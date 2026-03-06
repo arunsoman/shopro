@@ -1,0 +1,22 @@
+plugins {
+    id "com.github.node-gradle.node" version "7.0.2"
+}
+
+node {
+    download = false
+}
+
+task dev(type: Exec) {
+    dependsOn npmInstall
+    commandLine 'npm', 'run', 'dev'
+}
+
+task build(type: Exec) {
+    dependsOn npmInstall
+    commandLine 'npm', 'run', 'build'
+}
+
+task lint(type: Exec) {
+    dependsOn npmInstall
+    commandLine 'npm', 'run', 'lint'
+}

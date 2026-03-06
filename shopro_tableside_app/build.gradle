@@ -1,0 +1,17 @@
+task pubGet(type: Exec) {
+    commandLine 'flutter', 'pub', 'get'
+}
+
+task runWeb(type: Exec) {
+    dependsOn pubGet
+    commandLine 'flutter', 'run', '-d', 'web-server', '--web-port', '8084', '--web-hostname', '0.0.0.0'
+}
+
+task buildWeb(type: Exec) {
+    dependsOn pubGet
+    commandLine 'flutter', 'build', 'web'
+}
+
+task clean(type: Exec) {
+    commandLine 'flutter', 'clean'
+}

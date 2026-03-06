@@ -1,0 +1,35 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.2.3' apply false
+    id 'io.spring.dependency-management' version '1.1.7' apply false
+    id "com.github.node-gradle.node" version "7.0.2" apply false
+}
+
+allprojects {
+    group = 'mls.sho'
+    version = '0.0.1-SNAPSHOT'
+
+    repositories {
+        mavenCentral()
+    }
+}
+
+task runBackend {
+    dependsOn ':shopro-pos-server:bootRun'
+}
+
+task runWeb {
+    dependsOn ':shopro-pos-web:dev'
+}
+
+task runPos {
+    dependsOn ':shopro-pos-flutter:runWeb'
+}
+
+task runTableSide {
+    dependsOn ':shopro_tableside_app:runWeb'
+}
+
+task runAll {
+    dependsOn runBackend, runWeb, runPos, runTableSide
+}

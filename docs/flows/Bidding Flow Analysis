@@ -1,0 +1,110 @@
+# Shopro POS: Vendor Bidding Flow Analysis
+
+Based on the [Inventory Management User Stories](file:///home/arun/IdeaProjects/shopro-pos/docs/user_stories/08_INVENTORY_REQUIREMENTS.md), the bidding system is a highly automated procurement workflow designed to optimize food costs and supplier reliability.
+
+## 1. Enabling Bidding
+Bidding is not a global "on/off" switch but is enabled through specific data configurations:
+
+*   **Ingredient Configuration**: An ingredient must have the `auto_replenish` flag set to `true` (**US-1.5**).
+*   **Supplier Mapping**: Multiple suppliers must be linked to the ingredient with active pricing data (`SupplierIngredientPricing`).
+*   **Thresholds**: A `Reorder Level` and `Par Level` must be defined for the ingredient to trigger the automated flow.
+*   **Global Settings**: The General Manager can configure the **Bid Scoring Weights** (default: 50% Price, 30% Delivery Speed, 20% Vendor Rating).
+
+## 2. The Detailed Bidding Flow
+
+### Phase A: Trigger & RFQ Generation
+1.  **Threshold Breach**: When real-time sales or manual waste logs cause an ingredient's stock to drop below its **Reorder Level**.
+2.  **Automated RFQ**: If `auto_replenish` is enabled, the system generates a **Request for Quotation (RFQ)**.
+3.  **Supplier Solicitation**: The RFQ is dispatched via Email and SMS to all suppliers mapped to that ingredient. It includes a secure, one-time link to the **Vendor Portal**.
+
+### Phase B: Vendor Bidding
+4.  **Bid Submission**: Vendors access the portal (token-based, no login required) and submit:
+    *   **Unit Price**
+    *   **Quantity Available**
+    *   **Delivery ETA**
+    *   **Payment Terms**
+5.  **Validation**: The system validates the bid against the **Price Ceiling** (a maximum price configured per ingredient). Bids over the ceiling are flagged for manager review.
+
+### Phase C: Scoring & Awarding
+6.  **Deadline Closure**: When the bid deadline passes (or the manager manually closes it), the system runs the **Multi-Criteria Scoring Algorithm**.
+7.  **Composite Scoring**:
+    *   **Price Score (50%)**: Normalized against the lowest bid.
+    *   **Delivery Score (30%)**: Normalized against the fastest ETA.
+    *   **Vendor Rating (20%)**: Based on historical performance.
+8.  **Automated Awarding**: The vendor with the highest composite score is selected as the winner. 
+    *   *Tie-breaker*: Faster delivery date takes precedence.
+9.  **Draft PO**: A draft **Purchase Order (PO)** is automatically created for the winning vendor.
+
+### Phase D: Multi-Level Approval
+10. **Approval Matrix**: The draft PO is routed based on its total value:
+    *   **< $500**: Auto-approved.
+    *   **$500 - $2,999**: Requires Inventory Manager PIN.
+    *   **$3,000+**: Requires General Manager PIN.
+11. **Dispatch**: Once approved, the PO is automatically emailed to the vendor as a PDF with an "Acknowledge" link.
+
+### Phase E: Receiving & Performance Loop
+12. **Goods Receipt**: When the delivery arrives, the Chef logs the received quantities and invoice price.
+13. **3-Way Match**: The system performs a match between the **PO**, the **Receipt**, and the **Invoice**.
+14. **Rating Update**: Upon PO closure, the system updates the **Vendor Performance Score**:
+    *   **Timeliness**: Actual vs. Expected delivery date.
+    *   **Accuracy**: Quantity and Price discrepancies.
+    *   This score feeds back into **Step 7** for the next bidding cycle.
+
+## 3. Key Entities Involved
+*   `RawIngredient`: Stores thresholds and `auto_replenish` flag.
+*   `RFQ`: Tracks the solicitation event.
+*   `VendorBid`: Stores individual supplier responses.
+*   `PurchaseOrder`: The final legally binding order.
+*   `Supplier`: Stores the rolling `vendor_rating`.
+
+## 4. Failure & Exception Handling
+
+The system is designed with a "pessimistic" approach to procurement, anticipating various failure modes at each stage.
+
+### Stage 1: Solicitation Failures (The "No Bid" Scenarios)
+*   **No Eligible Vendors**: If an item breaches its threshold but no suppliers are mapped, the system fires a **Critical Alert** to the Manager: *"Manual intervention required for [Ingredient]."*
+*   **Zero Bids Received**: If the deadline passes with no submissions, the system **auto-extends the window by 30 minutes** and sends an emergency reminder (**US-13.4**).
+*   **Bid Over Price Ceiling**: Bids exceeding the restaurant's internal maximum are flagged as `OVER_CEILING`. They are excluded from automated awarding and require a manual Manager override to proceed.
+
+### Stage 2: Agreement Failures (The "Ghosting" Scenarios)
+*   **Missing Acknowledgment**: After a PO is dispatched, the vendor must click an "Acknowledge" link.
+    *   **1 Hour Delay**: Automated reminder via SMS/Email (**US-14.2**).
+    *   **2 Hour Delay**: Escalation alert and visual flagging on the Kanban board (**US-14.3**).
+*   **Bid Rescinded/Expired**: If a vendor attempts to acknowledge a PO after their bid's validity period (or after the item is sold out), the system locks the record and notifies the Manager.
+
+### Stage 3: Delivery Failures (The "Late/Partial" Scenarios)
+*   **Late Delivery**: If the actual delivery date exceeds the `expected_delivery_date`:
+    *   The **Timeliness Score** is penalized and KDS alerts fire for at-risk menu items (**US-15.3**).
+    *   A notification is sent to the Chef to prepare for a possible stockout (86'ing items).
+*   **Partial Fulfillment**: If the received quantity is less than the PO quantity:
+    *   The PO is marked as `PARTIALLY_FULFILLED`. 
+    *   A **Discrepancy Alert** is created.
+    *   The Manager decides whether to accept the shortfall or keep the line open.
+
+### Stage 4: Quality & Financial Failures (The "Discrepancy" Scenarios)
+*   **Price Creep**: If the invoice price exceeds the PO price by **more than 2%**:
+    *   The PO transitions to `DISCREPANCY_REVIEW`.
+    *   Payment is blocked until a Manager authorizes the variance via the **Discrepancy Resolver** (**US-15.4**).
+*   **3-Way Match Failure**: Any misalignment between the **PO**, **Goods Receipt**, and **Invoice** triggers a formal dispute log.
+
+### Stage 5: Long-Term Consequences (The "Performance Loop")
+*   **Rating Decay**: Every failure (lateness, inaccuracy, discrepancy) is quantified and subtracted from the `Supplier.vendor_rating`.
+*   **Blacklisting/Review**: If a vendor's rating drops below **60%**, the system generates a **Supplier Relationship Review Alert**.
+*   **Algorithm Penalty**: Lower ratings directly reduce a vendor's chance of winning future RFQs, even if they have the lowest price, through the **Composite Scoring Algorithm**.
+
+---
+
+## 5. State Management & Idempotency
+
+To prevent procurement chaos, the system implements strict state locking:
+
+### RFQ State Locking (**US-13.5**)
+*   **Active Lock**: An ingredient is "Locked" for new RFQs if any associated record is in a non-terminal state:
+    *   **RFQ**: `OPEN`, `EXTENDED`, `IN_SCORING`.
+    *   **Purchase Order**: `PENDING_APPROVAL`, `APPROVED`, `SENT`, `ACKNOWLEDGED`.
+*   **Idempotency**: Depletion events hitting the reorder threshold are checked against these locks. If a lock exists, the trigger is suppressed to avoid duplicate bidding cycles.
+
+### Cycle Recovery & Ghosting (**US-13.6**)
+*   **Terminal Failure**: If an RFQ reaches `FAILED` (no bids) or a PO is `CANCELLED` (ghosted), the lock is released.
+*   **Manual Re-trigger**: Managers can explicitly click **"Restart Cycle"** in the Inventory Dashboard. This ignores the threshold trigger logic and forcibly generates a new RFQ, ensuring that even if stock is already at zero, the procurement process can begin again.
+*   **Successor Chain**: The new RFQ is linked to the failed one, allowing the system to track "Procurement Success Rates" per ingredient.

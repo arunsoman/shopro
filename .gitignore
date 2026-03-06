@@ -1,0 +1,44 @@
+# Root .gitignore for Shopro POS
+
+# IDEs
+.idea/
+.vscode/
+*.iml
+*.iws
+
+# Build
+build/
+.gradle/
+bin/
+out/
+.dart_tool/
+.pub/
+.pub-cache/
+
+# Dependencies
+node_modules/
+.npm/
+
+# Docker
+.docker/
+
+# Secrets/Env
+ .env
+ .env.*
+ !.env.example
+
+# OS files
+ .DS_Store
+ Thumbs.db
+
+# Logs
+ *.log
+ server_log.txt
+ server_pid.txt
+
+# Artifacts
+.gemini/
+design-artifacts/
+docs/ brain/
+validation-report.json
+validation-report.md

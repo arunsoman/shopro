@@ -1,0 +1,6 @@
+rootProject.name = 'shopro-pos'
+
+include 'shopro-pos-server'
+include 'shopro-pos-web'
+include 'shopro-pos-flutter'
+include 'shopro_tableside_app'

@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: shopro-db
+    environment:
+      POSTGRES_DB: shopro_pos
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d shopro_pos"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  server:
+    build:
+      context: .
+      dockerfile: shopro-pos-server/Dockerfile
+    container_name: shopro-server
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/shopro_pos
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: password
+    ports:
+      - "8080:8080"
+    restart: always
+
+  web-pos:
+    build:
+      context: ./shopro-pos-web
+      dockerfile: Dockerfile
+    container_name: shopro-web-pos
+    ports:
+      - "5173:80"
+    depends_on:
+      - server
+
+  flutter-pos:
+    build:
+      context: ./shopro-pos-flutter
+      dockerfile: Dockerfile
+    container_name: shopro-flutter-pos
+    ports:
+      - "8083:80"
+    depends_on:
+      - server
+
+  flutter-tableside:
+    build:
+      context: ./shopro_tableside_app
+      dockerfile: Dockerfile
+    container_name: shopro-flutter-tableside
+    ports:
+      - "8084:80"
+    depends_on:
+      - server

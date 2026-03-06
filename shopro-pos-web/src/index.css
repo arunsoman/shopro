@@ -1,0 +1,444 @@
+/* ─────────────────────────────────────────────────────────────
+   Shopro Design System — index.css
+   Brand palette extracted from logo:
+     Teal checkmark   #00C9A7 → #00B4D8
+     Sky wifi         #48CAE4 → #0096C7
+     Coral cart       #FF6B6B → #FFB347 → #FFD93D
+     Navy logo bg     #0D0B1E
+     Wordmark cyan    #48CAE4
+   ───────────────────────────────────────────────────────────── */
+
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── 1. Light mode ─────────────────────────────────────────── */
+@layer base {
+  :root {
+    /* Brand primaries */
+    --primary: #00B4D8;
+    /* electric cyan — logo checkmark mid */
+    --primary-soft: #E0F7FC;
+    /* very light teal tint */
+    --primary-fore: #ffffff;
+    /* white text on --primary */
+
+    --secondary: #FF6B6B;
+    /* coral cart gradient start */
+    --secondary-soft: #FFF0F0;
+
+    --accent: #FFB347;
+    /* amber cart gradient mid */
+    --accent-soft: #FFF8EC;
+
+    /* Gradient stops */
+    --grad-start: #00C9A7;
+    --grad-mid: #00B4D8;
+    --grad-end: #48CAE4;
+
+    /* Cart / energy palette */
+    --brand-coral: #FF6B6B;
+    --brand-amber: #FFB347;
+    --brand-gold: #FFD93D;
+
+    /* Surfaces — clean white with warm undertone */
+    --background: #F5FBFD;
+    /* near-white with a breath of cyan */
+    --surface: #FFFFFF;
+    --surface-2: #EEF8FB;
+    /* slightly elevated card */
+    --surface-3: #E0F2F7;
+    /* tooltip / popover */
+
+    /* Typography */
+    --foreground: #0D1B2A;
+    /* deep navy-black */
+    --muted: #4A6274;
+    /* slate-blue muted */
+    --muted-2: #8BA3B0;
+    /* lighter muted */
+
+    /* Borders */
+    --border: #C8E8F0;
+    /* soft cyan-tinted border */
+    --border-soft: #E3F4F8;
+
+    /* Semantic */
+    --error: #E53E3E;
+    --success: #00C9A7;
+    /* re-use brand teal for success */
+    --warning: #FFB347;
+    /* re-use brand amber for warning */
+    --info: #48CAE4;
+
+    /* Table Status Colors (Light Mode) */
+    --status-available-bg: rgba(16, 185, 129, 0.1);
+    --status-available-border: rgba(16, 185, 129, 0.4);
+    --status-available-text: #047857;
+
+    --status-occupied-bg: rgba(59, 130, 246, 0.1);
+    --status-occupied-border: rgba(59, 130, 246, 0.4);
+    --status-occupied-text: #1D4ED8;
+
+    --status-ordered-bg: rgba(139, 92, 246, 0.1);
+    --status-ordered-border: rgba(139, 92, 246, 0.4);
+    --status-ordered-text: #6D28D9;
+
+    --status-dirty-bg: rgba(107, 114, 128, 0.1);
+    --status-dirty-border: rgba(107, 114, 128, 0.4);
+    --status-dirty-text: #374151;
+
+    --status-reserved-bg: rgba(6, 182, 212, 0.1);
+    --status-reserved-border: rgba(6, 182, 212, 0.4);
+    --status-reserved-text: #0E7490;
+
+    --status-inactive-bg: rgba(244, 244, 245, 0.5);
+    --status-inactive-border: #E4E4E7;
+    --status-inactive-text: #71717A;
+
+    /* Shadow */
+    --shadow-color: 198 80% 40%;
+    /* HSL for box-shadow tinting */
+
+    color-scheme: light;
+  }
+
+  /* ── 2. Dark mode ──────────────────────────────────────────── */
+  .dark {
+    /* Brand primaries — slightly brighter in dark */
+    --primary: #00C9A7;
+    /* teal checkmark — more vivid on dark */
+    --primary-soft: #0A2A28;
+    --primary-fore: #ffffff;
+
+    --secondary: #FF7B7B;
+    /* slightly lighter coral */
+    --secondary-soft: #2A1010;
+
+    --accent: #FFD93D;
+    /* gold brightened */
+    --accent-soft: #2A2000;
+
+    /* Gradient stops — same hue, slightly brighter */
+    --grad-start: #00DDB7;
+    --grad-mid: #00C9E8;
+    --grad-end: #5DD5F0;
+
+    --brand-coral: #FF8080;
+    --brand-amber: #FFC060;
+    --brand-gold: #FFE060;
+
+    /* Surfaces — deep navy from logo background */
+    --background: #060D14;
+    /* deepest navy — logo bg vibe */
+    --surface: #0D1B2A;
+    /* elevated slightly */
+    --surface-2: #122333;
+    /* cards */
+    --surface-3: #1A3040;
+    /* modals / popovers */
+
+    /* Typography */
+    --foreground: #E8F4F8;
+    /* very light cyan-white */
+    --muted: #6B92A8;
+    --muted-2: #3F5F72;
+
+    /* Borders */
+    --border: #1E3A4A;
+    /* dark cyan-navy border */
+    --border-soft: #142835;
+
+    /* Semantic */
+    --error: #FC6868;
+    --success: #00DDB7;
+    --warning: #FFC060;
+    --info: #5DD5F0;
+
+    /* Table Status Colors (Dark Mode) */
+    --status-available-bg: rgba(16, 185, 129, 0.2);
+    --status-available-border: rgba(16, 185, 129, 0.6);
+    --status-available-text: #34D399;
+
+    --status-occupied-bg: rgba(59, 130, 246, 0.2);
+    --status-occupied-border: rgba(59, 130, 246, 0.6);
+    --status-occupied-text: #60A5FA;
+
+    --status-ordered-bg: rgba(139, 92, 246, 0.2);
+    --status-ordered-border: rgba(139, 92, 246, 0.6);
+    --status-ordered-text: #A78BFA;
+
+    --status-dirty-bg: rgba(107, 114, 128, 0.2);
+    --status-dirty-border: rgba(107, 114, 128, 0.6);
+    --status-dirty-text: #9CA3AF;
+
+    --status-reserved-bg: rgba(6, 182, 212, 0.2);
+    --status-reserved-border: rgba(6, 182, 212, 0.6);
+    --status-reserved-text: #22D3EE;
+
+    --status-inactive-bg: rgba(39, 39, 42, 0.3);
+    --status-inactive-border: #3F3F46;
+    --status-inactive-text: #A1A1AA;
+
+    --shadow-color: 198 80% 10%;
+
+    color-scheme: dark;
+  }
+
+  /* ── Global base styles ──────────────────────────────────── */
+  html {
+    background-color: var(--background);
+    color: var(--foreground);
+    transition: background-color 0.35s ease, color 0.35s ease;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    font-feature-settings: "kern" 1, "liga" 1;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  /* Smooth scrollbar styling to match theme */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--background);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 999px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--primary);
+  }
+
+  /* Focus ring — brand teal */
+  *:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Selection colour */
+  ::selection {
+    background-color: var(--primary);
+    color: var(--primary-fore);
+  }
+}
+
+/* ── 3. Shopro gradient utilities ──────────────────────────── */
+@layer utilities {
+
+  /* The hero brand gradient — teal → cyan → sky */
+  .gradient-brand {
+    background: linear-gradient(135deg,
+        var(--grad-start) 0%,
+        var(--grad-mid) 50%,
+        var(--grad-end) 100%);
+  }
+
+  /* Energy gradient — mirrors the cart in the logo */
+  .gradient-energy {
+    background: linear-gradient(135deg,
+        var(--brand-coral) 0%,
+        var(--brand-amber) 55%,
+        var(--brand-gold) 100%);
+  }
+
+  /* Text gradients */
+  .text-gradient-brand {
+    background: linear-gradient(135deg, var(--grad-start), var(--grad-end));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .text-gradient-energy {
+    background: linear-gradient(135deg, var(--brand-coral), var(--brand-amber));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Subtle gradient for interactive card hovers */
+  .gradient-surface-hover {
+    background: linear-gradient(135deg,
+        var(--primary-soft) 0%,
+        var(--surface) 100%);
+  }
+}
+
+/* ── 4. Component-level reusables ──────────────────────────── */
+@layer components {
+
+  /* Primary button */
+  .btn-primary {
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 select-none cursor-pointer;
+    background: linear-gradient(135deg, var(--grad-start), var(--grad-mid));
+    color: var(--primary-fore);
+    box-shadow: 0 2px 12px color-mix(in srgb, var(--primary) 35%, transparent);
+  }
+
+  .btn-primary:hover {
+    filter: brightness(1.08);
+    box-shadow: 0 4px 20px color-mix(in srgb, var(--primary) 50%, transparent);
+    transform: translateY(-1px);
+  }
+
+  .btn-primary:active {
+    transform: translateY(0);
+    filter: brightness(0.96);
+  }
+
+  /* Ghost / outline button */
+  .btn-ghost {
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 select-none cursor-pointer;
+    border: 1.5px solid var(--border);
+    color: var(--foreground);
+    background: transparent;
+  }
+
+  .btn-ghost:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: var(--primary-soft);
+  }
+
+  /* Card surface */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  }
+
+  .card:hover {
+    border-color: var(--primary);
+    box-shadow: 0 4px 24px color-mix(in srgb, var(--primary) 12%, transparent);
+  }
+
+  /* Elevated card (slight tint) */
+  .card-elevated {
+    background: var(--surface-2);
+    border: 1px solid var(--border-soft);
+    border-radius: 0.75rem;
+  }
+
+  /* Stat / metric pill */
+  .badge-brand {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold;
+    background: var(--primary-soft);
+    color: var(--primary);
+  }
+
+  .badge-energy {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold;
+    background: var(--secondary-soft);
+    color: var(--secondary);
+  }
+
+  .badge-gold {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold;
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+
+  /* Nav link active state */
+  .nav-active {
+    color: var(--primary);
+    background: var(--primary-soft);
+  }
+
+  /* Sidebar divider */
+  .divider {
+    height: 1px;
+    background: var(--border-soft);
+    margin-block: 0.5rem;
+  }
+}
+
+/* ── 5. Skeleton loading shimmer ───────────────────────────── */
+@keyframes shimmer {
+  0% {
+    background-position: -600px 0;
+  }
+
+  100% {
+    background-position: 600px 0;
+  }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(90deg,
+      var(--border-soft) 0%,
+      var(--surface-3) 40%,
+      var(--border-soft) 80%);
+  background-size: 1200px 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+  border-radius: 0.5rem;
+}
+
+/* ── 6. Glow effects for key brand moments ─────────────────── */
+@keyframes pulse-glow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--primary) 0%, transparent);
+  }
+
+  50% {
+    box-shadow: 0 0 0 6px color-mix(in srgb, var(--primary) 20%, transparent);
+  }
+}
+
+.glow-pulse {
+  animation: pulse-glow 2.4s ease-in-out infinite;
+}
+
+/* Teal glow on hover (for icon buttons, active indicators, etc.) */
+.glow-hover {
+  transition: box-shadow 0.25s ease;
+}
+
+.glow-hover:hover {
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 22%, transparent);
+}
+
+/* ── 7. Theme transition — smooth swap ─────────────────────── */
+*,
+*::before,
+*::after {
+  transition:
+    background-color 0.3s ease,
+    border-color 0.3s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+/* Opt-out for elements where transitions would cause jank */
+img,
+svg,
+canvas,
+video,
+[data-no-transition] {
+  transition: none !important;
+}
