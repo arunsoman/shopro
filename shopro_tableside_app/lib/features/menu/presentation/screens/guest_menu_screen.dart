@@ -427,7 +427,7 @@ class MenuGridItem extends ConsumerWidget {
                               color: Colors.black.withValues(alpha: 0.05),
                             )
                           : child,
-                      errorBuilder: (_, __, ___) => Container(
+                      errorBuilder: (_, _, _) => Container(
                         color: Colors.grey[200],
                         child: const Icon(
                           LucideIcons.image,

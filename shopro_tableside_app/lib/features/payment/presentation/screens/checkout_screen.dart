@@ -2,11 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_spacing.dart';
 import '../../../menu/presentation/providers/menu_providers.dart';
 import '../../../session/presentation/providers/session_providers.dart';
-import '../domain/payment_models.dart';
+import '../../domain/payment_models.dart';
 
 class CheckoutScreen extends ConsumerStatefulWidget {
   const CheckoutScreen({super.key});
@@ -66,7 +64,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
           ),
           if (_isProcessing)
             Container(
-              color: Colors.black.withOpacity(0.5),
+              color: Colors.black.withValues(alpha: 0.5),
               child: Center(
                 child: Card(
                   margin: const EdgeInsets.all(32),
@@ -164,7 +162,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
 
     return ListView.separated(
       itemCount: methods.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
+      separatorBuilder: (_, _) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
         final m = methods[index];
         final isSelected = _selectedMethod == m['method'];
