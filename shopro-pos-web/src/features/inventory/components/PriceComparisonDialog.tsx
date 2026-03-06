@@ -55,7 +55,7 @@ export const PriceComparisonDialog: React.FC<PriceComparisonDialogProps> = ({
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {comparison.prices.map((p, idx) => {
+                                {comparison.prices.map((p) => {
                                     const lowestPrice = comparison.prices[0].price;
                                     const variance = ((p.price - lowestPrice) / lowestPrice) * 100;
 
