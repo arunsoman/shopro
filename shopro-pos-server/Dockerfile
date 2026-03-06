@@ -17,6 +17,10 @@ COPY --from=build /app/shopro-pos-server/build/libs/*.jar app.jar
 
 # Add a non-root user for security
 RUN addgroup -S spring && adduser -S spring -G spring
+
+# Create uploads directory and set permissions
+RUN mkdir -p /app/uploads && chown -R spring:spring /app
+
 USER spring:spring
 
 EXPOSE 8080
