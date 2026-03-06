@@ -30,6 +30,12 @@ services:
       SPRING_DATASOURCE_PASSWORD: password
     ports:
       - "5172:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
     restart: always
 
   web-pos:
@@ -40,7 +46,8 @@ services:
     ports:
       - "5173:80"
     depends_on:
-      - server
+      server:
+        condition: service_healthy
 
   flutter-pos:
     build:
@@ -50,7 +57,8 @@ services:
     ports:
       - "5171:80"
     depends_on:
-      - server
+      server:
+        condition: service_healthy
 
   flutter-tableside:
     build:
@@ -60,4 +68,5 @@ services:
     ports:
       - "5170:80"
     depends_on:
-      - server
+      server:
+        condition: service_healthy
