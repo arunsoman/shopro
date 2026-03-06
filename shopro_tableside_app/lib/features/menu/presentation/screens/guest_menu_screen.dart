@@ -15,10 +15,10 @@ String proxyImageUrl(String? raw) {
   if (raw == null || raw.isEmpty) return '';
   if (raw.startsWith('/')) {
     // Internal backend asset
-    return 'http://192.168.0.102:3002$raw';
+    return '/img?url=${Uri.encodeComponent(raw)}';
   }
   // External URL — transcode via proxy
-  return 'http://192.168.0.102:3002/img?url=${Uri.encodeComponent(raw)}';
+  return '/img?url=${Uri.encodeComponent(raw)}';
 }
 
 class GuestMenuScreen extends ConsumerStatefulWidget {

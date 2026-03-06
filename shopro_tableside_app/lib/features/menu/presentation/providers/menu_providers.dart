@@ -10,7 +10,7 @@ final dioProvider = Provider<Dio>((ref) {
   // This completely eliminates CORS issues on mobile.
   const apiBase = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://192.168.0.102:3002/api/v1',
+    defaultValue: '/api/v1',
   );
 
   final dio = Dio(

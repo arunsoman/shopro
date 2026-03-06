@@ -33,7 +33,7 @@ class SessionNotifier extends Notifier<SessionState> {
 
     const apiBase = String.fromEnvironment(
       'API_BASE_URL',
-      defaultValue: 'http://192.168.0.102:3002/api/v1/tableside',
+      defaultValue: '/api/v1/tableside',
     );
 
     final dio = Dio(

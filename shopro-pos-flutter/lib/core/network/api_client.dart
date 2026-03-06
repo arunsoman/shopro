@@ -6,7 +6,7 @@ class ApiClient {
   ApiClient({String? baseUrl}) {
     dio = Dio(
       BaseOptions(
-        baseUrl: baseUrl ?? 'http://localhost:8080/api/v1',
+        baseUrl: baseUrl ?? '/api/v1',
         connectTimeout: const Duration(seconds: 5),
         receiveTimeout: const Duration(seconds: 3),
       ),
