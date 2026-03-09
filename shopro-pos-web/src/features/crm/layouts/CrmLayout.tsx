@@ -1,6 +1,6 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { Users, Settings, History, LayoutDashboard } from "lucide-react";
+import { Users, Settings, History, LayoutDashboard, BarChart3 } from "lucide-react";
 
 export function CrmLayout() {
     const location = useLocation();
@@ -8,6 +8,7 @@ export function CrmLayout() {
     const navItems = [
         { label: "Guest List", path: "/crm", icon: <Users className="h-4 w-4" /> },
         { label: "Loyalty Tiers", path: "/crm/tiers", icon: <LayoutDashboard className="h-4 w-4" /> },
+        { label: "Analytics", path: "/crm/analytics", icon: <BarChart3 className="h-4 w-4" /> },
         { label: "Campaigns", path: "/crm/campaigns", icon: <History className="h-4 w-4" /> },
         { label: "Settings", path: "/crm/settings", icon: <Settings className="h-4 w-4" /> },
     ];

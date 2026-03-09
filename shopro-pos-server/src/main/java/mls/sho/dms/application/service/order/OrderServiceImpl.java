@@ -275,7 +275,7 @@ public class OrderServiceImpl implements OrderService {
         
         // Process Loyalty Points
         if (ticket.getCustomerProfile() != null) {
-            loyaltyService.processOrderPoints(ticket);
+            loyaltyService.earnPoints(ticket.getCustomerProfile().getId(), ticket.getSubtotal(), ticket.getId());
         }
 
         // US-2.4: Transition table to DIRTY upon payment

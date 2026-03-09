@@ -30,6 +30,14 @@ public class LoyaltyTransaction extends BaseEntity {
     @Column(name = "description", length = 200)
     private String description;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "transaction_type", nullable = false, length = 20)
+    private LoyaltyTransactionType transactionType = LoyaltyTransactionType.EARN;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "bonus_event_id")
+    private BonusPointEvent bonusEvent;
+
     public CustomerProfile getCustomerProfile() { return customerProfile; }
     public void setCustomerProfile(CustomerProfile customerProfile) { this.customerProfile = customerProfile; }
     public OrderTicket getOrderTicket() { return orderTicket; }
@@ -38,4 +46,8 @@ public class LoyaltyTransaction extends BaseEntity {
     public void setPoints(int points) { this.points = points; }
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
+    public LoyaltyTransactionType getTransactionType() { return transactionType; }
+    public void setTransactionType(LoyaltyTransactionType transactionType) { this.transactionType = transactionType; }
+    public BonusPointEvent getBonusEvent() { return bonusEvent; }
+    public void setBonusEvent(BonusPointEvent bonusEvent) { this.bonusEvent = bonusEvent; }
 }
