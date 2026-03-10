@@ -2,9 +2,9 @@
 FROM node:20-alpine AS build
 WORKDIR /app
 
-# Install dependencies
+# Install dependencies using cache mount
 COPY package*.json ./
-RUN npm install
+RUN --mount=type=cache,target=/root/.npm npm install
 
 # Copy source and build
 COPY . .

@@ -18,6 +18,14 @@ import { TablesideSettingsPage } from './features/settings/pages/TablesideSettin
 import KdsSettings from './features/settings/components/kds/KdsSettings';
 import { CrmLayout } from './features/crm/layouts/CrmLayout';
 import { CustomerListPage } from './features/crm/pages/CustomerListPage';
+import { CustomerDetailPage } from './features/crm/pages/CustomerDetailPage';
+import { LoyaltyConfigPage } from './features/crm/pages/LoyaltyConfigPage';
+import SegmentsPage from './features/crm/pages/SegmentsPage';
+import PromoCodesPage from './features/crm/pages/PromoCodesPage';
+import { CampaignsPage } from './features/crm/pages/CampaignsPage';
+import FeedbackDashboardPage from './features/crm/pages/FeedbackDashboardPage';
+import { CrmAnalyticsPage } from './features/crm/pages/CrmAnalyticsPage';
+import { CrmSettingsPage } from './features/crm/pages/CrmSettingsPage';
 import { DashboardPage } from './features/dashboard/pages/DashboardPage';
 import { StaffListPage } from './features/staff/pages/StaffListPage';
 import { RoleManagementPage } from './features/staff/pages/RoleManagementPage';
@@ -144,29 +152,35 @@ function AppContent() {
             }
           >
             <Route index element={<CustomerListPage />} />
+            <Route path="customers" element={<CustomerListPage />} />
+            <Route path="customers/:id" element={<CustomerDetailPage />} />
             <Route
               path="tiers"
-              element={
-                <div className="p-8 font-body font-medium text-foreground">
-                  Loyalty Tiers Configuration — coming soon
-                </div>
-              }
+              element={<LoyaltyConfigPage />}
+            />
+            <Route
+              path="analytics"
+              element={<CrmAnalyticsPage />}
             />
             <Route
               path="campaigns"
-              element={
-                <div className="p-8 font-body font-medium text-foreground">
-                  Marketing Campaigns — coming soon
-                </div>
-              }
+              element={<CampaignsPage />}
+            />
+            <Route
+              path="segments"
+              element={<SegmentsPage />}
+            />
+            <Route
+              path="promos"
+              element={<PromoCodesPage />}
+            />
+            <Route
+              path="feedback"
+              element={<FeedbackDashboardPage />}
             />
             <Route
               path="settings"
-              element={
-                <div className="p-8 font-body font-medium text-foreground">
-                  CRM Global Settings — coming soon
-                </div>
-              }
+              element={<CrmSettingsPage />}
             />
           </Route>
 

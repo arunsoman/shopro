@@ -1,11 +1,14 @@
 package mls.sho.dms.repository.order;
 
+import mls.sho.dms.entity.crm.CustomerProfile;
 import mls.sho.dms.entity.order.OrderTicket;
 import mls.sho.dms.entity.order.TicketStatus;
 import mls.sho.dms.entity.floor.TableShape;
 import mls.sho.dms.entity.staff.StaffMember;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import org.springframework.data.domain.Pageable;
@@ -15,6 +18,10 @@ import java.util.UUID;
 
 @Repository
 public interface OrderTicketRepository extends JpaRepository<OrderTicket, UUID> {
+
+    @Modifying
+    @Query("UPDATE OrderTicket ot SET ot.customerProfile = :target WHERE ot.customerProfile = :source")
+    void updateCustomerProfile(@Param("source") CustomerProfile source, @Param("target") CustomerProfile target);
 
     /** Find the active (not paid or voided) ticket for a specific table. */
     @Query("SELECT o FROM OrderTicket o WHERE o.table = :table AND o.status IN ('OPEN', 'SUBMITTED', 'PARTIALLY_PAID')")
