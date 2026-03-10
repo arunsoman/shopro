@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useCustomerDetails } from '../hooks/useCrm';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { User, ArrowLeft, Phone, Mail, Award, Clock, Calendar } from 'lucide-react';
+import { ArrowLeft, Phone, Mail, Award, Clock, Calendar } from 'lucide-react';
 
 export const CustomerDetailPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();

@@ -1,7 +1,6 @@
 import React from 'react';
 import { useCrmAnalytics, useAtRiskCustomers, useServerFeedbackStats } from '../hooks/useCrm';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { 
     TrendingUp, 
@@ -10,7 +9,6 @@ import {
     Coins, 
     AlertCircle, 
     ChevronRight,
-    Search,
     User,
     Star
 } from 'lucide-react';

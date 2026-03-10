@@ -1,4 +1,3 @@
-import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { crmApi } from "../api/crmApi";
 import { 
@@ -9,7 +8,7 @@ import {
     Star, MessageSquare, ThumbsUp, ThumbsDown, User, Calendar 
 } from "lucide-react";
 import { 
-    PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend 
+    Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip 
 } from "recharts";
 import { format } from "date-fns";
 import {

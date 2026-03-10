@@ -125,7 +125,7 @@ export const CustomerListPage: React.FC = () => {
                                             size="sm" 
                                             onClick={(e) => { 
                                                 e.stopPropagation(); 
-                                                setSelectedCustomer(customer);
+                                                setSelectedCustomer(customer as any);
                                                 setIsMergeModalOpen(true);
                                             }}
                                             title="Merge Profile"

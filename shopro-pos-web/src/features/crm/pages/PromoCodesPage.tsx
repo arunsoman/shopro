@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { crmApi } from "../api/crmApi";
 import { 
-    Card, CardContent, CardDescription, CardHeader, CardTitle 
+    Card
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,7 +18,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Plus, Ticket, Trash2, Calendar, Target, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
-import { PromoCodeResponse, CreatePromoCodeRequest, DiscountType } from "../schema/crmSchema";
+import type { CreatePromoCodeRequest, DiscountType } from "../schema/crmSchema";
 import { format } from "date-fns";
 
 export default function PromoCodesPage() {
@@ -148,7 +148,6 @@ export default function PromoCodesPage() {
 
 function PromoBuilderDialog({ segments, onSubmit, isSubmitting }: { segments: any[], onSubmit: (data: CreatePromoCodeRequest) => void, isSubmitting: boolean }) {
     const [code, setCode] = useState("");
-    const [description, setDescription] = useState("");
     const [discountType, setDiscountType] = useState<DiscountType>("PERCENTAGE");
     const [discountValue, setDiscountValue] = useState("");
     const [maxUses, setMaxUses] = useState("");
@@ -166,7 +165,6 @@ function PromoBuilderDialog({ segments, onSubmit, isSubmitting }: { segments: an
         if (!code || !discountValue) return toast.error("Missing required fields");
         onSubmit({
             code,
-            description,
             discountType,
             discountValue: parseFloat(discountValue),
             maxUses: maxUses ? parseInt(maxUses) : undefined,

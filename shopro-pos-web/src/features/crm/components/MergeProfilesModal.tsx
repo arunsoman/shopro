@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
     Dialog,
     DialogContent,
@@ -93,9 +93,9 @@ export const MergeProfilesModal: React.FC<MergeProfilesModalProps> = ({
 
                         {isSearching && <p className="text-sm text-center text-muted-foreground">Searching...</p>}
 
-                        {searchResults && searchResults.length > 0 && (
+                        {searchResults && (
                             <div className="space-y-2 max-h-[200px] overflow-y-auto pr-1">
-                                {searchResults
+                                {[searchResults]
                                     .filter((c: CustomerProfileResponse) => c.id !== sourceCustomer.id)
                                     .map((customer: CustomerProfileResponse) => (
                                         <div

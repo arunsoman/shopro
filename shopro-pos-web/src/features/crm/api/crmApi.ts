@@ -5,8 +5,6 @@ import type {
     UpdateCustomerRequest,
     CustomerSearchResponse,
     Page,
-    CustomerDietaryTag,
-    CustomerOccasion,
     DietaryTagType,
     OccasionType,
     LoyaltyConfigResponse,

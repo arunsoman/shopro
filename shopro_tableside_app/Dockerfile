@@ -2,9 +2,9 @@
 FROM ghcr.io/cirruslabs/flutter:stable AS build
 WORKDIR /app
 
-# Copy pubspec and get dependencies
+# Copy pubspec and get dependencies using cache mount
 COPY pubspec.* ./
-RUN flutter pub get
+RUN --mount=type=cache,target=/root/.pub-cache flutter pub get
 
 # Copy source and build web
 COPY . .

@@ -1,0 +1,17 @@
+.git
+node_modules
+build
+.gradle
+.dart_tool
+*.log
+.DS_Store
+server_pid.txt
+server_log.txt
+compile_errors.txt
+shopro-pos-server/uploads
+**/build/
+**/node_modules/
+**/.gradle/
+shopro-pos-web/
+shopro-pos-flutter/
+shopro_tableside_app/

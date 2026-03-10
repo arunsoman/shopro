@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { crmApi } from "../api/crmApi";
 import { 
@@ -6,9 +6,6 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { 
-    Table, TableBody, TableCell, TableHead, TableHeader, TableRow 
-} from "@/components/ui/table";
 import { 
     Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger 
 } from "@/components/ui/dialog";
@@ -18,7 +15,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Plus, Users, Trash2, Filter, Save } from "lucide-react";
 import { toast } from "sonner";
-import { SegmentResponse, CreateSegmentRequest, SegmentField, SegmentOperator } from "../schema/crmSchema";
+import type { CreateSegmentRequest } from "../schema/crmSchema";
 
 export default function SegmentsPage() {
     const queryClient = useQueryClient();
@@ -118,7 +115,7 @@ function SegmentBuilderDialog({ onSubmit, isSubmitting }: { onSubmit: (data: Cre
     const [rules, setRules] = useState<any[]>([{ field: "TIER", operator: "EQUALS", ruleValue: "" }]);
 
     const addRule = () => setRules([...rules, { field: "LTV", operator: "GREATER_THAN", ruleValue: "" }]);
-    const removeRule = (idx: number) => setRules(rules.filter((_, i) => i !== idx));
+    const removeRule = (idx: number) => setRules(rules.filter((_: any, i: number) => i !== idx));
     const updateRule = (idx: number, field: string, value: string) => {
         const newRules = [...rules];
         newRules[idx][field] = value;
@@ -127,7 +124,7 @@ function SegmentBuilderDialog({ onSubmit, isSubmitting }: { onSubmit: (data: Cre
 
     const handleSave = () => {
         if (!name) return toast.error("Name is required");
-        if (rules.some(r => !r.ruleValue)) return toast.error("All rules must have a value");
+        if (rules.some((r: any) => !r.ruleValue)) return toast.error("All rules must have a value");
         onSubmit({ name, description, rules });
     };
 
@@ -159,11 +156,11 @@ function SegmentBuilderDialog({ onSubmit, isSubmitting }: { onSubmit: (data: Cre
                         </Button>
                     </div>
                     
-                    {rules.map((rule, idx) => (
+                    {rules.map((rule: any, idx: number) => (
                         <div key={idx} className="flex gap-2 items-end bg-muted/30 p-3 rounded-lg border border-border/50">
                             <div className="flex-1 space-y-1.5">
                                 <label className="text-[10px] uppercase font-bold text-muted-foreground px-1">Field</label>
-                                <Select value={rule.field} onValueChange={(v) => updateRule(idx, "field", v)}>
+                                <Select value={rule.field} onValueChange={(v: string) => updateRule(idx, "field", v)}>
                                     <SelectTrigger>
                                         <SelectValue />
                                     </SelectTrigger>
@@ -177,7 +174,7 @@ function SegmentBuilderDialog({ onSubmit, isSubmitting }: { onSubmit: (data: Cre
                             </div>
                             <div className="flex-1 space-y-1.5">
                                 <label className="text-[10px] uppercase font-bold text-muted-foreground px-1">Condition</label>
-                                <Select value={rule.operator} onValueChange={(v) => updateRule(idx, "operator", v)}>
+                                <Select value={rule.operator} onValueChange={(v: string) => updateRule(idx, "operator", v)}>
                                     <SelectTrigger>
                                         <SelectValue />
                                     </SelectTrigger>
