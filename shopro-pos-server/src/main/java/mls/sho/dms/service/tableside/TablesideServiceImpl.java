@@ -43,7 +43,7 @@ public class TablesideServiceImpl implements TablesideService {
     private final MenuItemRepository menuItemRepo;
     private final MenuCategoryRepository categoryRepo;
     private final mls.sho.dms.repository.order.OrderTicketRepository orderTicketRepo;
-    private final mls.sho.dms.repository.staff.StaffMemberRepository staffRepo;
+    private final mls.sho.dms.repository.staff.StaffRepository staffRepo;
     private final RecipeService recipeService;
 
     public TablesideServiceImpl(
@@ -53,7 +53,7 @@ public class TablesideServiceImpl implements TablesideService {
             MenuItemRepository menuItemRepo,
             MenuCategoryRepository categoryRepo,
             mls.sho.dms.repository.order.OrderTicketRepository orderTicketRepo,
-            mls.sho.dms.repository.staff.StaffMemberRepository staffRepo,
+            mls.sho.dms.repository.staff.StaffRepository staffRepo,
             RecipeService recipeService) {
         this.sessionRepo = sessionRepo;
         this.cartItemRepo = cartItemRepo;

@@ -1,6 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
-import type { Supplier, CreateSupplierRequest, SupplierCatalogImportRequest, PriceComparison } from '../api/types';
+import type {
+    Supplier,
+    CreateSupplierRequest,
+    SupplierCatalogImportRequest,
+    PriceComparison,
+    SupplierUser,
+    InviteSupplierUserRequest
+} from '../api/types';
 
 const API_BASE = '/api/v1/inventory/suppliers';
 
@@ -56,5 +63,38 @@ export const usePriceComparison = (ingredientId?: string) => {
             return data;
         },
         enabled: !!ingredientId
+    });
+};
+
+export const useSupplierUsers = (supplierId: string) => {
+    return useQuery<SupplierUser[]>({
+        queryKey: ['supplier-users', supplierId],
+        queryFn: async () => {
+            const { data } = await axios.get(`${API_BASE}/${supplierId}/users`);
+            return data;
+        },
+        enabled: !!supplierId
+    });
+};
+
+export const useInviteSupplierUser = (supplierId: string) => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (request: InviteSupplierUserRequest) =>
+            axios.post(`${API_BASE}/${supplierId}/users/invite`, request),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['supplier-users', supplierId] });
+        }
+    });
+};
+
+export const useDeactivateSupplierUser = (supplierId: string) => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (userId: string) =>
+            axios.patch(`${API_BASE}/${supplierId}/users/${userId}/deactivate`),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['supplier-users', supplierId] });
+        }
     });
 };

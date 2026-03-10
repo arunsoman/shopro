@@ -2,16 +2,26 @@ package mls.sho.dms.application.service.inventory.impl;
 
 import lombok.RequiredArgsConstructor;
 import mls.sho.dms.application.dto.inventory.CreateIngredientRequest;
+import mls.sho.dms.application.dto.inventory.UpdateIngredientRequest;
 import mls.sho.dms.application.dto.inventory.IngredientResponse;
 import mls.sho.dms.application.exception.ResourceNotFoundException;
+import mls.sho.dms.application.service.inventory.AlertService;
 import mls.sho.dms.application.service.inventory.IngredientService;
 import mls.sho.dms.entity.inventory.InventoryTransaction;
 import mls.sho.dms.entity.inventory.InventoryTransactionType;
 import mls.sho.dms.entity.inventory.RawIngredient;
 import mls.sho.dms.entity.inventory.Supplier;
 import mls.sho.dms.repository.inventory.InventoryTransactionRepository;
+import mls.sho.dms.repository.inventory.PurchaseOrderRepository;
+import mls.sho.dms.repository.inventory.RFQRepository;
 import mls.sho.dms.repository.inventory.RawIngredientRepository;
 import mls.sho.dms.repository.inventory.SupplierRepository;
+import mls.sho.dms.entity.inventory.PurchaseOrderStatus;
+import mls.sho.dms.entity.inventory.RfqStatus;
+import mls.sho.dms.entity.inventory.PurchaseOrder;
+import mls.sho.dms.entity.inventory.RFQ;
+import java.util.EnumSet;
+import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +39,9 @@ public class IngredientServiceImpl implements IngredientService {
     private final RawIngredientRepository ingredientRepository;
     private final SupplierRepository supplierRepository;
     private final InventoryTransactionRepository transactionRepository;
+    private final PurchaseOrderRepository purchaseOrderRepository;
+    private final RFQRepository rfqRepository;
+    private final AlertService alertService;
 
     @Override
     public IngredientResponse create(CreateIngredientRequest request) {
@@ -49,6 +62,38 @@ public class IngredientServiceImpl implements IngredientService {
         ingredient.setAutoReplenish(request.autoReplenish());
         if (request.allergens() != null) {
             ingredient.setAllergens(request.allergens());
+        }
+
+        if (request.supplierId() != null) {
+            Supplier supplier = supplierRepository.findById(request.supplierId())
+                .orElseThrow(() -> new ResourceNotFoundException("Supplier not found"));
+            ingredient.setSupplier(supplier);
+        }
+
+        RawIngredient saved = ingredientRepository.save(ingredient);
+        return mapToResponse(saved);
+    }
+
+    @Override
+    public IngredientResponse update(UUID id, UpdateIngredientRequest request) {
+        RawIngredient ingredient = ingredientRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Ingredient not found"));
+
+        if (request.name() != null) ingredient.setName(request.name());
+        if (request.unitOfMeasure() != null) ingredient.setUnitOfMeasure(request.unitOfMeasure());
+        if (request.costPerUnit() != null) ingredient.setCostPerUnit(request.costPerUnit());
+        if (request.yieldPct() != null) ingredient.setYieldPct(request.yieldPct());
+        if (request.parLevel() != null) ingredient.setParLevel(request.parLevel());
+        if (request.reorderPoint() != null) ingredient.setReorderPoint(request.reorderPoint());
+        if (request.safetyLevel() != null) ingredient.setSafetyLevel(request.safetyLevel());
+        if (request.criticalLevel() != null) ingredient.setCriticalLevel(request.criticalLevel());
+        if (request.maxStockLevel() != null) ingredient.setMaxStockLevel(request.maxStockLevel());
+        if (request.autoReplenish() != null) ingredient.setAutoReplenish(request.autoReplenish());
+        
+        if (request.allergens() != null) {
+            ingredient.setAllergens(request.allergens().stream()
+                .map(mls.sho.dms.entity.inventory.Allergen::valueOf)
+                .collect(Collectors.toSet()));
         }
 
         if (request.supplierId() != null) {
@@ -104,9 +149,42 @@ public class IngredientServiceImpl implements IngredientService {
         transaction.setReferenceId(referenceId);
         transaction.setTransactedAt(Instant.now());
         transactionRepository.save(transaction);
+
+        // Check for alerts
+        if (newStock.compareTo(ingredient.getCriticalLevel()) <= 0) {
+            alertService.sendCriticalStockAlert(ingredient);
+        } else if (newStock.compareTo(ingredient.getSafetyLevel()) <= 0) {
+            alertService.sendSafetyStockAlert(ingredient);
+        }
     }
 
     private IngredientResponse mapToResponse(RawIngredient ingredient) {
+        // Find active PO
+        List<PurchaseOrder> activePos = purchaseOrderRepository.findActiveOrdersByIngredientId(
+            ingredient.getId(), 
+            EnumSet.of(PurchaseOrderStatus.CLOSED, PurchaseOrderStatus.CANCELLED, PurchaseOrderStatus.REJECTED)
+        );
+
+        // Find active RFQ
+        List<RFQ> activeRfqs = rfqRepository.findActiveRfqsByIngredientId(
+            ingredient.getId(), 
+            RfqStatus.OPEN
+        );
+
+        UUID activeOrderId = null;
+        String activeOrderType = null;
+        String activeOrderStatus = null;
+
+        if (!activePos.isEmpty()) {
+            activeOrderId = activePos.get(0).getId();
+            activeOrderType = "PO";
+            activeOrderStatus = activePos.get(0).getStatus().name();
+        } else if (!activeRfqs.isEmpty()) {
+            activeOrderId = activeRfqs.get(0).getId();
+            activeOrderType = "RFQ";
+            activeOrderStatus = activeRfqs.get(0).getStatus().name();
+        }
+
         return new IngredientResponse(
             ingredient.getId(),
             ingredient.getName(),
@@ -123,7 +201,10 @@ public class IngredientServiceImpl implements IngredientService {
             ingredient.isAutoReplenish(),
             ingredient.getAllergens().stream().map(Enum::name).collect(Collectors.toSet()),
             ingredient.getSupplier() != null ? ingredient.getSupplier().getId() : null,
-            ingredient.getSupplier() != null ? ingredient.getSupplier().getCompanyName() : null
+            ingredient.getSupplier() != null ? ingredient.getSupplier().getCompanyName() : null,
+            activeOrderId,
+            activeOrderType,
+            activeOrderStatus
         );
     }
 }

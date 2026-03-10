@@ -8,10 +8,9 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 public record LogWasteRequest(
-    @NotNull(message = "Order item ID is mandatory if resolving an order waste, optional for direct ingredient waste")
-    UUID orderItemId,
+    UUID orderItemId, 
 
-    UUID ingredientId, // Optional, used if logging waste directly for an ingredient rather than an order item
+    UUID ingredientId, 
 
     @NotNull(message = "Waste reason is required.")
     WasteReason reason,

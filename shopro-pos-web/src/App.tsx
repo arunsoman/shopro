@@ -20,12 +20,27 @@ import { CrmLayout } from './features/crm/layouts/CrmLayout';
 import { CustomerListPage } from './features/crm/pages/CustomerListPage';
 import { DashboardPage } from './features/dashboard/pages/DashboardPage';
 import { StaffListPage } from './features/staff/pages/StaffListPage';
+import { RoleManagementPage } from './features/staff/pages/RoleManagementPage';
 import { VendorRFQPage } from './features/inventory/pages/VendorRFQPage';
 import { InventoryLayout } from './features/inventory/layouts/InventoryLayout';
 import { InventoryDashboard } from './features/inventory/pages/InventoryDashboard';
 import { RecipesPage } from './features/inventory/pages/RecipesPage';
 import { SupplierManagementPage } from './features/inventory/pages/SupplierManagementPage';
 import { RFQManagementPage } from './features/inventory/pages/RFQManagementPage';
+import { NotificationAdminLayout } from './features/notifications/layouts/NotificationAdminLayout';
+import { NotificationDashboardPage } from './features/notifications/pages/NotificationDashboardPage';
+import { NotificationTypesPage } from './features/notifications/pages/NotificationTypesPage';
+import { NotificationChannelsPage } from './features/notifications/pages/NotificationChannelsPage';
+import { NotificationRoutingPage } from './features/notifications/pages/NotificationRoutingPage';
+import { NotificationLogsPage } from './features/notifications/pages/NotificationLogsPage';
+import { NotificationSendPage } from './features/notifications/pages/NotificationSendPage';
+import { SupplierAuthProvider } from './features/auth/SupplierAuthContext';
+import { SupplierProtectedRoute } from './features/auth/SupplierProtectedRoute';
+import { SupplierLoginPage } from './features/auth/pages/SupplierLoginPage';
+import { SupplierPortalLayout } from './features/inventory/layouts/SupplierPortalLayout';
+import { SupplierDashboard } from './features/inventory/pages/SupplierDashboard';
+import { SupplierRfqList } from './features/inventory/pages/SupplierRfqList';
+import { SupplierInventoryView } from './features/inventory/pages/SupplierInventoryView';
 import type { StaffRole } from '@/lib/auth/AuthContext';
 
 // Shopro design system
@@ -33,10 +48,12 @@ import './App.css';
 
 const queryClient = new QueryClient();
 
-const ADMIN_ROLES: StaffRole[] = ['OWNER', 'MANAGER'];
+const ADMIN_ROLES: StaffRole[] = ['OWNER', 'MANAGER', 'GENERAL_MANAGER', 'ASSISTANT_MANAGER'];
 const ALL_STAFF: StaffRole[] = [
-  'OWNER', 'MANAGER', 'HOST', 'HOSTESS', 'SERVER',
-  'CASHIER', 'BUSSER', 'CHEF', 'LINE_COOK', 'EXPEDITOR',
+  'OWNER', 'MANAGER', 'GENERAL_MANAGER', 'ASSISTANT_MANAGER', 'FB_MANAGER',
+  'KITCHEN_MANAGER', 'EXECUTIVE_CHEF', 'SOUS_CHEF', 'CHEF_DE_PARTIE',
+  'LINE_COOK', 'PREP_COOK', 'DISHWASHER', 'MAITRE_D', 'HOST',
+  'BARTENDER', 'BUSSER', 'RUNNER', 'SENIOR_SERVER', 'JUNIOR_SERVER',
 ];
 
 function AppContent() {
@@ -90,7 +107,7 @@ function AppContent() {
           <Route
             path="/inventory"
             element={
-              <ProtectedRoute allowedRoles={['OWNER', 'MANAGER', 'CHEF']}>
+              <ProtectedRoute allowedRoles={['OWNER', 'MANAGER', 'GENERAL_MANAGER', 'ASSISTANT_MANAGER', 'EXECUTIVE_CHEF', 'SOUS_CHEF', 'KITCHEN_MANAGER']}>
                 <InventoryLayout />
               </ProtectedRoute>
             }
@@ -175,8 +192,16 @@ function AppContent() {
               }
             />
             <Route
+              path="roles"
+              element={
+                <ProtectedRoute allowedRoles={ADMIN_ROLES}>
+                  <RoleManagementPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="notifications"
-              element={<div className="p-8 text-foreground">Notifications Config — coming soon</div>}
+              element={<Navigate to="/admin/notifications/dashboard" replace />}
             />
             <Route
               path="payments"
@@ -189,10 +214,50 @@ function AppContent() {
           </Route>
         </Route>
 
+        {/* Admin Notifications — admin only */}
+        <Route
+          path="/admin/notifications"
+          element={
+            <ProtectedRoute allowedRoles={ADMIN_ROLES}>
+              <div className="pt-[3px] flex flex-col min-h-dvh">
+                <AppShell />
+              </div>
+            </ProtectedRoute>
+          }
+        >
+          <Route element={<NotificationAdminLayout />}>
+            <Route index element={<Navigate to="dashboard" replace />} />
+            <Route path="dashboard" element={<NotificationDashboardPage />} />
+            <Route path="types" element={<NotificationTypesPage />} />
+            <Route path="channels" element={<NotificationChannelsPage />} />
+            <Route path="routing" element={<NotificationRoutingPage />} />
+            <Route path="send" element={<NotificationSendPage />} />
+            <Route path="logs" element={<NotificationLogsPage />} />
+          </Route>
+        </Route>
+
+
+
+        {/* ── Supplier Portal ──────────────────────────────────────── */}
+        <Route path="/supplier/login" element={<SupplierLoginPage />} />
+        <Route
+          element={
+            <SupplierProtectedRoute>
+              <div className="pt-[3px] flex flex-col min-h-dvh font-body">
+                <SupplierPortalLayout />
+              </div>
+            </SupplierProtectedRoute>
+          }
+        >
+          <Route path="/supplier/dashboard" element={<SupplierDashboard />} />
+          <Route path="/supplier/rfqs" element={<SupplierRfqList />} />
+          <Route path="/supplier/inventory" element={<SupplierInventoryView />} />
+        </Route>
+
         {/* Catch-all */}
         <Route path="*" element={<Navigate to="/login" replace />} />
-      </Routes>
-    </BrowserRouter>
+      </Routes >
+    </BrowserRouter >
   );
 }
 
@@ -201,7 +266,9 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <AuthProvider>
-          <AppContent />
+          <SupplierAuthProvider>
+            <AppContent />
+          </SupplierAuthProvider>
         </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>

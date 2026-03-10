@@ -51,3 +51,39 @@ export const useReactivateStaff = () => {
         onSuccess: () => qc.invalidateQueries({ queryKey: STAFF_KEY }),
     });
 };
+
+export const useRoles = () =>
+    useQuery({
+        queryKey: ["roles"],
+        queryFn: () => staffApi.getRoles(),
+    });
+
+export const usePermissions = () =>
+    useQuery({
+        queryKey: ["permissions"],
+        queryFn: () => staffApi.getPermissions(),
+    });
+
+export const useCreateRole = () => {
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: (data: any) => staffApi.createRole(data),
+        onSuccess: () => qc.invalidateQueries({ queryKey: ["roles"] }),
+    });
+};
+
+export const useUpdateRoleEntity = () => {
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: ({ id, data }: { id: string; data: any }) => staffApi.updateRoleEntity(id, data),
+        onSuccess: () => qc.invalidateQueries({ queryKey: ["roles"] }),
+    });
+};
+
+export const useDeleteRole = () => {
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: (id: string) => staffApi.deleteRole(id),
+        onSuccess: () => qc.invalidateQueries({ queryKey: ["roles"] }),
+    });
+};

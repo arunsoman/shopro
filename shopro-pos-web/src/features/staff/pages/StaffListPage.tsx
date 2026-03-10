@@ -8,23 +8,34 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { UserPlus, Pencil, PowerOff, RefreshCcw } from 'lucide-react';
+import { UserPlus, Pencil, PowerOff, RefreshCcw, ShieldCheck } from 'lucide-react';
 import { STAFF_ROLES, type StaffMemberResponse } from '../schema/staffSchema';
+import { useNavigate } from 'react-router-dom';
 
 const ROLE_COLORS: Record<string, string> = {
     OWNER: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
     MANAGER: 'bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/20',
-    CHEF: 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20',
-    LINE_COOK: 'bg-orange-400/10 text-orange-500 dark:text-orange-300 border-orange-400/20',
-    SERVER: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
-    CASHIER: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20',
+    GENERAL_MANAGER: 'bg-violet-600/10 text-violet-700 dark:text-violet-300 border-violet-600/20',
+    ASSISTANT_MANAGER: 'bg-violet-400/10 text-violet-500 dark:text-violet-200 border-violet-400/20',
+    FB_MANAGER: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20',
+    KITCHEN_MANAGER: 'bg-orange-600/10 text-orange-700 dark:text-orange-300 border-orange-600/20',
+    EXECUTIVE_CHEF: 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20',
+    SOUS_CHEF: 'bg-orange-400/10 text-orange-500 dark:text-orange-300 border-orange-400/20',
+    CHEF_DE_PARTIE: 'bg-orange-300/10 text-orange-400 dark:text-orange-200 border-orange-300/20',
+    LINE_COOK: 'bg-orange-200/10 text-orange-300 dark:text-orange-100 border-orange-200/20',
+    PREP_COOK: 'bg-slate-400/10 text-slate-500 dark:text-slate-300 border-slate-400/20',
+    DISHWASHER: 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20',
+    MAITRE_D: 'bg-cyan-600/10 text-cyan-700 dark:text-cyan-300 border-cyan-600/20',
     HOST: 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20',
-    HOSTESS: 'bg-cyan-400/10 text-cyan-500 dark:text-cyan-300 border-cyan-400/20',
-    BUSSER: 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20',
-    EXPEDITOR: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20',
+    BARTENDER: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
+    BUSSER: 'bg-slate-300/10 text-slate-400 dark:text-slate-200 border-slate-300/20',
+    RUNNER: 'bg-emerald-400/10 text-emerald-500 dark:text-emerald-300 border-emerald-400/20',
+    SENIOR_SERVER: 'bg-emerald-600/10 text-emerald-700 dark:text-emerald-300 border-emerald-600/20',
+    JUNIOR_SERVER: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
 };
 
 export const StaffListPage: React.FC = () => {
+    const navigate = useNavigate();
     const [roleFilter, setRoleFilter] = useState('');
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [editTarget, setEditTarget] = useState<StaffMemberResponse | null>(null);
@@ -46,9 +57,14 @@ export const StaffListPage: React.FC = () => {
                         Manage team members, roles, and access PINs.
                     </p>
                 </div>
-                <Button onClick={() => setIsCreateOpen(true)} className="gap-2 shrink-0">
-                    <UserPlus className="h-4 w-4" /> Add Staff
-                </Button>
+                <div className="flex gap-2 shrink-0">
+                    <Button variant="outline" onClick={() => navigate('/settings/roles')} className="gap-2">
+                        <ShieldCheck className="h-4 w-4" /> Manage Roles
+                    </Button>
+                    <Button onClick={() => setIsCreateOpen(true)} className="gap-2">
+                        <UserPlus className="h-4 w-4" /> Add Staff
+                    </Button>
+                </div>
             </div>
 
             {/* Role filter tabs */}

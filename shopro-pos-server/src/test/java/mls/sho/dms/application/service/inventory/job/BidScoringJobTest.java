@@ -2,13 +2,13 @@ package mls.sho.dms.application.service.inventory.job;
 
 import mls.sho.dms.application.service.inventory.AlertService;
 import mls.sho.dms.entity.inventory.*;
-import mls.sho.dms.entity.staff.StaffRole;
+import mls.sho.dms.entity.staff.Role;
 import mls.sho.dms.entity.staff.StaffMember;
 import mls.sho.dms.repository.inventory.PurchaseOrderLineRepository;
 import mls.sho.dms.repository.inventory.PurchaseOrderRepository;
 import mls.sho.dms.repository.inventory.RFQRepository;
 import mls.sho.dms.repository.inventory.VendorBidRepository;
-import mls.sho.dms.repository.staff.StaffMemberRepository;
+import mls.sho.dms.repository.staff.StaffRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -35,7 +35,7 @@ class BidScoringJobTest {
     @Mock private VendorBidRepository vendorBidRepository;
     @Mock private PurchaseOrderRepository purchaseOrderRepository;
     @Mock private PurchaseOrderLineRepository purchaseOrderLineRepository;
-    @Mock private StaffMemberRepository staffMemberRepository;
+    @Mock private StaffRepository staffMemberRepository;
     @Mock private AlertService alertService;
 
     @InjectMocks
@@ -59,8 +59,9 @@ class BidScoringJobTest {
         expiredRfq.setBidDeadline(Instant.now().minus(1, ChronoUnit.HOURS));
 
         admin = new StaffMember();
-        admin.setId(UUID.randomUUID());
-        admin.setRole(StaffRole.MANAGER);
+        mls.sho.dms.entity.staff.Role managerRole = new mls.sho.dms.entity.staff.Role();
+        managerRole.setName("MANAGER");
+        admin.setRole(managerRole);
     }
 
     @Test

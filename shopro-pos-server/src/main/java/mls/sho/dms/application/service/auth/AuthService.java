@@ -2,6 +2,8 @@ package mls.sho.dms.application.service.auth;
 
 import mls.sho.dms.application.dto.auth.PinLoginRequest;
 import mls.sho.dms.application.dto.auth.StaffSessionResponse;
+import mls.sho.dms.application.dto.auth.SupplierLoginRequest;
+import mls.sho.dms.application.dto.auth.SupplierSessionResponse;
 
 public interface AuthService {
     /**
@@ -12,4 +14,9 @@ public interface AuthService {
      * @throws TerminalLockedException if 5 consecutive failures have occurred.
      */
     StaffSessionResponse login(PinLoginRequest request, String remoteAddr);
+
+    /**
+     * Authenticates an external supplier using email/password.
+     */
+    SupplierSessionResponse supplierLogin(SupplierLoginRequest request, String remoteAddr);
 }

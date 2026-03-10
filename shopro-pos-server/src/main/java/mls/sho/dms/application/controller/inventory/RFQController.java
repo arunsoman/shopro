@@ -16,7 +16,6 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/inventory/rfqs")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*") // For development environment matching local dev setup
 public class RFQController {
 
     private final RFQService rfqService;
@@ -41,5 +40,10 @@ public class RFQController {
     @ResponseStatus(HttpStatus.ACCEPTED)
     public void submitBid(@PathVariable UUID id, @RequestBody @Valid VendorBidRequest request) {
         rfqService.submitBid(id, request);
+    }
+
+    @PostMapping("/{id}/cancel")
+    public void cancel(@PathVariable UUID id) {
+        rfqService.cancelRfq(id);
     }
 }

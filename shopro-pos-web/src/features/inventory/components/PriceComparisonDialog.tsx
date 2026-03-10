@@ -1,29 +1,29 @@
 import React from 'react';
 import { usePriceComparison } from '../hooks/useSuppliers';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { BarChart2, TrendingDown, Clock, Star, AlertCircle } from 'lucide-react';
+import { TrendingDown, Clock, Star, AlertCircle } from 'lucide-react';
 
 interface PriceComparisonDialogProps {
-    ingredientId: string;
-    ingredientName: string;
+    ingredientId?: string;
+    ingredientName?: string;
+    open?: boolean;
+    onOpenChange?: (open: boolean) => void;
 }
 
 export const PriceComparisonDialog: React.FC<PriceComparisonDialogProps> = ({
     ingredientId,
-    ingredientName
+    ingredientName,
+    open,
+    onOpenChange
 }) => {
-    const { data: comparison, isLoading } = usePriceComparison(ingredientId);
+    const { data: comparison, isLoading } = usePriceComparison(ingredientId || '');
+
+    if (!ingredientId) return null;
 
     return (
-        <Dialog>
-            <DialogTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                    <BarChart2 className="h-4 w-4" />
-                </Button>
-            </DialogTrigger>
+        <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="max-w-3xl">
                 <DialogHeader>
                     <div className="flex items-center gap-2">

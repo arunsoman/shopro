@@ -5,8 +5,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { CreateStaffSchema, STAFF_ROLES, type CreateStaffRequest } from '../schema/staffSchema';
-import { useCreateStaff } from '../hooks/useStaff';
+import { CreateStaffSchema, type CreateStaffRequest } from '../schema/staffSchema';
+import { useCreateStaff, useRoles } from '../hooks/useStaff';
 
 interface Props {
     isOpen: boolean;
@@ -15,6 +15,7 @@ interface Props {
 
 export const CreateStaffModal: React.FC<Props> = ({ isOpen, onClose }) => {
     const { mutate, isPending } = useCreateStaff();
+    const { data: roles } = useRoles();
     const { register, handleSubmit, reset, formState: { errors } } = useForm<CreateStaffRequest>({
         resolver: zodResolver(CreateStaffSchema),
     });
@@ -44,8 +45,8 @@ export const CreateStaffModal: React.FC<Props> = ({ isOpen, onClose }) => {
                             {...register('role')}
                         >
                             <option value="">Select a role…</option>
-                            {STAFF_ROLES.map(r => (
-                                <option key={r} value={r}>{r.replace('_', ' ')}</option>
+                            {roles?.map(r => (
+                                <option key={r.id} value={r.name}>{r.name.replace('_', ' ')}</option>
                             ))}
                         </select>
                         {errors.role && <p className="text-xs text-destructive">{errors.role.message}</p>}

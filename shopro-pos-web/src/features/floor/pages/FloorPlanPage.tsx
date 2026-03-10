@@ -153,10 +153,6 @@ export function FloorPlanPage() {
                 <TableActionModal
                     table={selectedTable}
                     onClose={() => setSelectedTable(null)}
-                    onSeatWalkIn={() => {
-                        // Walk-in logic — could open an inline form; for now close and let host use waitlist drag
-                        setSelectedTable(null);
-                    }}
                 />
             )}
         </div>

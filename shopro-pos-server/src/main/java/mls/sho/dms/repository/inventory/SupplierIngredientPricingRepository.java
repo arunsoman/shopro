@@ -12,4 +12,9 @@ public interface SupplierIngredientPricingRepository extends JpaRepository<Suppl
     List<SupplierIngredientPricing> findByIngredientId(UUID ingredientId);
     java.util.Optional<SupplierIngredientPricing> findBySupplierAndIngredient(mls.sho.dms.entity.inventory.Supplier supplier, mls.sho.dms.entity.inventory.RawIngredient ingredient);
     List<SupplierIngredientPricing> findAllByIngredient(mls.sho.dms.entity.inventory.RawIngredient ingredient);
+
+    @org.springframework.data.jpa.repository.Query("SELECT p.ingredient.id FROM SupplierIngredientPricing p WHERE p.supplier.id = :supplierId")
+    List<UUID> findByIngredientIdInSupplierCatalog(UUID supplierId);
+
+    List<SupplierIngredientPricing> findBySupplierId(UUID supplierId);
 }

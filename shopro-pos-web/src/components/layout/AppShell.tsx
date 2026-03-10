@@ -2,6 +2,8 @@ import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { Home, LogOut, ChevronRight, Sun, Moon } from 'lucide-react';
 import { useTheme } from '@/lib/theme/ThemeContext';
+import { NotificationBadge, NotificationTray } from '@/features/notifications/components/NotificationTray';
+import { useState } from 'react';
 import logo from '@/assets/logo.jpeg';
 
 /** Derives a readable breadcrumb label from the current URL path. */
@@ -43,6 +45,7 @@ export function AppShell() {
     const navigate = useNavigate();
     const breadcrumbs = useBreadcrumb();
     const { theme, toggleTheme } = useTheme();
+    const [isNotificationTrayOpen, setIsNotificationTrayOpen] = useState(false);
 
     const handleLogout = () => {
         logout();
@@ -98,6 +101,16 @@ export function AppShell() {
                         >
                             {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
                         </button>
+
+                        <div className="relative">
+                            <div onClick={() => setIsNotificationTrayOpen(!isNotificationTrayOpen)}>
+                                <NotificationBadge />
+                            </div>
+                            <NotificationTray
+                                open={isNotificationTrayOpen}
+                                onClose={() => setIsNotificationTrayOpen(false)}
+                            />
+                        </div>
 
                         <div className="hidden sm:block text-right leading-none border-l border-border pl-3 h-8 flex flex-col justify-center">
                             <p className="text-xs font-medium text-foreground">{session?.fullName}</p>

@@ -1,10 +1,11 @@
 package mls.sho.dms.application.service.inventory.impl;
 
 import mls.sho.dms.application.service.inventory.ReceivingService;
+import mls.sho.dms.application.service.core.NotificationEngine;
 import mls.sho.dms.entity.inventory.*;
 import mls.sho.dms.entity.staff.StaffMember;
 import mls.sho.dms.repository.inventory.*;
-import mls.sho.dms.repository.staff.StaffMemberRepository;
+import mls.sho.dms.repository.staff.StaffRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,25 +20,25 @@ public class ReceivingServiceImpl implements ReceivingService {
 
     private final PurchaseOrderRepository poRepository;
     private final PurchaseOrderLineRepository poLineRepository;
-    private final StaffMemberRepository staffRepository;
+    private final StaffRepository staffRepository;
     private final RawIngredientRepository ingredientRepository;
     private final InventoryTransactionRepository transactionRepository;
     private final GoodsReceiptNoteRepository grnRepository;
     private final GoodsReceiptNoteLineRepository grnLineRepository;
     private final VendorInvoiceRepository invoiceRepository;
     private final VendorInvoiceLineRepository invoiceLineRepository;
-    private final NotificationLogRepository notificationRepository;
+    private final NotificationEngine notificationEngine;
 
     public ReceivingServiceImpl(PurchaseOrderRepository poRepository,
                                 PurchaseOrderLineRepository poLineRepository,
-                                StaffMemberRepository staffRepository,
+                                StaffRepository staffRepository,
                                 RawIngredientRepository ingredientRepository,
                                 InventoryTransactionRepository transactionRepository,
                                 GoodsReceiptNoteRepository grnRepository,
                                 GoodsReceiptNoteLineRepository grnLineRepository,
                                 VendorInvoiceRepository invoiceRepository,
                                 VendorInvoiceLineRepository invoiceLineRepository,
-                                NotificationLogRepository notificationRepository) {
+                                NotificationEngine notificationEngine) {
         this.poRepository = poRepository;
         this.poLineRepository = poLineRepository;
         this.staffRepository = staffRepository;
@@ -47,7 +48,7 @@ public class ReceivingServiceImpl implements ReceivingService {
         this.grnLineRepository = grnLineRepository;
         this.invoiceRepository = invoiceRepository;
         this.invoiceLineRepository = invoiceLineRepository;
-        this.notificationRepository = notificationRepository;
+        this.notificationEngine = notificationEngine;
     }
 
     @Override
@@ -203,22 +204,22 @@ public class ReceivingServiceImpl implements ReceivingService {
     }
 
     private void logWarning(String message) {
-        NotificationLog warn = new NotificationLog();
-        warn.setRecipient("SYSTEM");
-        warn.setMessage(message);
-        warn.setType(NotificationLog.NotificationType.IN_APP);
-        warn.setStatus(NotificationLog.NotificationStatus.SENT);
-        warn.setSentAt(Instant.now());
-        notificationRepository.save(warn);
+        notificationEngine.sendNotification(
+            "SYSTEM_WARNING", 
+            "PO Receiving Warning", 
+            message, 
+            Map.of("module", "purchasing"), 
+            null
+        );
     }
     
     private void notifyManager(String message) {
-        NotificationLog notif = new NotificationLog();
-        notif.setRecipient("MANAGER_GROUP"); // Placeholder for actual manager routing
-        notif.setMessage(message);
-        notif.setType(NotificationLog.NotificationType.IN_APP);
-        notif.setStatus(NotificationLog.NotificationStatus.PENDING);
-        notif.setSentAt(Instant.now());
-        notificationRepository.save(notif);
+        notificationEngine.sendNotification(
+            "PO_APPROVAL", 
+            "PO Receiving Update", 
+            message, 
+            Map.of("module", "purchasing"), 
+            null
+        );
     }
 }

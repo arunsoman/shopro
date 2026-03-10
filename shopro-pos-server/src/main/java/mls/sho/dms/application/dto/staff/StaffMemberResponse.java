@@ -11,7 +11,8 @@ public record StaffMemberResponse(
         UUID id,
         String fullName,
         String role,
+        java.util.List<String> permissions,
         boolean active,
-        Instant lastLoginAt,
-        Instant createdAt
+        java.time.Instant lastLoginAt,
+        java.time.Instant createdAt
 ) {}

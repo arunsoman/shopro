@@ -5,7 +5,10 @@ import mls.sho.dms.application.dto.inventory.CreateSupplierRequest;
 import mls.sho.dms.application.dto.inventory.PriceComparisonResponse;
 import mls.sho.dms.application.dto.inventory.SupplierCatalogImportRequest;
 import mls.sho.dms.application.dto.inventory.SupplierResponse;
+import mls.sho.dms.application.dto.inventory.SupplierUserResponse;
+import mls.sho.dms.application.dto.inventory.InviteSupplierUserRequest;
 import mls.sho.dms.application.service.inventory.SupplierService;
+import mls.sho.dms.application.service.inventory.SupplierUserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,6 +21,7 @@ import java.util.UUID;
 public class SupplierController {
 
     private final SupplierService supplierService;
+    private final SupplierUserService supplierUserService;
 
     @PostMapping
     public ResponseEntity<SupplierResponse> create(@RequestBody CreateSupplierRequest request) {

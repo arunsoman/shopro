@@ -4,8 +4,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { STAFF_ROLES, UpdateRoleSchema, type UpdateRoleRequest, type StaffMemberResponse } from '../schema/staffSchema';
-import { useUpdateRole } from '../hooks/useStaff';
+import { UpdateRoleSchema, type UpdateRoleRequest, type StaffMemberResponse } from '../schema/staffSchema';
+import { useUpdateRole, useRoles } from '../hooks/useStaff';
 
 interface Props {
     member: StaffMemberResponse | null;
@@ -14,6 +14,7 @@ interface Props {
 
 export const EditRoleModal: React.FC<Props> = ({ member, onClose }) => {
     const { mutate, isPending } = useUpdateRole();
+    const { data: roles } = useRoles();
     const { register, handleSubmit } = useForm<UpdateRoleRequest>({
         resolver: zodResolver(UpdateRoleSchema),
         defaultValues: { role: member?.role },
@@ -37,8 +38,9 @@ export const EditRoleModal: React.FC<Props> = ({ member, onClose }) => {
                             className="w-full flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                             {...register('role')}
                         >
-                            {STAFF_ROLES.map(r => (
-                                <option key={r} value={r}>{r.replace('_', ' ')}</option>
+                            <option value="">Select a role...</option>
+                            {roles?.map(r => (
+                                <option key={r.id} value={r.name}>{r.name.replace('_', ' ')}</option>
                             ))}
                         </select>
                     </div>

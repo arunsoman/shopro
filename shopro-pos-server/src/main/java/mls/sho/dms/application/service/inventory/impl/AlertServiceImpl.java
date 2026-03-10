@@ -3,13 +3,19 @@ package mls.sho.dms.application.service.inventory.impl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import mls.sho.dms.application.service.inventory.AlertService;
-import mls.sho.dms.entity.inventory.NotificationLog;
+import mls.sho.dms.application.service.core.NotificationEngine;
+import mls.sho.dms.entity.notification.NotificationLog;
+import mls.sho.dms.entity.notification.NotificationStatus;
+import mls.sho.dms.entity.notification.NotificationType;
 import mls.sho.dms.entity.inventory.RawIngredient;
-import mls.sho.dms.repository.inventory.NotificationLogRepository;
+import mls.sho.dms.repository.notification.NotificationLogRepository;
+import mls.sho.dms.repository.notification.NotificationTypeRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.Map;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -18,16 +24,22 @@ import java.time.Instant;
 public class AlertServiceImpl implements AlertService {
 
     private final NotificationLogRepository notificationLogRepository;
+    private final NotificationTypeRepository notificationTypeRepository;
+    private final NotificationEngine notificationEngine;
 
     @Override
     public void sendSafetyStockAlert(RawIngredient ingredient) {
         String subject = "Safety Stock Alert: " + ingredient.getName();
-        String body = String.format("%s has dropped below Safety Stock (%.2f). Current stock: %.2f. Immediate action may be required.",
+        String body = String.format("%s has dropped below Safety Stock (%.2f). Current stock: %.2f.",
                 ingredient.getName(), ingredient.getSafetyLevel(), ingredient.getCurrentStock());
 
-        // In a real app we'd fetch the Inventory Manager and Head Chef emails
-        String to = "manager@shopro.pos, headchef@shopro.pos";
-        dispatchEmail(to, subject, body);
+        notificationEngine.sendNotification(
+                "SYSTEM_WARNING",
+                subject,
+                body,
+                Map.of("ingredientId", ingredient.getId().toString(), "category", "INVENTORY"),
+                "LOW_STOCK_" + ingredient.getId()
+        );
     }
 
     @Override
@@ -36,40 +48,42 @@ public class AlertServiceImpl implements AlertService {
         String body = String.format("CRITICAL: %s stock at %.2f. Immediate action required.",
                 ingredient.getName(), ingredient.getCurrentStock());
 
-        // In a real app we'd fetch the GM and Head Chef phones and emails
-        String toEmail = "gm@shopro.pos, headchef@shopro.pos";
-        String toPhone = "+15550199999, +15550188888";
-
-        dispatchSms(toPhone, body);
-        dispatchEmail(toEmail, subject, body);
+        notificationEngine.sendNotification(
+                "STOCK_CRITICAL",
+                subject,
+                body,
+                Map.of("ingredientId", ingredient.getId().toString(), "category", "INVENTORY"),
+                "CRITICAL_STOCK_" + ingredient.getId()
+        );
     }
 
     @Override
     public void dispatchEmail(String to, String subject, String body) {
-        log.info("Sending EMAIL to {}: [{}] {}", to, subject, body);
+        dispatchWithLog(to, subject, body, "EMAIL");
+    }
+
+    private void dispatchWithLog(String to, String subject, String body, String channel) {
+        log.info("Sending {} to {}: [{}] {}", channel, to, subject, body);
         
         NotificationLog nLog = new NotificationLog();
-        nLog.setType(NotificationLog.NotificationType.EMAIL);
-        nLog.setRecipient(to);
-        nLog.setSubject(subject);
-        nLog.setMessage(body);
-        nLog.setStatus(NotificationLog.NotificationStatus.SENT);
+        nLog.setDispatchId(UUID.randomUUID());
+        nLog.setRecipientIdentifier(to);
+        nLog.setPayload(Map.of("type", channel, "subject", subject != null ? subject : "", "body", body));
+        nLog.setStatus(NotificationStatus.SENT);
         nLog.setSentAt(Instant.now());
+        
+        // Attempt to associate with a type if known from context (simplistic for now)
+        String typeCode = subject != null && subject.contains("CRITICAL") ? "STOCK_CRITICAL" : 
+                         (subject != null && subject.contains("Approval") ? "PO_APPROVAL" : "SYSTEM_WARNING");
+        
+        notificationTypeRepository.findByCode(typeCode).ifPresent(nLog::setNotificationType);
         
         notificationLogRepository.save(nLog);
     }
 
     @Override
     public void dispatchSms(String to, String body) {
-        log.info("Sending SMS to {}: {}", to, body);
-        
-        NotificationLog nLog = new NotificationLog();
-        nLog.setType(NotificationLog.NotificationType.SMS);
-        nLog.setRecipient(to);
-        nLog.setMessage(body);
-        nLog.setStatus(NotificationLog.NotificationStatus.SENT);
-        nLog.setSentAt(Instant.now());
-        notificationLogRepository.save(nLog);
+        dispatchWithLog(to, null, body, "SMS");
     }
 
     @Override

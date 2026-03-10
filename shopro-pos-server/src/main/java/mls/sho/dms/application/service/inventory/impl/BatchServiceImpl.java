@@ -6,7 +6,7 @@ import mls.sho.dms.application.service.inventory.RecipeService;
 import mls.sho.dms.entity.inventory.*;
 import mls.sho.dms.entity.staff.StaffMember;
 import mls.sho.dms.repository.inventory.*;
-import mls.sho.dms.repository.staff.StaffMemberRepository;
+import mls.sho.dms.repository.staff.StaffRepository;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,7 +23,7 @@ public class BatchServiceImpl implements BatchService {
 
     private final SubRecipeRepository subRecipeRepository;
     private final BatchRecordRepository batchRepository;
-    private final StaffMemberRepository staffRepository;
+    private final StaffRepository staffRepository;
     private final RecipeService recipeService;
     private final InventoryTransactionRepository transactionRepository;
 

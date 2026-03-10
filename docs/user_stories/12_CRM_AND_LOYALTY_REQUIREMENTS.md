@@ -1,59 +1,114 @@
 # Growth & CRM (Loyalty) Requirements
 
 ## 1. Overview
-This document captures unambiguous User Stories for the Customer Relationship Management (CRM) and Loyalty module. This module enables the restaurant to build a customer database, track historical preferences, and incentivize repeat business through points-based loyalty and targeted promotions.
+This document captures high-fidelity User Stories for the Customer Relationship Management (CRM) and Loyalty module, augmented with industry-leading features from top-tier platforms (Punchh, Thanx, SevenRooms). The goal is to move beyond simple point-based systems toward zero-friction identity, predictive marketing, and gamified guest engagement.
 
 ## 2. User Roles
-*   **Server/Cashier:** Looks up customers, applies loyalty points, and redeems rewards at checkout.
-*   **Customer/Guest:** Earns points on purchases and receives promotional offers via SMS or Email.
-*   **Manager/Owner:** Configures loyalty rules, views customer aggregates, and launches marketing campaigns.
+*   **Server/Cashier:** Identifies guests, manages rewards, and provides personalized service based on guest ledgers.
+*   **Guest:** Participates in loyalty programs, earns/redeems rewards via app, QR, or card-linking.
+*   **Manager:** Configures membership tiers, launches automated AI campaigns, and handles service recovery.
+*   **System (AI Engine):** Segment guests, predicts churn, and automates marketing triggers.
 
 ## 3. User Stories
 
-### Epic 1: Customer Profile Management
-**Goal:** Build a robust database of diner preferences and contact information.
+### Epic 1: Zero-Friction Guest Identity & Profiling
+**Goal:** Eliminate registration friction while building a 360-degree guest ledger.
 
-*   **US-1.1: Creating a Customer Profile**
-    *   **As a** Cashier, **I want to** create a new customer profile by entering a phone number, name, and email address at the POS, **so that** the customer can begin earning loyalty points immediately.
-    *   *Acceptance Criteria:* The system must prompt the Cashier to search by phone number first. If no result is found, a "Create Profile" modal appears. Phone Number is the only strictly required field (for SMS routing).
-    *   **Entities:** `CustomerProfile`, `AuditLog`
-    *   **Tech Stack:** React + shadcn + Tailwind (Admin) / Flutter (POS)
+**[US-1.1]: Omni-Channel Profile Search & Lookup**
+- **As a** Cashier,
+- **I want to** search for a guest by phone number, name, or QR code scan from the POS,
+- **so that** I can accurately link their order to their profile without delaying the line.
 
-*   **US-1.2: Order History & Preferences Tracking**
-    *   **As a** Server, **I want to** view a customer's profile when they are attached to a ticket, **so that** I can see their past orders, total lifetime spend, and custom notes (e.g., "Allergic to shellfish", "Prefers window seating").
-    *   *Acceptance Criteria:* Attaching a customer to a ticket displays a "Profile Summary" icon. Tapping it reveals their last 5 orders, lifetime loyalty tier (if applicable), and any pinned allergy/preference notes.
-    *   **Entities:** `CustomerProfile`, `OrderTicket`, `LoyaltyTier`
-    *   **Tech Stack:** Flutter
+*Acceptance Criteria:*
+- ✅ **Happy Path:** Searching "555-0199" returns "John Doe". Attaching profile displays "VIP" tag and "Allergic: Nuts" note within 500ms.
+- ✅ **Edge Case:** Multiple profiles for one name; system must display phone digits for disambiguation.
+- ✅ **Failure/Error:** If no profile is found, the "Quick Create" modal must require ONLY Phone Number (name/email optional) to maximize enrollment.
+- ✅ **Permission Gate:** N/A
+- ✅ **Cross-Module Impact:** Attaching a guest must update the Floor Plan table icon to show "Loyal Guest" status.
 
-### Epic 2: Loyalty Rewards Program
-**Goal:** Incentivize repeat visits by automating point accumulation and redemption.
+**[US-1.2]: Card-Linked Loyalty (Automatic Recognition)**
+- **As a** Guest,
+- **I want to** be automatically identified and credited points when I pay with a previously linked credit card,
+- **so that** I don't have to provide my phone number or scan an app every time I visit.
 
-*   **US-2.1: Earning Points on Purchases**
-    *   **As a** Customer, **I want to** automatically earn loyalty points based on the subtotal of my bill when my profile is linked to the order, **so that** I am rewarded for my spending.
-    *   *Acceptance Criteria:* Points are calculated on the Net Subtotal (pre-tax, post-discount). The conversion rate (e.g., 1 point per $1 spent) must be configurable by a Manager. Points must be credited to the profile within 1 minute of full payment realization.
-    *   **Entities:** `CustomerProfile`, `LoyaltyTransaction`, `Payment`
-    *   **Tech Stack:** Flutter (POS) / Backend Service
+*Acceptance Criteria:*
+- ✅ **Happy Path:** System uses an encrypted card token (via payment gateway) to lookup the guest profile. If match exists, "John Doe recognized" appears on POS screen.
+- ✅ **Edge Case:** Expired card; system should prompt to link the new card to the existing account during checkout.
+- ✅ **Failure/Error:** Payment gateway downtime; POS must fallback to manual phone number lookup.
+- ✅ **Permission Gate:** N/A (Encryption handled by Gateway).
+- ✅ **Cross-Module Impact:** Integrates with `Payment` module; loyalty logic must fire upon `PAYMENT_AUTHORIZED`.
 
-*   **US-2.2: Redeeming Points at Checkout**
-    *   **As a** Cashier, **I want to** apply a customer's available loyalty points as a discount to their current bill, **so that** they can use their earned rewards.
-    *   *Acceptance Criteria:* The checkout screen must display the customer's available point balance and its equivalent fiat value (e.g., "500 points = $5.00 off"). Applying the points must generate a distinct "Loyalty Redemption" negative line item on the digital and printed receipt.
-    *   **Entities:** `CustomerProfile`, `LoyaltyTransaction`, `OrderTicket`, `Payment`
-    *   **Tech Stack:** Flutter
+---
 
-### Epic 3: Promotional Campaigns
-**Goal:** Empower owners to drive traffic during slow periods using direct communication.
+### Epic 2: Intelligent Loyalty Tiers & Gamification
+**Goal:** Drive higher LTV (Lifetime Value) through tiered status and behavioral rewards.
 
-*   **US-3.1: Targeted SMS/Email Offers**
-    *   **As a** Manager, **I want to** send a promotional SMS to a filtered list of customers (e.g., "Customers who haven't visited in 30 days"), **so that** I can drive traffic on slow nights.
-    *   *Acceptance Criteria:* The CRM dashboard must provide filters for "Last Visit Date", "Lifetime Spend", and "Favorite Item". Generating the campaign sends the message via an integrated SMS gateway. The system must track open/redemption rates if a unique promo code is included.
-    *   **Entities:** `CustomerProfile`, `MarketingCampaign`, `CampaignMessageLog`
-    *   **Tech Stack:** React + shadcn + Tailwind
+**[US-2.1]: Multi-Tier Membership Infrastructure**
+- **As a** Manager,
+- **I want to** define membership tiers (e.g., Bronze, Silver, Gold) with different point multipliers and exclusive perks,
+- **so that** high-spending guests are incentivized to visit more frequently.
 
-### Epic 4: Guest Sentiment & Feedback
-**Goal:** Capture and analyze guest satisfaction to improve service.
+*Acceptance Criteria:*
+- ✅ **Happy Path:** Gold members earn 1.5x points per $1. System automatically upgrades guests when rolling 12-month spend exceeds a threshold.
+- ✅ **Edge Case:** Tier demotion; guests falling below spend must receive a "Maintenance Warning" SMS 30 days before tier drop.
+- ✅ **Failure/Error:** Manager enters overlapping spend thresholds; system must block save with a validation error.
+- ✅ **Permission Gate:** Manager PIN required to edit tier configurations.
+- ✅ **Cross-Module Impact:** Pricing engine must detect guest tier to apply "Member-Only" discounts automatically.
 
-*   **US-4.1: Post-Meal Feedback Collection**
-    *   **As an** Owner, **I want to** send an automated SMS/Email after a guest pays their bill asking for a 1-5 star rating and comment, **so that** I can track service quality.
-    *   *Acceptance Criteria:* SMS sent 30 minutes after `PAID` state. Feedback link leads to a simple 1-question survey. Results appear in Manager dashboard.
-    *   **Entities:** `GuestFeedback`, `CustomerProfile`, `OrderTicket`
-    *   **Tech Stack:** React + Backend
+**[US-2.2]: Gamified Engagement Challenges (Streaks/Badges)**
+- **As a** System (AI Engine),
+- **I want to** issue "Visit Streaks" or "Item Badges" (e.g., "The Burger Hunter" - order 5 different burgers),
+- **so that** guests are psychologically incentivized to explore the menu and return.
+
+*Acceptance Criteria:*
+- ✅ **Happy Path:** Completing a streak awards a one-time "Bonus Reward" (e.g., 500 bonus points).
+- ✅ **Edge Case:** Multiple concurrent streaks; guest sees progress bars in the mobile guest app.
+- ✅ **Failure/Error:** Redundant streak logic; system must prevent a single purchase from triggering more than 2 distinct challenge completions.
+- ✅ **Permission Gate:** N/A
+- ✅ **Cross-Module Impact:** Requires real-time menu item classification to track specific categories (Burgers, Drinks).
+
+---
+
+### Epic 3: Predictive Marketing & Service Recovery
+**Goal:** Automate retention and prevent guest churn using data.
+
+**[US-3.1]: AI-Driven Churn Prediction (Win-Back Campaigns)**
+- **As a** Manager,
+- **I want to** automatically send a "We Miss You" SMS with a 20% discount to guests who haven't visited in 45 days,
+- **so that** I can recover potentially lost revenue.
+
+*Acceptance Criteria:*
+- ✅ **Happy Path:** System daily scans for "at-risk" profiles. Re-engagement rate must be tracked (Did they visit within 7 days of SMS?).
+- ✅ **Edge Case:** Holiday closures; AI must offset "last visit" calculation by local holiday dates.
+- ✅ **Failure/Error:** Opt-out handling; system must NEVER send SMS to profiles marked `unsubscribed`.
+- ✅ **Permission Gate:** Manager must define the SMS template and discount value once; automation thereafter is "System" role.
+- ✅ **Cross-Module Impact:** Integrates with `Marketing` module and `POS` for coupon redemption tracking.
+
+**[US-3.2]: Real-Time Service Recovery (Automated Apology)**
+- **As an** Owner,
+- **I want to** trigger an automated apology and a "Dessert on Us" voucher if a guest submits a feedback rating < 2 stars,
+- **so that** I can mitigate negative reviews before they reach social media.
+
+*Acceptance Criteria:*
+- ✅ **Happy Path:** Negative rating fires SMS/Email within 60 seconds of feedback submission.
+- ✅ **Edge Case:** Repeat negative feedback; system flags for manual Manager phone call instead of another automated coupon.
+- ✅ **Failure/Error:** Rating submission without contact info; system ignores trigger (can't send coupon).
+- ✅ **Permission Gate:** N/A (Automated).
+- ✅ **Cross-Module Impact:** Requires integration with Epic 4 (Feedback).
+
+---
+
+### Epic 4: Reputation & Behavioral Insights
+**Goal:** Close the loop between guest satisfaction and operational performance.
+
+**[US-4.1]: Automated NPS & Post-Meal Sentiment Loop**
+- **As a** Guest,
+- **I want to** receive a friction-less 1-click rating request after my meal,
+- **so that** I can share my experience without filling out long forms.
+
+*Acceptance Criteria:*
+- ✅ **Happy Path:** SMS link opens a mobile-optimized page with 5 stars and one text field.
+- ✅ **Edge Case:** Takeout vs. Dine-in; system varies the delay (30 min for dine-in, 60 min for takeout).
+- ✅ **Failure/Error:** Double submission; system must link feedback to `OrderTicket_UUID` to prevent spamming.
+- ✅ **Permission Gate:** N/A
+- ✅ **Cross-Module Impact:** Aggregated scores must be displayed on the Analytics "Staff Performance" dashboard.

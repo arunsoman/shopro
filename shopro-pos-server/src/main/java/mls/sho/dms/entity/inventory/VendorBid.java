@@ -45,6 +45,10 @@ public class VendorBid extends BaseEntity {
     @Column(name = "status", nullable = false, length = 20)
     private VendorBidStatus status = VendorBidStatus.SUBMITTED;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "submitted_by_id")
+    private SupplierUser submittedBy;
+
     public RFQ getRfq() { return rfq; }
     public void setRfq(RFQ rfq) { this.rfq = rfq; }
     public Supplier getSupplier() { return supplier; }
@@ -61,4 +65,6 @@ public class VendorBid extends BaseEntity {
     public void setNotes(String notes) { this.notes = notes; }
     public VendorBidStatus getStatus() { return status; }
     public void setStatus(VendorBidStatus status) { this.status = status; }
+    public SupplierUser getSubmittedBy() { return submittedBy; }
+    public void setSubmittedBy(SupplierUser submittedBy) { this.submittedBy = submittedBy; }
 }

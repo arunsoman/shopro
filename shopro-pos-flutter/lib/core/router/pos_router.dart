@@ -15,6 +15,7 @@ import '../../features/kds/presentation/screens/kds_station_selection_screen.dar
 import '../../features/kds/presentation/screens/kds_queue_screen.dart';
 import '../../features/kds/presentation/providers/kds_provider.dart';
 import '../../features/kds/domain/models/kds_models.dart';
+import '../../features/notifications/presentation/screens/notification_routing_screen.dart';
 import '../presentation/widgets/main_navigation_layout.dart';
 import 'package:flutter/material.dart';
 
@@ -154,6 +155,13 @@ final routerProvider = Provider<GoRouter>((ref) {
 
           return MainNavigationLayout(location: state.uri.path, child: queue);
         },
+      ),
+      GoRoute(
+        path: '/notification-routing',
+        builder: (context, state) => MainNavigationLayout(
+          location: state.uri.path,
+          child: const NotificationRoutingScreen(),
+        ),
       ),
     ],
   );

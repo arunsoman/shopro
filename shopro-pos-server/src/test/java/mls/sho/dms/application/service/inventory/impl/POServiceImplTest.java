@@ -5,9 +5,9 @@ import mls.sho.dms.entity.inventory.PurchaseOrder;
 import mls.sho.dms.entity.inventory.PurchaseOrderStatus;
 import mls.sho.dms.entity.inventory.Supplier;
 import mls.sho.dms.entity.staff.StaffMember;
-import mls.sho.dms.entity.staff.StaffRole;
+import mls.sho.dms.entity.staff.Role;
 import mls.sho.dms.repository.inventory.PurchaseOrderRepository;
-import mls.sho.dms.repository.staff.StaffMemberRepository;
+import mls.sho.dms.repository.staff.StaffRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,7 +27,7 @@ import static org.mockito.Mockito.*;
 class POServiceImplTest {
 
     @Mock private PurchaseOrderRepository poRepository;
-    @Mock private StaffMemberRepository staffRepository;
+    @Mock private StaffRepository staffRepository;
     @Mock private AlertService alertService;
 
     @InjectMocks
@@ -63,12 +63,16 @@ class POServiceImplTest {
         managerPo.setSupplier(mockSupplier);
         managerPo.setGeneratedBy(generatedBy);
 
+        mls.sho.dms.entity.staff.Role managerRole = new mls.sho.dms.entity.staff.Role();
+        managerRole.setName("MANAGER");
         manager = new StaffMember();
-        manager.setRole(StaffRole.MANAGER);
+        manager.setRole(managerRole);
         manager.setFullName("Manager Bob");
 
+        mls.sho.dms.entity.staff.Role ownerRole = new mls.sho.dms.entity.staff.Role();
+        ownerRole.setName("OWNER");
         owner = new StaffMember();
-        owner.setRole(StaffRole.OWNER);
+        owner.setRole(ownerRole);
         owner.setFullName("Owner Alice");
     }
 

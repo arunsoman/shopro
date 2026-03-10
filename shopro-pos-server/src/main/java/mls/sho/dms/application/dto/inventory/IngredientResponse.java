@@ -19,5 +19,8 @@ public record IngredientResponse(
     boolean autoReplenish,
     java.util.Set<String> allergens,
     UUID supplierId,
-    String supplierName
+    String supplierName,
+    UUID activeOrderId,
+    String activeOrderType,
+    String activeOrderStatus
 ) {}

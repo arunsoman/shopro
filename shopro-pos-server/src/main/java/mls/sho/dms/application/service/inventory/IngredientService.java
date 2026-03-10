@@ -1,6 +1,7 @@
 package mls.sho.dms.application.service.inventory;
 
 import mls.sho.dms.application.dto.inventory.CreateIngredientRequest;
+import mls.sho.dms.application.dto.inventory.UpdateIngredientRequest;
 import mls.sho.dms.application.dto.inventory.IngredientResponse;
 import mls.sho.dms.application.dto.inventory.LogWasteRequest;
 import mls.sho.dms.entity.inventory.InventoryTransactionType;
@@ -11,6 +12,7 @@ import java.util.UUID;
 
 public interface IngredientService {
     IngredientResponse create(CreateIngredientRequest request);
+    IngredientResponse update(UUID id, UpdateIngredientRequest request);
     IngredientResponse findById(UUID id);
     List<IngredientResponse> findAll();
     List<IngredientResponse> findLowStock();

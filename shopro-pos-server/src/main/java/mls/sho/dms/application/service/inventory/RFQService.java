@@ -35,4 +35,9 @@ public interface RFQService {
      * Submits a bid against an RFQ.
      */
     void submitBid(UUID rfqId, VendorBidRequest request);
+
+    /**
+     * Cancels an RFQ if it is in a revokable state.
+     */
+    void cancelRfq(UUID rfqId);
 }

@@ -1,5 +1,6 @@
 package mls.sho.dms.application.service.inventory;
 
+import mls.sho.dms.application.dto.inventory.CreatePurchaseOrderRequest;
 import mls.sho.dms.application.dto.inventory.PurchaseOrderResponse;
 import mls.sho.dms.entity.inventory.PurchaseOrder;
 
@@ -24,4 +25,14 @@ public interface POService {
      * Rejects a Pending PO.
      */
     PurchaseOrder rejectOrder(UUID poId, UUID approverId, String reason);
+
+    /**
+     * Creates a manual Purchase Order.
+     */
+    PurchaseOrder createOrder(CreatePurchaseOrderRequest request, UUID generatedById);
+
+    /**
+     * Cancels a Purchase Order if it is in a revokable state.
+     */
+    void cancelOrder(UUID poId);
 }

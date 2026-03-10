@@ -1,15 +1,20 @@
 package mls.sho.dms.repository.kds;
 
+import mls.sho.dms.entity.staff.Role;
+import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import mls.sho.dms.entity.staff.StaffMember;
+import mls.sho.dms.repository.staff.StaffRepository;
+import mls.sho.dms.entity.order.OrderType;
 import mls.sho.dms.entity.kds.KDSStation;
 import mls.sho.dms.entity.kds.KDSStationType;
 import mls.sho.dms.entity.kds.KDSTicket;
 import mls.sho.dms.entity.kds.KDSTicketStatus;
 import mls.sho.dms.entity.order.OrderTicket;
-import mls.sho.dms.entity.order.OrderType;
 import mls.sho.dms.repository.order.OrderTicketRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 
 import java.time.Instant;
 import java.util.Arrays;
@@ -18,7 +23,11 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class KDSTicketRepositoryTest {
+
+    @Autowired
+    private TestEntityManager entityManager;
 
     @Autowired
     private KDSTicketRepository kdsTicketRepository;
@@ -29,9 +38,22 @@ class KDSTicketRepositoryTest {
     @Autowired
     private OrderTicketRepository orderTicketRepository;
 
+    @Autowired
+    private StaffRepository staffRepository;
+
     @Test
     void shouldFindActiveTicketsForStationOrderedByFiredAt() {
         // Given
+        Role role = new Role();
+        role.setName("SERVER_" + java.util.UUID.randomUUID().toString());
+        role = entityManager.persistAndFlush(role);
+
+        StaffMember server = new StaffMember();
+        server.setFullName("Test Server");
+        server.setPinHash("1234");
+        server.setRole(role);
+        server = staffRepository.save(server);
+
         KDSStation station = new KDSStation();
         station.setName("Test Station");
         station.setStationType(KDSStationType.PREP);
@@ -39,6 +61,7 @@ class KDSTicketRepositoryTest {
 
         OrderTicket orderTicket = new OrderTicket();
         orderTicket.setOrderType(OrderType.DINE_IN);
+        orderTicket.setServer(server);
         orderTicket = orderTicketRepository.save(orderTicket);
 
         KDSTicket ticket1 = new KDSTicket();

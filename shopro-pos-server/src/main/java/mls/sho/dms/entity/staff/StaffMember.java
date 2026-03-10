@@ -17,7 +17,7 @@ import mls.sho.dms.entity.core.BaseEntity;
     name = "staff_member",
     indexes = {
         @Index(name = "idx_staff_active", columnList = "active"),
-        @Index(name = "idx_staff_role",   columnList = "role")
+        @Index(name = "idx_staff_role_id", columnList = "role_id")
     }
 )
 public class StaffMember extends BaseEntity {
@@ -32,9 +32,12 @@ public class StaffMember extends BaseEntity {
     @Column(name = "pin_hash", nullable = false, length = 255)
     private String pinHash;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "role", nullable = false, length = 20)
-    private StaffRole role;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "role_id")
+    private Role role;
+
+    @OneToMany(mappedBy = "staffMember", cascade = CascadeType.ALL, orphanRemoval = true)
+    private java.util.Set<DeviceBinding> deviceBindings = new java.util.HashSet<>();
 
     @Column(name = "active", nullable = false)
     private boolean active = true;
@@ -49,8 +52,11 @@ public class StaffMember extends BaseEntity {
     public String getPinHash() { return pinHash; }
     public void setPinHash(String pinHash) { this.pinHash = pinHash; }
 
-    public StaffRole getRole() { return role; }
-    public void setRole(StaffRole role) { this.role = role; }
+    public Role getRole() { return role; }
+    public void setRole(Role role) { this.role = role; }
+
+    public java.util.Set<DeviceBinding> getDeviceBindings() { return deviceBindings; }
+    public void setDeviceBindings(java.util.Set<DeviceBinding> deviceBindings) { this.deviceBindings = deviceBindings; }
 
     public boolean isActive() { return active; }
     public void setActive(boolean active) { this.active = active; }

@@ -5,7 +5,7 @@ const NAV_ITEMS = [
     { label: "Floor Plan Layout", icon: Map, href: "/settings/floor-layout" },
     { label: "Tableside Ordering", icon: Smartphone, href: "/settings/tableside" },
     { label: "Kitchen Display (KDS)", icon: Monitor, href: "/settings/kds" },
-    { label: "Staff & Permissions", icon: Users, href: "/settings/staff" },
+    { label: "Roles and permission", icon: Users, href: "/settings/staff" },
     { label: "Notifications", icon: Bell, href: "/settings/notifications" },
     { label: "Payments", icon: CreditCard, href: "/settings/payments" },
     { label: "Security", icon: ShieldCheck, href: "/settings/security" },

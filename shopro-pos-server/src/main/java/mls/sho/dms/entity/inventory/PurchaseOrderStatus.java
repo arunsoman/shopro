@@ -11,6 +11,9 @@ public enum PurchaseOrderStatus {
     RECEIVED,
     DISCREPANCY_REVIEW,
     PARTIALLY_FULFILLED,
+    GRN_FLAGGED,
+    INVOICE_MATCHED,
+    PAID,
     CLOSED,
     CANCELLED
 }

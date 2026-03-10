@@ -401,6 +401,63 @@ Each story includes its original acceptance criteria, a detailed end-to-end flow
 
 ---
 
+### US-2.4 — Inventory List Filtering & Search
+
+**Role:** Manager/Chef
+**Goal:** Quickly locate specific ingredients or identify all items at high-risk stock levels (Critical, Safety, Reorder) to prioritize procurement and prep.
+
+#### Flow
+1. Manager/Chef navigates to **Inventory → Stock Overview**.
+2. A **Search Bar** and **Quick Filter Chips** are visible above the inventory table.
+3. Manager types in the search bar (e.g., "Beef"). The list filters in real-time to show only matching ingredients.
+4. Manager clicks the **"Critical"** filter chip.
+   - The table updates to show only ingredients where `current_stock <= critical_level`.
+   - The chip displays a count of matching items (e.g., "Critical (3)").
+5. Manager clicks the **"Reorder"** filter chip.
+   - The table updates to show ingredients where `current_stock <= reorder_point`.
+6. Manager clicks **"All"** to reset the view.
+
+#### Acceptance Criteria
+- [ ] Real-time search by ingredient name.
+- [ ] Quick filter buttons for Critical, Reorder, and Safety levels.
+- [ ] Filter chips display dynamic counts of items in each category.
+- [ ] "No results" message is shown if search/filter returns nothing.
+
+**Entities:** `RawIngredient`
+**Tech Stack:** React + shadcn + Tailwind
+
+---
+
+### US-2.5 — Manual Procurement Workflow
+
+**Role:** Manager/Chef
+**Goal:** Manually initiate a reorder for an ingredient when auto-replenish is disabled, choosing between direct ordering, price comparison, or open bidding.
+
+#### Flow
+1. Manager identifies a low-stock item in the **Inventory List**.
+2. Manager clicks the **"Reorder"** action on the ingredient row.
+3. A **Manual Procurement Panel** opens, presenting three options:
+   - **Direct Order**: Reorder immediately from the default supplier at the last known price.
+   - **Price Comparison**: View current prices from all linked suppliers and select the best value before drafting a PO.
+   - **Place for Bidding (RFQ)**: Open a Request for Quote to all registered suppliers for this ingredient.
+4. Manager selects a strategy and completes the specific flow:
+   - For **Direct/Comparison**: A Draft PO is created for review.
+   - For **Bidding**: A new RFQ is published to the Supplier Portal.
+5. Manager confirms the action.
+6. System updates the ingredient status and generates the necessary `AuditLog` entries.
+
+#### Acceptance Criteria
+- [ ] Reorder trigger is easily accessible from the inventory list.
+- [ ] Workflow supports three distinct procurement strategies: Direct, Comparison, and Bidding.
+- [ ] System pre-fills recommended quantities based on `Max Level - Current Stock`.
+- [ ] Full audit trail created for the chosen procurement path.
+
+**Constants/Enums:** `ProcurementStrategy { DIRECT, COMPARISON, BIDDING }`
+**Entities:** `RawIngredient`, `PurchaseOrder`, `RFQ`
+**Tech Stack:** React + shadcn + Tailwind
+
+---
+
 ## Epic 3: Physical Counting & Reconciliation
 
 **Goal:** Allow staff to correct discrepancies between the digital system and physical reality.
@@ -657,7 +714,10 @@ Each story includes its original acceptance criteria, a detailed end-to-end flow
 4. The system validates required fields and uniqueness of Company Name.
 5. If a supplier with the same **Company Name** already exists, an inline error appears: _"A supplier with this name already exists."_
 6. On success, the `Supplier` record is created and the supplier appears in the master supplier list and in all ingredient Supplier dropdowns (US-1.1).
-7. The `AuditLog` records: Manager ID, timestamp, "Supplier Created", company name.
+7. **Supplier User Invitation (Registry & Onboarding):** Managers can invite specific contacts associated with the supplier to create `SupplierUser` accounts.
+   - Fields: Full Name, Email, Phone Number, Role (Admin, Bidder, Planner).
+   - System dispatches invitation with temporary credentials.
+8. The `AuditLog` records: Manager ID, timestamp, "Supplier Created", company name.
 
 #### Edge Cases & System Behaviour
 
@@ -1074,7 +1134,7 @@ Each story includes its original acceptance criteria, a detailed end-to-end flow
 2. The system automatically:
    - Creates an `RFQ` record with: ingredient ID, required quantity (Par Level − Current Stock), desired delivery date (today + Supplier default lead time), bid deadline (configurable, e.g., 2 hours from now).
    - Identifies all `Supplier` records linked to this ingredient via `SupplierIngredientPricing`.
-   - Sends each eligible supplier an **RFQ Email / SMS**: _"Request for Quotation: [Ingredient Name]. Required quantity: [X kg]. Please submit your bid by [deadline]."_ The message includes a link to the Vendor Portal.
+   - Sends each eligible supplier an **RFQ Notification (Email/SMS)**: _"New RFQ available for [Ingredient Name]. Please log in to the Supplier Portal to submit your bid."_ The message includes a link to `/supplier/login`.
 3. The `RFQ` record transitions to status `OPEN`.
 4. The Manager receives an in-app notification: _"RFQ #[ID] generated for [Ingredient]. Awaiting [N] vendor bids."_
 5. Vendors submit their bids via the Vendor Portal (US-13.2).
@@ -1106,8 +1166,12 @@ Each story includes its original acceptance criteria, a detailed end-to-end flow
 #### Flow
 
 1. Vendor receives the RFQ Email/SMS and clicks the **Vendor Portal link**.
-2. The Vendor Portal opens (no login required — secured via a unique token in the URL tied to the RFQ and supplier).
-3. The portal displays the RFQ details: ingredient name, required quantity, delivery location, bid deadline countdown.
+2. The Vendor Portal requires **authenticated login** using the supplier's email and password.
+3. Upon login, the vendor is presented with a **Supplier Dashboard** showing:
+   - **Active RFQs**: Count and direct links to open bids.
+   - **Performance Stats**: 30-day win rate and "Won Bids" count.
+   - **Stock Visibility Alerts**: Ingredients they supply that are currently below par.
+4. The vendor navigates to the RFQ list to view specific details: ingredient name, required quantity, delivery location, bid deadline countdown.
 4. Vendor fills in their bid:
    - **Unit Price** (price per base unit, e.g., $2.50 / kg).
    - **Quantity Available** (may be less than requested if supply is limited).
@@ -1256,6 +1320,54 @@ Each story includes its original acceptance criteria, a detailed end-to-end flow
 
 **Entities:** `VendorBid`, `RFQ`, `PurchaseOrder`, `Supplier`
 **Tech Stack:** Backend Service
+
+---
+
+### US-13.7 — Proactive Inventory Visibility for Suppliers
+
+**Role:** Vendor (External)
+**Goal:** View real-time stock levels of the ingredients I supply so I can anticipate the restaurant's needs and prepare for upcoming orders.
+
+#### Flow
+
+1. Vendor logs into the **Supplier Portal**.
+2. Vendor navigates to the **Inventory Visibility** tab.
+3. The system displays a table of all `RawIngredient` records linked to this `Supplier`:
+   - **Current Stock Level** (in the restaurant).
+   - **Par Level**.
+   - **Status Indicator**: Highlights items in **Orange** if `current_stock < par_level`.
+4. The Vendor can see a visual progress bar of the "Stock Health" for each item.
+
+#### Acceptance Criteria
+
+- [ ] Vendor can only see ingredients they are registered to supply.
+- [ ] Stock levels are updated in real time from the main inventory.
+- [ ] Items below par are visually prioritized.
+
+---
+
+### US-13.8 — Proactive Price Proposals (Vendor-Push)
+
+**Role:** Vendor (External)
+**Goal:** Submit a proactive price quote for an ingredient without waiting for an RFQ, helping the restaurant replenish stock quickly at a competitive price.
+
+#### Flow
+
+1. Vendor identifies a low-stock item in their **Inventory Visibility** tab (US-13.7).
+2. Vendor taps **"Propose Instant Restock"** next to the ingredient.
+3. A proposal modal opens, pre-filled with the vendor's current catalog price.
+4. Vendor enters:
+   - **Proposed Price** (can be discounted for the proactive push).
+   - **Optional Notes** (e.g., "Ready for same-day delivery").
+5. Vendor taps **"Send Proposal"**.
+6. The system dispatches a **Procurement Alert** to the restaurant's Managers/Buyers: _"Supplier [Name] has proposed a proactive price for [Ingredient]."_
+7. The proposal is logged as a special entry in the system for procurement review.
+
+#### Acceptance Criteria
+
+- [ ] Proposals can be sent directly from the Inventory Visibility view.
+- [ ] Procurement managers receive immediate in-app/email notifications.
+- [ ] Action is logged for audit and historical price comparison.
 
 ---
 

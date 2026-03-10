@@ -4,7 +4,7 @@ import mls.sho.dms.application.dto.kds.*;
 import mls.sho.dms.entity.floor.TableStatus;
 import mls.sho.dms.repository.floor.TableShapeRepository;
 import mls.sho.dms.repository.order.OrderTicketRepository;
-import mls.sho.dms.repository.staff.StaffMemberRepository;
+import mls.sho.dms.repository.staff.StaffRepository;
 import mls.sho.dms.entity.floor.TableShape;
 import mls.sho.dms.entity.kds.*;
 import mls.sho.dms.entity.order.OrderTicket;
@@ -33,7 +33,7 @@ public class KDSService {
     private final SimpMessagingTemplate messagingTemplate;
     private final mls.sho.dms.application.mapper.KDSMapper kdsMapper;
     private final OrderTicketRepository orderTicketRepository;
-    private final StaffMemberRepository staffRepo;
+    private final StaffRepository staffRepo;
     private final TableShapeRepository tableShapeRepository;
 
     public KDSService(KDSStationRepository stationRepository,
@@ -45,7 +45,7 @@ public class KDSService {
                       SimpMessagingTemplate messagingTemplate,
                       mls.sho.dms.application.mapper.KDSMapper kdsMapper,
                       OrderTicketRepository orderTicketRepository,
-                      StaffMemberRepository staffRepo,
+                      StaffRepository staffRepo,
                       TableShapeRepository tableShapeRepository) {
         this.stationRepository = stationRepository;
         this.routingRuleRepository = routingRuleRepository;

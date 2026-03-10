@@ -5,8 +5,10 @@ import mls.sho.dms.application.dto.staff.CreateStaffRequest;
 import mls.sho.dms.application.dto.staff.StaffMemberResponse;
 import mls.sho.dms.application.exception.BusinessRuleException;
 import mls.sho.dms.application.exception.ResourceNotFoundException;
+import mls.sho.dms.entity.staff.Permission;
+import mls.sho.dms.entity.staff.Role;
 import mls.sho.dms.entity.staff.StaffMember;
-import mls.sho.dms.entity.staff.StaffRole;
+import mls.sho.dms.repository.staff.RoleRepository;
 import mls.sho.dms.repository.staff.StaffRepository;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -14,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -21,11 +24,12 @@ import java.util.UUID;
 public class StaffServiceImpl implements StaffService {
 
     private final StaffRepository staffRepository;
+    private final RoleRepository roleRepository;
     private final BCryptPasswordEncoder passwordEncoder;
 
     @Override
     public StaffMemberResponse create(CreateStaffRequest request) {
-        StaffRole role = parseRole(request.role());
+        Role role = getRoleOrThrow(request.role());
 
         StaffMember member = new StaffMember();
         member.setFullName(request.fullName());
@@ -40,8 +44,8 @@ public class StaffServiceImpl implements StaffService {
     @Transactional(readOnly = true)
     public List<StaffMemberResponse> findAll(String roleFilter) {
         if (roleFilter != null && !roleFilter.isBlank()) {
-            StaffRole role = parseRole(roleFilter);
-            return staffRepository.findByRole(role).stream().map(this::toResponse).toList();
+            return staffRepository.findByRoleName(roleFilter.toUpperCase()).stream()
+                    .map(this::toResponse).toList();
         }
         return staffRepository.findAll().stream().map(this::toResponse).toList();
     }
@@ -53,9 +57,9 @@ public class StaffServiceImpl implements StaffService {
     }
 
     @Override
-    public StaffMemberResponse updateRole(UUID id, String newRole) {
+    public StaffMemberResponse updateRole(UUID id, String newRoleName) {
         StaffMember member = getOrThrow(id);
-        member.setRole(parseRole(newRole));
+        member.setRole(getRoleOrThrow(newRoleName));
         return toResponse(staffRepository.save(member));
     }
 
@@ -90,19 +94,23 @@ public class StaffServiceImpl implements StaffService {
                 .orElseThrow(() -> new ResourceNotFoundException("Staff member not found: " + id));
     }
 
-    private StaffRole parseRole(String role) {
-        try {
-            return StaffRole.valueOf(role.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw new BusinessRuleException("Invalid role: " + role);
-        }
+    private Role getRoleOrThrow(String roleName) {
+        return roleRepository.findByName(roleName.toUpperCase())
+                .orElseThrow(() -> new BusinessRuleException("Invalid role: " + roleName));
     }
 
     private StaffMemberResponse toResponse(StaffMember m) {
+        List<String> permissions = m.getRole() != null 
+            ? m.getRole().getEffectivePermissions().stream()
+                .map(Permission::getName)
+                .collect(Collectors.toList())
+            : List.of();
+
         return new StaffMemberResponse(
                 m.getId(),
                 m.getFullName(),
-                m.getRole().name(),
+                m.getRole() != null ? m.getRole().getName() : "NONE",
+                permissions,
                 m.isActive(),
                 m.getLastLoginAt(),
                 m.getCreatedAt()

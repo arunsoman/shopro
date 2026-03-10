@@ -6,8 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Upload, Search, Truck, Mail, Phone, Clock, Star, ArrowRight } from 'lucide-react';
+import { Plus, Upload, Search, Truck, Mail, Phone, Clock, Star, UserPlus, Users } from 'lucide-react';
 import { toast } from 'sonner';
+import { useSupplierUsers, useInviteSupplierUser } from '../hooks/useSuppliers';
+import type { SupplierRole } from '../api/types';
 
 export const SupplierManagementPage: React.FC = () => {
     const { data: suppliers, isLoading } = useSuppliers();
@@ -15,8 +17,13 @@ export const SupplierManagementPage: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
     const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
+    const [isUsersDialogOpen, setIsUsersDialogOpen] = useState(false);
+    const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
     const [selectedSupplierId, setSelectedSupplierId] = useState<string | null>(null);
     const [catalogJson, setCatalogJson] = useState('');
+
+    const { data: supplierUsers } = useSupplierUsers(selectedSupplierId || '');
+    const inviteUserMutation = useInviteSupplierUser(selectedSupplierId || '');
 
     const importCatalogMutation = useImportCatalog(selectedSupplierId || '');
 
@@ -27,6 +34,13 @@ export const SupplierManagementPage: React.FC = () => {
         contactEmail: '',
         contactPhone: '',
         leadTimeDays: 1
+    });
+
+    const [inviteData, setInviteData] = useState({
+        fullName: '',
+        email: '',
+        phoneNumber: '',
+        role: 'SUPPLIER_BIDDER' as SupplierRole
     });
 
     const handleCreate = async () => {
@@ -200,6 +214,19 @@ export const SupplierManagementPage: React.FC = () => {
                                     <TableCell className="text-right">
                                         <div className="flex justify-end gap-2">
                                             <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="gap-2"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setSelectedSupplierId(supplier.id);
+                                                    setIsUsersDialogOpen(true);
+                                                }}
+                                            >
+                                                <Users className="h-4 w-4" />
+                                                Users
+                                            </Button>
+                                            <Button
                                                 variant="ghost"
                                                 size="sm"
                                                 className="gap-2"
@@ -211,9 +238,6 @@ export const SupplierManagementPage: React.FC = () => {
                                             >
                                                 <Upload className="h-4 w-4" />
                                                 Catalog
-                                            </Button>
-                                            <Button variant="ghost" size="sm" className="group-hover:translate-x-1 transition-transform">
-                                                <ArrowRight className="h-4 w-4" />
                                             </Button>
                                         </div>
                                     </TableCell>
@@ -258,6 +282,130 @@ export const SupplierManagementPage: React.FC = () => {
                             }}
                         >
                             {importCatalogMutation.isPending ? 'Importing...' : 'Start Import'}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Manage Users Dialog */}
+            <Dialog open={isUsersDialogOpen} onOpenChange={setIsUsersDialogOpen}>
+                <DialogContent className="max-w-3xl">
+                    <DialogHeader className="flex flex-row items-center justify-between">
+                        <DialogTitle>Supplier Contacts & Users</DialogTitle>
+                        <Button
+                            size="sm"
+                            className="gap-2"
+                            onClick={() => setIsInviteDialogOpen(true)}
+                        >
+                            <UserPlus className="h-4 w-4" />
+                            Invite User
+                        </Button>
+                    </DialogHeader>
+                    <div className="py-4">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Full Name</TableHead>
+                                    <TableHead>Email / Phone</TableHead>
+                                    <TableHead>Role</TableHead>
+                                    <TableHead>Status</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {supplierUsers?.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell colSpan={4} className="h-32 text-center text-muted">
+                                            No users invited yet for this supplier.
+                                        </TableCell>
+                                    </TableRow>
+                                ) : (
+                                    supplierUsers?.map(user => (
+                                        <TableRow key={user.id}>
+                                            <TableCell className="font-medium">{user.fullName}</TableCell>
+                                            <TableCell>
+                                                <div className="text-sm">{user.email}</div>
+                                                <div className="text-xs text-muted">{user.phoneNumber || 'No phone'}</div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge variant="secondary" className="text-[10px]">
+                                                    {user.role}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge variant={user.active ? 'default' : 'destructive'} className="text-[10px]">
+                                                    {user.active ? 'Active' : 'Inactive'}
+                                                </Badge>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                )}
+                            </TableBody>
+                        </Table>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* Invite User Dialog */}
+            <Dialog open={isInviteDialogOpen} onOpenChange={setIsInviteDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Invite Supplier User</DialogTitle>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div className="grid gap-2">
+                            <label className="text-sm font-medium">Full Name</label>
+                            <Input
+                                placeholder="e.g. John Doe"
+                                value={inviteData.fullName}
+                                onChange={e => setInviteData({ ...inviteData, fullName: e.target.value })}
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <label className="text-sm font-medium">Email Address</label>
+                            <Input
+                                type="email"
+                                placeholder="john@supplier.com"
+                                value={inviteData.email}
+                                onChange={e => setInviteData({ ...inviteData, email: e.target.value })}
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <label className="text-sm font-medium">Phone Number (Optional)</label>
+                            <Input
+                                placeholder="+1 (555) 000-0000"
+                                value={inviteData.phoneNumber}
+                                onChange={e => setInviteData({ ...inviteData, phoneNumber: e.target.value })}
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <label className="text-sm font-medium">Portal Role</label>
+                            <select
+                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                value={inviteData.role}
+                                onChange={e => setInviteData({ ...inviteData, role: e.target.value as SupplierRole })}
+                            >
+                                <option value="SUPPLIER_BIDDER">Bidder (Participation in RFQs)</option>
+                                <option value="SUPPLIER_ADMIN">Admin (Manage other users)</option>
+                                <option value="SUPPLIER_PLANNER">Planner (View inventory forecasts)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsInviteDialogOpen(false)}>Cancel</Button>
+                        <Button
+                            disabled={!inviteData.fullName || !inviteData.email || inviteUserMutation.isPending}
+                            onClick={async () => {
+                                try {
+                                    await inviteUserMutation.mutateAsync(inviteData);
+                                    toast.success('Invitation sent successfully');
+                                    setIsInviteDialogOpen(false);
+                                    setInviteData({ fullName: '', email: '', phoneNumber: '', role: 'SUPPLIER_BIDDER' });
+                                } catch (e) {
+                                    toast.error('Failed to send invitation');
+                                }
+                            }}
+                        >
+                            {inviteUserMutation.isPending ? 'Sending...' : 'Send Invitation'}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import mls.sho.dms.application.dto.inventory.CreateIngredientRequest;
+import mls.sho.dms.application.dto.inventory.UpdateIngredientRequest;
 import mls.sho.dms.application.dto.inventory.IngredientResponse;
 import mls.sho.dms.application.service.inventory.IngredientService;
 import org.springframework.http.HttpStatus;
@@ -24,6 +25,11 @@ public class IngredientController {
     @ResponseStatus(HttpStatus.CREATED)
     public IngredientResponse create(@Valid @RequestBody CreateIngredientRequest request) {
         return ingredientService.create(request);
+    }
+
+    @PatchMapping("/{id}")
+    public IngredientResponse update(@PathVariable UUID id, @Valid @RequestBody UpdateIngredientRequest request) {
+        return ingredientService.update(id, request);
     }
 
     @GetMapping

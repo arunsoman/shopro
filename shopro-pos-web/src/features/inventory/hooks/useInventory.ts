@@ -48,6 +48,20 @@ export const useCreateIngredient = () => {
     });
 };
 
+export const useUpdateIngredient = (id: string) => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (ingredient: import('../api/types').UpdateIngredientRequest) => {
+            const { data } = await axios.patch<Ingredient>(`${API_BASE}/ingredients/${id}`, ingredient);
+            return data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['ingredients'] });
+            queryClient.invalidateQueries({ queryKey: ['ingredients', id] });
+        },
+    });
+};
+
 export const useSubRecipes = () => {
     return useQuery({
         queryKey: ['sub-recipes'],
@@ -108,6 +122,58 @@ export const usePurchaseOrders = () => {
         queryFn: async () => {
             const { data } = await axios.get(`${API_BASE}/purchase-orders`);
             return data;
+        },
+    });
+};
+
+export const useCreatePurchaseOrder = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (request: import('../api/types').CreatePurchaseOrderRequest) => {
+            const { data } = await axios.post<PurchaseOrder>(`${API_BASE}/purchase-orders`, request);
+            return data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['inventory', 'purchase-orders'] });
+        },
+    });
+};
+
+export const useCreateRFQ = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (request: import('../api/types').CreateRFQRequest) => {
+            const { data } = await axios.post(`${API_BASE}/rfqs`, request);
+            return data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['inventory', 'rfqs'] });
+        },
+    });
+};
+
+export const useCancelPurchaseOrder = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (id: string) => {
+            await axios.post(`${API_BASE}/purchase-orders/${id}/cancel`);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['inventory', 'purchase-orders'] });
+            queryClient.invalidateQueries({ queryKey: ['ingredients'] });
+        },
+    });
+};
+
+export const useCancelRFQ = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (id: string) => {
+            await axios.post(`${API_BASE}/rfqs/${id}/cancel`);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['inventory', 'rfqs'] });
+            queryClient.invalidateQueries({ queryKey: ['ingredients'] });
         },
     });
 };

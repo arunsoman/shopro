@@ -29,6 +29,7 @@ public class FloorPlanServiceImpl implements FloorPlanService {
     private final TableShapeRepository tableShapeRepository;
     private final WaitlistEntryRepository waitlistEntryRepository;
     private final ReservationRepository reservationRepository;
+    private final mls.sho.dms.application.service.core.NotificationEngine notificationEngine;
 
     private static final int RESERVATION_HOLD_WINDOW_MINS = 15;
 
@@ -137,23 +138,31 @@ public class FloorPlanServiceImpl implements FloorPlanService {
              throw new BusinessRuleException("Table " + table.getName() + " is not available for seating.");
         }
 
-        WaitlistEntry entry = waitlistEntryRepository.findById(waitlistEntryId)
-                .orElseThrow(() -> new ResourceNotFoundException("Waitlist entry not found."));
-
-        if (entry.getStatus() != WaitlistStatus.WAITING && entry.getStatus() != WaitlistStatus.NOTIFIED) {
-             throw new BusinessRuleException("Waitlist entry is already processed.");
-        }
-
-        // We do a soft warning in the UI, but on backend we enforce seat party logic
         // Seating a party sets the table status to OCCUPIED
         table.setStatus(TableStatus.OCCUPIED);
         
-        entry.setStatus(WaitlistStatus.SEATED);
-        entry.setSeatedAtTable(table);
-        // Note: we can map the `performedBy` to a StaffMember here if we had full staff repository context.
+        if (waitlistEntryId != null) {
+            WaitlistEntry entry = waitlistEntryRepository.findById(waitlistEntryId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Waitlist entry not found."));
+
+            if (entry.getStatus() != WaitlistStatus.WAITING && entry.getStatus() != WaitlistStatus.NOTIFIED) {
+                 throw new BusinessRuleException("Waitlist entry is already processed.");
+            }
+            entry.setStatus(WaitlistStatus.SEATED);
+            entry.setSeatedAtTable(table);
+            waitlistEntryRepository.save(entry);
+        }
         
         tableShapeRepository.save(table);
-        waitlistEntryRepository.save(entry);
+
+        // Notify Servers
+        notificationEngine.sendNotification(
+            "TABLE_OCCUPIED",
+            "Table Seated: " + table.getName(),
+            "Guests seated at " + table.getName() + ".",
+            java.util.Map.of("tableId", table.getId().toString(), "tableName", table.getName()),
+            "TABLE_OCCUPIED_" + table.getId()
+        );
 
         return mapToTableShapeResponse(table);
     }
@@ -168,7 +177,18 @@ public class FloorPlanServiceImpl implements FloorPlanService {
         }
 
         table.setStatus(TableStatus.AVAILABLE);
-        return mapToTableShapeResponse(tableShapeRepository.save(table));
+        TableShape saved = tableShapeRepository.save(table);
+
+        // Notify Hosts
+        notificationEngine.sendNotification(
+            "TABLE_VACANT",
+            "Table Vacant: " + saved.getName(),
+            "Table " + saved.getName() + " is now clean and ready for guests.",
+            java.util.Map.of("tableId", saved.getId().toString(), "tableName", saved.getName()),
+            "TABLE_VACANT_" + saved.getId()
+        );
+
+        return mapToTableShapeResponse(saved);
     }
 
     @Override
@@ -182,7 +202,20 @@ public class FloorPlanServiceImpl implements FloorPlanService {
             throw new BusinessRuleException("Invalid table status: " + newStatus);
         }
         table.setStatus(status);
-        return mapToTableShapeResponse(tableShapeRepository.save(table));
+        TableShape saved = tableShapeRepository.save(table);
+
+        // If manually setting to OCCUPIED, notify servers too
+        if (status == TableStatus.OCCUPIED) {
+            notificationEngine.sendNotification(
+                "TABLE_OCCUPIED",
+                "Table Seated: " + saved.getName(),
+                "Guests seated at " + saved.getName() + ".",
+                java.util.Map.of("tableId", saved.getId().toString(), "tableName", saved.getName()),
+                "TABLE_OCCUPIED_" + saved.getId()
+            );
+        }
+
+        return mapToTableShapeResponse(saved);
     }
 
     @Override

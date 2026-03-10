@@ -3,7 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import '../../theme/app_colors.dart';
-import '../../../features/kds/presentation/providers/kds_notifications_provider.dart';
+import '../../../features/notifications/presentation/providers/notification_provider.dart';
+import '../../../features/notifications/presentation/widgets/notification_center_sidebar.dart';
 
 class MainNavigationLayout extends ConsumerStatefulWidget {
   final Widget child;
@@ -24,17 +25,24 @@ class _MainNavigationLayoutState extends ConsumerState<MainNavigationLayout> {
   @override
   void initState() {
     super.initState();
-    // Move listener to initState so `context` is stable when the callback fires
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.listenManual(kdsNotificationsProvider, (previous, next) {
+      ref.listenManual(notificationProvider, (previous, next) {
         if (!mounted) return;
-        if (next.length > (previous?.length ?? 0)) {
-          final newNotif = next.first;
+        final newCount = next.notifications.length;
+        final oldCount = previous?.notifications.length ?? 0;
+
+        if (newCount > oldCount) {
+          final newNotif = next.notifications.first;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(newNotif.message),
               behavior: SnackBarBehavior.floating,
               backgroundColor: AppColors.primary,
+              action: SnackBarAction(
+                label: 'View',
+                textColor: Colors.white,
+                onPressed: () => Scaffold.of(context).openEndDrawer(),
+              ),
             ),
           );
         }
@@ -44,10 +52,15 @@ class _MainNavigationLayoutState extends ConsumerState<MainNavigationLayout> {
 
   @override
   Widget build(BuildContext context) {
-    final notifications = ref.watch(kdsNotificationsProvider);
+    final notificationState = ref.watch(notificationProvider);
+    final count = notificationState.notifications
+        .where((n) => !n.isRead)
+        .length;
     final location = widget.location;
 
     return Scaffold(
+      key: GlobalKey<ScaffoldState>(), // Key for opening drawer
+      endDrawer: const NotificationCenterSidebar(),
       backgroundColor: AppColors.lightBorder,
       body: Center(
         child: Container(
@@ -188,7 +201,8 @@ class _MainNavigationLayoutState extends ConsumerState<MainNavigationLayout> {
                           ),
                         ),
                         const SizedBox(width: 12),
-                        _buildNotificationBadge(notifications),
+                        const SizedBox(width: 12),
+                        _buildNotificationBadge(context, count),
                         const SizedBox(width: 6),
                         _buildIconBtn(Icons.person_outline),
                         const SizedBox(width: 12),
@@ -213,29 +227,34 @@ class _MainNavigationLayoutState extends ConsumerState<MainNavigationLayout> {
     );
   }
 
-  Widget _buildNotificationBadge(List<KDSNotification> notifications) {
+  Widget _buildNotificationBadge(BuildContext context, int count) {
     return Stack(
       children: [
-        _buildIconBtn(Icons.notifications_none),
-        if (notifications.isNotEmpty)
+        GestureDetector(
+          onTap: () => Scaffold.of(context).openEndDrawer(),
+          child: _buildIconBtn(Icons.notifications_none),
+        ),
+        if (count > 0)
           Positioned(
             right: 0,
             top: 0,
-            child: Container(
-              padding: const EdgeInsets.all(2),
-              decoration: BoxDecoration(
-                color: Colors.red,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-              child: Text(
-                '${notifications.length}',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
+            child: IgnorePointer(
+              child: Container(
+                padding: const EdgeInsets.all(2),
+                decoration: BoxDecoration(
+                  color: Colors.red,
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                textAlign: TextAlign.center,
+                constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                child: Text(
+                  '$count',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
               ),
             ),
           ),

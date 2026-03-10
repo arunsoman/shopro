@@ -2,15 +2,19 @@ package mls.sho.dms.application.service.inventory.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import mls.sho.dms.application.exception.BusinessRuleException;
+import mls.sho.dms.application.dto.inventory.CreatePurchaseOrderRequest;
 import mls.sho.dms.application.dto.inventory.PurchaseOrderResponse;
 import mls.sho.dms.application.service.inventory.AlertService;
 import mls.sho.dms.application.service.inventory.POService;
-import mls.sho.dms.entity.inventory.PurchaseOrder;
-import mls.sho.dms.entity.inventory.PurchaseOrderStatus;
+import mls.sho.dms.entity.inventory.*;
 import mls.sho.dms.entity.staff.StaffMember;
-import mls.sho.dms.entity.staff.StaffRole;
+import mls.sho.dms.entity.staff.Role;
 import mls.sho.dms.repository.inventory.PurchaseOrderRepository;
-import mls.sho.dms.repository.staff.StaffMemberRepository;
+import mls.sho.dms.repository.inventory.RFQRepository;
+import mls.sho.dms.repository.inventory.RawIngredientRepository;
+import mls.sho.dms.repository.inventory.SupplierRepository;
+import mls.sho.dms.repository.staff.StaffRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,7 +22,9 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -28,7 +34,10 @@ import java.util.stream.Collectors;
 public class POServiceImpl implements POService {
 
     private final PurchaseOrderRepository poRepository;
-    private final StaffMemberRepository staffRepository;
+    private final RFQRepository rfqRepository;
+    private final StaffRepository staffRepository;
+    private final SupplierRepository supplierRepository;
+    private final RawIngredientRepository ingredientRepository;
     private final AlertService alertService;
 
     @Override
@@ -158,19 +167,21 @@ public class POServiceImpl implements POService {
         return savedPo;
     }
 
-    private void validateApprovalPermissions(BigDecimal value, StaffRole role) {
+    private void validateApprovalPermissions(BigDecimal value, Role role) {
         if (value.compareTo(TIER1_AUTO_LIMIT) < 0) return; // Anyone can approve < $500 if they manually do it
         
+        String roleName = role != null ? role.getName() : "NONE";
+        
         if (value.compareTo(TIER2_MANAGER_LIMIT) < 0) {
-            if (role != StaffRole.MANAGER && role != StaffRole.OWNER) { // Assuming GM translates to MANAGER/OWNER here
+            if (!roleName.equals("MANAGER") && !roleName.equals("OWNER")) {
                 throw new SecurityException("This PO requires Manager level approval.");
             }
         } else if (value.compareTo(TIER3_GM_LIMIT) < 0) {
-             if (role != StaffRole.MANAGER && role != StaffRole.OWNER) { 
+             if (!roleName.equals("MANAGER") && !roleName.equals("OWNER")) { 
                 throw new SecurityException("This PO requires General Manager level approval.");
             }
         } else {
-             if (role != StaffRole.OWNER) {
+             if (!roleName.equals("OWNER")) {
                 throw new SecurityException("This PO requires Owner level approval.");
             }
         }
@@ -192,6 +203,86 @@ public class POServiceImpl implements POService {
             );
         }
         log.info("PO #{} dispatched to {}", po.getId(), po.getSupplier().getCompanyName());
+    }
+
+    @Override
+    @Transactional
+    public PurchaseOrder createOrder(CreatePurchaseOrderRequest request, UUID generatedById) {
+        Supplier supplier = supplierRepository.findById(request.getSupplierId())
+            .orElseThrow(() -> new IllegalArgumentException("Supplier not found"));
+        StaffMember creator = staffRepository.findById(generatedById)
+            .orElseThrow(() -> new IllegalArgumentException("Creator staff member not found"));
+
+        // Check for existing active orders for any of the ingredients
+        List<UUID> ingredientIds = request.getItems().stream()
+            .map(CreatePurchaseOrderRequest.PurchaseOrderLineRequest::getIngredientId)
+            .collect(Collectors.toList());
+
+        for (UUID ingredientId : ingredientIds) {
+            List<PurchaseOrder> activePos = poRepository.findActiveOrdersByIngredientId(
+                ingredientId, 
+                EnumSet.of(PurchaseOrderStatus.CLOSED, PurchaseOrderStatus.CANCELLED, PurchaseOrderStatus.REJECTED)
+            );
+            if (!activePos.isEmpty()) {
+                throw new BusinessRuleException("An active Purchase Order already exists for ingredient ID: " + ingredientId);
+            }
+
+            List<RFQ> activeRfqs = rfqRepository.findActiveRfqsByIngredientId(ingredientId, RfqStatus.OPEN);
+            if (!activeRfqs.isEmpty()) {
+                throw new BusinessRuleException("An active RFQ already exists for ingredient ID: " + ingredientId);
+            }
+        }
+
+        PurchaseOrder po = new PurchaseOrder();
+        po.setSupplier(supplier);
+        po.setGeneratedBy(creator);
+        po.setStatus(PurchaseOrderStatus.DRAFT);
+        po.setExpectedDeliveryDate(request.getExpectedDeliveryDate());
+
+        BigDecimal total = BigDecimal.ZERO;
+        for (CreatePurchaseOrderRequest.PurchaseOrderLineRequest item : request.getItems()) {
+            RawIngredient ingredient = ingredientRepository.findById(item.getIngredientId())
+                .orElseThrow(() -> new IllegalArgumentException("Ingredient not found: " + item.getIngredientId()));
+
+            PurchaseOrderLine line = new PurchaseOrderLine();
+            line.setPurchaseOrder(po);
+            line.setIngredient(ingredient);
+            line.setOrderedQty(item.getOrderedQty());
+            line.setUnitCost(item.getUnitCost());
+            po.getLines().add(line);
+
+            total = total.add(item.getOrderedQty().multiply(item.getUnitCost()));
+        }
+
+        po.setTotalValue(total);
+        PurchaseOrder savedPo = poRepository.save(po);
+        
+        log.info("Manual PO created: #{} for supplier {}", savedPo.getId(), supplier.getCompanyName());
+        
+        // Auto-submit for approval based on rules in submitForApproval
+        return submitForApproval(savedPo.getId());
+    }
+    @Override
+    @Transactional
+    public void cancelOrder(UUID poId) {
+        PurchaseOrder po = poRepository.findById(poId)
+            .orElseThrow(() -> new mls.sho.dms.application.exception.ResourceNotFoundException("Purchase Order not found"));
+
+        EnumSet<PurchaseOrderStatus> revokableStatuses = EnumSet.of(
+            PurchaseOrderStatus.DRAFT,
+            PurchaseOrderStatus.PENDING_APPROVAL,
+            PurchaseOrderStatus.APPROVED,
+            PurchaseOrderStatus.SENT,
+            PurchaseOrderStatus.ACKNOWLEDGED
+        );
+
+        if (!revokableStatuses.contains(po.getStatus())) {
+            throw new BusinessRuleException("Purchase Order cannot be cancelled in its current state: " + po.getStatus());
+        }
+
+        po.setStatus(PurchaseOrderStatus.CANCELLED);
+        poRepository.save(po);
+        log.info("Purchase Order {} has been cancelled", poId);
     }
 
     private PurchaseOrder getPoOrThrow(UUID id) {

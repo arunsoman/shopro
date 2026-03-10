@@ -14,7 +14,7 @@ import mls.sho.dms.repository.floor.TableShapeRepository;
 import mls.sho.dms.repository.menu.MenuItemRepository;
 import mls.sho.dms.repository.menu.ModifierOptionRepository;
 import mls.sho.dms.repository.order.*;
-import mls.sho.dms.repository.staff.StaffMemberRepository;
+import mls.sho.dms.repository.staff.StaffRepository;
 import mls.sho.dms.application.service.inventory.RecipeService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,12 +41,13 @@ public class OrderServiceImpl implements OrderService {
     private final MenuItemRepository menuItemRepository;
     private final ModifierOptionRepository modifierOptionRepository;
     private final TableShapeRepository tableShapeRepository;
-    private final StaffMemberRepository staffMemberRepository;
+    private final StaffRepository staffMemberRepository;
     private final CustomerProfileRepository customerProfileRepository;
     private final mls.sho.dms.application.service.crm.LoyaltyService loyaltyService;
     private final RecipeService recipeService;
     private final mls.sho.dms.service.kds.KDSService kdsService;
     private final OrderAuditLogRepository orderAuditLogRepository;
+    private final mls.sho.dms.application.service.core.NotificationEngine notificationEngine;
 
     @Override
     public OrderResponse createOrder(CreateOrderRequest request, String performedBy) {
@@ -68,6 +69,15 @@ public class OrderServiceImpl implements OrderService {
             if (table.getStatus() == mls.sho.dms.entity.floor.TableStatus.AVAILABLE) {
                 table.setStatus(mls.sho.dms.entity.floor.TableStatus.OCCUPIED);
                 tableShapeRepository.save(table);
+
+                // Notify Servers
+                notificationEngine.sendNotification(
+                    "TABLE_OCCUPIED",
+                    "Table Seated: " + table.getName(),
+                    "Guests have been seated at " + table.getName() + " (" + request.coverCount() + " pax).",
+                    java.util.Map.of("tableId", table.getId().toString(), "tableName", table.getName()),
+                    "TABLE_OCCUPIED_" + table.getId()
+                );
             }
         } else if (request.orderType() == OrderType.DELIVERY) {
             if (request.deliveryAddress() == null || request.deliveryAddress().isBlank()) {
@@ -283,6 +293,15 @@ public class OrderServiceImpl implements OrderService {
             TableShape table = ticket.getTable();
             table.setStatus(mls.sho.dms.entity.floor.TableStatus.DIRTY);
             tableShapeRepository.save(table);
+
+            // Notify Bussers
+            notificationEngine.sendNotification(
+                "TABLE_DIRTY",
+                "Table Dirty: " + table.getName(),
+                "Table " + table.getName() + " is now dirty and needs cleaning.",
+                java.util.Map.of("tableId", table.getId().toString(), "tableName", table.getName()),
+                "TABLE_DIRTY_" + table.getId()
+            );
         }
 
         orderTicketRepository.save(ticket);

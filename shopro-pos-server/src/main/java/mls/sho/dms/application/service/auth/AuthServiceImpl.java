@@ -1,10 +1,15 @@
 package mls.sho.dms.application.service.auth;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import mls.sho.dms.application.dto.auth.PinLoginRequest;
 import mls.sho.dms.application.dto.auth.StaffSessionResponse;
+import mls.sho.dms.application.dto.auth.SupplierLoginRequest;
+import mls.sho.dms.application.dto.auth.SupplierSessionResponse;
 import mls.sho.dms.entity.staff.StaffMember;
 import mls.sho.dms.repository.staff.StaffRepository;
+import mls.sho.dms.repository.inventory.SupplierUserRepository;
+import mls.sho.dms.entity.inventory.SupplierUser;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +28,7 @@ public class AuthServiceImpl implements AuthService {
     private static final long LOCKOUT_SECONDS = 60;
 
     private final StaffRepository staffRepository;
+    private final SupplierUserRepository supplierUserRepository;
     private final BCryptPasswordEncoder passwordEncoder;
 
     /** In-memory attempt tracker keyed by remote IP. */
@@ -48,7 +54,37 @@ public class AuthServiceImpl implements AuthService {
         failureTracker.remove(remoteAddr);
 
         StaffMember staff = matched.get();
-        return new StaffSessionResponse(staff.getId(), staff.getFullName(), staff.getRole().name());
+        String roleName = (staff.getRole() != null) ? staff.getRole().getName() : "NONE";
+        return new StaffSessionResponse(staff.getId(), staff.getFullName(), roleName);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public SupplierSessionResponse supplierLogin(SupplierLoginRequest request, String remoteAddr) {
+        checkLockout(remoteAddr);
+
+        SupplierUser user = supplierUserRepository.findByEmail(request.email())
+                .orElseThrow(() -> new UnauthorizedException("Invalid credentials."));
+
+        if (!user.isActive()) {
+            throw new UnauthorizedException("Account is disabled.");
+        }
+
+        if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
+            recordFailure(remoteAddr);
+            throw new UnauthorizedException("Invalid credentials.");
+        }
+
+        // Success — reset failure counter
+        failureTracker.remove(remoteAddr);
+
+        return new SupplierSessionResponse(
+            user.getId(),
+            user.getSupplier().getId(),
+            user.getSupplier().getCompanyName(),
+            user.getFullName(),
+            user.getRole().name()
+        );
     }
 
     private void checkLockout(String addr) {

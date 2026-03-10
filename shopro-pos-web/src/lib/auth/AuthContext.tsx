@@ -5,14 +5,23 @@ import { apiClient } from "@/lib/api/client";
 export type StaffRole =
     | "OWNER"
     | "MANAGER"
-    | "HOST"
-    | "HOSTESS"
-    | "SERVER"
-    | "CASHIER"
-    | "BUSSER"
-    | "CHEF"
+    | "GENERAL_MANAGER"
+    | "ASSISTANT_MANAGER"
+    | "FB_MANAGER"
+    | "KITCHEN_MANAGER"
+    | "EXECUTIVE_CHEF"
+    | "SOUS_CHEF"
+    | "CHEF_DE_PARTIE"
     | "LINE_COOK"
-    | "EXPEDITOR";
+    | "PREP_COOK"
+    | "DISHWASHER"
+    | "MAITRE_D"
+    | "HOST"
+    | "BARTENDER"
+    | "BUSSER"
+    | "RUNNER"
+    | "SENIOR_SERVER"
+    | "JUNIOR_SERVER";
 
 export interface StaffSession {
     id: string;
@@ -25,16 +34,25 @@ export const ADMIN_ROLES: StaffRole[] = ["OWNER", "MANAGER"];
 
 /** Roles that can access operational screens (Floor Plan, Orders) */
 export const OPERATIONAL_ROLES: StaffRole[] = [
-    "HOST",
-    "HOSTESS",
-    "SERVER",
-    "CASHIER",
-    "BUSSER",
-    "CHEF",
-    "LINE_COOK",
-    "EXPEDITOR",
-    "MANAGER",
     "OWNER",
+    "MANAGER",
+    "GENERAL_MANAGER",
+    "ASSISTANT_MANAGER",
+    "FB_MANAGER",
+    "KITCHEN_MANAGER",
+    "EXECUTIVE_CHEF",
+    "SOUS_CHEF",
+    "CHEF_DE_PARTIE",
+    "LINE_COOK",
+    "PREP_COOK",
+    "DISHWASHER",
+    "MAITRE_D",
+    "HOST",
+    "BARTENDER",
+    "BUSSER",
+    "RUNNER",
+    "SENIOR_SERVER",
+    "JUNIOR_SERVER",
 ];
 
 // ---- Context ----

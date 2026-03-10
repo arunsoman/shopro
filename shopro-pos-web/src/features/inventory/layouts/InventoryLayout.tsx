@@ -8,7 +8,7 @@ import {
     ClipboardList
 } from 'lucide-react';
 
-const navItems = [
+const internalItems = [
     {
         label: "Stock Dashboard",
         path: "/inventory/stock",
@@ -19,6 +19,9 @@ const navItems = [
         path: "/inventory/recipes",
         icon: <ChefHat className="h-4 w-4" />
     },
+];
+
+const procurementItems = [
     {
         label: "Vendors & Catalogs",
         path: "/inventory/vendors",
@@ -34,14 +37,20 @@ const navItems = [
 export function InventoryLayout() {
     const location = useLocation();
 
+    // Determine which module set to show based on the current path
+    const isProcurementPath = location.pathname.includes('/vendors') || location.pathname.includes('/procurement');
+    const navItems = isProcurementPath ? procurementItems : internalItems;
+    const title = isProcurementPath ? "Supplier Portal" : "Inventory Control";
+    const subtitle = isProcurementPath ? "Procurement Staff" : "Management Suite";
+
     return (
-        <div className="flex min-h-screen w-full bg-background">
+        <div className="flex min-h-screen w-full bg-background animate-in fade-in duration-300">
             {/* Sidebar */}
             <aside className="w-64 border-r bg-surface px-4 py-6 shrink-0 transition-colors">
                 <div className="mb-8 px-2">
-                    <h2 className="text-lg font-semibold tracking-tight">Inventory Control</h2>
+                    <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
                     <p className="text-[11px] text-muted-2 mt-1 uppercase tracking-wider font-bold">
-                        Management Suite
+                        {subtitle}
                     </p>
                 </div>
 
@@ -91,6 +100,5 @@ export function InventoryLayout() {
         </div>
     );
 }
-
 
 export default InventoryLayout;

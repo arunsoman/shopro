@@ -15,6 +15,9 @@ export interface Ingredient {
     allergens?: string[];
     supplierId?: string;
     supplierName?: string;
+    activeOrderId?: string;
+    activeOrderType?: 'PO' | 'RFQ';
+    activeOrderStatus?: string;
 }
 
 export interface CreateIngredientRequest {
@@ -24,6 +27,21 @@ export interface CreateIngredientRequest {
     yieldPct: number;
     parLevel: number;
     reorderPoint: number;
+    supplierId?: string;
+}
+
+export interface UpdateIngredientRequest {
+    name?: string;
+    unitOfMeasure?: string;
+    costPerUnit?: number;
+    yieldPct?: number;
+    parLevel?: number;
+    reorderPoint?: number;
+    safetyLevel?: number;
+    criticalLevel?: number;
+    maxStockLevel?: number;
+    autoReplenish?: boolean;
+    allergens?: string[];
     supplierId?: string;
 }
 
@@ -81,8 +99,9 @@ export type PurchaseOrderStatus =
     | 'ACKNOWLEDGED'
     | 'PARTIALLY_RECEIVED'
     | 'RECEIVED'
-    | 'DISCREPANCY_REVIEW'
-    | 'PARTIALLY_FULFILLED'
+    | 'GRN_FLAGGED'
+    | 'INVOICE_MATCHED'
+    | 'PAID'
     | 'CLOSED'
     | 'CANCELLED';
 
@@ -95,6 +114,16 @@ export interface PurchaseOrder {
     expectedDeliveryDate?: string;
     createdAt: string;
     items: PurchaseOrderLine[];
+}
+
+export interface CreatePurchaseOrderRequest {
+    supplierId: string;
+    expectedDeliveryDate: string;
+    items: {
+        ingredientId: string;
+        orderedQty: number;
+        unitCost: number;
+    }[];
 }
 
 export interface PurchaseOrderLine {
@@ -172,9 +201,19 @@ export interface PriceComparison {
     }[];
 }
 
-export type RfqStatus = 'OPEN' | 'CLOSED' | 'CANCELLED';
+export type RfqStatus = 'OPEN' | 'CLOSED' | 'AWARDED' | 'FAILED' | 'CANCELLED';
 
 export interface RFQ {
+    id: string;
+    ingredientId: string;
+    ingredientName: string;
+    requiredQty: number;
+    status: RfqStatus;
+    desiredDeliveryDate: string;
+    bidDeadline: string;
+}
+
+export interface RFQResponse {
     id: string;
     ingredientId: string;
     ingredientName: string;
@@ -197,4 +236,23 @@ export interface VendorBidRequest {
     deliveryDate: string;
     paymentTerms?: string;
     notes?: string;
+}
+
+export type SupplierRole = 'SUPPLIER_ADMIN' | 'SUPPLIER_BIDDER' | 'SUPPLIER_PLANNER';
+
+export interface SupplierUser {
+    id: string;
+    supplierId: string;
+    fullName: string;
+    email: string;
+    phoneNumber?: string;
+    role: SupplierRole;
+    active: boolean;
+}
+
+export interface InviteSupplierUserRequest {
+    fullName: string;
+    email: string;
+    phoneNumber?: string;
+    role: SupplierRole;
 }

@@ -10,4 +10,10 @@ import java.util.UUID;
 @Repository
 public interface VendorBidRepository extends JpaRepository<VendorBid, UUID> {
     List<VendorBid> findByRfqIdAndStatus(UUID rfqId, mls.sho.dms.entity.inventory.VendorBidStatus status);
+
+    long countBySupplierIdAndStatus(UUID supplierId, mls.sho.dms.entity.inventory.VendorBidStatus status);
+
+    long countBySupplierIdAndStatusAndCreatedAtAfter(UUID supplierId, mls.sho.dms.entity.inventory.VendorBidStatus status, java.time.Instant date);
+
+    long countBySupplierIdAndCreatedAtAfter(UUID supplierId, java.time.Instant date);
 }

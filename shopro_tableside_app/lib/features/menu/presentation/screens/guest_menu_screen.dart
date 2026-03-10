@@ -7,6 +7,8 @@ import 'package:shopro_tableside_app/core/theme/app_colors.dart';
 import 'package:shopro_tableside_app/core/theme/app_spacing.dart';
 import '../../domain/models/menu_models.dart';
 import '../providers/menu_providers.dart';
+import 'package:shopro_tableside_app/features/notifications/presentation/providers/notification_provider.dart';
+import 'package:shopro_tableside_app/features/notifications/presentation/widgets/notification_center_sheet.dart';
 
 /// Routes image URLs through our Node proxy for transcoding + caching.
 /// External URLs (Unsplash etc.) are proxied via /img?url=
@@ -58,6 +60,7 @@ class _GuestMenuScreenState extends ConsumerState<GuestMenuScreen> {
             icon: const Icon(LucideIcons.search),
           ),
           _buildCartBadge(cartItems.length),
+          _buildNotificationBadge(),
           const SizedBox(width: AppSpacing.s),
         ],
       ),
@@ -249,6 +252,49 @@ class _GuestMenuScreenState extends ConsumerState<GuestMenuScreen> {
             ),
           ),
       ],
+    );
+  }
+
+  Widget _buildNotificationBadge() {
+    final state = ref.watch(notificationProvider);
+    final unreadCount = state.notifications.where((n) => !n.isRead).length;
+
+    return Stack(
+      children: [
+        IconButton(
+          onPressed: () => _showNotificationCenter(),
+          icon: const Icon(LucideIcons.bell),
+        ),
+        if (unreadCount > 0)
+          Positioned(
+            right: 8,
+            top: 8,
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: const BoxDecoration(
+                color: Colors.red,
+                shape: BoxShape.circle,
+              ),
+              child: Text(
+                '$unreadCount',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  void _showNotificationCenter() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => const NotificationCenterSheet(),
     );
   }
 

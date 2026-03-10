@@ -9,7 +9,7 @@ import mls.sho.dms.repository.inventory.PurchaseOrderLineRepository;
 import mls.sho.dms.repository.inventory.PurchaseOrderRepository;
 import mls.sho.dms.repository.inventory.RFQRepository;
 import mls.sho.dms.repository.inventory.VendorBidRepository;
-import mls.sho.dms.repository.staff.StaffMemberRepository;
+import mls.sho.dms.repository.staff.StaffRepository;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,7 +32,7 @@ public class BidScoringJob {
     private final VendorBidRepository vendorBidRepository;
     private final PurchaseOrderRepository purchaseOrderRepository;
     private final PurchaseOrderLineRepository purchaseOrderLineRepository;
-    private final StaffMemberRepository staffMemberRepository;
+    private final StaffRepository staffMemberRepository;
     private final AlertService alertService;
 
     // Configurable weights (US-13.3)
@@ -170,9 +170,9 @@ public class BidScoringJob {
     }
 
     private void createDraftPurchaseOrder(RFQ rfq, VendorBid winningBid) {
-        // Look for a system user or default staff member
+        // Look for a system user or default staff member with MANAGER role
         Optional<StaffMember> systemUser = staffMemberRepository.findAll().stream()
-            .filter(u -> u.getRole() == mls.sho.dms.entity.staff.StaffRole.MANAGER)
+            .filter(u -> u.getRole() != null && "MANAGER".equals(u.getRole().getName()))
             .findFirst();
 
         PurchaseOrder po = new PurchaseOrder();

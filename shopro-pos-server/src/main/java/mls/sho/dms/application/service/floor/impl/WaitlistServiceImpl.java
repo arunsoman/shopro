@@ -5,6 +5,7 @@ import mls.sho.dms.application.dto.floor.*;
 import mls.sho.dms.application.exception.BusinessRuleException;
 import mls.sho.dms.application.exception.ResourceNotFoundException;
 import mls.sho.dms.application.service.floor.WaitlistService;
+import mls.sho.dms.application.service.core.NotificationEngine;
 import mls.sho.dms.entity.floor.TableShape;
 import mls.sho.dms.entity.floor.WaitlistEntry;
 import mls.sho.dms.entity.floor.WaitlistStatus;
@@ -14,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -23,6 +25,7 @@ import java.util.stream.Collectors;
 public class WaitlistServiceImpl implements WaitlistService {
 
     private final WaitlistEntryRepository waitlistEntryRepository;
+    private final NotificationEngine notificationEngine;
 
     // A simplified wait time prediction: 15 mins per party ahead of the same size
     private static final int AVG_TURN_MINS_PER_HEAD = 15; 
@@ -67,7 +70,14 @@ public class WaitlistServiceImpl implements WaitlistService {
         entry.setStatus(WaitlistStatus.NOTIFIED);
         entry.setNotifiedAt(Instant.now());
         
-        // TODO: In a real system, trigger SMS service here
+        // Dispatch multi-channel notification (In-app for staff, hypothetical SMS for guest)
+        notificationEngine.sendNotification(
+            "SYSTEM_WARNING",
+            "Guest Ready: " + entry.getCustomerName(),
+            "Table is ready for " + entry.getCustomerName() + " (Party of " + entry.getPartySize() + ").",
+            Map.of("waitlistId", entry.getId().toString(), "guestPhone", entry.getPhoneNumber()),
+            "WAITLIST_NOTIFY_" + entry.getId()
+        );
         
         return mapToResponse(waitlistEntryRepository.save(entry));
     }

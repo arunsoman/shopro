@@ -24,8 +24,10 @@ interface NavCard {
 }
 
 const ALL_ROLES: StaffRole[] = [
-    'OWNER', 'MANAGER', 'HOST', 'HOSTESS', 'SERVER',
-    'CASHIER', 'BUSSER', 'CHEF', 'LINE_COOK', 'EXPEDITOR',
+    'OWNER', 'MANAGER', 'GENERAL_MANAGER', 'ASSISTANT_MANAGER', 'FB_MANAGER',
+    'KITCHEN_MANAGER', 'EXECUTIVE_CHEF', 'SOUS_CHEF', 'CHEF_DE_PARTIE',
+    'LINE_COOK', 'PREP_COOK', 'DISHWASHER', 'MAITRE_D', 'HOST',
+    'BARTENDER', 'BUSSER', 'RUNNER', 'SENIOR_SERVER', 'JUNIOR_SERVER',
 ];
 
 const NAV_CARDS: NavCard[] = [
@@ -50,22 +52,22 @@ const NAV_CARDS: NavCard[] = [
     {
         title: 'Inventory',
         description: 'Track ingredient stock levels, costs, and automated kitchen depletion.',
-        href: '/inventory',
+        href: '/inventory/stock',
         icon: <Package className="h-7 w-7" />,
         gradient: 'from-emerald-500 to-green-600',
         iconColor: 'text-emerald-500',
-        roles: ['OWNER', 'MANAGER', 'CHEF'],
+        roles: ['OWNER', 'MANAGER', 'GENERAL_MANAGER', 'KITCHEN_MANAGER', 'EXECUTIVE_CHEF'],
         badge: 'Live Depletion',
     },
     {
         title: 'Supplier Portal',
         description: 'Manage vendor relationships, track bid performance, and monitor active RFQs.',
-        href: '/inventory', // Linking to inventory for now until dedicated supplier module exists
+        href: '/inventory/vendors',
         icon: <Truck className="h-7 w-7" />,
         gradient: 'from-blue-500 to-indigo-600',
         iconColor: 'text-blue-500',
         roles: ADMIN_ROLES,
-        badge: 'New',
+        badge: 'Staff View',
     },
     {
         title: 'CRM & Loyalty',
@@ -85,9 +87,9 @@ const NAV_CARDS: NavCard[] = [
         roles: ADMIN_ROLES,
     },
     {
-        title: 'Role & Permissions',
+        title: 'Roles and permission',
         description: 'Define what each role can see and do across the entire POS system.',
-        href: '/settings/security',
+        href: '/settings/staff',
         icon: <ShieldCheck className="h-7 w-7" />,
         gradient: 'from-yellow-500 to-amber-600',
         roles: ['OWNER'],

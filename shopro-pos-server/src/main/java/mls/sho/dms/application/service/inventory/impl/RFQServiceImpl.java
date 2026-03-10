@@ -5,6 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import mls.sho.dms.application.dto.inventory.CreateRFQRequest;
 import mls.sho.dms.application.dto.inventory.RFQResponse;
 import mls.sho.dms.application.dto.inventory.VendorBidRequest;
+import mls.sho.dms.application.exception.BusinessRuleException;
+import mls.sho.dms.application.exception.ResourceNotFoundException;
 import mls.sho.dms.application.service.inventory.AlertService;
 import mls.sho.dms.application.service.inventory.RFQService;
 import mls.sho.dms.entity.inventory.*;
@@ -16,7 +18,9 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -27,6 +31,7 @@ public class RFQServiceImpl implements RFQService {
 
     private final RFQRepository rfqRepository;
     private final RawIngredientRepository ingredientRepository;
+    private final PurchaseOrderRepository purchaseOrderRepository;
     private final SupplierRepository supplierRepository;
     private final VendorBidRepository vendorBidRepository;
     private final SupplierIngredientPricingRepository pricingRepository;
@@ -105,18 +110,38 @@ public class RFQServiceImpl implements RFQService {
     @Override
     @Transactional
     public RFQResponse createRfq(CreateRFQRequest request) {
-        RawIngredient ingredient = ingredientRepository.findById(request.ingredientId())
-            .orElseThrow(() -> new RuntimeException("Ingredient not found"));
+        try {
+            RawIngredient ingredient = ingredientRepository.findById(request.ingredientId())
+                .orElseThrow(() -> new RuntimeException("Ingredient not found"));
 
-        RFQ rfq = new RFQ();
-        rfq.setIngredient(ingredient);
-        rfq.setRequiredQty(request.requiredQty());
-        rfq.setStatus(RfqStatus.OPEN);
-        rfq.setDesiredDeliveryDate(request.desiredDeliveryDate());
-        rfq.setBidDeadline(Instant.now().plus(24, ChronoUnit.HOURS)); // Manual RFQs get 24h by default
+            // Check for existing active orders
+            List<PurchaseOrder> activePos = purchaseOrderRepository.findActiveOrdersByIngredientId(
+                ingredient.getId(), 
+                EnumSet.of(PurchaseOrderStatus.CLOSED, PurchaseOrderStatus.CANCELLED, PurchaseOrderStatus.REJECTED)
+            );
+            if (!activePos.isEmpty()) {
+                throw new BusinessRuleException("An active Purchase Order already exists for this ingredient.");
+            }
 
-        RFQ saved = rfqRepository.save(rfq);
-        return mapToResponse(saved);
+            List<RFQ> activeRfqs = rfqRepository.findActiveRfqsByIngredientId(ingredient.getId(), RfqStatus.OPEN);
+            if (!activeRfqs.isEmpty()) {
+                throw new BusinessRuleException("An active RFQ already exists for this ingredient.");
+            }
+
+            RFQ rfq = new RFQ();
+            rfq.setIngredient(ingredient);
+            rfq.setRequiredQty(request.requiredQty());
+            rfq.setStatus(RfqStatus.OPEN);
+            rfq.setDesiredDeliveryDate(request.desiredDeliveryDate());
+            rfq.setBidDeadline(Instant.now().plus(24, ChronoUnit.HOURS)); // Manual RFQs get 24h by default
+
+            RFQ saved = rfqRepository.save(rfq);
+            log.info("Manual RFQ created: #{} for ingredient {}", saved.getId(), ingredient.getName());
+            return mapToResponse(saved);
+        } catch (Exception e) {
+            log.error("Failed to create manual RFQ", e);
+            throw e;
+        }
     }
 
     @Override
@@ -157,6 +182,21 @@ public class RFQServiceImpl implements RFQService {
 
         vendorBidRepository.save(bid);
         log.info("Bid submitted by {} for RFQ #{}", supplier.getCompanyName(), rfqId);
+    }
+
+    @Override
+    @Transactional
+    public void cancelRfq(UUID rfqId) {
+        RFQ rfq = rfqRepository.findById(rfqId)
+            .orElseThrow(() -> new ResourceNotFoundException("RFQ not found"));
+
+        if (rfq.getStatus() != RfqStatus.OPEN) {
+            throw new BusinessRuleException("RFQ can only be cancelled when in OPEN status");
+        }
+
+        rfq.setStatus(RfqStatus.CANCELLED);
+        rfqRepository.save(rfq);
+        log.info("RFQ {} has been cancelled", rfqId);
     }
 
     private RFQResponse mapToResponse(RFQ rfq) {
