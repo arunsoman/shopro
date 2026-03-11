@@ -68,7 +68,11 @@ public class AlertServiceImpl implements AlertService {
         NotificationLog nLog = new NotificationLog();
         nLog.setDispatchId(UUID.randomUUID());
         nLog.setRecipientIdentifier(to);
-        nLog.setPayload(Map.of("type", channel, "subject", subject != null ? subject : "", "body", body));
+        java.util.Map<String, Object> payload = new java.util.HashMap<>();
+        payload.put("type", channel);
+        payload.put("subject", subject != null ? subject : "");
+        payload.put("body", body != null ? body : "");
+        nLog.setPayload(payload);
         nLog.setStatus(NotificationStatus.SENT);
         nLog.setSentAt(Instant.now());
         

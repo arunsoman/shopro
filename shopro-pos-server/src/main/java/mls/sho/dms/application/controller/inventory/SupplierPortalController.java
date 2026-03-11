@@ -39,4 +39,29 @@ public class SupplierPortalController {
     public void proposePrice(@RequestParam UUID userId, @RequestBody VendorPriceProposalRequest proposalRequest) {
         portalService.proposePrice(userId, proposalRequest);
     }
+
+    @GetMapping("/{supplierId}/pos")
+    public List<PurchaseOrderResponse> getPurchaseOrders(@PathVariable UUID supplierId) {
+        return portalService.getPurchaseOrders(supplierId);
+    }
+
+    @GetMapping("/{supplierId}/proposals")
+    public List<PriceProposalResponse> getMyProposals(@PathVariable UUID supplierId) {
+        return portalService.getMyProposals(supplierId);
+    }
+
+    @PostMapping("/pos/{poId}/acknowledge")
+    public PurchaseOrderResponse acknowledgeOrder(@PathVariable UUID poId, @RequestParam UUID userId) {
+        return portalService.acknowledgeOrder(userId, poId);
+    }
+
+    @PostMapping("/pos/{poId}/counter-offer")
+    public PurchaseOrderResponse counterOfferOrder(@PathVariable UUID poId, @RequestParam UUID userId, @RequestBody CounterOfferRequest request) {
+        return portalService.counterOfferOrder(userId, poId, request);
+    }
+
+    @PostMapping("/pos/{poId}/ship")
+    public PurchaseOrderResponse shipOrder(@PathVariable UUID poId, @RequestParam UUID userId, @RequestBody ShipActionRequest request) {
+        return portalService.shipOrder(userId, poId, request);
+    }
 }

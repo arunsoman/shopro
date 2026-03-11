@@ -11,6 +11,8 @@ import java.util.UUID;
 public interface VendorBidRepository extends JpaRepository<VendorBid, UUID> {
     List<VendorBid> findByRfqIdAndStatus(UUID rfqId, mls.sho.dms.entity.inventory.VendorBidStatus status);
 
+    List<VendorBid> findByRfqId(UUID rfqId);
+
     long countBySupplierIdAndStatus(UUID supplierId, mls.sho.dms.entity.inventory.VendorBidStatus status);
 
     long countBySupplierIdAndStatusAndCreatedAtAfter(UUID supplierId, mls.sho.dms.entity.inventory.VendorBidStatus status, java.time.Instant date);

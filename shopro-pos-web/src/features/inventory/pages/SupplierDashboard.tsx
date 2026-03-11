@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useSupplierAuth } from '@/features/auth/SupplierAuthContext';
-import { useSupplierDashboard, useSupplierPortalInventory } from '../hooks/useSupplierPortal';
+import { useSupplierDashboard, useSupplierPortalInventory, useSupplierPortalPOs } from '../hooks/useSupplierPortal';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
@@ -21,8 +21,9 @@ export const SupplierDashboard: React.FC = () => {
     const { session } = useSupplierAuth();
     const { data: stats, isLoading: statsLoading } = useSupplierDashboard(session?.supplierId);
     const { data: inventory, isLoading: invLoading } = useSupplierPortalInventory(session?.supplierId);
+    const { data: pos, isLoading: posLoading } = useSupplierPortalPOs(session?.supplierId);
 
-    if (statsLoading || invLoading) return (
+    if (statsLoading || invLoading || posLoading) return (
         <div className="flex items-center justify-center h-64">
             <div className="animate-pulse text-slate-400">Loading your performance metrics...</div>
         </div>
@@ -137,6 +138,62 @@ export const SupplierDashboard: React.FC = () => {
                             {(!inventory || inventory.length === 0) && (
                                 <div className="text-center py-12 text-slate-400 italic text-sm">
                                     No tracked ingredients in your catalog yet.
+                                </div>
+                            )}
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card className="lg:col-span-2 border-none shadow-sm dark:bg-slate-900 overflow-hidden">
+                    <CardHeader className="flex flex-row items-center justify-between border-b border-slate-50 dark:border-slate-800">
+                        <CardTitle className="text-lg flex items-center gap-2">
+                            <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                            Awarded Purchase Orders
+                        </CardTitle>
+                        <Button variant="ghost" size="sm" asChild>
+                            <Link to="/supplier/pos" className="gap-2 text-indigo-600">
+                                View All <ArrowRight className="h-4 w-4" />
+                            </Link>
+                        </Button>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                        <div className="divide-y divide-slate-50 dark:divide-slate-800">
+                            {pos?.slice(0, 5).map(po => (
+                                <div key={po.id} className="flex items-center justify-between p-4 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 bg-emerald-50 dark:bg-emerald-900/20 rounded">
+                                            <Package className="h-4 w-4 text-emerald-600" />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-semibold">PO #{po.id.slice(0, 8)}</p>
+                                            <p className="text-xs text-slate-400">Value: ${Number(po.totalValue || 0).toFixed(2)}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-4">
+                                        <div className="text-right">
+                                            <p className="text-xs font-medium text-slate-500">
+                                                {po.status}
+                                            </p>
+                                            <p className="text-[10px] text-slate-400">
+                                                Expected: {po.expectedDeliveryDate || 'N/A'}
+                                            </p>
+                                        </div>
+                                        <Button size="sm" variant="outline" className={cn(
+                                            "h-8 text-xs transition-all",
+                                            (po.status === 'SENT' || po.status === 'ACKNOWLEDGED') 
+                                                ? "bg-indigo-50 border-indigo-100 text-indigo-600 hover:bg-indigo-100" 
+                                                : "bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100"
+                                        )} asChild>
+                                            <Link to={`/supplier/po/${po.id}`}>
+                                                { (po.status === 'SENT' || po.status === 'ACKNOWLEDGED') ? 'Fulfill' : 'View' }
+                                            </Link>
+                                        </Button>
+                                    </div>
+                                </div>
+                            ))}
+                            {(!pos || pos.length === 0) && (
+                                <div className="text-center py-12 text-slate-400 italic text-sm">
+                                    No awarded purchase orders to fulfill.
                                 </div>
                             )}
                         </div>

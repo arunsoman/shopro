@@ -25,17 +25,20 @@ export const SupplierInventoryView: React.FC = () => {
     const [proposedPrice, setProposedPrice] = React.useState<number>(0);
     const [notes, setNotes] = React.useState('');
 
-    const proposeMutation = useProposePrice(session?.userId || '');
+    const proposeMutation = useProposePrice();
 
     if (isLoading) return <div className="text-slate-500">Syncing stock visibility...</div>;
 
     const handleProposalSubmit = async () => {
         try {
             await proposeMutation.mutateAsync({
-                supplierId: session?.supplierId || '',
-                ingredientId: selectedItem.ingredientId,
-                proposedPrice: proposedPrice,
-                notes: notes
+                userId: session?.userId || '',
+                request: {
+                    supplierId: session?.supplierId || '',
+                    ingredientId: selectedItem.ingredientId,
+                    proposedPrice: proposedPrice,
+                    notes: notes
+                }
             });
             toast.success('Price proposal sent to procurement');
             setSelectedItem(null);
@@ -84,7 +87,7 @@ export const SupplierInventoryView: React.FC = () => {
                                 </div>
                                 <div className="text-right">
                                     <p className="text-xs text-slate-400 uppercase font-bold">Your Price</p>
-                                    <p className="font-bold text-slate-900 dark:text-slate-100">${item.currentVendorPrice.toFixed(2)}</p>
+                                    <p className="font-bold text-slate-900 dark:text-slate-100">${Number(item.currentVendorPrice || 0).toFixed(2)}</p>
                                 </div>
                             </div>
 

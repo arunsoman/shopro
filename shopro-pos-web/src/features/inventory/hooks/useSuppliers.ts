@@ -6,8 +6,10 @@ import type {
     SupplierCatalogImportRequest,
     PriceComparison,
     SupplierUser,
-    InviteSupplierUserRequest
+    InviteSupplierUserRequest,
+    SupplierPolicy
 } from '../api/types';
+import { apiClient } from '@/lib/api/client';
 
 const API_BASE = '/api/v1/inventory/suppliers';
 
@@ -95,6 +97,30 @@ export const useDeactivateSupplierUser = (supplierId: string) => {
             axios.patch(`${API_BASE}/${supplierId}/users/${userId}/deactivate`),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['supplier-users', supplierId] });
+        }
+    });
+};
+
+export const useSupplierPolicy = (supplierId?: string) => {
+    return useQuery<SupplierPolicy>({
+        queryKey: ['supplier-policy', supplierId],
+        queryFn: async () => {
+            const { data } = await apiClient.get<SupplierPolicy>(`/inventory/suppliers/${supplierId}/policy`);
+            return data;
+        },
+        enabled: !!supplierId
+    });
+};
+
+export const useUpdateSupplierPolicy = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async ({ supplierId, policy }: { supplierId: string, policy: Partial<SupplierPolicy> }) => {
+            const { data } = await apiClient.put<SupplierPolicy>(`/inventory/suppliers/${supplierId}/policy`, policy);
+            return data;
+        },
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({ queryKey: ['supplier-policy', variables.supplierId] });
         }
     });
 };

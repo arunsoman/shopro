@@ -96,7 +96,7 @@ export const InventoryDashboard: React.FC = () => {
                         ) : (
                             <>
                                 <div className="text-2xl font-bold text-foreground">
-                                    ${(stats?.monthlyWasteAmount || 0).toFixed(2)}
+                                    ${Number(stats?.monthlyWasteAmount || 0).toFixed(2)}
                                 </div>
                                 <p className="text-xs text-error">-0.4% from goal</p>
                             </>

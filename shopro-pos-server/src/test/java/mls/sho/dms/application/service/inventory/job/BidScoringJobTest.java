@@ -1,6 +1,7 @@
 package mls.sho.dms.application.service.inventory.job;
 
 import mls.sho.dms.application.service.inventory.AlertService;
+import mls.sho.dms.application.service.inventory.POGeneratorService;
 import mls.sho.dms.entity.inventory.*;
 import mls.sho.dms.entity.staff.Role;
 import mls.sho.dms.entity.staff.StaffMember;
@@ -37,6 +38,7 @@ class BidScoringJobTest {
     @Mock private PurchaseOrderLineRepository purchaseOrderLineRepository;
     @Mock private StaffRepository staffMemberRepository;
     @Mock private AlertService alertService;
+    @Mock private POGeneratorService poGeneratorService;
 
     @InjectMocks
     private BidScoringJob bidScoringJob;
@@ -122,11 +124,11 @@ class BidScoringJobTest {
         when(vendorBidRepository.findByRfqIdAndStatus(expiredRfq.getId(), VendorBidStatus.SUBMITTED))
             .thenReturn(List.of(b1, b2, b3));
         
-        when(staffMemberRepository.findAll()).thenReturn(List.of(admin));
+        when(staffMemberRepository.findByActiveTrue()).thenReturn(List.of(admin));
         
         PurchaseOrder dummyPo = new PurchaseOrder();
         dummyPo.setId(UUID.randomUUID());
-        when(purchaseOrderRepository.save(any(PurchaseOrder.class))).thenReturn(dummyPo);
+        when(poGeneratorService.createFromBid(any(UUID.class), any())).thenReturn(dummyPo);
 
         bidScoringJob.evaluateExpiredRfqs();
 
@@ -135,18 +137,8 @@ class BidScoringJobTest {
         assertEquals(VendorBidStatus.LOST, b2.getStatus());
         assertEquals(RfqStatus.CLOSED, expiredRfq.getStatus());
 
-        ArgumentCaptor<PurchaseOrder> poCaptor = ArgumentCaptor.forClass(PurchaseOrder.class);
-        verify(purchaseOrderRepository).save(poCaptor.capture());
+        verify(poGeneratorService).createFromBid(eq(b3.getId()), any());
         
-        PurchaseOrder savedPo = poCaptor.getValue();
-        assertEquals(s3, savedPo.getSupplier());
-        assertEquals(PurchaseOrderStatus.DRAFT, savedPo.getStatus());
-        assertEquals(BigDecimal.valueOf(95.0), savedPo.getTotalValue()); // 1.90 * 50
-
-        ArgumentCaptor<PurchaseOrderLine> lineCaptor = ArgumentCaptor.forClass(PurchaseOrderLine.class);
-        verify(purchaseOrderLineRepository).save(lineCaptor.capture());
-        assertEquals(ingredient, lineCaptor.getValue().getIngredient());
-
         verify(alertService).sendNotification(eq("Manager"), contains("Bid Awarded & PO Drafted"), anyString());
     }
 }

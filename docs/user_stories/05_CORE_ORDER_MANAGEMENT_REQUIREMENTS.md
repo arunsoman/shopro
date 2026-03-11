@@ -78,18 +78,14 @@ This document captures fully expanded User Stories for the Core Menu & Order Man
 **Role:** Server
 **Goal:** Tap a primary menu category to quickly filter the displayed menu items.
 
-#### Flow
+#### UI Journey (GATE 5b)
+- **Origin Screen:** Order Header / Initial Menu View.
+- **Trigger:** Tap on a Category Tile (e.g., 'Mains').
+- **Container:** Main Menu Grid (state reactive).
+- **Spatial:** Horizontal category bar at top; grid below updates.
+- **Cancel Path:** Tapping 'Home' or 'All' resets filters.
 
-1. Server opens an active or new order ticket on the POS terminal.
-2. The screen displays a category bar (top or side) listing all active top-level categories (e.g., Appetizers, Mains, Drinks, Desserts).
-3. Server taps a category tile.
-4. Within **200ms**, the main item grid re-renders to display only the `MenuItem` records belonging to that category.
-5. The tapped category tile receives a **visual highlight** (e.g., filled background, underline, accent colour) to indicate it is the active filter.
-6. All previously visible items from other categories are hidden.
-7. Server can tap a different category at any point to switch the filter; the highlight moves accordingly.
-8. An **"All"** or **"Home"** tab (if present) resets the grid to show all available items.
-
-#### Edge Cases & System Behaviour
+#### Acceptance Criteria
 
 - If a category contains **zero active items** (e.g., all are 86'd), the grid displays an empty-state message: _"No items available in this category."_
 - Categories marked **inactive** in the back-office are not shown in the category bar.
@@ -112,18 +108,14 @@ This document captures fully expanded User Stories for the Core Menu & Order Man
 **Role:** Server
 **Goal:** Tap a visual tile to add an item to the active order ticket.
 
-#### Flow
+#### UI Journey (GATE 5b)
+- **Origin Screen:** Menu Grid.
+- **Trigger:** Single-tap on `MenuItem` Tile.
+- **Container:** Inline add (if no modifiers) or `Sheet` overlay (if modifiers required).
+- **Spatial:** Slide-in from right (for modifiers) or animation to sidebar (for simple add).
+- **Cancel Path:** Swipe-dismiss or 'Cancel' button on modifier sheet.
 
-1. Server views the filtered or full item grid; each tile shows the dish **photo**, **name**, and **base price**.
-2. Server taps the tile for the desired item.
-3. **System checks** whether the item has any **required modifier groups** (i.e., `ModifierGroup.required = true`).
-   - **If NO required modifiers exist:** The item is added immediately to the Order Ticket sidebar within **200ms**. A brief animation (e.g., item flies into the sidebar) provides visual confirmation.
-   - **If required modifiers exist:** An **intermediate Modifier Screen** slides in or overlays the grid. The Server must complete all required selections before the item can be committed (see US-2.1 for full modifier flow).
-4. Once added, the item appears as a new line in the Order Ticket sidebar with quantity `1`, its name, and its current price.
-5. The running subtotal, estimated tax, and total in the sidebar update immediately.
-6. The Server may continue browsing and adding further items.
-
-#### Edge Cases & System Behaviour
+#### Acceptance Criteria
 
 - If the item is **out of stock / 86'd**, the tile displays a greyed-out overlay and an "Unavailable" label; tapping it produces no action.
 - If the item requires a **minimum quantity** (e.g., sold in pairs), the quantity defaults to that minimum on addition.
@@ -145,6 +137,13 @@ This document captures fully expanded User Stories for the Core Menu & Order Man
 
 **Role:** Server
 **Goal:** Type a dish name in a search bar to quickly locate rarely ordered items.
+
+#### UI Journey (GATE 5b)
+- **Origin Screen:** Menu Grid.
+- **Trigger:** Tap on Search Icon (top-right) or Search Bar.
+- **Container:** Inline Search Field with typeahead.
+- **Spatial:** Expands to full width of header; grid below filters.
+- **Cancel Path:** 'X' button clears; 'Back' icon dismisses keyboard.
 
 #### Flow
 
@@ -188,22 +187,14 @@ This document captures fully expanded User Stories for the Core Menu & Order Man
 **Role:** Server
 **Goal:** Be forced to select a required modifier (e.g., Meat Temperature) when adding specific items.
 
-#### Flow
+#### UI Journey (GATE 5b)
+- **Origin Screen:** Menu Grid (on item tap).
+- **Trigger:** Auto-trigger when `ModifierGroup.required=true`.
+- **Container:** `Sheet` (Slide-out from Right).
+- **Spatial:** Fixes to right 40% of tablet screen; menu grid remains interactive but dimmed.
+- **Cancel Path:** 'Cancel' button; prevents adding item to ticket.
 
-1. Server taps a menu item tile that has one or more **required `ModifierGroup`** records.
-2. The system intercepts the add action and opens the **Modifier Screen** as a modal or full overlay.
-3. The Modifier Screen displays:
-   - Item name and photo at the top.
-   - Each `ModifierGroup` listed in order, labelled with its name (e.g., "Meat Temperature") and marked **"Required"**.
-   - Selection tiles/buttons for each `ModifierOption` within the group (e.g., Rare, Medium, Well Done).
-4. The **"Add to Ticket"** button is **disabled** (greyed out) until exactly ONE option is selected from every required group.
-5. As the Server selects an option within a required group, that option highlights and the group's validation indicator turns green.
-6. If there are also optional modifier groups on the same screen (see US-2.2), they appear below the required groups and are clearly labelled "Optional".
-7. Once all required groups have a selection, the "Add to Ticket" button becomes active.
-8. Server taps **"Add to Ticket"**: the item is added to the Order Ticket sidebar with all chosen modifiers listed as sub-lines beneath the item name.
-9. The subtotal updates to reflect the item price plus any upcharges from selected modifiers.
-
-#### Edge Cases & System Behaviour
+#### Acceptance Criteria
 
 - If the Server taps the **back/cancel button** on the Modifier Screen, the item is **not added** to the ticket. The grid returns to its previous state.
 - If a required group has only one option (e.g., only one size available), that option should be **pre-selected** automatically, but remain visible for Server awareness.
@@ -224,6 +215,13 @@ This document captures fully expanded User Stories for the Core Menu & Order Man
 
 **Role:** Server
 **Goal:** Select optional add-ons (e.g., Extra Cheese +$1.50) to upsell and accurately charge the customer.
+
+#### UI Journey (GATE 5b)
+- **Origin Screen:** Menu Grid (on item tap).
+- **Trigger:** Auto-trigger (if required exist) or tap 'Edit' on line item.
+- **Container:** `Sheet` (Slide-out from Right).
+- **Spatial:** Right 40% of tablet screen; menu grid remains interactive but dimmed.
+- **Cancel Path:** 'Cancel' button; prevents adding/updating item.
 
 #### Flow
 
@@ -258,6 +256,13 @@ This document captures fully expanded User Stories for the Core Menu & Order Man
 
 **Role:** Server
 **Goal:** Apply 'NO' modifiers and 'ALLERGY' flags so the kitchen clearly knows to omit ingredients safely.
+
+#### UI Journey (GATE 5b)
+- **Origin Screen:** Modifier Screen / Detail View.
+- **Trigger:** Tap on 'Subtractions' category or 'Allergy' icon.
+- **Container:** Inline expansion within `Sheet` or `Dialog`.
+- **Spatial:** Centred within the active modifier container.
+- **Cancel Path:** Deselecting the option; 'Cancel' on main sheet.
 
 #### Flow
 
@@ -297,6 +302,13 @@ This document captures fully expanded User Stories for the Core Menu & Order Man
 
 **Role:** Server
 **Goal:** Attach a free-text note (max 100 chars) to a line item for requests not covered by standard modifiers.
+
+#### UI Journey (GATE 5b)
+- **Origin Screen:** Modifier Screen / Order Sidebar Edit.
+- **Trigger:** Tap on 'Special Instructions' text field.
+- **Container:** OS Keyboard + Inline focus with character counter.
+- **Spatial:** Inline within the active `Sheet` or detail panel.
+- **Cancel Path:** Clear text or tap outside to dismiss keyboard without saving.
 
 #### Flow
 
@@ -340,6 +352,13 @@ This document captures fully expanded User Stories for the Core Menu & Order Man
 **Role:** Server
 **Goal:** Use '+' and '−' buttons to quickly adjust item quantity on the ticket.
 
+#### UI Journey (GATE 5b)
+- **Origin Screen:** Order Sidebar.
+- **Trigger:** Tap on '+' or '−' icon buttons.
+- **Container:** Inline state update.
+- **Spatial:** Confined to the specific line item card in sidebar.
+- **Cancel Path:** N/A (Reactive state); Undo toast appears on removal.
+
 #### Flow
 
 1. The Order Ticket sidebar lists each line item with a **quantity display** flanked by **'−'** and **'+'** buttons.
@@ -375,17 +394,14 @@ This document captures fully expanded User Stories for the Core Menu & Order Man
 **Role:** Server
 **Goal:** Assign specific items to separate sub-tickets so customers can pay independently.
 
-#### Flow
+#### UI Journey (GATE 5b)
+- **Origin Screen:** Active Order Management View.
+- **Trigger:** 'Split Bill' button in Ticket Header.
+- **Container:** Full-screen multi-column view.
+- **Spatial:** Column 1 = Original Items; Column 2+ = Sub-Tickets.
+- **Cancel Path:** 'Discard Split' button with confirmation toast.
 
-1. Server taps the **"Split Bill"** action on the active order ticket.
-2. The system enters **Split Mode**, displaying the full list of line items.
-3. A panel shows labelled sub-tickets: **Seat 1**, **Seat 2** (and the option to add more seats).
-4. Server taps a line item and taps the target seat (or drags the item to the seat column) to assign it.
-5. Partially consumed items (e.g., a shared bottle of wine) can be split by quantity — the Server adjusts quantities across multiple seats.
-6. As items are assigned, each sub-ticket's **independent subtotal and tax** update in real time.
-7. All sub-tickets remain **grouped under the same parent Order ID / Table ID** for tracking purposes.
-8. Server taps **"Confirm Split"** to lock the assignments.
-9. Each sub-ticket can proceed independently through the payment flow (US-4.2).
+#### Acceptance Criteria
 10. An item that is not yet assigned to any seat remains in an **"Unassigned"** pool, preventing checkout until all items are assigned or the Server explicitly selects "Charge to one seat."
 
 #### Edge Cases & System Behaviour
@@ -410,6 +426,13 @@ This document captures fully expanded User Stories for the Core Menu & Order Man
 
 **Role:** Server
 **Goal:** Designate items as Course 1 / Course 2, hold Course 2, and manually fire it when ready.
+
+#### UI Journey (GATE 5b)
+- **Origin Screen:** Order Sidebar.
+- **Trigger:** Long-press item -> 'Assign Course' or 'Hold' toggle.
+- **Container:** `Dialog` (Course Picker) or Inline Toggle.
+- **Spatial:** Overlays active ticket; 'Fire' button appears in Sidebar Footer.
+- **Cancel Path:** Tap backdrop to dismiss picker.
 
 #### Flow
 
@@ -446,6 +469,13 @@ This document captures fully expanded User Stories for the Core Menu & Order Man
 
 **Role:** Manager
 **Goal:** Apply a percentage or flat-fee discount to a line item or the whole ticket, secured by Manager PIN.
+
+#### UI Journey (GATE 5b)
+- **Origin Screen:** Order Sidebar / Checkout.
+- **Trigger:** 'Discount' button.
+- **Container:** `Dialog` (PIN entry first, then Discount Selector).
+- **Spatial:** Centred in viewport with backdrop.
+- **Cancel Path:** 'Cancel' on PIN entry or 'Cancel' on Discount selector.
 
 #### Flow
 
@@ -487,6 +517,13 @@ This document captures fully expanded User Stories for the Core Menu & Order Man
 
 **Role:** Kitchen Manager
 **Goal:** Reject an order or specific items (e.g., out-of-stock) and immediately notify the Server.
+
+#### UI Journey (GATE 5b)
+- **Origin Screen:** KDS Station View.
+- **Trigger:** 'Reject' button on KDS Ticket.
+- **Container:** `Dialog` (Reason Picker).
+- **Spatial:** Centred on KDS screen; blocks item bump until reason selected.
+- **Cancel Path:** 'Back' button return to KDS view.
 
 #### Flow
 
@@ -531,6 +568,13 @@ This document captures fully expanded User Stories for the Core Menu & Order Man
 **Role:** Manager
 **Goal:** Void an entire order ticket (e.g., guest walk-out or duplicate), requiring a reason and PIN.
 
+#### UI Journey (GATE 5b)
+- **Origin Screen:** Order Header / More Options.
+- **Trigger:** 'Cancel Order' menu item.
+- **Container:** `AlertDialog`.
+- **Spatial:** Centred in viewport; requires high-contrast 'Confirm' button.
+- **Cancel Path:** 'No, Keep Order' (Escape/Backdrop).
+
 #### Flow
 
 1. Server/Manager selects the "Cancel Order" action from the ticket menu.
@@ -559,6 +603,13 @@ This document captures fully expanded User Stories for the Core Menu & Order Man
 **Role:** Server
 **Goal:** Add new items to an existing order or remove/void specific submitted items.
 
+#### UI Journey (GATE 5b)
+- **Origin Screen:** Order Sidebar (Submitted Item).
+- **Trigger:** Swipe-left on item -> 'Void' or 'Edit' button.
+- **Container:** `Dialog` (Manager PIN / Reason).
+- **Spatial:** Centred in viewport.
+- **Cancel Path:** 'Cancel' button; item remains on ticket.
+
 #### Flow
 
 1. Server opens an active `ORDERED` or `PREPARING` ticket.
@@ -586,6 +637,13 @@ This document captures fully expanded User Stories for the Core Menu & Order Man
 
 **Role:** Server
 **Goal:** Add items to a ticket and have them automatically sorted into Course 1 (Appetizer), Course 2 (Main), etc. based on their menu category.
+
+#### UI Journey (GATE 5b)
+- **Origin Screen:** Menu Grid.
+- **Trigger:** Auto-trigger (Item select).
+- **Container:** Order Sidebar Section.
+- **Spatial:** High-level headers cluster items by category.
+- **Cancel Path:** N/A (Auto-sort); manually moveable per US-3.1.
 
 #### Flow
 
@@ -617,22 +675,14 @@ This document captures fully expanded User Stories for the Core Menu & Order Man
 **Role:** Server
 **Goal:** Press "Send" to instantly transmit unsubmitted items to the kitchen.
 
-#### Flow
+#### UI Journey (GATE 5b)
+- **Origin Screen:** Order Management Sidebar.
+- **Trigger:** 'Send to Kitchen' button.
+- **Container:** Button loading state (Spinner) with haptic pulse.
+- **Spatial:** Inline feedback on ticket line items (Blue → Black).
+- **Cancel Path:** None (Immutable transaction once confirmed).
 
-1. Server reviews the Order Ticket in the DRAFT state; new/unsubmitted items are displayed in **blue text** (or another designated "new" colour).
-2. Server taps the **"Send to Kitchen"** button (prominently positioned per US-8.3).
-3. The button immediately disables and shows a **loading spinner** (idempotency guard — US-4.3).
-4. The POS client sends the order payload to the backend via the API.
-5. The backend validates the `OrderTicket` state (`DRAFT` or `REJECTED_KITCHEN` → transition to `PENDING_KITCHEN`).
-6. The backend creates `KDSTicket` and `KDSTicketItem` records and routes them to the appropriate kitchen stations (by item category or prep station mapping).
-7. Within **300ms** of a successful API response:
-   - Items on the POS ticket change from blue text to **black text** ("Submitted" state).
-   - The "Send to Kitchen" button re-enables (or remains disabled if no new unsent items remain).
-8. Within **1 second**, the `KDSTicket` appears on the targeted KDS screen(s) in the kitchen.
-9. An `InventoryTransaction` record is created for each sent item to decrement provisional inventory.
-10. Haptic feedback fires on the Server's device (short pulse for success — US-16.4).
-
-#### Edge Cases & System Behaviour
+#### Acceptance Criteria
 
 - If the API call **fails** (network timeout, server error): the items remain in blue text (DRAFT state), the spinner stops, and an error toast appears: _"Failed to send to kitchen. Tap to retry."_ No partial state is written.
 - If the KDS is **offline** but the backend is reachable: the order is queued server-side and routed to the KDS upon reconnection. The POS shows a warning: _"KDS offline — order queued."_
@@ -655,22 +705,14 @@ This document captures fully expanded User Stories for the Core Menu & Order Man
 **Role:** Server
 **Goal:** Press "Checkout" to transition from the menu grid to the payment processing screen.
 
-#### Flow
+#### UI Journey (GATE 5b)
+- **Origin Screen:** Order Management View.
+- **Trigger:** 'Checkout' button.
+- **Container:** Full-page slide transition to Payment UI.
+- **Spatial:** Replaces menu/grid view.
+- **Cancel Path:** 'Back' arrow (Haptic confirm).
 
-1. Server confirms all desired items are on the ticket and the order is in an appropriate state for payment (see US-8.2 for gate enforcement).
-2. Server taps the **"Checkout"** button.
-3. The system validates the payment gate (US-8.2): if the order state is below `SERVED` (and no manager override), the button is disabled.
-4. Assuming the gate passes, the POS transitions from the menu/order screen to the **Checkout / Payment Screen**.
-5. The Checkout Screen displays:
-   - Itemised list of all line items with quantities and prices.
-   - Subtotal.
-   - VAT / Tax amount (5% UAE VAT — US-6.1, or applicable jurisdiction rate).
-   - **Gratuity suggestions** (e.g., 10%, 15%, 20%, Custom, or No Tip) as selectable presets.
-   - **Grand Total** after selected gratuity.
-   - Payment method options: **Cash**, **Card**, **Gift Card**, **House Account** (if applicable — US-13.1), **Multi-Currency** (if enabled — US-14.1).
-6. Server (or customer, if using a customer-facing display) selects a payment method and proceeds to finalise payment.
-
-#### Edge Cases & System Behaviour
+#### Acceptance Criteria
 
 - If there are **unsubmitted items** (still in blue DRAFT state) on the ticket when Checkout is tapped, the system warns: _"You have unsent items. Send to kitchen before checking out?"_ with options "Send Now" / "Remove Unsent Items" / "Cancel".
 - The checkout screen is accessible from any order state that meets the gate criteria, including split sub-tickets (US-3.2).
@@ -691,6 +733,13 @@ This document captures fully expanded User Stories for the Core Menu & Order Man
 
 **Role:** Server (System Guard)
 **Goal:** Prevent the same order from being accidentally sent to the kitchen twice.
+
+#### UI Journey (GATE 5b)
+- **Origin Screen:** Order Side Bar.
+- **Trigger:** 'Send to Kitchen' button.
+- **Container:** Inline spinner on button; items transition in Sidebar.
+- **Spatial:** Confined to the primary action area of the Sidebar.
+- **Cancel Path:** N/A (Atomic transaction).
 
 #### Flow
 
@@ -736,6 +785,13 @@ This document captures fully expanded User Stories for the Core Menu & Order Man
 **Role:** Cashier
 **Goal:** Create a takeaway order with minimal taps, bypassing floor-plan selection.
 
+#### UI Journey (GATE 5b)
+- **Origin Screen:** POS Home Screen / Table View.
+- **Trigger:** 'New Takeaway' button or FAB.
+- **Container:** New Ticket Overlay.
+- **Spatial:** Transitions to full-page menu view.
+- **Cancel Path:** 'X' button or 'Cancel' dismisses ticket.
+
 #### Flow
 
 1. Cashier taps the dedicated **"Takeaway"** button on the POS home screen (bypasses the Floor Plan / Table Selection screen).
@@ -777,6 +833,13 @@ This document captures fully expanded User Stories for the Core Menu & Order Man
 **Role:** Customer (and System)
 **Goal:** Inform the customer of an accurate ETA for their takeaway order.
 
+#### UI Journey (GATE 5b)
+- **Origin Screen:** Background Process.
+- **Trigger:** Auto-triggered by `OrderTicket` transition to `PENDING_KITCHEN`.
+- **Container:** Receipt (Print) / SMS / Dashboard Header.
+- **Spatial:** Displays prominently on ticket and customer-facing UI.
+- **Cancel Path:** N/A.
+
 #### Flow
 
 1. Immediately after the takeaway order is sent to the kitchen (US-5.1 / US-4.1), the system calculates an **Estimated Time of Arrival (ETA)** based on:
@@ -814,6 +877,13 @@ This document captures fully expanded User Stories for the Core Menu & Order Man
 
 **Role:** Cashier
 **Goal:** Verify customer identity before handing over food to prevent mix-ups or theft.
+
+#### UI Journey (GATE 5b)
+- **Origin Screen:** Takeaway Dashboard / Ready Queue.
+- **Trigger:** 'Verify Pickup' button on 'Ready' ticket.
+- **Container:** `Sheet` (Camera Scanner / Manual Entry).
+- **Spatial:** Overlays active dashboard.
+- **Cancel Path:** 'Back' or 'X' button.
 
 #### Flow
 
@@ -901,6 +971,13 @@ This document captures fully expanded User Stories for the Core Menu & Order Man
 **Role:** Manager
 **Goal:** Configure the restaurant's 15-digit TRN in backend settings.
 
+#### UI Journey (GATE 5b)
+- **Origin Screen:** Admin Panel -> Settings -> Tax & Compliance.
+- **Trigger:** 'Edit TRN' button.
+- **Container:** `Dialog` (PIN entry) -> Inline focus.
+- **Spatial:** Centred in admin settings panel.
+- **Cancel Path:** 'Discard' button dismisses field edits.
+
 #### Flow
 
 1. Manager navigates to **Admin Panel → Settings → Tax & Compliance**.
@@ -944,6 +1021,13 @@ This document captures fully expanded User Stories for the Core Menu & Order Man
 
 **Role:** Server
 **Goal:** See a clear, specific error message when a guest's card is declined, and offer an alternative without losing the ticket.
+
+#### UI Journey (GATE 5b)
+- **Origin Screen:** Checkout Screen.
+- **Trigger:** Tap on 'Card' payment method and initiate.
+- **Container:** Inline 'Processing' Overlay or Toast.
+- **Spatial:** Overlays totals; dims method selection.
+- **Cancel Path:** Terminal cancel button; reverts to payment selector.
 
 #### Flow
 
@@ -991,6 +1075,13 @@ This document captures fully expanded User Stories for the Core Menu & Order Man
 
 **Role:** Manager
 **Goal:** Search for a closed or paid order by table number, date, or order ID.
+
+#### UI Journey (GATE 5b)
+- **Origin Screen:** Admin Dashboard / POS More Menu.
+- **Trigger:** 'Order History' link.
+- **Container:** Full-page navigation (/admin/orders).
+- **Spatial:** List-detail view with filter sidebar.
+- **Cancel Path:** 'Back' arrow or 'Home' icon.
 
 #### Flow
 
@@ -1055,6 +1146,13 @@ This document captures fully expanded User Stories for the Core Menu & Order Man
 **Role:** Manager
 **Goal:** View a complete timeline of every state change for any order.
 
+#### UI Journey (GATE 5b)
+- **Origin Screen:** Order Detail View.
+- **Trigger:** 'View Timeline' or scroll to footer.
+- **Container:** Vertical Stepper / List.
+- **Spatial:** Integrated into the side or bottom of the detail panel.
+- **Cancel Path:** Collapse icon or 'Back' button.
+
 #### Flow
 
 1. Manager opens an order from the Order History search results (US-7b.1).
@@ -1090,6 +1188,13 @@ This document captures fully expanded User Stories for the Core Menu & Order Man
 
 **Role:** Manager
 **Goal:** Re-print the receipt for any closed order from the order history view.
+
+#### UI Journey (GATE 5b)
+- **Origin Screen:** Order Detail View.
+- **Trigger:** 'Re-print Receipt' button (Printer Icon).
+- **Container:** Toast (Sending to Printer) + Printer Queue Dialog.
+- **Spatial:** Top center HUD or bottom snackbar.
+- **Cancel Path:** N/A (Atomic print job).
 
 #### Flow
 
@@ -1224,6 +1329,13 @@ This document captures fully expanded User Stories for the Core Menu & Order Man
 **Role:** Server
 **Goal:** A persistent "Back to Tables" button on the POS order screen to switch between ordering and table management.
 
+#### UI Journey (GATE 5b)
+- **Origin Screen:** Order Entry View (Floating or Header).
+- **Trigger:** 'Back to Tables' icon or button.
+- **Container:** Full-page route transition.
+- **Spatial:** Replaces ordering grid with floor plan.
+- **Cancel Path:** Tap table again to re-enter order.
+
 #### Flow
 
 1. At all times while the order entry screen is active, a **"Back to Tables"** button or icon is visible in the top app bar or a persistent sidebar icon.
@@ -1302,6 +1414,13 @@ This document captures fully expanded User Stories for the Core Menu & Order Man
 **Role:** System
 **Goal:** Automatically receive and route third-party delivery platform orders into the kitchen pipeline.
 
+#### UI Journey (GATE 5b)
+- **Origin Screen:** Background Integration.
+- **Trigger:** Incoming Webhook from Aggregator (PET/DPoP secured).
+- **Container:** KDS Ticket card with Platform Logo.
+- **Spatial:** Injected into active kitchen queue.
+- **Cancel Path:** Manager Void (Manual).
+
 #### Flow
 
 1. Third-party platform (UberEats, Deliveroo) sends an order via **webhook or API** to the Shopro backend.
@@ -1379,6 +1498,13 @@ This document captures fully expanded User Stories for the Core Menu & Order Man
 **Role:** Kitchen Staff
 **Goal:** Mark when a delivery driver picks up an order for proof of handoff and delivery time tracking.
 
+#### UI Journey (GATE 5b)
+- **Origin Screen:** KDS Ready State / Delivery Dashboard.
+- **Trigger:** 'Driver Pickup' button tapping.
+- **Container:** `Dialog` (QR Scanner / Manual ID).
+- **Spatial:** Center viewport with backdrop.
+- **Cancel Path:** 'X' or 'Back' button.
+
 #### Flow
 
 1. A delivery order in `READY` state appears on the KDS or POS with a **"Driver Pickup"** button.
@@ -1421,6 +1547,13 @@ This document captures fully expanded User Stories for the Core Menu & Order Man
 **Role:** Cashier
 **Goal:** Flag an order as "Curbside" and capture vehicle details so runners know which car to approach.
 
+#### UI Journey (GATE 5b)
+- **Origin Screen:** POS Home / New Order.
+- **Trigger:** 'New Order' -> 'Curbside' selection.
+- **Container:** `Sheet` (Form entry).
+- **Spatial:** Centered or anchored to the new ticket panel.
+- **Cancel Path:** 'Discard' / 'X'.
+
 #### Flow
 
 1. Cashier taps the **"New Order"** button; an **Order Type Selector** appears: Dine-In / Takeaway / Curbside / Delivery.
@@ -1459,6 +1592,13 @@ This document captures fully expanded User Stories for the Core Menu & Order Man
 **Role:** Customer
 **Goal:** Notify the restaurant upon arrival so food is brought out immediately.
 
+#### UI Journey (GATE 5b)
+- **Origin Screen:** Customer Mobile / SMS Link.
+- **Trigger:** Tapping 'I'm Here' button.
+- **Container:** Web App (Lightweight) Confirmation page.
+- **Spatial:** Fires event to POS Floor Plan (Flashing icon).
+- **Cancel Path:** N/A.
+
 #### Flow
 
 1. After placing a curbside order, the customer receives an SMS with a **"Tap when you've arrived"** link.
@@ -1492,6 +1632,13 @@ This document captures fully expanded User Stories for the Core Menu & Order Man
 
 **Role:** QSR Cashier
 **Goal:** Streamlined interface for drive-through orders with vehicle queue tracking.
+
+#### UI Journey (GATE 5b)
+- **Origin Screen:** POS Mode Selector.
+- **Trigger:** 'Drive-Through' mode switch.
+- **Container:** Full-screen UI reflow.
+- **Spatial:** Replaces grid with Queue/Lane visualization.
+- **Cancel Path:** Revert mode via user settings.
 
 #### Flow
 
@@ -1536,6 +1683,13 @@ This document captures fully expanded User Stories for the Core Menu & Order Man
 **Role:** Guest / Server
 **Goal:** Allow paying an arbitrary dollar amount toward the bill rather than splitting exactly by item or head count.
 
+#### UI Journey (GATE 5b)
+- **Origin Screen:** Checkout Screen.
+- **Trigger:** 'Split Payment' -> 'By Custom Amount' selection.
+- **Container:** Inline multi-guest breakdown view.
+- **Spatial:** Split-view replaces standard totals panel.
+- **Cancel Path:** 'Back to Single Payer' / 'Reset Split'.
+
 #### Flow
 
 1. Server arrives at the Checkout Screen for a table with multiple guests.
@@ -1569,6 +1723,13 @@ This document captures fully expanded User Stories for the Core Menu & Order Man
 **Role:** Server
 **Goal:** Adjust the tip amount on a card transaction after initial authorisation, based on a guest's handwritten tip.
 
+#### UI Journey (GATE 5b)
+- **Origin Screen:** Order Detail View / Historical Search.
+- **Trigger:** 'Adjust Tip' button.
+- **Container:** `Dialog` (Amount Input).
+- **Spatial:** Centered viewport with numeric pad.
+- **Cancel Path:** 'Cancel' button.
+
 #### Flow
 
 1. Guest signs the receipt and writes in a tip amount.
@@ -1600,6 +1761,13 @@ This document captures fully expanded User Stories for the Core Menu & Order Man
 
 **Role:** Guest
 **Goal:** Choose between a printed receipt, an email receipt, or an SMS receipt.
+
+#### UI Journey (GATE 5b)
+- **Origin Screen:** Payment Success Screen.
+- **Trigger:** Tapping [Email] or [SMS] buttons.
+- **Container:** Inline input field or `Sheet` (Contact picker).
+- **Spatial:** Focused at bottom of success confirmation.
+- **Cancel Path:** 'Skip' or 'No Receipt' icon.
 
 #### Flow
 
@@ -1665,6 +1833,13 @@ This document captures fully expanded User Stories for the Core Menu & Order Man
 
 **Role:** Manager / Server
 **Goal:** Allow trusted customers to charge to a House Account without card pre-auth.
+
+#### UI Journey (GATE 5b)
+- **Origin Screen:** Checkout Screen / Payment Methods.
+- **Trigger:** 'House Account' button.
+- **Container:** `AlertDialog` (Confirmation with balance check).
+- **Spatial:** Overlays active checkout.
+- **Cancel Path:** 'Cancel' or Backdrop tap.
 
 #### Flow
 
@@ -1742,6 +1917,13 @@ This document captures fully expanded User Stories for the Core Menu & Order Man
 **Role:** Server
 **Goal:** See a real-time list of all active orders for tables assigned to me.
 
+#### UI Journey (GATE 5b)
+- **Origin Screen:** POS Navigation / Sidebar.
+- **Trigger:** 'Active Orders' or 'My Tables' tab.
+- **Container:** Dashboard Grid / List View.
+- **Spatial:** Main application area / full-page layout.
+- **Cancel Path:** Select 'Floor Plan' or 'Menu'.
+
 #### Flow
 
 1. Server navigates to the **"My Orders"** or **"Active Orders"** tab.
@@ -1772,6 +1954,13 @@ This document captures fully expanded User Stories for the Core Menu & Order Man
 
 **Role:** Server / Runner
 **Goal:** Manually mark a "Ready" order as "Served" after delivering it to the guest.
+
+#### UI Journey (GATE 5b)
+- **Origin Screen:** Staff Dashboard Card.
+- **Trigger:** 'Mark as Served' button.
+- **Container:** Inline state update (Badge color change).
+- **Spatial:** Confined to the card footer.
+- **Cancel Path:** N/A (Atomic update).
 
 #### Flow
 
@@ -1812,6 +2001,13 @@ This document captures fully expanded User Stories for the Core Menu & Order Man
 
 **Role:** Manager / Server
 **Goal:** Apply a pre-paid deposit from a reservation to the final order, so the guest pays only the remaining balance.
+
+#### UI Journey (GATE 5b)
+- **Origin Screen:** Order Sidebar / Reservation Link.
+- **Trigger:** 'Apply Deposit' button (Auto-prompt if linked).
+- **Container:** `Dialog` (Amount confirmation).
+- **Spatial:** Centered overlay.
+- **Cancel Path:** 'Cancel' or 'Don't Apply'.
 
 #### Flow
 
@@ -1855,6 +2051,13 @@ This document captures fully expanded User Stories for the Core Menu & Order Man
 **Role:** Server
 **Goal:** A "Favorites" category on the POS grid for 1-tap ordering of most frequently sold items.
 
+#### UI Journey (GATE 5b)
+- **Origin Screen:** POS Category Bar.
+- **Trigger:** Tap on 'Favorites' (Star icon).
+- **Container:** Filtered Grid View.
+- **Spatial:** Primary grid area changes to Favorites subset.
+- **Cancel Path:** Select another Category.
+
 #### Flow
 
 1. The category bar on the POS menu screen includes a persistent **"Favorites" / "Quick Keys"** category tab.
@@ -1884,6 +2087,13 @@ This document captures fully expanded User Stories for the Core Menu & Order Man
 
 **Role:** Cashier
 **Goal:** Scan a barcode on pre-packaged items to instantly add them to the order.
+
+#### UI Journey (GATE 5b)
+- **Origin Screen:** Menu Entry View.
+- **Trigger:** 'Barcode' icon in search bar or hardware trigger.
+- **Container:** Camera Viewfinder / Scanner HUD.
+- **Spatial:** Replaces grid view during active scan.
+- **Cancel Path:** 'X' or 'Back' button.
 
 #### Flow
 
@@ -1919,6 +2129,13 @@ This document captures fully expanded User Stories for the Core Menu & Order Man
 
 **Role:** Server
 **Goal:** A "Same Again" button to quickly reorder a whole round of drinks.
+
+#### UI Journey (GATE 5b)
+- **Origin Screen:** Order Sidebar Toolbar.
+- **Trigger:** 'Same Again' button.
+- **Container:** Loading Spinner (Async logic).
+- **Spatial:** Inline with button; newly items appear in Sidebar.
+- **Cancel Path:** Delete the cloned items (US-3.1).
 
 #### Flow
 
@@ -2000,4 +2217,45 @@ This document captures fully expanded User Stories for the Core Menu & Order Man
 
 **Entities:** `TableShape`, `OrderTicket`
 **Tech Stack:** Flutter
+
+---
+
+## 7. Data Schema & Connectivity
+
+### 7.1 Split Payment & Sub-Ticket Schema
+
+#### `order_tickets` (PostgreSQL)
+- `id`: UUID (PK)
+- `parent_order_id`: UUID (NULL for primary, FK to `id` for splits)
+- `seat_number`: INTEGER (Optional)
+- `split_type`: ENUM (ITEMIZED, EQUAL, CATEGORY)
+- `idempotency_key`: VARCHAR(64) (TerminalID + ClientReqHash)
+
+#### `order_items` (PostgreSQL)
+- `id`: UUID (PK)
+- `ticket_id`: UUID (FK to `order_tickets.id`)
+- `sync_status`: ENUM (DRAFT_LOCAL, SYNCED, CONFLICT)
+- `version`: INTEGER (Optimistic locking)
+
+---
+
+## 8. Security & Permissions
+
+### 8.1 Permission Matrix (COMPONENT:ACTION)
+
+| Operation | Permission Code | Role(s) | Auth Type |
+|---|---|---|---|
+| Void Submitted Item | `ORDER:VOID_SUBMITTED` | MANAGER | PIN + DPoP |
+| Manual Whole-Ticket Discount | `ORDER:DISCOUNT_TICKET`| MANAGER | PIN |
+| Split Billed Ticket | `ORDER:SPLIT_BILL` | SERVER, MANAGER | DPoP |
+| Apply Deposit | `ORDER:APPLY_DEPOSIT` | MANAGER | PIN |
+| Re-open Closed Order | `ORDER:REOPEN` | OWNER | Biometric/PIN |
+
+---
+
+## 9. Offline & Error Resilience
+
+- **Conflict Resolution (Crdt-Lite):** If Terminal A and B simultaneously edit the same DRAFT Table, the terminal with the latest `updated_at` wins per line item. Deleted items override additions.
+- **KDS Persistence:** If KDS routing fails, POS stores the `PendingKitchenLoad` in local SQLite and retries every 30s with a visible '🔄 Syncing' header status.
+- **Idempotent Retries:** Every "Send" action uses a `ClientToken`. Re-transmitting the same token within 5 minutes returns the original `201 Created` response without duplicating kitchen chits.
 

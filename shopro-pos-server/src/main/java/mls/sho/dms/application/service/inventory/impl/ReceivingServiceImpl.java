@@ -1,6 +1,7 @@
 package mls.sho.dms.application.service.inventory.impl;
 
 import mls.sho.dms.application.service.inventory.ReceivingService;
+import mls.sho.dms.application.service.inventory.POStateMachineService;
 import mls.sho.dms.application.service.core.NotificationEngine;
 import mls.sho.dms.entity.inventory.*;
 import mls.sho.dms.entity.staff.StaffMember;
@@ -28,6 +29,8 @@ public class ReceivingServiceImpl implements ReceivingService {
     private final VendorInvoiceRepository invoiceRepository;
     private final VendorInvoiceLineRepository invoiceLineRepository;
     private final NotificationEngine notificationEngine;
+    private final POStateMachineService stateMachineService;
+    private final SupplierPolicyRepository supplierPolicyRepository;
 
     public ReceivingServiceImpl(PurchaseOrderRepository poRepository,
                                 PurchaseOrderLineRepository poLineRepository,
@@ -38,7 +41,9 @@ public class ReceivingServiceImpl implements ReceivingService {
                                 GoodsReceiptNoteLineRepository grnLineRepository,
                                 VendorInvoiceRepository invoiceRepository,
                                 VendorInvoiceLineRepository invoiceLineRepository,
-                                NotificationEngine notificationEngine) {
+                                NotificationEngine notificationEngine,
+                                POStateMachineService stateMachineService,
+                                SupplierPolicyRepository supplierPolicyRepository) {
         this.poRepository = poRepository;
         this.poLineRepository = poLineRepository;
         this.staffRepository = staffRepository;
@@ -49,6 +54,8 @@ public class ReceivingServiceImpl implements ReceivingService {
         this.invoiceRepository = invoiceRepository;
         this.invoiceLineRepository = invoiceLineRepository;
         this.notificationEngine = notificationEngine;
+        this.stateMachineService = stateMachineService;
+        this.supplierPolicyRepository = supplierPolicyRepository;
     }
 
     @Override
@@ -107,13 +114,12 @@ public class ReceivingServiceImpl implements ReceivingService {
             }
         }
 
-        // We use RECEIVED as the status indicating all items were received, and PARTIALLY_RECEIVED for some
+        // 3-Way Match logic for status
         if (isPartial) {
-            po.setStatus(PurchaseOrderStatus.PARTIALLY_RECEIVED); // We might need to handle this differently in US-15.1, but this matches GRN logic
+            stateMachineService.transition(poId, PurchaseOrderStatus.PARTIALLY_RECEIVED, receiverId, "Partial shipment received");
         } else {
-            po.setStatus(PurchaseOrderStatus.RECEIVED);
+            stateMachineService.transition(poId, PurchaseOrderStatus.RECEIVED, receiverId, "Full shipment received");
         }
-        poRepository.save(po);
 
         return grn;
     }
@@ -149,6 +155,13 @@ public class ReceivingServiceImpl implements ReceivingService {
             }
         }
 
+        // Fetch Supplier Policy for tolerances
+        SupplierPolicy policy = supplierPolicyRepository.findById(po.getSupplier().getId())
+                .orElse(new SupplierPolicy());
+
+        BigDecimal qtyTolerance = policy.getQtyTolerance().divide(new BigDecimal("100"), 4, RoundingMode.HALF_UP);
+        BigDecimal priceTolerance = policy.getPriceTolerance().divide(new BigDecimal("100"), 4, RoundingMode.HALF_UP);
+
         boolean priceVarianceRequiresReview = false;
         boolean quantityDiscrepancy = false;
 
@@ -168,39 +181,30 @@ public class ReceivingServiceImpl implements ReceivingService {
             BigDecimal receivedQty = grnReceivedTotals.getOrDefault(ingredientId, BigDecimal.ZERO);
             BigDecimal poPrice = poLine.getUnitCost();
 
-            // 1. Quantity Match (Received < Ordered -> PARTIALLY_FULFILLED)
-            if (receivedQty.compareTo(orderedQty) < 0) {
-                quantityDiscrepancy = true;
+            // 1. Quantity Match (Received vs Invoiced vs Ordered)
+            if (invoicedQty.compareTo(receivedQty) > 0) {
+                 BigDecimal variance = invoicedQty.subtract(receivedQty).divide(receivedQty, 4, RoundingMode.HALF_UP);
+                 if (variance.compareTo(qtyTolerance) > 0) {
+                     quantityDiscrepancy = true;
+                 }
             }
 
-            // 2. Price Match 
-            // If invoice price > PO price by more than 2%
+            // 2. Price Match (Invoiced vs PO Price)
             if (invoicedPrice.compareTo(poPrice) > 0) {
                 BigDecimal variance = invoicedPrice.subtract(poPrice).divide(poPrice, 4, RoundingMode.HALF_UP);
-                if (variance.compareTo(new BigDecimal("0.02")) > 0) {
+                if (variance.compareTo(priceTolerance) > 0) {
                     priceVarianceRequiresReview = true;
-                } else {
-                    // <= 2% tolerance -> Auto accepted with warning
-                    logWarning("Price variance <= 2% auto-accepted on PO " + poId + " for ingredient " + poLine.getIngredient().getName());
                 }
             }
-            
-            // Only update Moving Average Cost when Closed/Accepted. We leave it as is until fully resolved.
         }
 
-        if (priceVarianceRequiresReview) {
-            po.setStatus(PurchaseOrderStatus.DISCREPANCY_REVIEW);
-            notifyManager("Price discrepancy on PO " + poId + " requires Manager review.");
-        } else if (quantityDiscrepancy) {
-            po.setStatus(PurchaseOrderStatus.PARTIALLY_FULFILLED);
-            notifyManager("Quantity shortfall on PO " + poId + " (Received < Ordered).");
+        if (priceVarianceRequiresReview || quantityDiscrepancy) {
+            stateMachineService.transition(poId, PurchaseOrderStatus.DISCREPANCY_REVIEW, UUID.randomUUID(), "Discrepancy detected outside tolerance");
         } else {
-            po.setStatus(PurchaseOrderStatus.CLOSED);
-            notifyManager("PO " + poId + " — 3-way match passed. Ready for payment.");
-            // Here we would also update moving average cost and vendor performance, but we'll do that in a separate step or US-15.2
+            stateMachineService.transition(poId, PurchaseOrderStatus.CLOSED, UUID.randomUUID(), "3-Way Match Passed");
         }
 
-        return poRepository.save(po);
+        return poRepository.findById(poId).get();
     }
 
     private void logWarning(String message) {

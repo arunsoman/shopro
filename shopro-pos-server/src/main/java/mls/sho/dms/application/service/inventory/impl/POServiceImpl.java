@@ -5,15 +5,20 @@ import lombok.extern.slf4j.Slf4j;
 import mls.sho.dms.application.exception.BusinessRuleException;
 import mls.sho.dms.application.dto.inventory.CreatePurchaseOrderRequest;
 import mls.sho.dms.application.dto.inventory.PurchaseOrderResponse;
+import mls.sho.dms.application.dto.inventory.POStatusHistoryResponse;
 import mls.sho.dms.application.service.inventory.AlertService;
 import mls.sho.dms.application.service.inventory.POService;
+import mls.sho.dms.application.service.inventory.POStateMachineService;
+import mls.sho.dms.application.service.inventory.POGeneratorService;
 import mls.sho.dms.entity.inventory.*;
 import mls.sho.dms.entity.staff.StaffMember;
 import mls.sho.dms.entity.staff.Role;
 import mls.sho.dms.repository.inventory.PurchaseOrderRepository;
+import mls.sho.dms.repository.inventory.POStatusHistoryRepository;
 import mls.sho.dms.repository.inventory.RFQRepository;
 import mls.sho.dms.repository.inventory.RawIngredientRepository;
 import mls.sho.dms.repository.inventory.SupplierRepository;
+import mls.sho.dms.repository.inventory.SupplierUserRepository;
 import mls.sho.dms.repository.staff.StaffRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,6 +44,10 @@ public class POServiceImpl implements POService {
     private final SupplierRepository supplierRepository;
     private final RawIngredientRepository ingredientRepository;
     private final AlertService alertService;
+    private final POStateMachineService stateMachineService;
+    private final POGeneratorService poGeneratorService;
+    private final POStatusHistoryRepository historyRepository;
+    private final SupplierUserRepository supplierUserRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -57,11 +66,22 @@ public class POServiceImpl implements POService {
                 .expectedDeliveryDate(po.getExpectedDeliveryDate())
                 .items(po.getLines().stream()
                         .map(line -> PurchaseOrderResponse.PurchaseOrderLineResponse.builder()
+                                .id(line.getId())
+                                .ingredientId(line.getIngredient().getId())
                                 .ingredientName(line.getIngredient().getName())
                                 .orderedQty(line.getOrderedQty())
+                                .unitCost(line.getUnitCost())
                                 .unitOfMeasure(line.getIngredient().getUnitOfMeasure())
                                 .build())
                         .collect(Collectors.toList()))
+                .acknowledgedAt(po.getAcknowledgedAt())
+                .shippedAt(po.getShippedAt())
+                .counterOfferPrice(po.getCounterOfferPrice())
+                .counterOfferQty(po.getCounterOfferQty())
+                .counterOfferNotes(po.getCounterOfferNotes())
+                .trackingNumber(po.getTrackingNumber())
+                .deliveryNoteRef(po.getDeliveryNoteRef())
+                .createdAt(po.getCreatedAt())
                 .build();
     }
 
@@ -83,36 +103,12 @@ public class POServiceImpl implements POService {
         // Auto Approval Tier (< $500)
         if (total.compareTo(TIER1_AUTO_LIMIT) < 0) {
             log.info("PO #{} auto-approved (Value: ${})", po.getId(), total);
-            po.setStatus(PurchaseOrderStatus.APPROVED);
-            po.setApprovedAt(Instant.now());
-            // System auto-approves, no specific approver mapped
-            poRepository.save(po);
-            dispatchPurchaseOrder(po);
-            return po;
+            stateMachineService.transition(poId, PurchaseOrderStatus.APPROVED, po.getGeneratedBy().getId(), "System Auto-Approved (<$500)");
+            return getPoOrThrow(poId);
         }
 
         // Needs Manual Approval
-        po.setStatus(PurchaseOrderStatus.PENDING_APPROVAL); // Note: Need to add this to the enum if missing, or use current options. 
-        // Wait, 'PENDING_APPROVAL' wasn't in PurchaseOrderStatus. Let's add it if needed, or leave as DRAFT until Approved. 
-        // Actually, let's keep it as DRAFT and just alert the manager, or we should update Enum. Let's assume we update the enum later. Let's just hold it in DRAFT.
-        // Actually, the US says "draft is cancelled on reject" and "routed for approval". Let's use PENDING_APPROVAL.
-        // If Enum lacks PENDING_APPROVAL, I will need to edit PurchaseOrderStatus to include it.
-        // For now let's set it to some intermediate state or just DRAFT. Let's say we update the entity soon.
-        
-        String requiredRole = "Inventory Manager";
-        if (total.compareTo(TIER2_MANAGER_LIMIT) >= 0 && total.compareTo(TIER3_GM_LIMIT) < 0) {
-            requiredRole = "General Manager";
-        } else if (total.compareTo(TIER3_GM_LIMIT) >= 0) {
-            requiredRole = "Owner";
-        }
-
-        log.info("PO #{} requires {} approval (Value: ${})", po.getId(), requiredRole, total);
-        
-        alertService.sendNotification(
-            "ApprovalsTeam", 
-            "PO Approval Required: #" + po.getId(), 
-            "PO #" + po.getId() + " for $" + total + " requires " + requiredRole + " approval."
-        );
+        stateMachineService.transition(poId, PurchaseOrderStatus.PENDING_APPROVAL, po.getGeneratedBy().getId(), "Submitted for review");
 
         return poRepository.save(po);
     }
@@ -126,16 +122,13 @@ public class POServiceImpl implements POService {
 
         validateApprovalPermissions(po.getTotalValue(), approver.getRole());
 
-        po.setStatus(PurchaseOrderStatus.APPROVED);
         po.setApprovedBy(approver);
         po.setApprovedAt(Instant.now());
+        poRepository.save(po);
+
+        stateMachineService.transition(poId, PurchaseOrderStatus.APPROVED, approverId, "Manager Approved");
         
-        PurchaseOrder savedPo = poRepository.save(po);
-        
-        log.info("PO #{} approved by {} ({})", po.getId(), approver.getFullName(), approver.getRole());
-        dispatchPurchaseOrder(savedPo);
-        
-        return savedPo;
+        return getPoOrThrow(poId);
     }
 
     @Override
@@ -151,20 +144,34 @@ public class POServiceImpl implements POService {
             throw new IllegalArgumentException("Rejection reason is mandatory.");
         }
 
-        po.setStatus(PurchaseOrderStatus.REJECTED);
-        po.setApprovedBy(approver); // Storing the rejector in the approvedBy field (as a tracker), or to an AuditLog.
+        stateMachineService.transition(poId, PurchaseOrderStatus.REJECTED, approverId, reason);
         
-        PurchaseOrder savedPo = poRepository.save(po);
+        return getPoOrThrow(poId);
+    }
+
+    @Override
+    @Transactional
+    public PurchaseOrder sendOrder(UUID poId, UUID staffId) {
+        PurchaseOrder po = getPoOrThrow(poId);
+        StaffMember staff = staffRepository.findById(staffId)
+            .orElseThrow(() -> new IllegalArgumentException("Staff member not found"));
+
+        if (po.getStatus() != PurchaseOrderStatus.APPROVED) {
+            throw new BusinessRuleException("Only APPROVED purchase orders can be sent to the supplier.");
+        }
+
+        stateMachineService.transition(poId, PurchaseOrderStatus.SENT, staffId, "Sent to Supplier");
         
-        log.info("PO #{} rejected by {}. Reason: {}", po.getId(), approver.getFullName(), reason);
-        
-        alertService.sendNotification(
-            po.getGeneratedBy().getFullName(), 
-            "PO Rejected: #" + po.getId(), 
-            "PO #" + po.getId() + " was rejected by " + approver.getFullName() + ". Reason: " + reason
-        );
-        
-        return savedPo;
+        // Notify the supplier
+        if (po.getSupplier() != null && po.getSupplier().getContactEmail() != null) {
+            String subject = "New Purchase Order: #" + po.getId().toString().substring(0, 8);
+            String message = String.format("You have received a new Purchase Order from our restaurant. Please review and acknowledge it in the Supplier Portal.\nTotal Value: $%.2f\nExpected Delivery: %s",
+                po.getTotalValue(), po.getExpectedDeliveryDate() != null ? po.getExpectedDeliveryDate() : "ASAP");
+            
+            alertService.sendNotification(po.getSupplier().getContactEmail(), subject, message);
+        }
+
+        return getPoOrThrow(poId);
     }
 
     private void validateApprovalPermissions(BigDecimal value, Role role) {
@@ -187,23 +194,6 @@ public class POServiceImpl implements POService {
         }
     }
 
-    private void dispatchPurchaseOrder(PurchaseOrder po) {
-        // US-14.2 Auto Dispatch
-        po.setStatus(PurchaseOrderStatus.SENT);
-        po.setSentAt(Instant.now());
-        poRepository.save(po);
-        
-        String vendorEmail = po.getSupplier().getContactEmail();
-        if (vendorEmail != null) {
-            String ackLink = "http://localhost:3000/vendor/po/" + po.getId() + "/acknowledge";
-            alertService.dispatchEmail(
-                vendorEmail, 
-                "New Purchase Order: #" + po.getId(), 
-                "Please find attached Purchase Order #" + po.getId() + ". Please acknowledge receipt using this link: " + ackLink
-            );
-        }
-        log.info("PO #{} dispatched to {}", po.getId(), po.getSupplier().getCompanyName());
-    }
 
     @Override
     @Transactional
@@ -283,6 +273,62 @@ public class POServiceImpl implements POService {
         po.setStatus(PurchaseOrderStatus.CANCELLED);
         poRepository.save(po);
         log.info("Purchase Order {} has been cancelled", poId);
+    }
+
+    @Override
+    @Transactional
+    public PurchaseOrder acknowledgeOrder(UUID poId) {
+        log.warn("Direct acknowledgeOrder is deprecated. Use SupplierPortalService.");
+        stateMachineService.transition(poId, PurchaseOrderStatus.ACKNOWLEDGED, UUID.randomUUID(), "Internal Acknowledgment");
+        return getPoOrThrow(poId);
+    }
+
+    @Override
+    @Transactional
+    public PurchaseOrder shipOrder(UUID poId, String trackingNumber, String deliveryNoteRef, UUID invoiceFileId) {
+        PurchaseOrder po = getPoOrThrow(poId);
+        po.setTrackingNumber(trackingNumber);
+        po.setDeliveryNoteRef(deliveryNoteRef);
+        po.setInvoiceFileId(invoiceFileId);
+        po.setShippedAt(Instant.now());
+        poRepository.save(po);
+
+        stateMachineService.transition(poId, PurchaseOrderStatus.SHIPPED, UUID.randomUUID(), "Internal Mark as Shipped");
+        
+        return getPoOrThrow(poId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<POStatusHistoryResponse> getStatusHistory(UUID poId) {
+        return historyRepository.findByPurchaseOrder_IdOrderByCreatedAtDesc(poId).stream()
+                .map(this::mapToHistoryResponse)
+                .collect(Collectors.toList());
+    }
+
+    private POStatusHistoryResponse mapToHistoryResponse(POStatusHistory history) {
+        String actorName = resolveActorName(history.getActorId());
+        return POStatusHistoryResponse.builder()
+                .id(history.getId())
+                .fromStatus(history.getFromStatus())
+                .toStatus(history.getToStatus())
+                .actorId(history.getActorId())
+                .actorName(actorName)
+                .reason(history.getReason())
+                .createdAt(history.getCreatedAt())
+                .build();
+    }
+
+    private String resolveActorName(UUID actorId) {
+        // Try staff first
+        Optional<String> staffName = staffRepository.findById(actorId).map(StaffMember::getFullName);
+        if (staffName.isPresent()) return staffName.get();
+
+        // Try supplier user
+        Optional<String> supplierUserName = supplierUserRepository.findById(actorId).map(SupplierUser::getFullName);
+        if (supplierUserName.isPresent()) return supplierUserName.get();
+
+        return "Unknown Actor (" + actorId + ")";
     }
 
     private PurchaseOrder getPoOrThrow(UUID id) {

@@ -1,5 +1,6 @@
 package mls.sho.dms.application.service.core.impl;
 
+import java.util.*;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -64,18 +65,23 @@ public class NotificationEngineImpl implements NotificationEngine {
                 // If the group is defined by a role code, resolve all active staff with that role
                 if (group.getRoleCode() != null && !group.getRoleCode().isEmpty()) {
                     String roleName = group.getRoleCode().replace("ROLE_", "");
-                    List<String> targetRoles = List.of(roleName);
+                    List<String> targetRoles = new ArrayList<>();
+                    targetRoles.add(roleName);
                     
-                    // Business rule: If a notification is intended for Managers, 
-                    // it should also be visible to the Owner and General Manager.
-                    if ("MANAGER".equals(roleName)) {
+                    // Business rule: Functional alerts should escalte to management
+                    if ("MANAGER".equals(roleName) || "ROLE_MANAGEMENT".equals(group.getRoleCode())) {
                         targetRoles = List.of("OWNER", "MANAGER", "GENERAL_MANAGER");
+                    } else if ("HOST".equals(roleName) || "BUSSER".equals(roleName)) {
+                        targetRoles = List.of(roleName, "OWNER", "MANAGER", "GENERAL_MANAGER");
                     } else if ("SERVER_ALL".equals(roleName)) {
                         targetRoles = List.of("SENIOR_SERVER", "JUNIOR_SERVER", "SERVER");
                     }
 
+                    log.info("Expanding recipient group {} to roles: {}", group.getRoleCode(), targetRoles);
+
                     for (String role : targetRoles) {
                         List<StaffMember> staffMembers = staffRepository.findByRoleName(role);
+                        log.debug("Found {} members for role {}", staffMembers.size(), role);
                         for (StaffMember staff : staffMembers) {
                             if (staff.isActive()) {
                                 sendToUser(staff.getId(), typeCode, title, body, data, correlationId);

@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import mls.sho.dms.application.dto.inventory.CreateRFQRequest;
 import mls.sho.dms.application.dto.inventory.RFQResponse;
 import mls.sho.dms.application.dto.inventory.VendorBidRequest;
+import mls.sho.dms.application.dto.inventory.VendorBidResponse;
 import mls.sho.dms.application.service.inventory.RFQService;
 import mls.sho.dms.entity.inventory.RfqStatus;
 import org.springframework.http.HttpStatus;
@@ -45,5 +46,15 @@ public class RFQController {
     @PostMapping("/{id}/cancel")
     public void cancel(@PathVariable UUID id) {
         rfqService.cancelRfq(id);
+    }
+
+    @GetMapping("/{id}/bids")
+    public List<VendorBidResponse> getBids(@PathVariable UUID id) {
+        return rfqService.getBidsForRfq(id);
+    }
+
+    @PostMapping("/bids/{bidId}/award")
+    public void awardBid(@PathVariable UUID bidId, @RequestParam UUID staffId) {
+        rfqService.awardBid(bidId, staffId);
     }
 }

@@ -49,7 +49,7 @@ INSERT INTO temp_customers VALUES
 ('Harper', 'Thompson', '+971501118888', 'harper.t@example.com', 'SILVER', 2600.00, 550, 9, '25 days', false),
 ('Evelyn', 'Garcia', '+971502227777', 'evelyn.g@example.com', 'BRONZE', 500.00, 140, 4, '18 days', false),
 ('Jack', 'Martinez', '+971503336666', 'jack.m@example.com', 'PLATINUM', 11200.00, 2900, 31, '3 days', false),
-('Henry', 'Robinson', '+971504445555', 'henry.r@example.com', 'GOLD', 5900.00, 1150, 22, '12 days', false),
+('Henry', 'Robinson', '+971504445556', 'henry.r@example.com', 'GOLD', 5900.00, 1150, 22, '12 days', false),
 ('Samuel', 'Clark', '+971505559999', 'sam.c@example.com', 'SILVER', 1500.00, 320, 6, '55 days', false),
 ('Sebastian', 'Rodriguez', '+971506663333', 'seb.r@example.com', 'BRONZE', 220.00, 60, 2, '30 days', false),
 ('Wyatt', 'Lewis', '+971507772222', 'wyatt.l@example.com', 'GOLD', 6700.00, 1500, 27, '2 days', false),
@@ -82,7 +82,8 @@ SELECT
     gen_random_uuid(), first_name, last_name, phone, email, 
     (SELECT id FROM loyalty_tier WHERE name = tier_name),
     spend, points, visits, NOW() - last_visit, is_churned, 0, NOW() - (visits || ' weeks')::interval
-FROM temp_customers;
+FROM temp_customers
+ON CONFLICT (phone_number) DO NOTHING;
 
 DROP TABLE temp_customers;
 

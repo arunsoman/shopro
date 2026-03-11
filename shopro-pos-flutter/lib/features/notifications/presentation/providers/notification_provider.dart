@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stomp_dart_client/stomp_dart_client.dart';
+import 'package:http/http.dart' as http;
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../data/models/notification_model.dart';
 
@@ -34,9 +35,31 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
   void _init() {
     final auth = _ref.watch(authProvider);
     if (auth.isAuthenticated) {
+      _fetchHistory(auth.staffId!);
       _connect(auth.staffId!, auth.role!);
     } else {
       _disconnect();
+    }
+  }
+
+  Future<void> _fetchHistory(String userId) async {
+    try {
+      // Assuming a global HTTP client or using a base URL constant
+      final response = await http.get(
+        Uri.parse('http://localhost:8080/api/v1/notifications?userId=$userId&page=0&size=50'),
+      );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = json.decode(response.body);
+        final List<dynamic> content = data['content'] ?? [];
+        final List<InAppNotification> history = content
+            .map((json) => InAppNotification.fromMap(json))
+            .toList();
+        
+        state = state.copyWith(notifications: history);
+      }
+    } catch (e) {
+      print('Failed to fetch notification history: $e');
     }
   }
 
@@ -100,6 +123,9 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
   }
 
   void _onNotificationReceived(InAppNotification notification) {
+    // Avoid duplicates if history was just fetched
+    if (state.notifications.any((n) => n.id == notification.id)) return;
+
     state = state.copyWith(
       notifications: [notification, ...state.notifications],
     );
@@ -144,7 +170,14 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
           .map((n) => n.id == id ? n.copyWith(isRead: true) : n)
           .toList(),
     );
-    // TODO: Call API /v1/notifications/{id}/read
+    
+    try {
+      await http.patch(
+        Uri.parse('http://localhost:8080/api/v1/notifications/$id/read'),
+      );
+    } catch (e) {
+      print('Failed to mark notification as read: $e');
+    }
   }
 
   Future<void> dismiss(String id) async {
@@ -152,7 +185,14 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
     state = state.copyWith(
       notifications: state.notifications.where((n) => n.id != id).toList(),
     );
-    // TODO: Call API /v1/notifications/{id}/dismiss
+
+    try {
+      await http.patch(
+        Uri.parse('http://localhost:8080/api/v1/notifications/$id/dismiss'),
+      );
+    } catch (e) {
+      print('Failed to dismiss notification: $e');
+    }
   }
 
   @override

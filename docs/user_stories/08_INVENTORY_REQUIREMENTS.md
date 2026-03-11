@@ -75,6 +75,13 @@ Each story includes its original acceptance criteria, a detailed end-to-end flow
 6. The system validates all required fields and uniqueness of the ingredient name. On success, the `RawIngredient` record is created and the ingredient appears in the master ingredient list.
 7. An `AuditLog` entry is created: Chef ID, timestamp, action "Ingredient Created", ingredient name.
 
+#### UI Journey (GATE 5b)
+- **Origin Screen:** Admin Panel -> Inventory -> Ingredients.
+- **Trigger:** 'Add New Ingredient' floating action button.
+- **Container:** Full-page Form.
+- **Spatial:** Multi-section layout (Basic Info, Purchasing, Costing).
+- **Cancel Path:** 'Cancel' breadcrumb or 'Discard' button.
+
 #### Edge Cases & System Behaviour
 
 - **Duplicate name:** If a `RawIngredient` with the same name already exists, an inline error appears: _"An ingredient named '[Name]' already exists. Use a unique name or edit the existing ingredient."_
@@ -122,6 +129,13 @@ Each story includes its original acceptance criteria, a detailed end-to-end flow
 9. Chef taps **"Save Recipe"**. The `Recipe` and `RecipeIngredient` records are created and linked to the `MenuItem`.
 10. The `AuditLog` records: Chef ID, timestamp, "Recipe Created", menu item name, ingredients list, total food cost snapshot.
 
+#### UI Journey (GATE 5b)
+- **Origin Screen:** Admin Panel -> Menu -> Item Detail.
+- **Trigger:** 'Build Recipe' tab or button.
+- **Container:** `Sheet` (Slide-out from Right).
+- **Spatial:** Right-side 60% of screen; live-updating cost footer.
+- **Cancel Path:** 'Close' or 'Discard'.
+
 #### Edge Cases & System Behaviour
 
 - **A menu item can only have one active recipe at a time.** If a recipe already exists for the item, the Chef is offered to "Edit Existing Recipe" (US-6.1) rather than create a duplicate.
@@ -160,6 +174,13 @@ Each story includes its original acceptance criteria, a detailed end-to-end flow
    - `timestamp` = now
 6. The `RawIngredient.current_stock_level` is decremented accordingly.
 7. After depletion, the system checks each ingredient against its par/safety/critical thresholds (Epic 12). If any breach is detected, alerts fire automatically.
+
+#### UI Journey (GATE 5b)
+- **Origin Screen:** POS Active Ticket.
+- **Trigger:** 'Send' button tap.
+- **Container:** Background Process (N/A).
+- **Spatial:** N/A (System task).
+- **Cancel Path:** N/A (Atomic).
 
 #### Void Handling — Pre-Prep vs Post-Prep
 
@@ -248,6 +269,13 @@ Each story includes its original acceptance criteria, a detailed end-to-end flow
 7. The Waste event is recorded in the `AuditLog` and appears in the Waste Analytics dashboard.
 8. A confirmation toast appears on the POS: _"Waste logged: [Item Name] × [Qty] — Reason: [Reason]."_
 
+#### UI Journey (GATE 5b)
+- **Origin Screen:** POS Item Action Menu.
+- **Trigger:** 'Log as Waste' selection.
+- **Container:** `Dialog` (PIN Guarded).
+- **Spatial:** Center-screen modal overlay.
+- **Cancel Path:** 'Dismiss' or 'Back'.
+
 #### Edge Cases & System Behaviour
 
 - **Waste logging without a linked recipe:** If the item has no recipe, the waste is still logged as an `InventoryTransaction` of `type = WASTE` with a zero-ingredient depletion — it records the event but does not affect ingredient stock levels. A warning is flagged.
@@ -294,6 +322,13 @@ Each story includes its original acceptance criteria, a detailed end-to-end flow
    - If stock crosses below **Critical Level**: the highlight changes to **red**; escalation alerts fire (US-12.2).
 6. The Reorder Alert widget on the main inventory dashboard updates in real time and is visible to all Manager-level and above users.
 
+#### UI Journey (GATE 5b)
+- **Origin Screen:** Ingredient Detail Screen.
+- **Trigger:** 'Thresholds' card expansion.
+- **Container:** Inline Form.
+- **Spatial:** Stacked numeric inputs with min/max validation.
+- **Cancel Path:** 'Reset' button.
+
 #### Edge Cases & System Behaviour
 
 - **No thresholds set:** Ingredients with no par level configured do not appear in the Reorder Alert widget. A separate "Unconfigured Thresholds" list in the admin panel flags these items for Manager attention.
@@ -339,6 +374,13 @@ Each story includes its original acceptance criteria, a detailed end-to-end flow
 7. Manager taps **"Finalise PO"**. The PO status transitions to `DRAFT` and is routed through the approval workflow (US-14.1) if its total value exceeds the auto-approval threshold.
 8. Once approved, the PO can be dispatched to the supplier (US-7.2 / US-14.2).
 
+#### UI Journey (GATE 5b)
+- **Origin Screen:** Reorder Alert Dashboard.
+- **Trigger:** 'Generate PO' button on Supplier Group.
+- **Container:** Draft PO View.
+- **Spatial:** Full-width line-item editor.
+- **Cancel Path:** 'Delete Draft'.
+
 #### Edge Cases & System Behaviour
 
 - **No ingredients below par for the selected supplier:** The system shows an informational message: _"All ingredients from [Supplier Name] are above par level. No PO required."_
@@ -381,6 +423,13 @@ Each story includes its original acceptance criteria, a detailed end-to-end flow
 7. The PO status transitions to `RECEIVED` (or `PARTIALLY_RECEIVED` if received quantities are less than ordered).
 8. If there are discrepancies (price or quantity), the three-way matching logic (US-15.1) triggers automatically.
 9. The `AuditLog` records: Chef ID, timestamp, PO ID, ingredients received, actual costs.
+
+#### UI Journey (GATE 5b)
+- **Origin Screen:** PO List (Sent status).
+- **Trigger:** 'Receive Goods' action.
+- **Container:** Interactive Grid.
+- **Spatial:** Left side: Expected; Right side: Received inputs.
+- **Cancel Path:** 'Save as Progress' (No adjustment) or 'Back'.
 
 #### Edge Cases & System Behaviour
 
@@ -492,6 +541,13 @@ Each story includes its original acceptance criteria, a detailed end-to-end flow
 10. `PhysicalCountLine` records are saved for each ingredient counted. A `InventoryTransaction` of `type = PHYSICAL_COUNT_ADJUSTMENT` is created for each adjusted item.
 11. The `AuditLog` records: Manager ID, session ID, timestamp, all variances and reason codes.
 
+#### UI Journey (GATE 5b)
+- **Origin Screen:** Inventory -> Physical Counts.
+- **Trigger:** 'New Session' button selection.
+- **Container:** Full-screen Mobile/Tablet View.
+- **Spatial:** Single-column scroll (optimized for BOH walking).
+- **Cancel Path:** 'Pause' or 'Abort'.
+
 #### Edge Cases & System Behaviour
 
 - **Partial count submission:** If the Manager closes the session before completing all lines, the session is saved as `IN_PROGRESS`. Items already counted are saved; the Manager can resume later. The inventory is not adjusted until the full session is submitted.
@@ -537,6 +593,13 @@ Each story includes its original acceptance criteria, a detailed end-to-end flow
    - When a menu item is **sold and inventory is depleted (US-1.3)**, the system applies the yield-adjusted depletion formula: `Depletion Quantity = Recipe Quantity ÷ Yield %`
    - e.g., Recipe calls for 6 oz Chicken at 80% yield → system deducts `6 ÷ 0.80 = 7.5 oz` from raw stock.
 7. The ingredient detail screen persistently displays both Raw Cost and Effective Cost for reference.
+
+#### UI Journey (GATE 5b)
+- **Origin Screen:** Ingredient Detail -> Costing Tab.
+- **Trigger:** 'Set Yield' button or input.
+- **Container:** Inline Form section.
+- **Spatial:** Side-by-side comparison of Raw vs. Effective costs.
+- **Cancel Path:** 'Reset' or 'Cancel'.
 
 #### Edge Cases & System Behaviour
 
@@ -584,6 +647,13 @@ Each story includes its original acceptance criteria, a detailed end-to-end flow
    - Both the Sold and Waste values are shown for the hovered period.
 6. Below the chart, a **summary table** lists the top 5 periods of highest waste for context.
 7. Manager can also download the raw data as **CSV** (columns: Week, Sold Qty, Waste Qty, Total Consumed).
+
+#### UI Journey (GATE 5b)
+- **Origin Screen:** Inventory -> Analytics Dashboard.
+- **Trigger:** Item selection from Usage List.
+- **Container:** Full-page Chart View.
+- **Spatial:** Time-series line chart with interactive tooltips.
+- **Cancel Path:** 'Back' button.
 
 #### Edge Cases & System Behaviour
 
@@ -636,6 +706,13 @@ Each story includes its original acceptance criteria, a detailed end-to-end flow
    - Edit timestamp.
 8. Historical `OrderItem` records retain a `recipe_version_id` foreign key pointing to the recipe version that was active when they were sold — ensuring historical food cost reports are accurate.
 
+#### UI Journey (GATE 5b)
+- **Origin Screen:** Recipe Builder (Existing Recipe).
+- **Trigger:** 'Edit' icon on line item or 'Add Ingredient'.
+- **Container:** `Sheet` (Slide-out).
+- **Spatial:** High-visibility 'Save New Version' button.
+- **Cancel Path:** 'Discard Changes'.
+
 #### Edge Cases & System Behaviour
 
 - **Editing while orders are mid-flight:** If an `OrderItem` using this recipe is currently in `PREPARING` or `READY` state, the edit is still saved for future orders, but the in-flight order continues to use the previous recipe version for its depletion.
@@ -670,6 +747,13 @@ Each story includes its original acceptance criteria, a detailed end-to-end flow
 6. From this point forward, selling the `MenuItem` **triggers no inventory depletion**. The item is sold at its sale price without any ingredient decrement.
 7. The `AuditLog` records: Chef ID, timestamp, "Recipe Deleted", `MenuItem` name.
 8. A warning appears on the Inventory dashboard for Managers: _"[Item Name] has no linked recipe. Inventory depletion is disabled for this item."_
+
+#### UI Journey (GATE 5b)
+- **Origin Screen:** Recipe Detail View.
+- **Trigger:** 'Delete' / 'Trash' icon.
+- **Container:** `Dialog` (Confirmation).
+- **Spatial:** Red-themed warning dialog.
+- **Cancel Path:** 'Keep Recipe' / 'Esc'.
 
 #### Edge Cases & System Behaviour
 
@@ -719,6 +803,13 @@ Each story includes its original acceptance criteria, a detailed end-to-end flow
    - System dispatches invitation with temporary credentials.
 8. The `AuditLog` records: Manager ID, timestamp, "Supplier Created", company name.
 
+#### UI Journey (GATE 5b)
+- **Origin Screen:** Admin -> Suppliers.
+- **Trigger:** 'Add Supplier' button.
+- **Container:** Full-screen Form.
+- **Spatial:** Progressive disclosure (Contact info -> Payment terms -> Notes).
+- **Cancel Path:** 'Cancel' or breadcrumb return.
+
 #### Edge Cases & System Behaviour
 
 - **No email address entered:** The supplier record can still be saved, but the **"Send PO"** action (US-7.2) is disabled for this supplier, with a tooltip: _"Add a contact email to enable PO dispatch."_
@@ -753,6 +844,13 @@ Each story includes its original acceptance criteria, a detailed end-to-end flow
 5. A confirmation toast appears on the POS/Admin: _"PO #[ID] sent to [supplier email] at [timestamp]."_
 6. The `PurchaseOrder` record updates to status **"Sent"**, and the send timestamp is logged.
 7. The `AuditLog` records: Manager ID, PO ID, supplier email, dispatch timestamp.
+
+#### UI Journey (GATE 5b)
+- **Origin Screen:** Purchase Order Detail.
+- **Trigger:** 'Send to Supplier' button.
+- **Container:** `Dialog` (Confirmation with Email Preview).
+- **Spatial:** Center modal showing recipient and attachment name.
+- **Cancel Path:** 'Cancel'.
 
 #### Edge Cases & System Behaviour
 
@@ -802,6 +900,13 @@ Each story includes its original acceptance criteria, a detailed end-to-end flow
 8. A success toast appears: _"Import complete: [X] items mapped, [Y] new ingredients created, [Z] rows skipped."_
 9. The `AuditLog` records: Manager ID, supplier ID, timestamp, import summary.
 
+#### UI Journey (GATE 5b)
+- **Origin Screen:** Supplier Detail -> Catalog.
+- **Trigger:** 'Import Catalog' button.
+- **Container:** File Upload Modal -> Mapping Table.
+- **Spatial:** Two-column mapping interface (Catalog vs. Internal).
+- **Cancel Path:** 'Abort Import'.
+
 #### Edge Cases & System Behaviour
 
 - **Invalid CSV format:** If the uploaded file does not match the expected template columns, the system rejects it with: _"Invalid CSV format. Please use the provided template."_
@@ -821,7 +926,7 @@ Each story includes its original acceptance criteria, a detailed end-to-end flow
 
 ### US-8.2 — B2B Price Benchmarking & Comparison
 
-**Role:** Chef
+**Role:** Chef or manager
 **Goal:** View a comparison table for a specific raw ingredient showing current cost across all registered suppliers to ensure the best margin before generating a PO.
 
 #### Flow
@@ -877,7 +982,16 @@ Each story includes its original acceptance criteria, a detailed end-to-end flow
    - **Yield Quantity** — how much the batch produces (e.g., "20 L" or "500 oz") in the sub-recipe's own base unit.
    - **Raw Ingredients** — using the same Recipe Builder interface (US-1.2), Chef adds the raw ingredients and quantities that go into making one full batch.
 3. Chef taps **"Save Sub-Recipe"**. A `SubRecipe` record is created, linked to its `RecipeIngredient` list.
-4. The sub-recipe now appears as a **selectable ingredient** in the main Recipe Builder (US-1.2). When a Chef adds "House Tomato Sauce" (e.g., 4 oz) to a "Pizza Margherita" recipe, the system understands that 4 oz of sauce comes from the `SubRecipe`.
+
+#### UI Journey (GATE 5b)
+- **Origin Screen:** Inventory -> Sub-Recipes.
+- **Trigger:** 'New Sub-Recipe' button.
+- **Container:** Recipe Builder Interface (Same as US-1.2).
+- **Spatial:** Right-side sheet; 'Batch Yield' input at header.
+- **Cancel Path:** 'Discard'.
+
+#### Acceptance Criteria
+pe now appears as a **selectable ingredient** in the main Recipe Builder (US-1.2). When a Chef adds "House Tomato Sauce" (e.g., 4 oz) to a "Pizza Margherita" recipe, the system understands that 4 oz of sauce comes from the `SubRecipe`.
 5. **Depletion chain on sale:**
    - POS fires "Pizza Margherita" → system checks the recipe → finds "House Tomato Sauce" as an ingredient → checks the `SubRecipe` batch stock.
    - If an **active batch exists** (see US-9.2): 4 oz is depleted from the batch's remaining quantity.
@@ -914,7 +1028,15 @@ Each story includes its original acceptance criteria, a detailed end-to-end flow
    - **Expiry Date / Time** (e.g., "End of service" or a specific date for refrigerated items).
    - **Batch Notes** (optional, e.g., "Batch A — extra seasoning").
 4. Chef taps **"Create Batch"**.
-5. The system:
+
+#### UI Journey (GATE 5b)
+- **Origin Screen:** Dashboard -> Prep Task List.
+- **Trigger:** 'Log Batch' button on Item row.
+- **Container:** `Dialog` (Quick Input).
+- **Spatial:** Numeric pad for Quantity; Expiry date picker.
+- **Cancel Path:** 'Cancel'.
+
+#### Acceptance Criteria
    - Creates a `BatchRecord` with status `ACTIVE`.
    - Triggers raw ingredient depletion for the sub-recipe batch (US-1.3 flow): depletes all `RecipeIngredient` quantities from `RawIngredient` stock to account for the prep.
    - Sets the **Active Batch** for this sub-recipe to the new batch.
@@ -975,7 +1097,15 @@ Each story includes its original acceptance criteria, a detailed end-to-end flow
 5. Manager can tap any flagged row to **drill into** the `InventoryTransaction` history for that ingredient during the period to investigate the source of the variance.
 6. The report can be exported to CSV or PDF.
 
-#### Edge Cases & System Behaviour
+#### UI Journey (GATE 5b)
+- **Origin Screen:** Inventory -> Reports.
+- **Trigger:** 'TvA Variance' report selection.
+- **Container:** Full-page Data Table.
+- **Spatial:** Column-based comparison with 'Heatmap' coloring for variances.
+- **Cancel Path:** 'Back' button.
+
+#### Acceptance Criteria
+ses & System Behaviour
 
 - **No physical count in the period:** If no `PhysicalCount` session exists for the period, the "Actual Closing Stock" column shows the last known count date with a warning: _"Physical count data is [X] days old. Results may not be accurate."_
 - **Positive variance (surplus):** Can indicate over-portioning on POS (recipes over-reporting usage), supplier over-delivery not yet received in the system, or counting errors. The system does not assume theft for positive variances.
@@ -1016,7 +1146,15 @@ Each story includes its original acceptance criteria, a detailed end-to-end flow
 6. The station must tap **"Station Cleaned"** to dismiss the warning and proceed to the next ticket.
 7. The cleaning acknowledgment is logged in the `AuditLog` (staff ID, station ID, allergen, timestamp) for food safety compliance records.
 
-#### Edge Cases & System Behaviour
+#### UI Journey (GATE 5b)
+- **Origin Screen:** KDS Prep View.
+- **Trigger:** Completion of allergen-containing ticket.
+- **Container:** Persistent Overlay Banner.
+- **Spatial:** Top of KDS screen; blocks next ticket visibility until cleared.
+- **Cancel Path:** 'Clear Station' button (Mandatory).
+
+#### Acceptance Criteria
+ses & System Behaviour
 
 - **Allergen in a sub-recipe:** If a sub-recipe (e.g., "House Dressing") contains Eggs, any menu item that uses that sub-recipe inherits the Egg allergen in its allergen profile — the chain is automatically resolved.
 - **Customer-facing allergen menu:** The allergen data can be published to the restaurant's online menu / QR menu system, where each dish's allergen profile is displayed to customers (integration outside the POS scope, but the data model supports it).
@@ -1058,7 +1196,15 @@ Each story includes its original acceptance criteria, a detailed end-to-end flow
 6. If any required threshold field is left blank, validation shows: _"All threshold levels are required before saving."_
 7. Manager taps **"Save Thresholds"**. Values are persisted and take effect immediately for all subsequent inventory depletion events.
 
-#### Edge Cases & System Behaviour
+#### UI Journey (GATE 5b)
+- **Origin Screen:** Ingredient Detail -> Thresholds.
+- **Trigger:** 'Edit' icon (PIN Guarded).
+- **Container:** `Dialog` (PIN Prompt) -> Tabular Form.
+- **Spatial:** Threshold levels visualized on a vertical bar/slider.
+- **Cancel Path:** 'Cancel'.
+
+#### Acceptance Criteria
+ses & System Behaviour
 
 - **Stock already below a threshold at save time:** If the current stock level already violates a newly saved threshold, the relevant alert fires immediately upon save.
 - **Threshold changes during a busy shift:** If the Reorder Level is raised mid-shift and stock is currently between the old and new levels, the alert fires immediately.
@@ -1185,7 +1331,16 @@ Each story includes its original acceptance criteria, a detailed end-to-end flow
    - The bid deadline has not passed.
    - The bid price does not exceed the restaurant's **maximum price ceiling** (configurable per ingredient).
 7. If validation passes, a `VendorBid` record is created with status `SUBMITTED`. The vendor sees a confirmation: _"Your bid has been submitted. Thank you."_
-8. The Manager receives an in-app notification: _"New bid received from [Supplier Name] for [Ingredient]."_
+
+#### UI Journey (GATE 5b)
+- **Origin Screen:** Vendor Portal -> RFQ Detail.
+- **Trigger:** 'Submit Bid' button.
+- **Container:** Bid Submission Modal.
+- **Spatial:** Three-column layout (Price, Quantity, Delivery).
+- **Cancel Path:** 'Save as Draft' or 'Cancel'.
+
+#### Acceptance Criteria
+ves an in-app notification: _"New bid received from [Supplier Name] for [Ingredient]."_
 
 #### Edge Cases & System Behaviour
 
@@ -1402,7 +1557,15 @@ Each story includes its original acceptance criteria, a detailed end-to-end flow
    - The approver taps **"Reject"**: a mandatory **Rejection Reason** field must be filled before the rejection is confirmed. PO transitions to `REJECTED`; the draft is cancelled. A notification fires to the originating Manager.
 5. The `AuditLog` records: approver ID, role, decision (Approved/Rejected), reason (if rejected), timestamp.
 
-#### Edge Cases & System Behaviour
+#### UI Journey (GATE 5b)
+- **Origin Screen:** Admin Dashboard -> Approval Queue.
+- **Trigger:** PO row selection.
+- **Container:** `Sheet` (Slide-out Approval Panel).
+- **Spatial:** Large 'Approve' (Green) and 'Reject' (Red) buttons at bottom.
+- **Cancel Path:** 'Close'.
+
+#### Acceptance Criteria
+ses & System Behaviour
 
 - **Role escalation:** If a Manager attempts to approve a PO that requires GM-level approval (e.g., $4,000 PO), the "Approve" button is disabled with a tooltip: _"This PO requires General Manager approval."_
 - **Approver out of office:** If the designated approver does not respond within a configurable time window (e.g., 4 hours), the system sends an escalation notification to the next level up.
@@ -1514,7 +1677,15 @@ Each story includes its original acceptance criteria, a detailed end-to-end flow
 8. Upon resolution, the PO transitions to `CLOSED`. The final invoice price is used to update the ingredient's moving average cost (if different from the PO price used at receipt in US-2.3).
 9. The Analytics module is notified of the final invoice price to update food cost calculations.
 
-#### Edge Cases & System Behaviour
+#### UI Journey (GATE 5b)
+- **Origin Screen:** PO Detail -> Invoicing Tab.
+- **Trigger:** 'Start Match' button.
+- **Container:** 3-Way Splittable Grid.
+- **Spatial:** Compare PO (Left) vs GRN (Center) vs Invoice (Right).
+- **Cancel Path:** 'Save Draft'.
+
+#### Acceptance Criteria
+ses & System Behaviour
 
 - **Invoice not yet received:** The PO can remain in `ACKNOWLEDGED` / `RECEIVED` state while awaiting the invoice. A reminder alert fires to the Manager after a configurable number of days (e.g., 7 days) if no invoice has been matched.
 - **Invoice quantity greater than received:** If the supplier invoices for more than was delivered, the system flags this as a **billing discrepancy** requiring immediate Manager attention and supplier contact.
@@ -1616,6 +1787,13 @@ Each story includes its original acceptance criteria, a detailed end-to-end flow
 5. Manager enters PIN and mandatory comment.
 6. PO transitions to `CLOSED`.
 
+#### UI Journey (GATE 5b)
+- **Origin Screen:** PO Detail -> Discrepancy Alert.
+- **Trigger:** 'Resolve' button.
+- **Container:** `Dialog` (Action Picker).
+- **Spatial:** Radio-button list of resolution types with PIN gate.
+- **Cancel Path:** 'Dismiss'.
+
 #### Acceptance Criteria
 
 - [ ] UI explicitly shows discrepancies.
@@ -1643,3 +1821,54 @@ Each story includes its original acceptance criteria, a detailed end-to-end flow
 | **Bid Tie-Breaking (US-13.3)** | Equal composite scores broken by faster delivery; further ties broken by lower price. |
 | **Approval Matrix Escalation (US-14.1)** | Role is validated server-side; a Manager cannot approve a PO that requires GM-level authority even if they access the UI. |
 | **3-Way Match Tolerance (US-15.1)** | A 2% price tolerance is the default configurable value; anything above requires explicit Manager approval with PIN and reason. |
+
+---
+
+## 8. Technical Specifications
+
+### A. Inventory Lifecycle State Machines (GATE 2)
+
+#### 1. Purchase Order Lifecycle
+| State | Description | Next States | Actor |
+| :--- | :--- | :--- | :--- |
+| **DRAFT** | Created by Manager or System | `PENDING_APPROVAL`, `CANCELLED` | Manager |
+| **PENDING_APPROVAL** | Order value > limit; in queue | `APPROVED`, `REJECTED` | GM / Owner |
+| **APPROVED** | Ready for dispatch | `SENT` | System / Manager |
+| **SENT** | Emailed to Vendor | `ACKNOWLEDGED`, `STALE` | System |
+| **ACKNOWLEDGED** | Vendor confirmed receipt | `RECEIVED`, `CANCELLED` | Vendor |
+| **RECEIVED** | Goods physically arrive | `DISCREPANCY`, `CLOSED` | Chef |
+| **CLOSED** | 3-way match complete | — | System |
+
+#### 2. Ingredient Depletion Cycle
+| Action | Trigger | Inventory Impact | Audit Record |
+| :--- | :--- | :--- | :--- |
+| **SALE** | POS 'Send' | `Current - (Recipe Qty / Yield)` | `InventoryTransaction` |
+| **VOID** | Pre-Prep Void | `Current + (Recipe Qty / Yield)` | `Undo Sale` |
+| **WASTE** | Post-Prep / Spoil | `Current - Total Qty` | `WasteLog` |
+| **COUNT** | Physical session | `Current = Physical Input` | `VarianceAdjustment` |
+
+### B. Data Foundation (GATE 3)
+
+| Entity | Primary Fields | Relationships |
+| :--- | :--- | :--- |
+| `RawIngredient` | `cost`, `yield_pct`, `current_stock`, `thresholds` (JSONB) | Child of `Supplier` |
+| `Recipe` | `menu_item_id`, `version`, `effective_date` | Links to `RecipeIngredient` |
+| `InventoryTransaction`| `type`, `qty_change`, `unit_cost_at_event` | FK to `Order` or `PO` |
+| `BatchRecord` | `sub_recipe_id`, `prep_timestamp`, `exp_timestamp` | Triggers sub-depletion |
+
+### C. Role & Permission Matrix (BOH/Inventory) (GATE 4d)
+
+| Role | `RECIPE` | `STOCK_COUNT` | `WASTE_LOG` | `PO_APPROVAL` |
+| :--- | :--- | :--- | :--- | :--- |
+| **Chef** | `CREATE` | `START/ENTRY` | `ENTRY` | `VIEW_ONLY` |
+| **Manager** | `EDIT/DELETE` | `FINALIZE` | `APPROVE_HIGH` | `< $3k APPROVE` |
+| **GM** | `AUDIT` | `AUDIT` | `AUDIT` | `ALL_APPROVE` |
+| **Server** | `None` | `None` | `LOG_LOW_VAL` | `None` |
+
+### D. Tech Stack Declaration (GATE 6)
+
+- **Admin/BOH:** React + shadcn + Tailwind (Web-based control center).
+- **POS/BOH Mobile:** Flutter (Tablet for physical counts and receiving).
+- **Vendor Portal:** React (Lightweight portal for bidding).
+- **Messaging:** STOMP-over-WebSocket (Real-time depletion and alerts).
+- **Reporting:** Chart.js / Recharts (TvA and Usage analytics).

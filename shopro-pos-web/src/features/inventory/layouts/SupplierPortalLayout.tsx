@@ -4,6 +4,7 @@ import {
     LayoutDashboard,
     ClipboardList,
     Package,
+    TrendingUp,
     LogOut,
     User
 } from 'lucide-react';
@@ -22,7 +23,9 @@ export const SupplierPortalLayout: React.FC = () => {
     const navigation = [
         { name: 'Dashboard', href: '/supplier/dashboard', icon: LayoutDashboard },
         { name: 'Active RFQs', href: '/supplier/rfqs', icon: ClipboardList },
+        { name: 'Purchase Orders', href: '/supplier/pos', icon: Package },
         { name: 'Inventory View', href: '/supplier/inventory', icon: Package },
+        { name: 'Price Proposals', href: '/supplier/proposals', icon: TrendingUp },
     ];
 
     if (!session) return <Outlet />;

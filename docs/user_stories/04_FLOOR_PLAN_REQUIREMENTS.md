@@ -48,6 +48,13 @@
 
     *   **US-1.1: Drag-and-Drop Layout Editor**
         *   **As a** Manager, **I want to** drag and drop table shapes (Square, Round, Rectangular, Bar Stools) onto a grid canvas, **so that** I can build a digital map that matches the physical restaurant layout.
+        *   **UI Journey (GATE 5b):**
+            *   **Origin:** Admin Dashboard (`/admin/settings`).
+            *   **Trigger:** 'Floor Plan Editor' tile.
+            *   **Enter Mode:** Requires 'Edit Layout' toggle (PIN gated: `ADMIN:TERMINAL_CONFIG`).
+            *   **Container:** Full-screen canvas with a right-side `Sheet` 'Tool Palette'.
+            *   **Spatial:** Elements snap to 10px grid; overlaps trigger red glow.
+            *   **Cancel Path:** 'Exit' button. If `isDirty`, show `AlertDialog`: "Discard unsaved layout changes?".
         *   *Acceptance Criteria:* Users must enter a specific 'Edit Layout' mode requiring Manager PIN validation. Dragging a shape must snap to a predefined grid to ensure alignment. Overlapping tables is prohibited and triggers a visual error (red outline).
         *   **Entities:** `TableShape`, `Section`, `AuditLog`
         *   **Tech Stack:** React + shadcn + Tailwind
@@ -58,7 +65,13 @@
         *   **Tech Stack:** React + shadcn + Tailwind
     *   **US-1.3: Dynamic Section Assignment**
         *   **As a** Manager, **I want to** assign specific tables to servers for each shift, **so that** I can balance workload and track server performance.
-        *   *Acceptance Criteria:* Pre-shift setup: Drag server names onto sections or individual tables. Each server gets a distinct color/border. Tables show server initials: "T-12 (M)". Server login auto-filters floor plan to show only their tables (toggle to see all). Transfer individual tables between servers during shift (with notification).
+        *   **UI Journey (GATE 5b):**
+            *   **Origin:** Floor Plan View (`/admin/floorplan`).
+            *   **Trigger:** 'Staff Assignment' button (Person icon, header).
+            *   **Container:** `Modal` with a searchable `StaffList` sidebar.
+            *   **Spatial:** Drag Staff Name from sidebar → Drop on Table/Section.
+            *   **Cancel Path:** 'Close' button dismisses without committing temporary assignments.
+        *   *Acceptance Criteria:* Pre-shift setup: Drag server names onto sections or individual tables. Each server gets a distinct color/border. Tables show server initials: "T-12 (M)". Server login auto-filters floor plan to show only their tables. Transfer individual tables between servers during shift (with notification).
         *   **Entities:** `Section`, `TableShape`, `StaffMember`, `ShiftAssignment`
         *   **Tech Stack:** React + shadcn + Tailwind (Manager) / Flutter (Server)
 
@@ -72,11 +85,23 @@
         *   **Tech Stack:** Flutter
     *   **US-2.2: Seating Guests (Status Change)**
         *   **As a** Host, **I want to** tap a Green (Available) table and enter party size, **so that** the table status changes to Blue (Occupied) and is reserved for the designated server.
-        *   *Acceptance Criteria:* Tapping an Available table opens a 'Seat Party' modal asking for the number of guests. Submitting a number greater than the defined Table Capacity (from US-1.2) must prompt a warning ("Party exceeds table capacity. Proceed?").
+        *   **UI Journey (GATE 5b):**
+            *   **Origin:** Floor Plan Canvas.
+            *   **Trigger:** Single-tap on any `GREEN` Table.
+            *   **Container:** `Dialog` (Centered).
+            *   **Spatial:** Minimalist modal with large numeric keypad.
+            *   **Cancel Path:** 'Cancel' button or tap outside modal.
+        *   *Acceptance Criteria:* Tapping an Available table opens a 'Seat Party' modal asking for the number of guests. Submitting a number greater than the defined Table Capacity must prompt a warning ("Party exceeds table capacity. Proceed?").
         *   **Entities:** `TableShape`, `OrderTicket`, `StaffMember`
         *   **Tech Stack:** Flutter
     *   **US-2.3: Marking Tables Clean**
         *   **As a** Busser/Host, **I want to** tap a Red (Dirty) table and hit a 'Mark Clean' button, **so that** the table status resets back to Green (Available) for the next party.
+        *   **UI Journey (GATE 5b):**
+            *   **Origin:** Floor Plan Canvas.
+            *   **Trigger:** Single-tap on any `RED` Table.
+            *   **Container:** `ActionSheet` (Bottom-up on smaller tablets, center popover on large).
+            *   **Spatial:** Direct context menu over the table.
+            *   **Cancel Path:** Dismissing the action sheet.
         *   *Acceptance Criteria:* A Red table cannot be marked clean if there is still an unpaid balance on the associated order ticket. 
         *   **Entities:** `TableShape`, `OrderTicket`, `TablesideSession`
         *   **Tech Stack:** Flutter
@@ -92,7 +117,13 @@
 
     *   **US-3.1: Adding to Waitlist**
         *   **As a** Host, **I want to** enter a customer's name, phone number, and party size into a sidebar Waitlist, **so that** I have a digital queue of waiting guests.
-        *   *Acceptance Criteria:* The Waitlist sidebar continuously displays sorting entries by wait time (longest wait at the top). It requires Name and Party Size (integer > 0); Phone number is optional.
+        *   **UI Journey (GATE 5b):**
+            *   **Origin:** Floor Plan main view.
+            *   **Trigger:** Right-edge 'Waitlist' toggle handle or swipe left from right edge.
+            *   **Container:** `SideSheet` (480px, persistence configurable).
+            *   **Spatial:** Pushes or overlays the right side of the floor plan.
+            *   **Cancel Path:** Swipe right or tap 'Close' button.
+        *   *Acceptance Criteria:* The Waitlist sidebar continuously displays sorting entries by wait time. It requires Name and Party Size (integer > 0); Phone number is optional.
         *   **Entities:** `WaitlistEntry`
         *   **Tech Stack:** Flutter
     *   **US-3.2: Quoting Wait Times**
@@ -102,7 +133,13 @@
         *   **Tech Stack:** Flutter
     *   **US-3.3: SMS Notification to Guest**
         *   **As a** Host, **I want to** tap a 'Notify' button next to a waitlist entry, **so that** an automated SMS SMS text message is sent to the customer's provided phone number letting them know their table is ready.
-        *   *Acceptance Criteria:* Taping 'Notify' changes the waitlist entry status to "Notified - Waiting" within 200ms and starts a 5-minute countdown timer visually alerting the host if the guest hasn't checked in. This action requires a phone number to have been entered in US-3.1.
+        *   **UI Journey (GATE 5b):**
+            *   **Origin:** Waitlist `SideSheet`.
+            *   **Trigger:** 'Notify' button (Bell icon) on any guest card.
+            *   **Container:** `AlertDialog` (Center).
+            *   **Spatial:** Modal confirmation: 'Notify Party [Name]?'.
+            *   **Cancel Path:** 'Cancel' dismisses without sending SMS.
+        *   *Acceptance Criteria:* Taping 'Notify' changes the waitlist entry status to "Notified" and starts a 5-minute countdown. Requires valid phone number.
         *   **Entities:** `WaitlistEntry`
         *   **Tech Stack:** Flutter
     *   **US-3.4: Seating from Waitlist**
@@ -127,9 +164,72 @@
 
     *   **US-4.1: Smart Table Hold for Reservations**
         *   **As a** Host, **I want the** system to automatically hold a table 15 minutes before a reservation time, **so that** I don't accidentally seat walk-ins at a reserved table.
-        *   *Acceptance Criteria:* Configurable hold window (default: 15 min). Visual indicator: Table shows "HELD - Reservation 7:00 PM" on hover. Release hold if late (Mark as No-Show). Automatic SMS to guest: "Your table is ready."
+        *   **UI Journey (GATE 5b):**
+            *   **Origin:** SYSTEM (Automated transition).
+            *   **Feedback:** Table color transitions to `YELLOW` (HELD).
+            *   **Trigger (Manual):** Tapping a `YELLOW` table allows assigning it to a guest early or releasing the hold.
+            *   **Container:** `ActionSheet` for manual release.
+        *   *Acceptance Criteria:* Configurable hold window. Visual indicator: Table shows "HELD - Reservation 7:00 PM" on hover. Release hold if late. Automatic SMS to guest.
         *   **Entities:** `TableShape`, `Reservation`, `TableHold`
         *   **Tech Stack:** Flutter + Backend Scheduler
+
+---
+
+## 7. Data Schema & Entities
+
+### 7.1 Table Geometric Schema
+
+#### `table_shapes` (PostgreSQL)
+| Column | Type | Nullable | Constraints |
+|---|---|---|---|
+| `id` | UUID | NOT NULL | PK |
+| `name` | VARCHAR(20) | NOT NULL | Unique per location |
+| `shape_type` | VARCHAR(20) | NOT NULL | SQUARE, ROUND, RECT, STOOL |
+| `x_pos_percent` | DECIMAL(5,2)| NOT NULL | 0.00 to 100.00 |
+| `y_pos_percent` | DECIMAL(5,2)| NOT NULL | 0.00 to 100.00 |
+| `width_percent` | DECIMAL(5,2)| NOT NULL | |
+| `height_percent`| DECIMAL(5,2)| NOT NULL | |
+| `rotation_deg` | INTEGER | NOT NULL | 0–359; default 0 |
+| `max_capacity` | INTEGER | NOT NULL | > 0 |
+
+#### `waitlist_entries` (PostgreSQL)
+| Column | Type | Nullable | Constraints |
+|---|---|---|---|
+| `id` | UUID | NOT NULL | PK |
+| `customer_id` | UUID | NULL | FK → customers.id |
+| `customer_name`| VARCHAR(100)| NOT NULL | |
+| `phone_number` | VARCHAR(20) | NULL | |
+| `party_size` | INTEGER | NOT NULL | > 0 |
+| `status` | VARCHAR(20) | NOT NULL | WAITING, NOTIFIED, SEATED, CANCEL |
+
+---
+
+## 8. Security & Permissions
+
+> **Source:** `02_ROLE_MANAGEMENT_UX_ARCHITECTURE.md`
+
+### 8.1 Permission Matrix (COMPONENT:ACTION)
+
+| Operation | Permission Code | Role(s) |
+|---|---|---|
+| Edit Physical Layout | `FLOOR:LAYOUT_EDIT` | MANAGER, OWNER |
+| Seat Guest | `FLOOR:SEAT` | HOST, MANAGER, SERVER |
+| Transfer Table | `FLOOR:TRANSFER` | MANAGER (Override for occupied), SERVER |
+| Mark Table Clean | `FLOOR:CLEAN` | BUSSER, HOST, MANAGER |
+| Manage Waitlist | `FLOOR:WAITLIST` | HOST, MANAGER |
+
+### 8.2 Logic Guards
+- **Manager Override:** Required when moving an order into a table that is already `OCCUPIED` (Party Merge).
+- **Masking:** Customer phone numbers in the Waitlist sidebar follow PET partial masking: `***-***-1234`.
+
+---
+
+## 9. Offline & IoT Resilience
+
+### 9.1 Hardware Failure Modes
+- **Occupancy Sensor Fault:** If a sensor sends 'No Occupancy' while the table status is `ORDERED`, a small '⚠️' icon appears on the table. Tapping it allows a 'Sync with Sensor' or 'Discard Sensor Data' action (Manager PIN required).
+- **Offline Sync:** Seating a guest while offline adds a record to the `local_ops_queue`. The table icon displays a spinning sync badge. The server uses the **Local Permission Cache** to verify if the actor can seat guests.
+- **Auto-Retry:** Failed SMS notifications (Waitlist US-3.3) retry 3 times with 10s backoff before flagging 'SMS Failed' on the guest card.
     *   **US-4.2: Visual Reservation Timeline**
         *   **As a** Manager, **I want to** see a timeline view of reservations overlaid on the floor plan, **so that** I can plan seating strategy.
         *   *Acceptance Criteria:* Toggle: "Floor Plan" vs "Timeline View". Timeline shows 24-hour horizon, tables as rows, reservations as colored blocks. Conflict warnings for double-booking.
@@ -158,6 +258,12 @@
 
     *   **US-5.1: Deleting a Table from the Layout**
         *   **As a** Manager, **I want to** delete a table shape from the floor plan in 'Edit Layout' mode, **so that** the digital map always reflects the restaurant's current physical configuration.
+        *   **UI Journey (GATE 5b):**
+            *   **Origin:** Floor Plan Editor (`/admin/floorplan/edit`).
+            *   **Trigger:** 'Delete' (Trash icon) on the selected table's context menu.
+            *   **Container:** `AlertDialog` (Center).
+            *   **Spatial:** Modal overlay.
+            *   **Cancel Path:** 'Cancel' dismisses without deletion.
         *   *Acceptance Criteria:* Deleting a table requires Manager PIN validation. Blocked if table has an active ticket. Past orders associated with the deleted table retain the original table name.
         *   **Entities:** `TableShape`, `OrderTicket`, `AuditLog`
         *   **Tech Stack:** React + shadcn + Tailwind
@@ -167,6 +273,12 @@
 
     *   **US-6.1: Table Joining/Splitting**
         *   **As a** Manager, **I want to** combine two adjacent tables for a large party, **so that** the system treats them as one logical table.
+        *   **UI Journey (GATE 5b):**
+            *   **Origin:** Floor Plan Canvas.
+            *   **Trigger:** Multi-select tables (Long press → Tap others) → 'Join' FAB (Bottom-right).
+            *   **Container:** Inline transformation (visual connector line).
+            *   **Spatial:** Anchored to the selected table group.
+            *   **Cancel Path:** 'Undo' toast or 'Split' from context menu.
         *   *Acceptance Criteria:* Multi-select tables → "Join Tables". Joined tables show as single unit: "T-12+T-14". Orders appear on unified ticket. Visual connector line on floor plan.
         *   **Entities:** `TableShape`, `CombinedTable`, `OrderTicket`
         *   **Tech Stack:** Flutter
@@ -253,6 +365,12 @@
         *   **Tech Stack:** Flutter (NFC API)
     *   **US-10.4: Busser Table Reset Workflow**
         *   **As a** Busser, **I want to** scan a table's QR or tap 'Ready' when I've finished cleaning, **so that** it becomes `AVAILABLE` for the host stand.
+        *   **UI Journey (GATE 5b):**
+            *   **Origin:** Busser Mobile App Dashboard.
+            *   **Trigger:** 'Scan QR' button or tap a `RED` table icon.
+            *   **Container:** Full-screen camera view (for QR) or `ActionSheet` (for 'Ready').
+            *   **Spatial:** Overlays active view.
+            *   **Cancel Path:** 'Back' or 'Cancel' dismisses scan/reset.
         *   *Acceptance Criteria:* Photo verification step (optional manager config): Take photo of clean table. Time tracked: `DIRTY` → `AVAILABLE`.
         *   **Entities:** `TableShape`, `AuditLog`
         *   **Tech Stack:** Flutter

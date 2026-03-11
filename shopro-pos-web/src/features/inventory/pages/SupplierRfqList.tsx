@@ -15,8 +15,15 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useSupplierAuth } from '@/features/auth/SupplierAuthContext';
 import { useSupplierPortalRfqs, useSubmitPortalBid } from '../hooks/useSupplierPortal';
-import { format } from 'date-fns';
+import { format, isAfter, addHours } from 'date-fns';
 import { toast } from 'sonner';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 
 export const SupplierRfqList: React.FC = () => {
     const { session } = useSupplierAuth();
@@ -31,18 +38,45 @@ export const SupplierRfqList: React.FC = () => {
         notes: ''
     });
 
-    const submitBidMutation = useSubmitPortalBid(selectedRfq?.id || '', session?.userId || '');
+    // Filtering State
+    const [searchTerm, setSearchTerm] = useState('');
+    const [filterType, setFilterType] = useState('ALL');
+
+    const submitBidMutation = useSubmitPortalBid(selectedRfq?.id || '');
+
+    const filteredRfqs = React.useMemo(() => {
+        if (!rfqs) return [];
+
+        let result = rfqs.filter(rfq =>
+            rfq.ingredientName.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+
+        if (filterType === 'EXPIRING') {
+            const tomorrow = addHours(new Date(), 24);
+            result = result.filter(rfq => !isAfter(new Date(rfq.bidDeadline), tomorrow));
+        } else if (filterType === 'HIGH_VOLUME') {
+            const avgQty = rfqs.length > 0
+                ? rfqs.reduce((acc, curr) => acc + curr.requiredQty, 0) / rfqs.length
+                : 0;
+            result = result.filter(rfq => rfq.requiredQty > avgQty);
+        }
+
+        return result;
+    }, [rfqs, searchTerm, filterType]);
 
     if (isLoading) return <div className="text-slate-500">Fetching active RFQs...</div>;
 
     const handleBidSubmit = async () => {
         try {
             await submitBidMutation.mutateAsync({
-                supplierId: session?.supplierId || '',
-                unitPrice: bidData.unitPrice,
-                quantityAvailable: bidData.quantityAvailable,
-                deliveryDate: bidData.deliveryDate,
-                notes: bidData.notes
+                userId: session?.userId || '',
+                request: {
+                    supplierId: session?.supplierId || '',
+                    unitPrice: bidData.unitPrice,
+                    quantityAvailable: bidData.quantityAvailable,
+                    deliveryDate: bidData.deliveryDate,
+                    notes: bidData.notes
+                }
             });
             toast.success('Bid submitted successfully');
             setSelectedRfq(null);
@@ -56,23 +90,37 @@ export const SupplierRfqList: React.FC = () => {
             <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
                 <div className="relative w-full md:w-96">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                    <Input placeholder="Search requests..." className="pl-10" />
+                    <Input
+                        placeholder="Search requests..."
+                        className="pl-10"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
                 </div>
-                <Button variant="outline" className="gap-2">
-                    <Filter className="h-4 w-4" />
-                    Filters
-                </Button>
+                <div className="flex items-center gap-2 w-full md:w-auto">
+                    <Filter className="h-4 w-4 text-slate-400" />
+                    <Select value={filterType} onValueChange={setFilterType}>
+                        <SelectTrigger className="w-[180px]">
+                            <SelectValue placeholder="All Requests" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="ALL">All Requests</SelectItem>
+                            <SelectItem value="EXPIRING">Expiring Soon</SelectItem>
+                            <SelectItem value="HIGH_VOLUME">High Volume</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
             </div>
 
             <div className="grid gap-4">
-                {rfqs?.length === 0 ? (
-                    <Card className="border-dashed border-2 py-16 text-center text-slate-500">
+                {filteredRfqs.length === 0 ? (
+                    <Card className="border-dashed border-2 py-16 text-center text-slate-500 bg-transparent">
                         <ClipboardList className="h-12 w-12 mx-auto mb-4 opacity-10" />
-                        <p>No active Requests for Quotation at the moment.</p>
-                        <p className="text-xs">We'll notify you when new opportunities match your catalog.</p>
+                        <p>No matching requests found.</p>
+                        <p className="text-xs">Try adjusting your search or filters.</p>
                     </Card>
                 ) : (
-                    rfqs?.map(rfq => (
+                    filteredRfqs.map(rfq => (
                         <Card key={rfq.id} className="hover:border-indigo-200 transition-colors shadow-sm dark:bg-slate-900 border-none">
                             <CardContent className="p-6">
                                 <div className="flex flex-col lg:flex-row justify-between lg:items-center gap-6">

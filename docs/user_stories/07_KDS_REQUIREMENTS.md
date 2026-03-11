@@ -17,17 +17,38 @@ This document captures unambiguous User Stories for the Kitchen Display System (
 
 *   **US-1.1: Automated Ticket Generation**
     *   **As a** Line Cook, **I want to** see a new digital ticket appear on my screen instantly when a Server presses 'Send' on the POS, **so that** I can begin preparing the order without waiting for a paper ticket.
-    *   *Acceptance Criteria:* The ticket must appear on the KDS within 1 second of the FOH submission. The ticket must prominently display the Table Number, Server Name, Time Received, and a list of items with their associated modifiers.
+#### UI Journey (GATE 5b)
+- **Origin Screen:** KDS Dashboard (Active Prep View).
+- **Trigger:** Server 'Send' action at POS (WebSocket Event).
+- **Container:** New Ticket Card (Animated entrance).
+- **Spatial:** Appears at the first available slot in the ticket queue (left-to-right).
+- **Cancel Path:** N/A (Atomic update).
+
+#### Acceptance Criteria
     *   **Entities:** `KDSTicket`, `KDSTicketItem`, `OrderTicket`, `OrderItem`
     *   **Tech Stack:** Flutter
 *   **US-1.2: Station Routing Rules**
     *   **As a** Manager, **I want to** configure rules that send specific menu categories to specific KDS screens (e.g., 'Cocktails' to the Bar Screen, 'Grill Items' to the Grill Screen), **so that** cooks only see the items they are responsible for.
-    *   *Acceptance Criteria:* The system must allow mapping Categories or individual Items to specific KDS Device IDs. If an order contains items for multiple stations, the POS must split the ticket and route the relevant parts to the correct screens simultaneously.
+#### UI Journey (GATE 5b)
+- **Origin Screen:** Admin Panel -> Hardware Settings.
+- **Trigger:** 'Routing' tab selection.
+- **Container:** Data Table with 'Edit' modals.
+- **Spatial:** Full-width grid for Category mapping.
+- **Cancel Path:** 'Discard' button on edit modal.
+
+#### Acceptance Criteria
     *   **Entities:** `KDSRoutingRule`, `KDSStation`, `MenuCategory`, `MenuItem`, `RoutingTargetType`
     *   **Tech Stack:** React + shadcn + Tailwind
 *   **US-1.3: All-Day Item Aggregation (Summary View)**
     *   **As a** Line Cook, **I want to** see a summary panel showing the total count of a specific item currently needed across all active tickets (e.g., "5x Cheeseburgers All-Day"), **so that** I can batch cook efficiently.
-    *   *Acceptance Criteria:* The KDS must have a toggleable sidebar/row that aggregates identical items from all "New" and "Cooking" tickets. It must update within 1 second as tickets are fired or fulfilled.
+#### UI Journey (GATE 5b)
+- **Origin Screen:** KDS Prep View.
+- **Trigger:** Bottom/Side navigation 'Summary' toggle.
+- **Container:** Overlay Drawer / Collapsible Side Panel.
+- **Spatial:** Right-aligned panel (20% screen width).
+- **Cancel Path:** Swipe-hide or toggle-off.
+
+#### Acceptance Criteria
     *   **Entities:** `KDSTicketItem`, `OrderItem`, `MenuItem`
     *   **Tech Stack:** Flutter
 *   **US-1.4: Cross-Station Item Bundling**
@@ -41,12 +62,26 @@ This document captures unambiguous User Stories for the Kitchen Display System (
 
 *   **US-2.1: Bumping Individual Items**
     *   **As a** Line Cook, **I want to** tap an individual item on a ticket (or use a physical bump bar) to mark it as 'Prepared', **so that** I can track my progress on a large, multi-item order.
-    *   *Acceptance Criteria:* Tapping an item changes its visual state (e.g., strikes through the text and turns the text color gray). The item remains on the screen until the entire ticket is bumped.
+#### UI Journey (GATE 5b)
+- **Origin Screen:** Active Ticket Card.
+- **Trigger:** Single tap on `KDSTicketItem` row or physical Bump Bar Button #1-10.
+- **Container:** State transition within the Card.
+- **Spatial:** Strike-through animation on the specific row.
+- **Cancel Path:** Tap again to 'Un-strike' (within 3s buffer).
+
+#### Acceptance Criteria
     *   **Entities:** `KDSTicketItem`, `OrderItem`
     *   **Tech Stack:** Flutter
 *   **US-2.2: Bumping Full Tickets**
     *   **As a** Line Cook, **I want to** tap a 'Done' button on a ticket (or double-tap the bump bar) to clear the entire ticket from my screen, **so that** I know the station's work for that order is complete.
-    *   *Acceptance Criteria:* Bumping a full ticket removes it from the active prep queue. If the restaurant uses an Expeditor screen (US-2.4), bumping from the prep station must update the item status to 'Ready' on the Expo screen.
+#### UI Journey (GATE 5b)
+- **Origin Screen:** Active Ticket Card.
+- **Trigger:** Tap on 'Done' [Footer] or double-tap physical Bump Bar.
+- **Container:** Fade-out animation.
+- **Spatial:** Ticket slide-out; queue shifts left.
+- **Cancel Path:** 'Recall' button (Bottom toast) to bring back last bumped ticket.
+
+#### Acceptance Criteria
     *   **Entities:** `KDSTicket`, `KDSTicketItem`, `OrderTicket`, `OrderItem`
     *   **Tech Stack:** Flutter
 *   **US-2.3: Color-Coded Ticket Timers**
@@ -61,7 +96,14 @@ This document captures unambiguous User Stories for the Kitchen Display System (
     *   **Tech Stack:** React + shadcn + Tailwind (Config) / Flutter (Alerts)
 *   **US-2.4: Expeditor (Expo) View Synchronization**
     *   **As an** Expeditor, **I want to** see a master screen that consolidates all items from an order across all prep stations, **so that** I know when every part of a table's order is ready to be delivered together.
-    *   *Acceptance Criteria:* The Expo screen displays the full, un-split ticket. Items assigned to specific prep stations appear with a "Pending" status. When a prep station bumps an item (US-2.1), the status on the Expo screen updates to "Ready" within 1 second. The Expo can only bump the full ticket when all items are marked "Ready".
+#### UI Journey (GATE 5b)
+- **Origin Screen:** Expo Master View.
+- **Trigger:** Sub-station bump event (WebSocket).
+- **Container:** Multi-station grid card.
+- **Spatial:** Item row turns green with 'Station Name' badge.
+- **Cancel Path:** N/A (Sync only).
+
+#### Acceptance Criteria
     *   **Entities:** `KDSTicket`, `KDSTicketItem`, `OrderTicket`, `OrderItem`
     *   **Tech Stack:** Flutter
 
@@ -69,6 +111,45 @@ This document captures unambiguous User Stories for the Kitchen Display System (
 *   **Timing Definitions (US-1.1):** Defined "instantly" as within 1 second to set clear performance expectations for the WebSocket/network infrastructure.
 *   **Routing Logic Context (US-1.2):** Clarified how the system handles mixed orders (e.g., drinks and food on the same POS ticket) by explicitly stating the system must perform the split logic before sending to the KDS devices.
 *   **State Propagation (US-2.2, US-2.4):** Explicitly linked the actions on the Line Cook screen to the state changes on the Expeditor screen, removing ambiguity about how different KDS roles interact.
+
+---
+
+## 7. Technical Specifications
+
+### A. KDS Ticket State Machine (GATE 2)
+
+| State | Description | Next States | Actor |
+| :--- | :--- | :--- | :--- |
+| **NEW** | Ticket received from POS | `PREPARING`, `CANCELLED` | System / Server |
+| **PREPARING** | Items being actively cooked | `ITEM_COMPLETE`, `READY` | Line Cook |
+| **ITEM_COMPLETE** | Sub-item bumped (Strike-through) | `READY`, `REJECTED` | Line Cook |
+| **READY** | Full ticket bumped at Station | `EXPO_PENDING`, `RUNNER_PICKUP` | Line Cook |
+| **EXPO_PENDING** | Expo consolidation view | `EXPO_COMPLETE`, `KITCHEN_REJECT` | Expeditor |
+| **EXPO_COMPLETE** | Full order ready for Runner | `DELIVERED` | Expeditor |
+| **DELIVERED** | Cleared from screens | — | Runner |
+
+### B. Data Foundation (GATE 3)
+
+| Entity | Fields | Constraints |
+| :--- | :--- | :--- |
+| `KDSTicket` | `id` (UUID), `order_id`, `station_id`, `status`, `fire_time` | Link to `OrderTicket` |
+| `KDSTicketItem` | `ticket_id`, `item_hash`, `quantity`, `modifiers` (JSONB) | `item_hash` used for all-day sums |
+| `KDSRoutingRule` | `category_id`, `station_id`, `priority`, `is_sequential` | Deterministic routing logic |
+
+### C. Role & Permission Matrix (GATE 4d)
+
+| Role | `STATION` | `TICKET` | `ITEM` | `SYS_CONFIG` |
+| :--- | :--- | :--- | :--- | :--- |
+| **Line Cook** | `BIND` | `BUMP_OWN` | `MARK_READY` | `VIEW_ALL_DAY` |
+| **Expeditor** | `VIEW_MASTER` | `BUMP_MASTER` | `COORD_SYNC` | `OVERRIDE_RUNNER` |
+| **Manager** | `CREATE_STATION`| `URGENT_CLEAR` | `VOID_ITEM` | `MAP_ROUTING` |
+
+### D. Tech Stack Declaration (GATE 6)
+
+- **Frontend:** Flutter (Tablet app) with `bump_bar` driver support.
+- **Admin:** React + shadcn + Tailwind (Hardware config).
+- **Messaging:** STOMP-over-WebSocket for real-time ticket delivery.
+- **Logging:** DLR for SMS alerts to Managers on critical station failures.
 
 ---
 
@@ -91,7 +172,14 @@ This document captures unambiguous User Stories for the Kitchen Display System (
 
 *   **US-3.3: Fallback to Receipt Printer**
     *   **As a** Manager, **I want to** manually trigger a fallback to the physical receipt printer for a specific offline KDS station, **so that** the kitchen can still receive tickets on paper if the KDS hardware cannot be restored quickly.
-    *   *Acceptance Criteria:* Triggering the printer fallback requires Manager PIN. When active, all orders destined for the offline station must print automatically to the designated kitchen printer. The fallback mode must be visually indicated on all POS terminals with a persistent "Printer Fallback Active for [Station]" badge. Fallback mode must be manually disabled by a Manager after the KDS is restored.
+#### UI Journey (GATE 5b)
+- **Origin Screen:** POS Warning Banner (US-3.1).
+- **Trigger:** Tap on 'Fallback Settings'.
+- **Container:** Dialog (Manager PIN Prompt).
+- **Spatial:** Modal centered on POS screen.
+- **Cancel Path:** 'Back' or 'Dismiss'.
+
+#### Acceptance Criteria
     *   **Entities:** `KDSStation`, `AuditLog`, `StaffMember`
     *   **Tech Stack:** Flutter
 
@@ -100,12 +188,26 @@ This document captures unambiguous User Stories for the Kitchen Display System (
 
 *   **US-4.1: KDS Device Authentication**
     *   **As a** Restaurant Manager, **I want to** be prompted for my Manager PIN the first time I open the KDS app on a new tablet, **so that** unauthorized users cannot access the kitchen display system.
-    *   *Acceptance Criteria:* Upon opening the app with no saved station identity, a fullscreen PIN pad is displayed. Only staff with the `MANAGER` role can bypass this screen.
+#### UI Journey (GATE 5b)
+- **Origin Screen:** App Launch (New Device).
+- **Trigger:** Automatic (Auth required detected).
+- **Container:** Full-screen PIN Pad.
+- **Spatial:** High-contrast numeric pad with 'Manager Required' label.
+- **Cancel Path:** N/A (Hard gate; prevents app usage).
+
+#### Acceptance Criteria
     *   **Entities:** `StaffMember`, `Role`
     *   **Tech Stack:** Flutter
 *   **US-4.2: Station Binding and Selection**
     *   **As a** Restaurant Manager, **I want to** select a specific Station Name (e.g., "Grill", "Bar") from a dropdown list after authenticating, **so that** this tablet knows which tickets it should display.
-    *   *Acceptance Criteria:* After successful PIN entry (US-4.1), the app must fetch all active `KDSStation` records via REST API. The Manager selects one station and taps "Confirm". The app stores the selected `stationId` persistently (e.g., via `SharedPreferences`).
+#### UI Journey (GATE 5b)
+- **Origin Screen:** PIN Success Screen (US-4.1).
+- **Trigger:** Station selection from List.
+- **Container:** Selection View -> Master Dashboard.
+- **Spatial:** List-view transition to main Grid View.
+- **Cancel Path:** 'Back' to PIN entry.
+
+#### Acceptance Criteria
     *   **Entities:** `KDSStation`
     *   **Tech Stack:** Flutter
 *   **US-4.3: Persistent WebSocket Connection**
@@ -133,7 +235,14 @@ This document captures unambiguous User Stories for the Kitchen Display System (
 
 *   **US-6.1: Real-Time Order Status Dashboard (Station-Wise View)**
     *   **As a** Server, **I want to** view a unified dashboard showing the real-time status of every item in my active orders broken down by station, so that I can answer "Where's my food?" without running to the kitchen.
-    *   *Acceptance Criteria:* Accessible via "Order Status" button from Floor Plan or Order Screen. Visual grid: Rows = Orders/Tables, Columns = Stations (Grill, Fry, Cold, Bar, Expo). Cell colors: Gray (Not Started) → Yellow (Preparing) → Green (Ready) → Blue (Delivered). Tap any cell to see item details and elapsed time. Auto-updates via WebSocket within 1 second of station status change. Shows aggregate "Order Completion %" per table.
+#### UI Journey (GATE 5b)
+- **Origin Screen:** POS Order Screen / Floor Plan.
+- **Trigger:** 'Order Status' button.
+- **Container:** `Sheet` (Slide-up Grid).
+- **Spatial:** 5-column grid mapping Prep Stations to Orders.
+- **Cancel Path:** 'Close' or swipe-down.
+
+#### Acceptance Criteria
     *   **Entities:** `OrderTicket`, `KDSSubTicket`, `KDSStation`
     *   **Tech Stack:** Flutter
 

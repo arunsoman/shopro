@@ -7,6 +7,7 @@ import mls.sho.dms.entity.staff.StaffMember;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * A Purchase Order sent to a supplier for ingredient replenishment.
@@ -61,6 +62,39 @@ public class PurchaseOrder extends BaseEntity {
     @Column(name = "received_at")
     private Instant receivedAt;
 
+    @Column(name = "tracking_number", length = 100)
+    private String trackingNumber;
+
+    @Column(name = "invoice_file_id")
+    private UUID invoiceFileId;
+
+    @Column(name = "delivery_note_ref", length = 100)
+    private String deliveryNoteRef;
+
+    @Column(name = "shipped_at")
+    private Instant shippedAt;
+
+    @Column(name = "source_bid_id")
+    private UUID sourceBidId;
+
+    @Column(name = "source_proposal_id")
+    private UUID sourceProposalId;
+
+    @Column(name = "counter_offer_price", precision = 12, scale = 4)
+    private java.math.BigDecimal counterOfferPrice;
+
+    @Column(name = "counter_offer_qty", precision = 12, scale = 4)
+    private java.math.BigDecimal counterOfferQty;
+
+    @Column(name = "counter_offer_date")
+    private Instant counterOfferDate;
+
+    @Column(name = "counter_offer_notes", columnDefinition = "TEXT")
+    private String counterOfferNotes;
+
+    @Column(name = "acknowledged_at")
+    private Instant acknowledgedAt;
+
     public Supplier getSupplier() { return supplier; }
     public void setSupplier(Supplier supplier) { this.supplier = supplier; }
     public StaffMember getGeneratedBy() { return generatedBy; }
@@ -82,4 +116,28 @@ public class PurchaseOrder extends BaseEntity {
 
     public List<PurchaseOrderLine> getLines() { return lines; }
     public void setLines(List<PurchaseOrderLine> lines) { this.lines = lines; }
+
+    public String getTrackingNumber() { return trackingNumber; }
+    public void setTrackingNumber(String trackingNumber) { this.trackingNumber = trackingNumber; }
+    public UUID getInvoiceFileId() { return invoiceFileId; }
+    public void setInvoiceFileId(UUID invoiceFileId) { this.invoiceFileId = invoiceFileId; }
+    public String getDeliveryNoteRef() { return deliveryNoteRef; }
+    public void setDeliveryNoteRef(String deliveryNoteRef) { this.deliveryNoteRef = deliveryNoteRef; }
+    public Instant getShippedAt() { return shippedAt; }
+    public void setShippedAt(Instant shippedAt) { this.shippedAt = shippedAt; }
+
+    public UUID getSourceBidId() { return sourceBidId; }
+    public void setSourceBidId(UUID sourceBidId) { this.sourceBidId = sourceBidId; }
+    public UUID getSourceProposalId() { return sourceProposalId; }
+    public void setSourceProposalId(UUID sourceProposalId) { this.sourceProposalId = sourceProposalId; }
+    public java.math.BigDecimal getCounterOfferPrice() { return counterOfferPrice; }
+    public void setCounterOfferPrice(java.math.BigDecimal counterOfferPrice) { this.counterOfferPrice = counterOfferPrice; }
+    public java.math.BigDecimal getCounterOfferQty() { return counterOfferQty; }
+    public void setCounterOfferQty(java.math.BigDecimal counterOfferQty) { this.counterOfferQty = counterOfferQty; }
+    public Instant getCounterOfferDate() { return counterOfferDate; }
+    public void setCounterOfferDate(Instant counterOfferDate) { this.counterOfferDate = counterOfferDate; }
+    public String getCounterOfferNotes() { return counterOfferNotes; }
+    public void setCounterOfferNotes(String counterOfferNotes) { this.counterOfferNotes = counterOfferNotes; }
+    public Instant getAcknowledgedAt() { return acknowledgedAt; }
+    public void setAcknowledgedAt(Instant acknowledgedAt) { this.acknowledgedAt = acknowledgedAt; }
 }

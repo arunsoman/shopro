@@ -5,10 +5,12 @@ import lombok.extern.slf4j.Slf4j;
 import mls.sho.dms.application.dto.inventory.CreateRFQRequest;
 import mls.sho.dms.application.dto.inventory.RFQResponse;
 import mls.sho.dms.application.dto.inventory.VendorBidRequest;
+import mls.sho.dms.application.dto.inventory.VendorBidResponse;
 import mls.sho.dms.application.exception.BusinessRuleException;
 import mls.sho.dms.application.exception.ResourceNotFoundException;
 import mls.sho.dms.application.service.inventory.AlertService;
 import mls.sho.dms.application.service.inventory.RFQService;
+import mls.sho.dms.application.service.inventory.POGeneratorService;
 import mls.sho.dms.entity.inventory.*;
 import mls.sho.dms.repository.inventory.*;
 import org.springframework.stereotype.Service;
@@ -36,6 +38,7 @@ public class RFQServiceImpl implements RFQService {
     private final VendorBidRepository vendorBidRepository;
     private final SupplierIngredientPricingRepository pricingRepository;
     private final AlertService alertService;
+    private final POGeneratorService poGeneratorService;
 
     @Override
     @Transactional
@@ -154,17 +157,40 @@ public class RFQServiceImpl implements RFQService {
     public RFQResponse getRfqById(UUID id) {
         return rfqRepository.findById(id)
             .map(this::mapToResponse)
-            .orElseThrow(() -> new RuntimeException("RFQ not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("RFQ not found"));
+    }
+
+    @Override
+    @Transactional
+    public void cancelRfq(UUID rfqId) {
+        RFQ rfq = rfqRepository.findById(rfqId)
+            .orElseThrow(() -> new ResourceNotFoundException("RFQ not found"));
+
+        if (rfq.getStatus() != RfqStatus.OPEN) {
+            throw new BusinessRuleException("Only open RFQs can be cancelled.");
+        }
+
+        rfq.setStatus(RfqStatus.CANCELLED);
+        rfqRepository.save(rfq);
+        log.info("RFQ #{} cancelled.", rfqId);
+
+        // Optionally, notify vendors whose bids might be pending
+        List<VendorBid> pendingBids = vendorBidRepository.findByRfqIdAndStatus(rfqId, VendorBidStatus.SUBMITTED);
+        for (VendorBid bid : pendingBids) {
+            bid.setStatus(VendorBidStatus.REJECTED); // Or a specific 'CANCELLED_BY_RFQ' status
+            // alertService.sendNotification(bid.getSupplier().getContactEmail(), "RFQ Cancelled", "The RFQ for " + rfq.getIngredient().getName() + " has been cancelled.");
+        }
+        vendorBidRepository.saveAll(pendingBids);
     }
 
     @Override
     @Transactional
     public void submitBid(UUID rfqId, VendorBidRequest request) {
         RFQ rfq = rfqRepository.findById(rfqId)
-            .orElseThrow(() -> new RuntimeException("RFQ not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("RFQ not found"));
 
         if (rfq.getStatus() != RfqStatus.OPEN) {
-            throw new RuntimeException("RFQ is no longer open for bidding");
+            throw new BusinessRuleException("RFQ is no longer open for bidding");
         }
 
         Supplier supplier = supplierRepository.findById(request.supplierId())
@@ -185,18 +211,49 @@ public class RFQServiceImpl implements RFQService {
     }
 
     @Override
-    @Transactional
-    public void cancelRfq(UUID rfqId) {
-        RFQ rfq = rfqRepository.findById(rfqId)
-            .orElseThrow(() -> new ResourceNotFoundException("RFQ not found"));
+    @Transactional(readOnly = true)
+    public List<VendorBidResponse> getBidsForRfq(UUID rfqId) {
+        return vendorBidRepository.findByRfqId(rfqId).stream()
+                .map(this::mapToBidResponse)
+                .collect(Collectors.toList());
+    }
 
-        if (rfq.getStatus() != RfqStatus.OPEN) {
-            throw new BusinessRuleException("RFQ can only be cancelled when in OPEN status");
+    @Override
+    @Transactional
+    public void awardBid(UUID bidId, UUID staffId) {
+        VendorBid bid = vendorBidRepository.findById(bidId)
+                .orElseThrow(() -> new ResourceNotFoundException("Bid not found"));
+
+        if (bid.getStatus() != VendorBidStatus.SUBMITTED) {
+            throw new BusinessRuleException("Only submitted bids can be awarded");
         }
 
-        rfq.setStatus(RfqStatus.CANCELLED);
+        RFQ rfq = bid.getRfq();
+        if (rfq.getStatus() != RfqStatus.OPEN) {
+            throw new BusinessRuleException("RFQ is no longer open");
+        }
+
+        // 1. Accept the winning bid
+        bid.setStatus(VendorBidStatus.WON);
+
+        // 2. Mark other bids as LOST
+        List<VendorBid> otherBids = vendorBidRepository.findByRfqId(rfq.getId());
+        for (VendorBid other : otherBids) {
+            if (!other.getId().equals(bidId)) {
+                other.setStatus(VendorBidStatus.LOST);
+            }
+        }
+
+        // 3. Close the RFQ
+        rfq.setStatus(RfqStatus.CLOSED);
+
+        // 4. Trigger PO Generation (US-13.3)
+        poGeneratorService.createFromBid(bidId, staffId);
+
+        log.info("Bid awarded to {} for RFQ {}. PO generated.", bid.getSupplier().getCompanyName(), rfq.getId());
+
         rfqRepository.save(rfq);
-        log.info("RFQ {} has been cancelled", rfqId);
+        vendorBidRepository.saveAll(otherBids);
     }
 
     private RFQResponse mapToResponse(RFQ rfq) {
@@ -208,6 +265,22 @@ public class RFQServiceImpl implements RFQService {
             rfq.getStatus(),
             rfq.getDesiredDeliveryDate(),
             rfq.getBidDeadline()
+        );
+    }
+
+    private VendorBidResponse mapToBidResponse(VendorBid bid) {
+        return new VendorBidResponse(
+            bid.getId(),
+            bid.getRfq().getId(),
+            bid.getSupplier().getId(),
+            bid.getSupplier().getCompanyName(),
+            bid.getUnitPrice(),
+            bid.getQuantityAvailable(),
+            bid.getDeliveryDate(),
+            bid.getPaymentTerms(),
+            bid.getNotes(),
+            bid.getStatus(),
+            bid.getCreatedAt()
         );
     }
 }

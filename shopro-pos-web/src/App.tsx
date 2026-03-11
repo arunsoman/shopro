@@ -49,6 +49,11 @@ import { SupplierPortalLayout } from './features/inventory/layouts/SupplierPorta
 import { SupplierDashboard } from './features/inventory/pages/SupplierDashboard';
 import { SupplierRfqList } from './features/inventory/pages/SupplierRfqList';
 import { SupplierInventoryView } from './features/inventory/pages/SupplierInventoryView';
+import { SupplierPOFulfillmentPage } from './features/inventory/pages/SupplierPOFulfillmentPage';
+import { SupplierPOListPage } from './features/inventory/pages/SupplierPOListPage';
+import { SupplierProposalsList } from './features/inventory/components/SupplierProposalsList';
+import { POManagementPage } from './features/inventory/pages/POManagementPage';
+import { NotificationProvider } from './features/notifications/contexts/NotificationContext';
 import type { StaffRole } from '@/lib/auth/AuthContext';
 
 // Shopro design system
@@ -125,6 +130,7 @@ function AppContent() {
             <Route path="recipes" element={<RecipesPage />} />
             <Route path="vendors" element={<SupplierManagementPage />} />
             <Route path="procurement" element={<RFQManagementPage />} />
+            <Route path="pos" element={<POManagementPage />} />
           </Route>
 
           {/* Menu — admin only */}
@@ -265,7 +271,10 @@ function AppContent() {
         >
           <Route path="/supplier/dashboard" element={<SupplierDashboard />} />
           <Route path="/supplier/rfqs" element={<SupplierRfqList />} />
+          <Route path="/supplier/pos" element={<SupplierPOListPage />} />
           <Route path="/supplier/inventory" element={<SupplierInventoryView />} />
+          <Route path="/supplier/proposals" element={<SupplierProposalsList />} />
+          <Route path="/supplier/po/:id" element={<SupplierPOFulfillmentPage />} />
         </Route>
 
         {/* Catch-all */}
@@ -281,7 +290,9 @@ function App() {
       <ThemeProvider>
         <AuthProvider>
           <SupplierAuthProvider>
-            <AppContent />
+            <NotificationProvider>
+              <AppContent />
+            </NotificationProvider>
           </SupplierAuthProvider>
         </AuthProvider>
       </ThemeProvider>

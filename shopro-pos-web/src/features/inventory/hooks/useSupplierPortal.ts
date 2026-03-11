@@ -1,8 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
-import type { RFQResponse, VendorBidRequest } from '../api/types';
+import { apiClient } from '@/lib/api/client';
+import type { RFQResponse, VendorBidRequest, PurchaseOrder } from '../api/types';
 
-const API_BASE = '/api/v1/supplier/portal';
+const API_BASE = '/supplier/portal';
 
 export interface SupplierDashboardData {
     activeRfqCount: number;
@@ -33,7 +33,7 @@ export const useSupplierDashboard = (supplierId?: string) => {
     return useQuery<SupplierDashboardData>({
         queryKey: ['supplier-dashboard', supplierId],
         queryFn: async () => {
-            const { data } = await axios.get(`${API_BASE}/${supplierId}/dashboard`);
+            const { data } = await apiClient.get(`${API_BASE}/${supplierId}/dashboard`);
             return data;
         },
         enabled: !!supplierId
@@ -42,9 +42,9 @@ export const useSupplierDashboard = (supplierId?: string) => {
 
 export const useSupplierPortalRfqs = (supplierId?: string) => {
     return useQuery<RFQResponse[]>({
-        queryKey: ['supplier-portal-rfqs', supplierId],
+        queryKey: ['supplier-rfqs', supplierId],
         queryFn: async () => {
-            const { data } = await axios.get(`${API_BASE}/${supplierId}/rfqs`);
+            const { data } = await apiClient.get(`${API_BASE}/${supplierId}/rfqs`);
             return data;
         },
         enabled: !!supplierId
@@ -53,20 +53,23 @@ export const useSupplierPortalRfqs = (supplierId?: string) => {
 
 export const useSupplierPortalInventory = (supplierId?: string) => {
     return useQuery<SupplierInventoryView[]>({
-        queryKey: ['supplier-portal-inventory', supplierId],
+        queryKey: ['supplier-inventory', supplierId],
         queryFn: async () => {
-            const { data } = await axios.get(`${API_BASE}/${supplierId}/inventory`);
+            const { data } = await apiClient.get(`${API_BASE}/${supplierId}/inventory`);
             return data;
         },
         enabled: !!supplierId
     });
 };
 
-export const useSubmitPortalBid = (rfqId: string, supplierUserId: string) => {
+export const useSubmitPortalBid = (rfqId: string) => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: (request: VendorBidRequest) =>
-            axios.post(`${API_BASE}/${rfqId}/bid?userId=${supplierUserId}`, request),
+        mutationFn: async ({ userId, request }: { userId: string, request: VendorBidRequest }) => {
+            await apiClient.post(`${API_BASE}/${rfqId}/bid`, request, {
+                params: { userId }
+            });
+        },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['supplier-portal-rfqs'] });
             queryClient.invalidateQueries({ queryKey: ['supplier-dashboard'] });
@@ -74,9 +77,52 @@ export const useSubmitPortalBid = (rfqId: string, supplierUserId: string) => {
     });
 };
 
-export const useProposePrice = (userId: string) => {
+export const useProposePrice = () => {
+    const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: (request: VendorPriceProposalRequest) =>
-            axios.post(`${API_BASE}/propose-price?userId=${userId}`, request)
+        mutationFn: async ({ userId, request }: { userId: string, request: VendorPriceProposalRequest }) => {
+            await apiClient.post(`${API_BASE}/propose-price`, request, {
+                params: { userId }
+            });
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['supplier-inventory'] });
+        }
+    });
+};
+
+export const useSupplierPortalPOs = (supplierId?: string) => {
+    return useQuery<PurchaseOrder[]>({
+        queryKey: ['supplier-pos', supplierId],
+        queryFn: async () => {
+            const { data } = await apiClient.get(`${API_BASE}/${supplierId}/pos`);
+            return data;
+        },
+        enabled: !!supplierId
+    });
+};
+
+export const useMyProposals = (supplierId?: string) => {
+    return useQuery<any[]>({
+        queryKey: ['supplier-proposals', supplierId],
+        queryFn: async () => {
+            const { data } = await apiClient.get(`${API_BASE}/${supplierId}/proposals`);
+            return data;
+        },
+        enabled: !!supplierId
+    });
+};
+
+export const useCounterOffer = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async ({ id, userId, request }: { id: string, userId: string, request: any }) => {
+            const { data } = await apiClient.post(`${API_BASE}/pos/${id}/counter-offer?userId=${userId}`, request);
+            return data;
+        },
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({ queryKey: ['supplier-pos'] });
+            queryClient.invalidateQueries({ queryKey: ['purchase-orders', variables.id] });
+        }
     });
 };

@@ -40,4 +40,14 @@ public interface RFQService {
      * Cancels an RFQ if it is in a revokable state.
      */
     void cancelRfq(UUID rfqId);
+
+    /**
+     * Retrieves all bids for a given RFQ.
+     */
+    List<mls.sho.dms.application.dto.inventory.VendorBidResponse> getBidsForRfq(UUID rfqId);
+
+    /**
+     * Accepts a specific bid, closes the RFQ, and triggers PO generation.
+     */
+    void awardBid(UUID bidId, UUID staffId);
 }

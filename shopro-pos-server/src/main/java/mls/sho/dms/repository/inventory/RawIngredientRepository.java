@@ -19,4 +19,6 @@ public interface RawIngredientRepository extends JpaRepository<RawIngredient, UU
 
     @Query("SELECT SUM(r.currentStock * r.costPerUnit) FROM RawIngredient r")
     BigDecimal calculateTotalInventoryValue();
+
+    List<RawIngredient> findBySupplierId(UUID supplierId);
 }

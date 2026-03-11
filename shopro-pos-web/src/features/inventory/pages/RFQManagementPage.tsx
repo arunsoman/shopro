@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useRfqs, useCreateRfq } from '../hooks/useRFQ';
+import { useRfqs, useCreateRfq, useCancelRfq } from '../hooks/useRFQ';
 import { useIngredients } from '../hooks/useInventory';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,13 +7,17 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Plus, FileText, Send, Clock, AlertCircle, ShoppingCart } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Plus, FileText, XCircle, Eye, Clock, AlertCircle, Send } from 'lucide-react';
 import { toast } from 'sonner';
+import { ReviewBidsDialog } from '../components/ReviewBidsDialog';
+import { PriceProposalsList } from '../components/PriceProposalsList';
 
 export const RFQManagementPage: React.FC = () => {
-    const { data: rfqs, isLoading: isRfqsLoading } = useRfqs();
+    const { data: rfqs, isLoading } = useRfqs();
     const { data: ingredients } = useIngredients();
     const createRfq = useCreateRfq();
+    const cancelRfq = useCancelRfq();
 
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
     const [formData, setFormData] = useState({
@@ -21,6 +25,10 @@ export const RFQManagementPage: React.FC = () => {
         requiredQty: 0,
         desiredDeliveryDate: new Date().toISOString().split('T')[0]
     });
+
+    const [selectedRfqId, setSelectedRfqId] = useState<string | undefined>();
+    const [selectedRfqRef, setSelectedRfqRef] = useState<string | undefined>();
+    const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
 
     const handleCreate = async () => {
         try {
@@ -30,6 +38,15 @@ export const RFQManagementPage: React.FC = () => {
             setFormData({ ingredientId: '', requiredQty: 0, desiredDeliveryDate: new Date().toISOString().split('T')[0] });
         } catch (error) {
             toast.error('Failed to issue RFQ');
+        }
+    };
+
+    const handleCancel = async (id: string) => {
+        try {
+            await cancelRfq.mutateAsync(id);
+            toast.success('RFQ cancelled successfully');
+        } catch (error) {
+            toast.error('Failed to cancel RFQ');
         }
     };
 
@@ -138,69 +155,115 @@ export const RFQManagementPage: React.FC = () => {
                 </Card>
             </div>
 
-            <Card>
-                <CardContent className="p-0">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>RFQ Reference</TableHead>
-                                <TableHead>Ingredient</TableHead>
-                                <TableHead>Quantity</TableHead>
-                                <TableHead>Deadline</TableHead>
-                                <TableHead>Status</TableHead>
-                                <TableHead className="text-right">Actions</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {isRfqsLoading ? (
-                                Array(3).fill(0).map((_, i) => (
-                                    <TableRow key={i}>
-                                        <TableCell colSpan={6} className="h-16 animate-pulse bg-muted/20" />
-                                    </TableRow>
-                                ))
-                            ) : rfqs?.length === 0 ? (
+            <Tabs defaultValue="rfqs" className="w-full">
+                <TabsList className="mb-4">
+                    <TabsTrigger value="rfqs">Active Quotations</TabsTrigger>
+                    <TabsTrigger value="proposals">Vendor Price Proposals</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="rfqs">
+                    <Card>
+                        <CardContent className="p-0">
+                    <div className="overflow-x-auto">
+                        <Table>
+                            <TableHeader>
                                 <TableRow>
-                                    <TableCell colSpan={6} className="h-32 text-center text-muted">
-                                        No active RFQs. Automated RFQs will appear here when stock is low.
-                                    </TableCell>
+                                    <TableHead>RFQ Reference</TableHead>
+                                    <TableHead>Ingredient</TableHead>
+                                    <TableHead>Quantity</TableHead>
+                                    <TableHead>Deadline</TableHead>
+                                    <TableHead>Status</TableHead>
+                                    <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
-                            ) : rfqs?.map(rfq => (
-                                <TableRow key={rfq.id}>
-                                    <TableCell className="font-mono text-xs">
-                                        #{rfq.id.slice(0, 8)}
-                                    </TableCell>
-                                    <TableCell className="font-medium text-foreground">
-                                        {rfq.ingredientName}
-                                    </TableCell>
-                                    <TableCell>
-                                        {rfq.requiredQty}
-                                    </TableCell>
-                                    <TableCell>
-                                        <div className="flex items-center gap-1.5 text-xs">
-                                            <Clock className="h-3 w-3 text-muted" />
-                                            {new Date(rfq.bidDeadline).toLocaleString()}
-                                        </div>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Badge
-                                            variant="outline"
-                                            className={rfq.status === 'OPEN' ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" : ""}
-                                        >
-                                            {rfq.status}
-                                        </Badge>
-                                    </TableCell>
-                                    <TableCell className="text-right">
-                                        <Button variant="ghost" size="sm" className="gap-2">
-                                            <ShoppingCart className="h-4 w-4" />
-                                            Review Bids
-                                        </Button>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
+                            </TableHeader>
+                            <TableBody>
+                                {isLoading ? (
+                                    Array(3).fill(0).map((_, i) => (
+                                        <TableRow key={i}>
+                                            <TableCell colSpan={6} className="h-16 animate-pulse bg-muted/20" />
+                                        </TableRow>
+                                    ))
+                                ) : rfqs?.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell colSpan={6} className="h-32 text-center text-muted">
+                                            No active RFQs. Automated RFQs will appear here when stock is low.
+                                        </TableCell>
+                                    </TableRow>
+                                ) : (
+                                    rfqs?.map(rfq => (
+                                        <TableRow key={rfq.id}>
+                                            <TableCell className="font-mono text-xs">
+                                                #{rfq.id.slice(0, 8)}
+                                            </TableCell>
+                                            <TableCell className="font-medium text-foreground">
+                                                {rfq.ingredientName}
+                                            </TableCell>
+                                            <TableCell>
+                                                {rfq.requiredQty}
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="flex items-center gap-1.5 text-xs">
+                                                    <Clock className="h-3 w-3 text-muted" />
+                                                    {new Date(rfq.bidDeadline).toLocaleString()}
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge
+                                                    variant="outline"
+                                                    className={rfq.status === 'OPEN' ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" : ""}
+                                                >
+                                                    {rfq.status}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                <div className="flex items-center justify-end gap-2">
+                                                    <Button 
+                                                        variant="outline" 
+                                                        size="sm" 
+                                                        className="gap-2 h-8"
+                                                        onClick={() => {
+                                                            setSelectedRfqId(rfq.id);
+                                                            setSelectedRfqRef(`${rfq.ingredientName} (${rfq.requiredQty})`);
+                                                            setReviewDialogOpen(true);
+                                                        }}
+                                                    >
+                                                        <Eye className="h-4 w-4" />
+                                                        Review Bids
+                                                    </Button>
+                                                    {rfq.status === 'OPEN' && (
+                                                        <Button 
+                                                            variant="ghost" 
+                                                            size="sm" 
+                                                            className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50"
+                                                            onClick={() => handleCancel(rfq.id)}
+                                                            title="Cancel RFQ"
+                                                        >
+                                                            <XCircle className="h-4 w-4" />
+                                                        </Button>
+                                                    )}
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                )}
+                            </TableBody>
+                        </Table>
+                    </div>
                 </CardContent>
             </Card>
+        </TabsContent>
+
+        <TabsContent value="proposals">
+            <PriceProposalsList />
+        </TabsContent>
+    </Tabs>
+
+    <ReviewBidsDialog
+                rfqId={selectedRfqId}
+                rfqReference={selectedRfqRef}
+                open={reviewDialogOpen}
+                onOpenChange={setReviewDialogOpen}
+            />
         </div>
     );
 };

@@ -97,8 +97,12 @@ export type PurchaseOrderStatus =
     | 'REJECTED'
     | 'SENT'
     | 'ACKNOWLEDGED'
+    | 'COUNTER_OFFERED'
+    | 'SHIPPED'
     | 'PARTIALLY_RECEIVED'
     | 'RECEIVED'
+    | 'DISCREPANCY_REVIEW'
+    | 'PARTIALLY_FULFILLED'
     | 'GRN_FLAGGED'
     | 'INVOICE_MATCHED'
     | 'PAID'
@@ -114,6 +118,47 @@ export interface PurchaseOrder {
     expectedDeliveryDate?: string;
     createdAt: string;
     items: PurchaseOrderLine[];
+    trackingNumber?: string;
+    invoiceFileId?: string;
+    deliveryNoteRef?: string;
+    shippedAt?: string;
+    acknowledgedAt?: string;
+    counterOfferPrice?: number;
+    counterOfferQty?: number;
+    counterOfferDate?: string;
+    counterOfferNotes?: string;
+}
+
+export interface POStatusHistory {
+    id: string;
+    poId: string;
+    fromStatus?: PurchaseOrderStatus;
+    toStatus: PurchaseOrderStatus;
+    actorId: string;
+    actorName: string;
+    reason?: string;
+    createdAt: string;
+}
+
+export interface SupplierPolicy {
+    supplierId: string;
+    autoAcknowledge: boolean;
+    counterOfferAllowed: boolean;
+    paymentTerms: string;
+    qtyTolerance: number;
+    priceTolerance: number;
+}
+
+export interface CounterOfferRequest {
+    proposedPrice: number;
+    proposedQuantity: number;
+    reason: string;
+}
+
+export interface ShipOrderRequest {
+    trackingNumber: string;
+    deliveryNoteRef: string;
+    invoiceFileId: string;
 }
 
 export interface CreatePurchaseOrderRequest {
@@ -229,6 +274,20 @@ export interface CreateRFQRequest {
     desiredDeliveryDate: string;
 }
 
+export interface VendorBid {
+    id: string;
+    rfqId: string;
+    supplierId: string;
+    supplierName: string;
+    unitPrice: number;
+    quantityAvailable: number;
+    deliveryDate: string;
+    paymentTerms?: string;
+    notes?: string;
+    status: 'SUBMITTED' | 'WON' | 'LOST' | 'REJECTED' | 'OVER_CEILING';
+    createdAt: string;
+}
+
 export interface VendorBidRequest {
     supplierId: string;
     unitPrice: number;
@@ -255,4 +314,28 @@ export interface InviteSupplierUserRequest {
     email: string;
     phoneNumber?: string;
     role: SupplierRole;
+}
+
+export type PriceProposalStatus = 'PENDING' | 'ACCEPTED' | 'REJECTED';
+
+export interface PriceProposal {
+    id: string;
+    supplierId: string;
+    supplierName: string;
+    ingredientId: string;
+    ingredientName: string;
+    unitOfMeasure: string;
+    proposedPrice: number;
+    currentPrice: number;
+    notes?: string;
+    status: PriceProposalStatus;
+    createdAt: string;
+    generatedPoId?: string;
+    generatedPoStatus?: string;
+}
+
+export interface ReviewProposalRequest {
+    status: 'ACCEPTED' | 'REJECTED';
+    reason?: string;
+    staffId: string;
 }

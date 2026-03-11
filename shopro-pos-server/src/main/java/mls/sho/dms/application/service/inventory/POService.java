@@ -2,6 +2,7 @@ package mls.sho.dms.application.service.inventory;
 
 import mls.sho.dms.application.dto.inventory.CreatePurchaseOrderRequest;
 import mls.sho.dms.application.dto.inventory.PurchaseOrderResponse;
+import mls.sho.dms.application.dto.inventory.POStatusHistoryResponse;
 import mls.sho.dms.entity.inventory.PurchaseOrder;
 
 import java.util.List;
@@ -35,4 +36,21 @@ public interface POService {
      * Cancels a Purchase Order if it is in a revokable state.
      */
     void cancelOrder(UUID poId);
+
+    /**
+     * Sends an APPROVED Purchase Order to the supplier.
+     */
+    PurchaseOrder sendOrder(UUID poId, UUID staffId);
+
+    /**
+     * Acknowledges a Purchase Order by the supplier.
+     */
+    PurchaseOrder acknowledgeOrder(UUID poId);
+
+    /**
+     * Marks a Purchase Order as shipped/sent by the supplier.
+     */
+    PurchaseOrder shipOrder(UUID poId, String trackingNumber, String deliveryNoteRef, UUID invoiceFileId);
+    
+    List<POStatusHistoryResponse> getStatusHistory(UUID poId);
 }

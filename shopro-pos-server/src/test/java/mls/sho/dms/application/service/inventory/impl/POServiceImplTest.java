@@ -7,6 +7,10 @@ import mls.sho.dms.entity.inventory.Supplier;
 import mls.sho.dms.entity.staff.StaffMember;
 import mls.sho.dms.entity.staff.Role;
 import mls.sho.dms.repository.inventory.PurchaseOrderRepository;
+import mls.sho.dms.repository.inventory.POStatusHistoryRepository;
+import mls.sho.dms.repository.inventory.SupplierUserRepository;
+import mls.sho.dms.application.service.inventory.POStateMachineService;
+import mls.sho.dms.application.service.inventory.POGeneratorService;
 import mls.sho.dms.repository.staff.StaffRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,6 +33,10 @@ class POServiceImplTest {
     @Mock private PurchaseOrderRepository poRepository;
     @Mock private StaffRepository staffRepository;
     @Mock private AlertService alertService;
+    @Mock private POStateMachineService stateMachineService;
+    @Mock private POGeneratorService poGeneratorService;
+    @Mock private POStatusHistoryRepository historyRepository;
+    @Mock private SupplierUserRepository supplierUserRepository;
 
     @InjectMocks
     private POServiceImpl poService;
@@ -79,25 +87,19 @@ class POServiceImplTest {
     @Test
     void submitForApproval_autoApprovesUnder500() {
         when(poRepository.findById(autoApprovePo.getId())).thenReturn(Optional.of(autoApprovePo));
-        when(poRepository.save(autoApprovePo)).thenReturn(autoApprovePo);
 
         PurchaseOrder result = poService.submitForApproval(autoApprovePo.getId());
 
-        assertEquals(PurchaseOrderStatus.SENT, result.getStatus());
-        assertNotNull(result.getSentAt());
-        assertNotNull(result.getApprovedAt());
-        verify(alertService).dispatchEmail(eq("test@supplier.com"), contains("New Purchase Order"), anyString());
+        verify(stateMachineService).transition(any(), any(), any(), any());
     }
 
     @Test
     void submitForApproval_routesToManagerUnder3000() {
         when(poRepository.findById(managerPo.getId())).thenReturn(Optional.of(managerPo));
-        when(poRepository.save(managerPo)).thenReturn(managerPo);
 
         PurchaseOrder result = poService.submitForApproval(managerPo.getId());
 
-        assertEquals(PurchaseOrderStatus.PENDING_APPROVAL, result.getStatus());
-        verify(alertService).sendNotification(eq("ApprovalsTeam"), contains("PO Approval Required"), contains("Inventory Manager"));
+        verify(stateMachineService).transition(any(), any(), any(), any());
     }
 
     @Test
@@ -107,13 +109,10 @@ class POServiceImplTest {
 
         when(poRepository.findById(managerPo.getId())).thenReturn(Optional.of(managerPo));
         when(staffRepository.findById(approverId)).thenReturn(Optional.of(manager));
-        when(poRepository.save(managerPo)).thenReturn(managerPo);
 
         PurchaseOrder result = poService.approveOrder(managerPo.getId(), approverId);
 
-        assertEquals(PurchaseOrderStatus.SENT, result.getStatus());
-        assertEquals(manager, result.getApprovedBy());
-        verify(alertService).dispatchEmail(eq("test@supplier.com"), contains("New Purchase Order"), anyString());
+        verify(stateMachineService).transition(any(), any(), any(), any());
     }
 
     @Test

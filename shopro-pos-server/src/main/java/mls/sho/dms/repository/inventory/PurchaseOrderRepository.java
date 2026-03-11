@@ -13,6 +13,7 @@ import java.util.UUID;
 public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, UUID> {
     long countByStatusIn(Collection<PurchaseOrderStatus> statuses);
     List<PurchaseOrder> findAllByStatusIn(Collection<PurchaseOrderStatus> statuses);
+    List<PurchaseOrder> findBySupplierId(UUID supplierId);
 
     @org.springframework.data.jpa.repository.Query("SELECT po FROM PurchaseOrder po JOIN po.lines pol WHERE pol.ingredient.id = :ingredientId AND po.status NOT IN :completedStatuses ORDER BY po.createdAt DESC")
     java.util.List<PurchaseOrder> findActiveOrdersByIngredientId(java.util.UUID ingredientId, java.util.Collection<PurchaseOrderStatus> completedStatuses);

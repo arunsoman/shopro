@@ -6,10 +6,11 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Upload, Search, Truck, Mail, Phone, Clock, Star, UserPlus, Users } from 'lucide-react';
+import { Plus, Upload, Search, Truck, Mail, Phone, Clock, Star, UserPlus, Users, Settings2, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
-import { useSupplierUsers, useInviteSupplierUser } from '../hooks/useSuppliers';
-import type { SupplierRole } from '../api/types';
+import { useSupplierUsers, useInviteSupplierUser, useSupplierPolicy, useUpdateSupplierPolicy } from '../hooks/useSuppliers';
+import type { SupplierRole, SupplierPolicy } from '../api/types';
+import { Switch } from '@/components/ui/switch';
 
 export const SupplierManagementPage: React.FC = () => {
     const { data: suppliers, isLoading } = useSuppliers();
@@ -19,6 +20,7 @@ export const SupplierManagementPage: React.FC = () => {
     const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
     const [isUsersDialogOpen, setIsUsersDialogOpen] = useState(false);
     const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
+    const [isPolicyDialogOpen, setIsPolicyDialogOpen] = useState(false);
     const [selectedSupplierId, setSelectedSupplierId] = useState<string | null>(null);
     const [catalogJson, setCatalogJson] = useState('');
 
@@ -239,6 +241,19 @@ export const SupplierManagementPage: React.FC = () => {
                                                 <Upload className="h-4 w-4" />
                                                 Catalog
                                             </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="gap-2"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setSelectedSupplierId(supplier.id);
+                                                    setIsPolicyDialogOpen(true);
+                                                }}
+                                            >
+                                                <Settings2 className="h-4 w-4" />
+                                                Policy
+                                            </Button>
                                         </div>
                                     </TableCell>
                                 </TableRow>
@@ -410,6 +425,132 @@ export const SupplierManagementPage: React.FC = () => {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            {/* Procurement Policy Dialog */}
+            <Dialog open={isPolicyDialogOpen} onOpenChange={setIsPolicyDialogOpen}>
+                <SupplierPolicyDialog 
+                    supplierId={selectedSupplierId || ''} 
+                    onClose={() => setIsPolicyDialogOpen(false)} 
+                />
+            </Dialog>
         </div>
+    );
+};
+
+interface SupplierPolicyDialogProps {
+    supplierId: string;
+    onClose: () => void;
+}
+
+const SupplierPolicyDialog: React.FC<SupplierPolicyDialogProps> = ({ supplierId, onClose }) => {
+    const { data: policy, isLoading } = useSupplierPolicy(supplierId);
+    const updatePolicy = useUpdateSupplierPolicy();
+    const [localPolicy, setLocalPolicy] = useState<Partial<SupplierPolicy>>({});
+
+    // Sync local state when data loads
+    React.useEffect(() => {
+        if (policy) {
+            setLocalPolicy(policy);
+        }
+    }, [policy]);
+
+    const handleSave = async () => {
+        try {
+            await updatePolicy.mutateAsync({ supplierId, policy: localPolicy });
+            toast.success('Procurement policy updated');
+            onClose();
+        } catch (error) {
+            toast.error('Failed to update policy');
+        }
+    };
+
+    if (isLoading) return <div className="p-8 text-center animate-pulse">Loading policy config...</div>;
+
+    return (
+        <DialogContent className="max-w-xl">
+            <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                    <ShieldCheck className="h-5 w-5 text-primary" />
+                    Procurement Policy Configuration
+                </DialogTitle>
+                <p className="text-sm text-muted">Define automation rules and tolerances for this supplier.</p>
+            </DialogHeader>
+            
+            <div className="space-y-6 py-4 overflow-y-auto max-h-[70vh]">
+                <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
+                    <div className="space-y-0.5">
+                        <label className="text-sm font-semibold">Automated Acknowledgment</label>
+                        <p className="text-xs text-muted">Auto-accept PO acknowledgments if they match perfectly.</p>
+                    </div>
+                    <Switch 
+                        checked={localPolicy.autoAcknowledge} 
+                        onCheckedChange={(val) => setLocalPolicy({ ...localPolicy, autoAcknowledge: val })}
+                    />
+                </div>
+
+                <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
+                    <div className="space-y-0.5">
+                        <label className="text-sm font-semibold">Allow Counter Offers</label>
+                        <p className="text-xs text-muted">Permit vendors to propose price or quantity changes.</p>
+                    </div>
+                    <Switch 
+                        checked={localPolicy.counterOfferAllowed} 
+                        onCheckedChange={(val) => setLocalPolicy({ ...localPolicy, counterOfferAllowed: val })}
+                    />
+                </div>
+
+                <div className="space-y-3 p-3 rounded-lg border border-divider">
+                    <label className="text-sm font-semibold">Payment Terms</label>
+                    <Input 
+                        placeholder="e.g. Net 30, Due on Receipt"
+                        value={localPolicy.paymentTerms || ''}
+                        onChange={(e) => setLocalPolicy({ ...localPolicy, paymentTerms: e.target.value })}
+                    />
+                </div>
+
+                <div className="space-y-4 p-3 rounded-lg bg-primary/5 border border-primary/10">
+                    <div className="flex items-center justify-between">
+                        <label className="text-sm font-semibold">Price Variance Tolerance</label>
+                        <Badge variant="outline" className="font-mono text-primary bg-background shadow-sm">
+                            {localPolicy.priceTolerance}%
+                        </Badge>
+                    </div>
+                    <input 
+                        type="range" 
+                        min="0" 
+                        max="20" 
+                        step="0.5" 
+                        className="w-full h-1.5 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
+                        value={localPolicy.priceTolerance || 0}
+                        onChange={(e) => setLocalPolicy({ ...localPolicy, priceTolerance: parseFloat(e.target.value) })}
+                    />
+                </div>
+
+                <div className="space-y-4 p-3 rounded-lg bg-primary/5 border border-primary/10">
+                    <div className="flex items-center justify-between">
+                        <label className="text-sm font-semibold">Quantity Variance Tolerance</label>
+                        <Badge variant="outline" className="font-mono text-primary bg-background shadow-sm">
+                            {localPolicy.qtyTolerance}%
+                        </Badge>
+                    </div>
+                    <input 
+                        type="range" 
+                        min="0" 
+                        max="50" 
+                        step="1" 
+                        className="w-full h-1.5 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
+                        value={localPolicy.qtyTolerance || 0}
+                        onChange={(e) => setLocalPolicy({ ...localPolicy, qtyTolerance: parseFloat(e.target.value) })}
+                    />
+                </div>
+            </div>
+
+            <DialogFooter>
+                <Button variant="outline" onClick={onClose}>Discard</Button>
+                <Button onClick={handleSave} disabled={updatePolicy.isPending} className="min-w-[120px]">
+                    {updatePolicy.isPending ? 'Saving...' : 'Save Policy Config'}
+                </Button>
+            </DialogFooter>
+        </DialogContent>
     );
 };

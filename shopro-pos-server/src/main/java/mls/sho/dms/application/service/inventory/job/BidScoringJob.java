@@ -3,6 +3,7 @@ package mls.sho.dms.application.service.inventory.job;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import mls.sho.dms.application.service.inventory.AlertService;
+import mls.sho.dms.application.service.inventory.POGeneratorService;
 import mls.sho.dms.entity.inventory.*;
 import mls.sho.dms.entity.staff.StaffMember;
 import mls.sho.dms.repository.inventory.PurchaseOrderLineRepository;
@@ -22,6 +23,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Slf4j
 @Component
@@ -34,6 +36,7 @@ public class BidScoringJob {
     private final PurchaseOrderLineRepository purchaseOrderLineRepository;
     private final StaffRepository staffMemberRepository;
     private final AlertService alertService;
+    private final POGeneratorService poGeneratorService;
 
     // Configurable weights (US-13.3)
     private static final double PRICE_WEIGHT = 0.50;
@@ -170,31 +173,20 @@ public class BidScoringJob {
     }
 
     private void createDraftPurchaseOrder(RFQ rfq, VendorBid winningBid) {
-        // Look for a system user or default staff member with MANAGER role
-        Optional<StaffMember> systemUser = staffMemberRepository.findAll().stream()
-            .filter(u -> u.getRole() != null && "MANAGER".equals(u.getRole().getName()))
-            .findFirst();
-
-        PurchaseOrder po = new PurchaseOrder();
-        po.setSupplier(winningBid.getSupplier());
-        po.setStatus(PurchaseOrderStatus.DRAFT);
-        po.setExpectedDeliveryDate(winningBid.getDeliveryDate());
+        // Look for a management staff member (priority: OWNER, GENERAL_MANAGER, KITCHEN_MANAGER)
+        List<StaffMember> activeStaff = staffMemberRepository.findByActiveTrue();
         
-        systemUser.ifPresent(po::setGeneratedBy);
-        
-        BigDecimal qty = winningBid.getQuantityAvailable().min(rfq.getRequiredQty());
-        BigDecimal lineTotal = winningBid.getUnitPrice().multiply(qty);
-        po.setTotalValue(lineTotal);
+        StaffMember creator = activeStaff.stream()
+            .filter(u -> {
+                String roleName = u.getRole() != null ? u.getRole().getName() : "";
+                return roleName.equals("OWNER") || roleName.equals("GENERAL_MANAGER") || 
+                       roleName.equals("MANAGER") || roleName.equals("KITCHEN_MANAGER");
+            })
+            .findFirst()
+            .orElseGet(() -> activeStaff.isEmpty() ? null : activeStaff.get(0));
 
-        PurchaseOrder savedPo = purchaseOrderRepository.save(po);
-
-        PurchaseOrderLine poLine = new PurchaseOrderLine();
-        poLine.setPurchaseOrder(savedPo);
-        poLine.setIngredient(rfq.getIngredient());
-        poLine.setOrderedQty(qty);
-        poLine.setUnitCost(winningBid.getUnitPrice());
-        
-        purchaseOrderLineRepository.save(poLine);
+        UUID creatorId = creator != null ? creator.getId() : null;
+        PurchaseOrder savedPo = poGeneratorService.createFromBid(winningBid.getId(), creatorId);
 
         // Alert Manager
         alertService.sendNotification(

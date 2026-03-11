@@ -7,6 +7,8 @@ public enum PurchaseOrderStatus {
     REJECTED,
     SENT,
     ACKNOWLEDGED,
+    COUNTER_OFFERED,
+    SHIPPED,
     PARTIALLY_RECEIVED,
     RECEIVED,
     DISCREPANCY_REVIEW,

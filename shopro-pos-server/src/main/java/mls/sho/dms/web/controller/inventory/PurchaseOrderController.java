@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import mls.sho.dms.application.dto.inventory.CreatePurchaseOrderRequest;
 import mls.sho.dms.application.dto.inventory.PurchaseOrderResponse;
+import mls.sho.dms.application.dto.inventory.POStatusHistoryResponse;
 import mls.sho.dms.application.service.inventory.POService;
 import mls.sho.dms.repository.staff.StaffRepository;
 import org.springframework.http.HttpStatus;
@@ -47,6 +48,23 @@ public class PurchaseOrderController {
         poService.cancelOrder(id);
     }
 
+    @PostMapping("/{id}/approve")
+    public PurchaseOrderResponse approve(@PathVariable UUID id, Principal principal) {
+        UUID approverId = resolveStaffId(principal);
+        return mapToResponse(poService.approveOrder(id, approverId));
+    }
+
+    @PostMapping("/{id}/reject")
+    public PurchaseOrderResponse reject(@PathVariable UUID id, @RequestParam String reason, Principal principal) {
+        UUID approverId = resolveStaffId(principal);
+        return mapToResponse(poService.rejectOrder(id, approverId, reason));
+    }
+
+    @GetMapping("/{id}/history")
+    public List<POStatusHistoryResponse> getHistory(@PathVariable UUID id) {
+        return poService.getStatusHistory(id);
+    }
+
     private UUID resolveStaffId(Principal principal) {
         if (principal != null) {
             return staffRepository.findByFullName(principal.getName())
@@ -70,10 +88,21 @@ public class PurchaseOrderController {
                 .status(po.getStatus())
                 .totalValue(po.getTotalValue())
                 .expectedDeliveryDate(po.getExpectedDeliveryDate())
+                .acknowledgedAt(po.getAcknowledgedAt())
+                .shippedAt(po.getShippedAt())
+                .counterOfferPrice(po.getCounterOfferPrice())
+                .counterOfferQty(po.getCounterOfferQty())
+                .counterOfferNotes(po.getCounterOfferNotes())
+                .trackingNumber(po.getTrackingNumber())
+                .deliveryNoteRef(po.getDeliveryNoteRef())
+                .createdAt(po.getCreatedAt())
                 .items(po.getLines().stream()
                         .map(line -> PurchaseOrderResponse.PurchaseOrderLineResponse.builder()
+                                .id(line.getId())
+                                .ingredientId(line.getIngredient().getId())
                                 .ingredientName(line.getIngredient().getName())
                                 .orderedQty(line.getOrderedQty())
+                                .unitCost(line.getUnitCost())
                                 .unitOfMeasure(line.getIngredient().getUnitOfMeasure())
                                 .build())
                         .collect(java.util.stream.Collectors.toList()))

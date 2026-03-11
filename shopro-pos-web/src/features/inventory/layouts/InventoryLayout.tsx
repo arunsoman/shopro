@@ -32,13 +32,20 @@ const procurementItems = [
         path: "/inventory/procurement",
         icon: <ClipboardList className="h-4 w-4" />
     },
+    {
+        label: "Purchase Orders",
+        path: "/inventory/pos",
+        icon: <Truck className="h-4 w-4" />
+    },
 ];
 
 export function InventoryLayout() {
     const location = useLocation();
 
     // Determine which module set to show based on the current path
-    const isProcurementPath = location.pathname.includes('/vendors') || location.pathname.includes('/procurement');
+    const isProcurementPath = location.pathname.includes('/vendors') || 
+                             location.pathname.includes('/procurement') ||
+                             location.pathname.includes('/pos');
     const navItems = isProcurementPath ? procurementItems : internalItems;
     const title = isProcurementPath ? "Supplier Portal" : "Inventory Control";
     const subtitle = isProcurementPath ? "Procurement Staff" : "Management Suite";
