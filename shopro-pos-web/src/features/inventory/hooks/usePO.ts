@@ -78,3 +78,31 @@ export const useSendPO = () => {
         },
     });
 };
+
+export const useReceiveGoods = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async ({ id, data }: { id: string; data: import('../api/types').ReceiveGoodsRequest }) => {
+            const { data: res } = await apiClient.post(`/pos/${id}/receive`, data);
+            return res;
+        },
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
+            queryClient.invalidateQueries({ queryKey: ['purchase-orders', variables.id] });
+        },
+    });
+};
+
+export const useMatchInvoice = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async ({ id, data }: { id: string; data: import('../api/types').MatchInvoiceRequest }) => {
+            const { data: res } = await apiClient.post(`/pos/${id}/match-invoice`, data);
+            return res;
+        },
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
+            queryClient.invalidateQueries({ queryKey: ['purchase-orders', variables.id] });
+        },
+    });
+};

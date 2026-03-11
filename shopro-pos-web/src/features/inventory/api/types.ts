@@ -339,3 +339,18 @@ export interface ReviewProposalRequest {
     reason?: string;
     staffId: string;
 }
+
+export interface ReceiveGoodsRequest {
+    receiverId: string;
+    receivedQuantities: Record<string, number>;
+    deliveryNoteReference?: string;
+    notes?: string;
+}
+
+export interface MatchInvoiceRequest {
+    invoiceNumber: string;
+    invoicedQuantities: Record<string, number>;
+    invoicedPrices: Record<string, number>;
+    totalAmount: number;
+    taxAmount: number;
+}

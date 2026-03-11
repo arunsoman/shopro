@@ -53,6 +53,8 @@ import { SupplierPOFulfillmentPage } from './features/inventory/pages/SupplierPO
 import { SupplierPOListPage } from './features/inventory/pages/SupplierPOListPage';
 import { SupplierProposalsList } from './features/inventory/components/SupplierProposalsList';
 import { POManagementPage } from './features/inventory/pages/POManagementPage';
+import { GoodsReceivingPage } from './features/inventory/pages/GoodsReceivingPage';
+import { ThreeWayMatchPanel } from './features/inventory/pages/ThreeWayMatchPanel';
 import { NotificationProvider } from './features/notifications/contexts/NotificationContext';
 import type { StaffRole } from '@/lib/auth/AuthContext';
 
@@ -131,6 +133,8 @@ function AppContent() {
             <Route path="vendors" element={<SupplierManagementPage />} />
             <Route path="procurement" element={<RFQManagementPage />} />
             <Route path="pos" element={<POManagementPage />} />
+            <Route path="po/:id/receive" element={<GoodsReceivingPage />} />
+            <Route path="po/:id/match" element={<ThreeWayMatchPanel />} />
           </Route>
 
           {/* Menu — admin only */}

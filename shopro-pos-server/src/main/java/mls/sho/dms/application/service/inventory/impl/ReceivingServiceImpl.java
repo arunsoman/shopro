@@ -66,7 +66,7 @@ public class ReceivingServiceImpl implements ReceivingService {
         StaffMember receiver = staffRepository.findById(receiverId)
                 .orElseThrow(() -> new IllegalArgumentException("Receiver staff not found"));
 
-        if (po.getStatus() != PurchaseOrderStatus.SENT && po.getStatus() != PurchaseOrderStatus.ACKNOWLEDGED && po.getStatus() != PurchaseOrderStatus.PARTIALLY_RECEIVED) {
+        if (po.getStatus() != PurchaseOrderStatus.SHIPPED && po.getStatus() != PurchaseOrderStatus.SENT && po.getStatus() != PurchaseOrderStatus.ACKNOWLEDGED && po.getStatus() != PurchaseOrderStatus.PARTIALLY_RECEIVED) {
             throw new IllegalStateException("PO is not in a receivable state. Current status: " + po.getStatus());
         }
 

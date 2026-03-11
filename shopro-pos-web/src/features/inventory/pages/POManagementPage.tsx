@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { usePurchaseOrders, useApprovePO, useRejectPO, usePOHistory, useSubmitForApproval, useSendPO } from '../hooks/usePO';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,7 +18,9 @@ import {
     AlertTriangle,
     Search,
     Filter,
-    Download
+    Download,
+    Box,
+    FileText
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -26,6 +29,7 @@ import type { PurchaseOrder, PurchaseOrderStatus } from '../api/types';
 import { useAuth } from '@/lib/auth/AuthContext';
 
 export const POManagementPage: React.FC = () => {
+    const navigate = useNavigate();
     const { session } = useAuth();
     const { data: pos, isLoading } = usePurchaseOrders();
     const submitForApproval = useSubmitForApproval();
@@ -303,6 +307,32 @@ export const POManagementPage: React.FC = () => {
                                                     >
                                                         {sendOrder.isPending ? 'Sending...' : 'Send'}
                                                         <Truck className="h-4 w-4" />
+                                                    </Button>
+                                                )}
+                                                {po.status === 'SHIPPED' && (
+                                                    <Button 
+                                                        size="sm" 
+                                                        className="h-8 gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            navigate(`/inventory/po/${po.id}/receive`);
+                                                        }}
+                                                    >
+                                                        Receive Goods
+                                                        <Box className="h-4 w-4" />
+                                                    </Button>
+                                                )}
+                                                {(po.status === 'RECEIVED' || po.status === 'PARTIALLY_RECEIVED') && (
+                                                    <Button 
+                                                        size="sm" 
+                                                        className="h-8 gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            navigate(`/inventory/po/${po.id}/match`);
+                                                        }}
+                                                    >
+                                                        Match Invoice
+                                                        <FileText className="h-4 w-4" />
                                                     </Button>
                                                 )}
                                             </div>

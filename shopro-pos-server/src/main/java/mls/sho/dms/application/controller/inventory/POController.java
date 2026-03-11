@@ -16,6 +16,7 @@ import java.util.UUID;
 public class POController {
 
     private final POService poService;
+    private final mls.sho.dms.application.service.inventory.ReceivingService receivingService;
 
     @GetMapping
     public List<PurchaseOrderResponse> getAllPOs() {
@@ -49,5 +50,30 @@ public class POController {
     @ResponseStatus(HttpStatus.OK)
     public void sendOrder(@PathVariable UUID id, @RequestParam UUID staffId) {
         poService.sendOrder(id, staffId);
+    }
+
+    @PostMapping("/{id}/receive")
+    @ResponseStatus(HttpStatus.OK)
+    public void receiveGoods(@PathVariable UUID id, @RequestBody mls.sho.dms.application.dto.inventory.ReceiveGoodsRequest request) {
+        receivingService.receiveGoods(
+            id, 
+            request.getReceiverId(), 
+            request.getReceivedQuantities(), 
+            request.getDeliveryNoteReference(), 
+            request.getNotes()
+        );
+    }
+
+    @PostMapping("/{id}/match-invoice")
+    @ResponseStatus(HttpStatus.OK)
+    public void matchInvoice(@PathVariable UUID id, @RequestBody mls.sho.dms.application.dto.inventory.MatchInvoiceRequest request) {
+        receivingService.processInvoiceAndMatch(
+            id,
+            request.getInvoiceNumber(),
+            request.getInvoicedQuantities(),
+            request.getInvoicedPrices(),
+            request.getTotalAmount(),
+            request.getTaxAmount()
+        );
     }
 }
