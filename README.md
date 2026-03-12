@@ -65,6 +65,31 @@ npm run dev
 docker-compose up --build
 ```
 
+## 🌐 Production Deployment
+
+### 1. Clone the Repository
+```bash
+git clone https://github.com/arunsoman/shopro.git
+cd shopro
+```
+
+### 2. Build and Deploy (Docker Compose)
+The recommended way to deploy Shopro POS in production is using Docker Compose. This ensures all services (Database, API, and all UI modules) are orchestrated correctly.
+
+```bash
+docker-compose up -d --build
+```
+
+### 3. Access the System
+Once started, the various modules are available at the following URLs:
+
+| Module | URL | Description |
+| :--- | :--- | :--- |
+| **Admin & Web POS** | [http://localhost:5173](http://localhost:5173) | Primary web interface for management and POS operations. |
+| **Flutter Admin/POS** | [http://localhost:5171](http://localhost:5171) | Multi-platform administrative and order interface. |
+| **Tableside App** | [http://localhost:5170](http://localhost:5170) | Dedicated mobile interface optimized for tablets/phones. |
+| **Backend API** | [http://localhost:5172](http://localhost:5172) | Central API Gateway (OpenAPI at `/swagger-ui.html`). |
+
 ## 📐 Architecture
 
 Shopro POS follows a modular monorepo structure:
