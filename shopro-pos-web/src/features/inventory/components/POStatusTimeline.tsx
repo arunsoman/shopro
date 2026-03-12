@@ -10,7 +10,7 @@ interface POStatusTimelineProps {
 
 export const POStatusTimeline: React.FC<POStatusTimelineProps> = ({ history }) => {
     if (!history || history.length === 0) {
-        return <div className="text-muted text-sm py-4">No status history available.</div>;
+        return <div className="text-muted-foreground text-sm py-4">No status history available.</div>;
     }
 
     const getStatusColor = (status: PurchaseOrderStatus) => {
@@ -50,25 +50,25 @@ export const POStatusTimeline: React.FC<POStatusTimelineProps> = ({ history }) =
                                 </Badge>
                                 {event.fromStatus && (
                                     <>
-                                        <span className="text-muted text-xs">from</span>
-                                        <Badge variant="outline" className="opacity-60">
+                                        <span className="text-muted-foreground text-xs">from</span>
+                                        <Badge variant="outline" className="opacity-60 text-muted-foreground">
                                             {event.fromStatus.replace('_', ' ')}
                                         </Badge>
                                     </>
                                 )}
                             </div>
-                            <time className="flex items-center gap-1.5 text-xs text-muted tabular-nums">
+                            <time className="flex items-center gap-1.5 text-xs text-muted-foreground tabular-nums">
                                 <Clock className="h-3 w-3" />
                                 {format(new Date(event.createdAt), 'MMM dd, HH:mm')}
                             </time>
                         </div>
                         <div className="flex flex-col gap-1">
                             <div className="flex items-center gap-1.5 text-sm font-medium text-foreground">
-                                <User className="h-3.5 w-3.5 text-muted" />
+                                <User className="h-3.5 w-3.5 text-muted-foreground" />
                                 {event.actorName}
                             </div>
                             {event.reason && (
-                                <div className="flex items-start gap-1.5 rounded-md bg-muted/30 p-2 text-xs text-muted">
+                                <div className="flex items-start gap-1.5 rounded-md bg-muted/30 p-2 text-xs text-muted-foreground">
                                     <MessageSquare className="mt-0.5 h-3 w-3 shrink-0" />
                                     <span>{event.reason}</span>
                                 </div>

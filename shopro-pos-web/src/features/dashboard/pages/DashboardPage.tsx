@@ -112,7 +112,7 @@ export function DashboardPage() {
         <div className="max-w-7xl mx-auto px-6">
             {/* Hero greeting */}
             <div className="pt-12 pb-10">
-                <p className="text-muted text-sm font-medium uppercase tracking-widest mb-2">
+                <p className="text-muted-foreground text-sm font-medium uppercase tracking-widest mb-2">
                     Welcome back
                 </p>
                 <h1 className="text-4xl font-bold tracking-tight text-foreground">
@@ -121,7 +121,7 @@ export function DashboardPage() {
                         what are we doing today?
                     </span>
                 </h1>
-                <p className="mt-3 text-muted max-w-xl">
+                <p className="mt-3 text-muted-foreground max-w-xl">
                     Select a section below to get started. You have access to{' '}
                     <span className="text-foreground font-medium">{visibleCards.length} modules</span> based on your role.
                 </p>
@@ -153,11 +153,11 @@ export function DashboardPage() {
                                 <h2 className="text-lg font-semibold text-foreground mb-1.5 font-display">
                                     {card.title}
                                 </h2>
-                                <p className="text-sm text-muted leading-relaxed group-hover:text-foreground transition-colors">
+                                <p className="text-sm text-muted-foreground leading-relaxed group-hover:text-foreground transition-colors">
                                     {card.description}
                                 </p>
 
-                                <div className="mt-5 flex items-center gap-1 text-xs font-medium text-muted group-hover:text-primary transition-colors">
+                                <div className="mt-5 flex items-center gap-1 text-xs font-medium text-muted-foreground group-hover:text-primary transition-colors">
                                     Open module
                                     <ChevronRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
                                 </div>

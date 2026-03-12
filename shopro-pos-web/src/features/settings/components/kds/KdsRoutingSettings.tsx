@@ -39,7 +39,7 @@ export const KdsRoutingSettings = () => {
             <CardHeader className="flex flex-row items-center justify-between">
                 <div>
                     <CardTitle className="text-xl font-bold">Kitchen Routing Rules</CardTitle>
-                    <CardDescription className="text-muted">Route categories or specific items to kitchen stations</CardDescription>
+                    <CardDescription className="text-muted-foreground">Route categories or specific items to kitchen stations</CardDescription>
                 </div>
                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                     <DialogTrigger asChild>
@@ -59,13 +59,13 @@ export const KdsRoutingSettings = () => {
                 {rulesLoading ? (
                     <div className="py-20 text-center">
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-                        <p className="text-muted">Loading rules...</p>
+                        <p className="text-muted-foreground">Loading rules...</p>
                     </div>
                 ) : !rules?.length ? (
                     <div className="py-20 text-center border-2 border-dashed border-border rounded-xl">
-                        <GitBranch className="w-12 h-12 text-muted/30 mx-auto mb-4" />
-                        <p className="text-muted">No routing rules defined yet.</p>
-                        <p className="text-xs text-muted/60 mt-1 max-w-xs mx-auto">
+                        <GitBranch className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
+                        <p className="text-muted-foreground">No routing rules defined yet.</p>
+                        <p className="text-xs text-muted-foreground/60 mt-1 max-w-xs mx-auto">
                             Rules determine which kitchen screen receives which order items.
                         </p>
                         <Button variant="link" onClick={() => setIsDialogOpen(true)} className="text-primary mt-2">
@@ -77,10 +77,10 @@ export const KdsRoutingSettings = () => {
                         <Table>
                             <TableHeader className="bg-muted/5">
                                 <TableRow className="border-border">
-                                    <TableHead className="text-muted">Target (Category/Item)</TableHead>
-                                    <TableHead className="text-muted text-center"><ArrowRight className="w-4 h-4 inline" /></TableHead>
-                                    <TableHead className="text-muted">Kitchen Station</TableHead>
-                                    <TableHead className="text-right text-muted">Actions</TableHead>
+                                    <TableHead className="text-muted-foreground">Target (Category/Item)</TableHead>
+                                    <TableHead className="text-muted-foreground text-center"><ArrowRight className="w-4 h-4 inline" /></TableHead>
+                                    <TableHead className="text-muted-foreground">Kitchen Station</TableHead>
+                                    <TableHead className="text-right text-muted-foreground">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -89,7 +89,7 @@ export const KdsRoutingSettings = () => {
                                         <TableCell>
                                             <div className="flex flex-col">
                                                 <span className="font-medium text-foreground">{rule.targetName}</span>
-                                                <Badge variant="outline" className="w-fit scale-75 -ml-2 border-border text-muted px-2">
+                                                <Badge variant="outline" className="w-fit scale-75 -ml-2 border-border text-muted-foreground px-2">
                                                     {rule.targetType}
                                                 </Badge>
                                             </div>
@@ -138,12 +138,12 @@ const KdsRoutingForm = ({ onSuccess }: { onSuccess: () => void }) => {
     return (
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 py-4">
             <div className="space-y-2">
-                <Label className="text-muted">Target Type</Label>
+                <Label className="text-muted-foreground">Target Type</Label>
                 <div className="grid grid-cols-2 gap-2">
                     <Button
                         type="button"
                         variant={selectedType === 'CATEGORY' ? 'default' : 'outline'}
-                        className={selectedType === 'CATEGORY' ? 'bg-primary' : 'border-border text-muted'}
+                        className={selectedType === 'CATEGORY' ? 'bg-primary' : 'border-border text-muted-foreground'}
                         onClick={() => form.setValue('targetType', 'CATEGORY')}
                     >
                         Menu Category
@@ -151,7 +151,7 @@ const KdsRoutingForm = ({ onSuccess }: { onSuccess: () => void }) => {
                     <Button
                         type="button"
                         variant={selectedType === 'ITEM' ? 'default' : 'outline'}
-                        className={selectedType === 'ITEM' ? 'bg-primary' : 'border-border text-muted'}
+                        className={selectedType === 'ITEM' ? 'bg-primary' : 'border-border text-muted-foreground'}
                         onClick={() => form.setValue('targetType', 'ITEM')}
                     >
                         Specific Item
@@ -160,7 +160,7 @@ const KdsRoutingForm = ({ onSuccess }: { onSuccess: () => void }) => {
             </div>
 
             <div className="space-y-2">
-                <Label htmlFor="targetId" className="text-muted">
+                <Label htmlFor="targetId" className="text-muted-foreground">
                     {selectedType === 'CATEGORY' ? 'Select Category' : 'Select Menu Item'}
                 </Label>
                 <select
@@ -199,7 +199,7 @@ const KdsRoutingForm = ({ onSuccess }: { onSuccess: () => void }) => {
                     type="button"
                     variant="ghost"
                     onClick={onSuccess}
-                    className="text-muted hover:text-foreground hover:bg-muted/10"
+                    className="text-muted-foreground hover:text-foreground hover:bg-muted/10"
                 >
                     Cancel
                 </Button>

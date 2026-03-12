@@ -54,11 +54,11 @@ export const CampaignsPage: React.FC = () => {
                 </Button>
             </div>
 
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-6 grid-cols-[repeat(auto-fill,minmax(320px,1fr))] justify-items-start">
                 {isLoading ? (
                     <p>Loading campaigns...</p>
                 ) : campaigns?.length === 0 ? (
-                    <Card className="col-span-full py-12">
+                    <Card className="col-span-full py-12 w-full">
                         <CardContent className="flex flex-col items-center justify-center text-center space-y-4">
                             <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">
                                 <Mail className="h-6 w-6 text-muted-foreground" />
@@ -74,7 +74,7 @@ export const CampaignsPage: React.FC = () => {
                     </Card>
                 ) : (
                     campaigns?.map((campaign: AutomatedCampaignResponse) => (
-                        <Card key={campaign.id} className={campaign.isActive ? 'border-primary/20' : 'opacity-70'}>
+                        <Card key={campaign.id} className={`${campaign.isActive ? 'border-primary/20' : 'opacity-70'} w-full max-w-[440px]`}>
                             <CardHeader>
                                 <div className="flex justify-between items-start">
                                     <div className="p-2 rounded-lg bg-primary/10 text-primary">

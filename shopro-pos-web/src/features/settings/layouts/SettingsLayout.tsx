@@ -1,4 +1,5 @@
 import { NavLink, Outlet } from "react-router-dom";
+import { sideNavItemClass } from '@/components/layout/SideNavItem';
 import { Settings, Map, Users, Bell, CreditCard, ShieldCheck, Smartphone, Monitor } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -15,40 +16,36 @@ export function SettingsLayout() {
     return (
         <div className="flex h-screen bg-background text-foreground overflow-hidden">
             {/* Sidebar */}
-            <aside className="w-64 flex-shrink-0 bg-surface border-r border-border flex flex-col transition-colors">
-                <div className="p-6 border-b border-border">
+            <aside className="w-16 lg:w-64 flex-shrink-0 bg-surface border-r border-border flex flex-col transition-all duration-300 items-center lg:items-stretch">
+                <div className="p-6 border-b border-border w-full hidden lg:block">
                     <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center">
                             <Settings className="h-5 w-5 text-primary" />
                         </div>
-                        <h1 className="font-bold text-lg">Settings</h1>
+                        <h1 className="font-bold text-lg truncate">Settings</h1>
                     </div>
                 </div>
 
-                <nav className="flex-1 p-4 space-y-1">
+                <nav className="flex-1 p-3 lg:p-4 space-y-1 w-full text-center">
                     {NAV_ITEMS.map((item) => (
                         <NavLink
                             key={item.href}
                             to={item.href}
-                            className={({ isActive }) =>
-                                `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all group ${isActive
-                                    ? "bg-primary text-primary-fore shadow-lg shadow-primary/20"
-                                    : "text-muted hover:text-foreground hover:bg-muted/10 border border-transparent"
-                                }`
-                            }
+                            className={({ isActive }) => sideNavItemClass(isActive)}
+                            title={item.label}
                         >
-                            <item.icon className="h-4.5 w-4.5" />
-                            {item.label}
+                            <item.icon className="h-4.5 w-4.5 shrink-0" />
+                            <span className="hidden lg:block truncate">{item.label}</span>
                         </NavLink>
                     ))}
                 </nav>
 
-                <div className="p-4 border-t border-border">
+                <div className="p-4 border-t border-border w-full hidden lg:block">
                     <div className="p-3 rounded-lg bg-muted/10 border border-border">
                         <p className="text-[10px] text-muted-2 uppercase tracking-widest font-bold mb-1">
                             System Version
                         </p>
-                        <p className="text-xs text-muted">v1.2.4-stable</p>
+                        <p className="text-xs text-muted-foreground">v1.2.4-stable</p>
                     </div>
                 </div>
             </aside>

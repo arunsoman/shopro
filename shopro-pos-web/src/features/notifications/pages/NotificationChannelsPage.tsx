@@ -66,7 +66,7 @@ export function NotificationChannelsPage() {
                         <Key className="h-6 w-6 text-primary" />
                         Delivery Channels
                     </h1>
-                    <p className="text-muted text-sm mt-1">Configure integrations and credentials for external delivery pathways.</p>
+                    <p className="text-muted-foreground text-sm mt-1">Configure integrations and credentials for external delivery pathways.</p>
                 </div>
             </div>
 
@@ -92,7 +92,7 @@ export function NotificationChannelsPage() {
                                     <h3 className="font-semibold text-foreground text-sm">{channel.name}</h3>
                                     <div className="flex items-center gap-2 mt-1">
                                         <div className={clsx("h-1.5 w-1.5 rounded-full", channel.isActive ? "bg-emerald-500" : "bg-muted")} />
-                                        <span className="text-[10px] text-muted font-medium uppercase tracking-wider">{channel.type}</span>
+                                        <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">{channel.type}</span>
                                     </div>
                                 </div>
                             </div>
@@ -109,7 +109,7 @@ export function NotificationChannelsPage() {
                             </div>
                             <div>
                                 <h2 className="text-xl font-bold font-heading text-foreground">{selectedChannel.name}</h2>
-                                <p className="text-sm text-muted mt-1">{selectedChannel.description}</p>
+                                <p className="text-sm text-muted-foreground mt-1">{selectedChannel.description}</p>
                             </div>
                         </div>
                     </div>
@@ -118,15 +118,15 @@ export function NotificationChannelsPage() {
                         <div className="flex items-center justify-between mb-6 bg-muted/5 p-4 rounded-lg border border-border">
                             <div>
                                 <h3 className="font-semibold text-foreground text-sm">Channel Status</h3>
-                                <p className="text-xs text-muted mt-0.5">Enable or disable this channel globally.</p>
+                                <p className="text-xs text-muted-foreground mt-0.5">Enable or disable this channel globally.</p>
                             </div>
                             <label className="relative inline-flex items-center cursor-pointer">
                                 <input type="checkbox" className="sr-only peer" defaultChecked={selectedChannel.isActive} />
-                                <div className="w-11 h-6 bg-muted/30 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                                <div className="w-11 h-6 bg-input peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                             </label>
                         </div>
 
-                        <h3 className="text-sm font-semibold text-muted uppercase tracking-wider mb-4 flex items-center gap-2">
+                        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
                             <Key size={14} /> Connection Credentials
                         </h3>
 

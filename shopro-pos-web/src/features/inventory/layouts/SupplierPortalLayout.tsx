@@ -11,6 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { useSupplierAuth } from '@/features/auth/SupplierAuthContext';
 import { cn } from '@/lib/utils';
+import { sideNavItemClass } from '@/components/layout/SideNavItem';
 import { NotificationBadge, NotificationTray } from '@/features/notifications/components/NotificationTray';
 
 export const SupplierPortalLayout: React.FC = () => {
@@ -31,65 +32,64 @@ export const SupplierPortalLayout: React.FC = () => {
     if (!session) return <Outlet />;
 
     return (
-        <div className="flex h-screen bg-slate-50 dark:bg-slate-950">
+        <div className="flex h-screen bg-background">
             {/* Sidebar */}
-            <aside className="w-64 border-r bg-white dark:bg-slate-900 flex flex-col">
-                <div className="p-6 border-b">
+            <aside className="w-16 lg:w-64 border-r bg-surface flex flex-col transition-all duration-300 items-center lg:items-stretch">
+                <div className="p-6 border-b w-full hidden lg:block">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold">
                             V
                         </div>
-                        <div>
-                            <h2 className="font-bold text-slate-800 dark:text-slate-100">Supplier Portal</h2>
-                            <p className="text-xs text-slate-500 dark:text-slate-400 truncate w-32">{session.supplierName}</p>
+                        <div className="overflow-hidden">
+                            <h2 className="font-bold text-foreground truncate">Supplier Portal</h2>
+                            <p className="text-xs text-muted-foreground truncate">{session.supplierName}</p>
                         </div>
                     </div>
                 </div>
 
-                <nav className="flex-1 p-4 space-y-1">
+                <nav className="flex-1 p-3 lg:p-4 space-y-1 w-full text-center">
                     {navigation.map((item) => (
                         <Link
                             key={item.name}
                             to={item.href}
                             className={cn(
-                                "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
-                                location.pathname === item.href
-                                    ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300"
-                                    : "text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
-                            )}
+                                 sideNavItemClass(location.pathname === item.href),
+                             )}
+                            title={item.name}
                         >
-                            <item.icon className="h-4 w-4" />
-                            {item.name}
+                            <item.icon className="h-4 w-4 shrink-0" />
+                            <span className="hidden lg:block truncate">{item.name}</span>
                         </Link>
                     ))}
                 </nav>
 
-                <div className="p-4 border-t space-y-4">
-                    <div className="flex items-center gap-3 px-3 py-2">
-                        <div className="w-8 h-8 bg-slate-200 dark:bg-slate-800 rounded-full flex items-center justify-center">
-                            <User className="h-4 w-4 text-slate-500" />
+                <div className="p-4 border-t space-y-4 w-full">
+                    <div className="flex items-center gap-3 px-3 py-2 justify-center lg:justify-start">
+                        <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center shrink-0">
+                            <User className="h-4 w-4 text-muted-foreground" />
                         </div>
-                        <div className="overflow-hidden">
-                            <p className="text-sm font-medium text-slate-700 dark:text-slate-200 truncate">{session.userName}</p>
-                            <p className="text-xs text-slate-500 dark:text-slate-400 capitalize">{session.role.replace('SUPPLIER_', '').toLowerCase()}</p>
+                        <div className="overflow-hidden hidden lg:block">
+                            <p className="text-sm font-medium text-foreground truncate">{session.userName}</p>
+                            <p className="text-xs text-muted-foreground capitalize">{session.role.replace('SUPPLIER_', '').toLowerCase()}</p>
                         </div>
                     </div>
                     <Button
                         variant="ghost"
                         size="sm"
-                        className="w-full justify-start gap-3 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30"
+                        className="w-full justify-center lg:justify-start gap-3 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30"
                         onClick={logout}
+                        title="Log Out"
                     >
-                        <LogOut className="h-4 w-4" />
-                        Log Out
+                        <LogOut className="h-4 w-4 shrink-0" />
+                        <span className="hidden lg:block">Log Out</span>
                     </Button>
                 </div>
             </aside>
 
             {/* Main Content */}
             <main className="flex-1 flex flex-col overflow-hidden">
-                <header className="h-16 border-b bg-white dark:bg-slate-900 flex items-center justify-between px-8">
-                    <h1 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
+                <header className="h-16 border-b bg-surface border-border flex items-center justify-between px-8">
+                    <h1 className="text-lg font-semibold text-foreground">
                         {navigation.find(n => n.href === location.pathname)?.name || 'Portal'}
                     </h1>
                     <div className="flex items-center gap-4 relative">

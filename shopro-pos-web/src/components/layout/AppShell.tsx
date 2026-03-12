@@ -58,7 +58,7 @@ export function AppShell() {
     return (
         <div className="min-h-screen bg-background flex flex-col transition-colors duration-300">
             {/* ---- Sticky top bar ---- */}
-            <header className="border-b border-border bg-surface/80 backdrop-blur-md sticky top-0 z-50 transition-colors">
+            <header className="border-b border-white/10 bg-[#180B33] sticky top-0 z-50 transition-colors">
                 <div className="px-4 sm:px-6 h-14 flex items-center gap-3">
                     {/* Logo + Home */}
                     <Link
@@ -69,19 +69,19 @@ export function AppShell() {
                         <img
                             src={logo}
                             alt="Shopro POS"
-                            className="h-8 w-auto object-contain group-hover:scale-105 transition-transform"
+                            className="h-14 w-auto object-contain group-hover:scale-115 transition-transform"
                         />
-                        <Home className="h-3.5 w-3.5 text-muted group-hover:text-primary transition-colors hidden sm:block" />
+                        <Home className="h-3.5 w-3.5 text-white/40 group-hover:text-primary transition-colors hidden sm:block" />
                     </Link>
 
                     {/* Breadcrumb */}
                     {breadcrumbs && breadcrumbs.length > 0 && (
-                        <div className="flex items-center gap-1 text-sm text-muted min-w-0">
-                            <ChevronRight className="h-3.5 w-3.5 text-muted/30 shrink-0" />
+                        <div className="flex items-center gap-1 text-sm text-white/60 min-w-0">
+                            <ChevronRight className="h-3.5 w-3.5 text-white/20 shrink-0" />
                             {breadcrumbs.map((crumb, i) => (
                                 <span key={i} className="flex items-center gap-1 min-w-0">
-                                    {i > 0 && <ChevronRight className="h-3 w-3 text-muted/30 shrink-0" />}
-                                    <span className={`truncate ${i === breadcrumbs.length - 1 ? 'text-foreground font-medium' : 'text-muted'}`}>
+                                    {i > 0 && <ChevronRight className="h-3 w-3 text-white/20 shrink-0" />}
+                                    <span className={`truncate ${i === breadcrumbs.length - 1 ? 'text-white font-medium' : 'text-white/60'}`}>
                                         {crumb}
                                     </span>
                                 </span>
@@ -97,7 +97,7 @@ export function AppShell() {
                         <button
                             onClick={toggleTheme}
                             title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
-                            className="p-2 rounded-md hover:bg-muted/10 text-muted hover:text-foreground transition-colors"
+                            className="p-2 rounded-md hover:bg-white/10 text-white/60 hover:text-white transition-colors"
                         >
                             {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
                         </button>
@@ -112,16 +112,16 @@ export function AppShell() {
                             />
                         </div>
 
-                        <div className="hidden sm:block text-right leading-none border-l border-border pl-3 h-8 flex flex-col justify-center">
-                            <p className="text-xs font-medium text-foreground">{session?.fullName}</p>
-                            <p className="text-[11px] text-muted mt-0.5">
+                        <div className="hidden sm:block text-right leading-none border-l border-white/10 pl-3 h-8 flex flex-col justify-center">
+                            <p className="text-xs font-medium text-white">{session?.fullName}</p>
+                            <p className="text-[11px] text-white/60 mt-0.5">
                                 {session ? getRoleLabel(session.role) : ''}
                             </p>
                         </div>
                         <button
                             onClick={handleLogout}
                             title="Logout"
-                            className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs text-muted hover:text-foreground hover:bg-muted/10 transition-colors border border-transparent hover:border-border"
+                            className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs text-white/60 hover:text-white hover:bg-white/10 transition-colors border border-transparent hover:border-white/10"
                         >
                             <LogOut className="h-3.5 w-3.5" />
                             <span className="hidden sm:inline">Logout</span>

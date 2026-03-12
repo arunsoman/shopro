@@ -79,10 +79,10 @@ export function WaitlistSidebar({ entries, onDragStart, onDragEnd }: WaitlistSid
     const removeMutation = useRemoveFromWaitlist();
 
     return (
-        <aside className="w-64 flex-shrink-0 flex flex-col bg-surface border-r border-border h-full overflow-hidden">
+        <aside className="w-16 lg:w-64 flex-shrink-0 flex flex-col bg-surface border-r border-border h-full overflow-hidden transition-all duration-300 items-center lg:items-stretch">
             {/* Header */}
-            <div className="px-3 py-2.5 border-b border-border flex items-center justify-between">
-                <span className="text-sm font-semibold text-foreground">
+            <div className="px-3 py-2.5 border-b border-border flex items-center justify-between w-full h-14">
+                <span className="text-sm font-semibold text-foreground hidden lg:flex items-center">
                     Waitlist
                     {entries.length > 0 && (
                         <span className="ml-1.5 bg-primary text-primary-fore text-[10px] font-bold px-1.5 py-0.5 rounded-full">
@@ -90,9 +90,16 @@ export function WaitlistSidebar({ entries, onDragStart, onDragEnd }: WaitlistSid
                         </span>
                     )}
                 </span>
+                <div className="lg:hidden flex justify-center w-full">
+                    {entries.length > 0 && (
+                        <span className="bg-primary text-primary-fore text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                            {entries.length}
+                        </span>
+                    )}
+                </div>
                 <button
                     onClick={() => setShowForm(v => !v)}
-                    className="flex items-center gap-1 text-xs text-primary hover:opacity-80 transition-colors"
+                    className="hidden lg:flex items-center gap-1 text-xs text-primary hover:opacity-80 transition-colors"
                 >
                     <UserPlus className="h-3.5 w-3.5" />
                     Add
@@ -100,16 +107,17 @@ export function WaitlistSidebar({ entries, onDragStart, onDragEnd }: WaitlistSid
             </div>
 
             {/* Add form */}
-            <div className="px-3 pt-2">
+            <div className="px-3 pt-2 w-full hidden lg:block">
                 {showForm && <AddGuestForm onClose={() => setShowForm(false)} />}
             </div>
 
             {/* Entry list */}
-            <div className="flex-1 overflow-y-auto p-2 space-y-2">
+            <div className="flex-1 overflow-y-auto p-2 space-y-2 w-full">
                 {entries.length === 0 && (
-                    <div className="flex flex-col items-center justify-center h-32 text-muted text-xs text-center px-4">
-                        <span>No guests waiting.</span>
-                        <span className="mt-1 text-muted-2">Tap "Add" to add a walk-in.</span>
+                    <div className="flex flex-col items-center justify-center h-32 text-muted text-xs text-center px-2 lg:px-4">
+                        <span className="hidden lg:inline">No guests waiting.</span>
+                        <span className="mt-1 text-muted-2 hidden lg:inline">Tap "Add" to add a walk-in.</span>
+                        <UserPlus className="h-4 w-4 lg:hidden opacity-20" />
                     </div>
                 )}
 
@@ -119,15 +127,20 @@ export function WaitlistSidebar({ entries, onDragStart, onDragEnd }: WaitlistSid
                         draggable
                         onDragStart={() => onDragStart(entry)}
                         onDragEnd={onDragEnd}
-                        className="bg-surface-2 border border-border rounded-lg p-2.5 cursor-grab active:cursor-grabbing select-none hover:border-primary/50 transition-colors group"
+                        className="bg-surface-2 border border-border rounded-lg p-2 lg:p-2.5 cursor-grab active:cursor-grabbing select-none hover:border-primary/50 transition-colors group flex flex-col items-center lg:items-stretch"
+                        title={`${entry.guestName} (${entry.partySize} guests)`}
                     >
-                        <div className="flex items-start justify-between gap-1">
-                            <div className="min-w-0">
-                                <p className="text-sm font-medium text-foreground truncate">{entry.guestName}</p>
-                                <p className="text-xs text-muted">{entry.partySize} guests</p>
-                                <WaitTime estimatedMinutes={entry.estimatedWaitMinutes} />
+                        <div className="flex lg:flex-row items-center lg:items-start justify-center lg:justify-between gap-1 w-full text-center lg:text-left">
+                            <div className="min-w-0 flex flex-col items-center lg:items-start">
+                                <p className="text-sm font-medium text-foreground truncate hidden lg:block">{entry.guestName}</p>
+                                <p className="text-xs font-bold text-primary lg:text-muted bg-primary/10 lg:bg-transparent px-1.5 py-0.5 lg:p-0 rounded-md">
+                                    {entry.partySize}<span className="hidden lg:inline"> guests</span>
+                                </p>
+                                <div className="hidden lg:block">
+                                    <WaitTime estimatedMinutes={entry.estimatedWaitMinutes} />
+                                </div>
                             </div>
-                            <div className="flex items-center gap-1 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="hidden lg:flex items-center gap-1 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                                 {entry.guestPhone && entry.status === "WAITING" && (
                                     <button
                                         onClick={() => notifyMutation.mutate(entry.id)}
@@ -147,13 +160,13 @@ export function WaitlistSidebar({ entries, onDragStart, onDragEnd }: WaitlistSid
                             </div>
                         </div>
                         {entry.status === "NOTIFIED" && (
-                            <div className="mt-1.5 flex items-center gap-1 text-[10px] text-primary font-medium">
+                            <div className="mt-1.5 flex items-center justify-center lg:justify-start gap-1 text-[10px] text-primary font-medium">
                                 <Bell className="h-2.5 w-2.5" />
-                                Notified — dragging seats them
+                                <span className="hidden lg:inline">Notified — dragging seats them</span>
                             </div>
                         )}
                         {entry.guestPhone && (
-                            <div className="mt-1 flex items-center gap-1 text-[10px] text-muted">
+                            <div className="mt-1 flex items-center justify-center lg:justify-start gap-1 text-[10px] text-muted hidden lg:flex">
                                 <Phone className="h-2.5 w-2.5" />
                                 {entry.guestPhone}
                             </div>

@@ -55,12 +55,12 @@ export const EditThresholdsPanel: React.FC<EditThresholdsPanelProps> = ({ ingred
         <>
             {/* Backdrop */}
             <div
-                className="fixed inset-0 bg-background/80 backdrop-blur-sm z-40 animate-in fade-in duration-200"
+                className="fixed inset-0 top-14 bg-background/90 backdrop-blur-sm z-40 animate-in fade-in duration-200"
                 onClick={onClose}
             />
 
             {/* Panel */}
-            <div className="fixed right-0 top-0 h-full w-[400px] bg-card border-l border-border shadow-2xl z-50 flex flex-col animate-in slide-in-from-right duration-300">
+            <div className="fixed right-0 top-14 h-[calc(100vh-3.5rem)] w-[400px] bg-card border-l border-border shadow-2xl z-50 flex flex-col animate-in slide-in-from-right duration-300">
                 <div className="p-6 border-b border-border flex items-center justify-between">
                     <div>
                         <h2 className="text-xl font-bold">Edit {ingredient.name}</h2>

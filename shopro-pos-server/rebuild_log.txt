@@ -1,0 +1,27 @@
+nohup: ignoring input
+Starting a Gradle Daemon, 1 busy and 2 incompatible and 6 stopped Daemons could not be reused, use --status for details
+Exception in thread "DisconnectableInputStream source reader" org.gradle.api.UncheckedIOException: java.io.IOException: Bad file descriptor
+	at org.gradle.internal.UncheckedException.throwAsUncheckedException(UncheckedException.java:62)
+	at org.gradle.internal.UncheckedException.throwAsUncheckedException(UncheckedException.java:41)
+	at org.gradle.util.internal.DisconnectableInputStream$1.run(DisconnectableInputStream.java:127)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+Caused by: java.io.IOException: Bad file descriptor
+	at java.base/java.io.FileInputStream.readBytes(Native Method)
+	at java.base/java.io.FileInputStream.read(FileInputStream.java:287)
+	at java.base/java.io.BufferedInputStream.read1(BufferedInputStream.java:345)
+	at java.base/java.io.BufferedInputStream.implRead(BufferedInputStream.java:420)
+	at java.base/java.io.BufferedInputStream.read(BufferedInputStream.java:399)
+	at org.gradle.util.internal.DisconnectableInputStream$1.run(DisconnectableInputStream.java:98)
+	... 1 more
+> Task :shopro-pos-server:compileJava UP-TO-DATE
+> Task :shopro-pos-server:processResources UP-TO-DATE
+> Task :shopro-pos-server:classes UP-TO-DATE
+> Task :shopro-pos-server:resolveMainClassName UP-TO-DATE
+> Task :shopro-pos-server:bootJar UP-TO-DATE
+> Task :shopro-pos-server:jar UP-TO-DATE
+> Task :shopro-pos-server:assemble UP-TO-DATE
+> Task :shopro-pos-server:check
+> Task :shopro-pos-server:build
+
+BUILD SUCCESSFUL in 13s
+5 actionable tasks: 5 up-to-date

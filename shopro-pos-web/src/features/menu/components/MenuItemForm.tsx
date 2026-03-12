@@ -61,7 +61,7 @@ export function MenuItemForm({ categories, onComplete }: MenuItemFormProps) {
     };
 
     return (
-        <form onSubmit={form.handleSubmit(onSubmit)} className="max-w-xl space-y-6 rounded-lg border bg-card p-6 shadow-sm">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="max-w-xl space-y-6 rounded-lg border border-border bg-surface p-6 shadow-sm">
             <div className="space-y-4">
                 <div className="space-y-2">
                     <Label htmlFor="name">Item Name</Label>
@@ -79,7 +79,7 @@ export function MenuItemForm({ categories, onComplete }: MenuItemFormProps) {
                     <Label htmlFor="categoryId">Category</Label>
                     <select
                         id="categoryId"
-                        className="flex h-9 w-full rounded-md border border-zinc-200 bg-transparent px-3 py-1 text-sm shadow-sm dark:border-zinc-800"
+                        className="flex h-9 w-full rounded-md border border-border bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus:border-primary focus:outline-none"
                         {...form.register("categoryId")}
                     >
                         <option value="">Select a category</option>
@@ -113,7 +113,7 @@ export function MenuItemForm({ categories, onComplete }: MenuItemFormProps) {
                     <Label htmlFor="description">Description (Optional)</Label>
                     <textarea
                         id="description"
-                        className="flex w-full rounded-md border border-zinc-200 bg-transparent px-3 py-2 text-sm shadow-sm dark:border-zinc-800"
+                        className="flex w-full rounded-md border border-border bg-transparent px-3 py-2 text-sm shadow-sm transition-colors focus:border-primary focus:outline-none"
                         rows={3}
                         {...form.register("description")}
                     />
@@ -123,18 +123,18 @@ export function MenuItemForm({ categories, onComplete }: MenuItemFormProps) {
                 {modifierGroups && modifierGroups.length > 0 && (
                     <div className="space-y-3 pt-2">
                         <Label>Modifier Groups (Optional)</Label>
-                        <div className="rounded-md border p-4 space-y-2">
+                        <div className="rounded-md border border-border bg-muted/5 p-4 space-y-2">
                             {modifierGroups.map(group => (
                                 <div key={group.id} className="flex items-center space-x-2">
                                     <input
                                         type="checkbox"
                                         id={`modifier-${group.id}`}
                                         value={group.id}
-                                        className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                        className="h-4 w-4 rounded border-border bg-background text-primary focus:ring-primary"
                                         {...form.register("modifierGroupIds")}
                                     />
-                                    <Label htmlFor={`modifier-${group.id}`} className="font-normal cursor-pointer">
-                                        {group.name} <span className="text-xs text-muted-foreground ml-1">({group.required ? 'Required' : 'Optional'})</span>
+                                    <Label htmlFor={`modifier-${group.id}`} className="font-normal cursor-pointer text-foreground">
+                                        {group.name} <span className="text-xs text-muted ml-1">({group.required ? 'Required' : 'Optional'})</span>
                                     </Label>
                                 </div>
                             ))}

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useStaff, useDeactivateStaff, useReactivateStaff } from '../hooks/useStaff';
 import { CreateStaffModal } from '../components/CreateStaffModal';
 import { EditRoleModal } from '../components/EditRoleModal';
+import {cn} from '@/lib/utils';
 import {
     Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
@@ -23,12 +24,12 @@ const ROLE_COLORS: Record<string, string> = {
     SOUS_CHEF: 'bg-orange-400/10 text-orange-500 dark:text-orange-300 border-orange-400/20',
     CHEF_DE_PARTIE: 'bg-orange-300/10 text-orange-400 dark:text-orange-200 border-orange-300/20',
     LINE_COOK: 'bg-orange-200/10 text-orange-300 dark:text-orange-100 border-orange-200/20',
-    PREP_COOK: 'bg-slate-400/10 text-slate-500 dark:text-slate-300 border-slate-400/20',
-    DISHWASHER: 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20',
+    PREP_COOK: 'bg-muted/10 text-muted-foreground border-border',
+    DISHWASHER: 'bg-muted/20 text-muted-foreground border-border',
     MAITRE_D: 'bg-cyan-600/10 text-cyan-700 dark:text-cyan-300 border-cyan-600/20',
     HOST: 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20',
     BARTENDER: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
-    BUSSER: 'bg-slate-300/10 text-slate-400 dark:text-slate-200 border-slate-300/20',
+    BUSSER: 'bg-muted/10 text-muted-foreground border-border',
     RUNNER: 'bg-emerald-400/10 text-emerald-500 dark:text-emerald-300 border-emerald-400/20',
     SENIOR_SERVER: 'bg-emerald-600/10 text-emerald-700 dark:text-emerald-300 border-emerald-600/20',
     JUNIOR_SERVER: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
@@ -135,7 +136,10 @@ export const StaffListPage: React.FC = () => {
                             <TableRow key={member.id} className={!member.active ? 'opacity-50' : ''}>
                                 <TableCell className="font-medium">
                                     <div className="flex items-center gap-3">
-                                        <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center text-sm font-bold text-muted-foreground shrink-0 border border-border">
+                                        <div className={cn(
+                                            "h-9 w-9 rounded-full flex items-center justify-center text-sm font-bold shrink-0 border",
+                                            ROLE_COLORS[member.role] ?? 'bg-muted text-muted-foreground border-border'
+                                        )}>
                                             {member.fullName.charAt(0).toUpperCase()}
                                         </div>
                                         {member.fullName}
@@ -149,7 +153,7 @@ export const StaffListPage: React.FC = () => {
                                 <TableCell>
                                     {member.active
                                         ? <Badge variant="secondary" className="bg-success/10 text-success dark:text-success border-success/20">Active</Badge>
-                                        : <Badge variant="secondary" className="bg-muted/10 text-muted dark:text-muted border-muted/20">Inactive</Badge>
+                                        : <Badge variant="secondary" className="bg-muted/10 text-muted-foreground dark:text-muted-foreground border-muted/20">Inactive</Badge>
                                     }
                                 </TableCell>
                                 <TableCell className="text-muted-foreground text-sm">

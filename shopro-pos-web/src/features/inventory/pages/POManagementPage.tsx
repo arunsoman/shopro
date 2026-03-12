@@ -125,7 +125,7 @@ export const POManagementPage: React.FC = () => {
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
                     <h1 className="text-4xl font-bold tracking-tight text-foreground">Purchase Orders</h1>
-                    <p className="text-muted mt-2">Monitor procurement lifecycle and manage approvals.</p>
+                    <p className="text-muted-foreground mt-2">Monitor procurement lifecycle and manage approvals.</p>
                 </div>
                 <div className="flex items-center gap-2">
                     <Button variant="outline" className="gap-2">
@@ -143,7 +143,7 @@ export const POManagementPage: React.FC = () => {
                                 <Clock className="h-5 w-5 text-primary" />
                             </div>
                             <div>
-                                <p className="text-sm text-muted">Pending Action</p>
+                                <p className="text-sm text-muted-foreground">Pending Action</p>
                                 <p className="text-xl font-bold">{pos?.filter(p => ['DRAFT', 'PENDING_APPROVAL', 'COUNTER_OFFERED', 'DISCREPANCY_REVIEW'].includes(p.status)).length || 0}</p>
                             </div>
                         </div>
@@ -156,7 +156,7 @@ export const POManagementPage: React.FC = () => {
                                 <Truck className="h-5 w-5 text-blue-500" />
                             </div>
                             <div>
-                                <p className="text-sm text-muted">In Transit</p>
+                                <p className="text-sm text-muted-foreground">In Transit</p>
                                 <p className="text-xl font-bold">{pos?.filter(p => p.status === 'SHIPPED').length || 0}</p>
                             </div>
                         </div>
@@ -169,7 +169,7 @@ export const POManagementPage: React.FC = () => {
                                 <CheckCircle2 className="h-5 w-5 text-emerald-500" />
                             </div>
                             <div>
-                                <p className="text-sm text-muted">Completed (MTD)</p>
+                                <p className="text-sm text-muted-foreground">Completed (MTD)</p>
                                 <p className="text-xl font-bold">{pos?.filter(p => p.status === 'CLOSED').length || 0}</p>
                             </div>
                         </div>
@@ -182,7 +182,7 @@ export const POManagementPage: React.FC = () => {
                                 <AlertTriangle className="h-5 w-5 text-red-500" />
                             </div>
                             <div>
-                                <p className="text-sm text-muted">Exceptions</p>
+                                <p className="text-sm text-muted-foreground">Exceptions</p>
                                 <p className="text-xl font-bold">{pos?.filter(p => p.status === 'DISCREPANCY_REVIEW').length || 0}</p>
                             </div>
                         </div>
@@ -195,7 +195,7 @@ export const POManagementPage: React.FC = () => {
                     <CardTitle className="text-lg">Order Registry</CardTitle>
                     <div className="flex items-center gap-4">
                         <div className="relative w-64">
-                            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted" />
+                            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                             <Input
                                 placeholder="Search by ID or Supplier..."
                                 className="pl-9"
@@ -204,7 +204,7 @@ export const POManagementPage: React.FC = () => {
                             />
                         </div>
                         <div className="flex items-center gap-2 bg-muted/50 p-1 rounded-md">
-                            <Filter className="h-4 w-4 text-muted ml-2" />
+                            <Filter className="h-4 w-4 text-muted-foreground ml-2" />
                             <select 
                                 className="bg-transparent text-sm font-medium border-none focus:ring-0 outline-none pr-4"
                                 value={statusFilter}
@@ -244,7 +244,7 @@ export const POManagementPage: React.FC = () => {
                                 ))
                             ) : filteredPos?.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={7} className="h-32 text-center text-muted">
+                                    <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">
                                         No purchase orders found matching your criteria.
                                     </TableCell>
                                 </TableRow>
@@ -254,7 +254,7 @@ export const POManagementPage: React.FC = () => {
                                         <TableCell className="font-mono text-xs text-primary font-medium">
                                             #{po.id.slice(0, 8)}
                                         </TableCell>
-                                        <TableCell className="text-xs text-muted">
+                                        <TableCell className="text-xs text-muted-foreground">
                                             {format(new Date(po.createdAt), 'MMM dd, yyyy')}
                                         </TableCell>
                                         <TableCell className="font-medium">
@@ -263,7 +263,7 @@ export const POManagementPage: React.FC = () => {
                                         <TableCell className="tabular-nums font-semibold">
                                             ${po.totalValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                         </TableCell>
-                                        <TableCell className="text-xs text-muted">
+                                        <TableCell className="text-xs text-muted-foreground">
                                             {po.expectedDeliveryDate ? format(new Date(po.expectedDeliveryDate), 'MMM dd, yyyy') : 'N/A'}
                                         </TableCell>
                                         <TableCell>
@@ -400,11 +400,11 @@ export const POManagementPage: React.FC = () => {
                                     <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Logistics Summary</h4>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
-                                            <p className="text-xs text-muted">Expected Delivery</p>
+                                            <p className="text-xs text-muted-foreground">Expected Delivery</p>
                                             <p className="text-sm font-medium">{selectedPo?.expectedDeliveryDate ? format(new Date(selectedPo.expectedDeliveryDate), 'PPP') : 'N/A'}</p>
                                         </div>
                                         <div>
-                                            <p className="text-xs text-muted">Tracking Ref</p>
+                                            <p className="text-xs text-muted-foreground">Tracking Ref</p>
                                             <p className="text-sm font-medium font-mono">{selectedPo?.trackingNumber || 'Awaiting Shipment'}</p>
                                         </div>
                                     </div>
@@ -413,11 +413,11 @@ export const POManagementPage: React.FC = () => {
                                     <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Financial Overview</h4>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
-                                            <p className="text-xs text-muted">Total Value</p>
+                                            <p className="text-xs text-muted-foreground">Total Value</p>
                                             <p className="text-xl font-bold text-primary">${selectedPo?.totalValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
                                         </div>
                                         <div>
-                                            <p className="text-xs text-muted">Payment Terms</p>
+                                            <p className="text-xs text-muted-foreground">Payment Terms</p>
                                             <p className="text-sm font-medium">Net 30</p>
                                         </div>
                                     </div>

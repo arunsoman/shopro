@@ -27,7 +27,7 @@ export function NotificationLogsPage() {
                         <FileText className="h-6 w-6 text-primary" />
                         Delivery Logs
                     </h1>
-                    <p className="text-muted text-sm mt-1">Real-time stream of all dispatched notifications, including delivery failures.</p>
+                    <p className="text-muted-foreground text-sm mt-1">Real-time stream of all dispatched notifications, including delivery failures.</p>
                 </div>
                 <button
                     onClick={handleRefresh}
@@ -40,7 +40,7 @@ export function NotificationLogsPage() {
 
             <div className="flex items-center gap-4 mb-6">
                 <div className="relative flex-1 max-w-md">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <input
                         type="text"
                         placeholder="Search by Dispatch ID, Recipient, or Event Type..."
@@ -50,7 +50,7 @@ export function NotificationLogsPage() {
                     />
                 </div>
                 <button className="flex items-center gap-2 px-3 py-2 bg-surface border border-border rounded-lg text-sm font-medium text-foreground hover:bg-muted/10 transition-colors">
-                    <Filter size={16} className="text-muted" />
+                    <Filter size={16} className="text-muted-foreground" />
                     Status: All
                 </button>
             </div>
@@ -58,7 +58,7 @@ export function NotificationLogsPage() {
             <div className="flex-1 bg-surface border border-border rounded-xl shadow-sm overflow-hidden flex flex-col">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm whitespace-nowrap">
-                        <thead className="bg-muted/5 border-b border-border text-muted">
+                        <thead className="bg-muted/5 border-b border-border text-muted-foreground">
                             <tr>
                                 <th className="px-6 py-4 font-medium">Timestamp</th>
                                 <th className="px-6 py-4 font-medium">Dispatch ID</th>
@@ -72,7 +72,7 @@ export function NotificationLogsPage() {
                         <tbody className="divide-y divide-border">
                             {MOCK_LOGS.filter(l => l.recipient.includes(search) || l.id.includes(search) || l.type.includes(search)).map((log) => (
                                 <tr key={log.id} className="hover:bg-muted/5 transition-colors">
-                                    <td className="px-6 py-4 font-mono text-xs text-muted">
+                                    <td className="px-6 py-4 font-mono text-xs text-muted-foreground">
                                         {format(log.timestamp, 'MMM d, yyyy HH:mm:ss')}
                                     </td>
                                     <td className="px-6 py-4">
@@ -109,7 +109,7 @@ export function NotificationLogsPage() {
                                             )}
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4 text-right text-muted tabular-nums">
+                                    <td className="px-6 py-4 text-right text-muted-foreground tabular-nums">
                                         {log.attempts}
                                     </td>
                                 </tr>

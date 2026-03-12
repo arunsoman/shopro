@@ -55,8 +55,10 @@
     /* Typography */
     --foreground: #0D1B2A;
     /* deep navy-black */
-    --muted: #4A6274;
-    /* slate-blue muted */
+    --muted: #F1F5F9;
+    /* soft slate background */
+    --muted-foreground: #475569;
+    /* high-contrast slate text */
     --muted-2: #8BA3B0;
     /* lighter muted */
 
@@ -64,6 +66,8 @@
     --border: #C8E8F0;
     /* soft cyan-tinted border */
     --border-soft: #E3F4F8;
+    --input: #CBD5E1;
+    --ring: #00B4D8;
 
     /* Semantic */
     --error: #E53E3E;
@@ -130,14 +134,14 @@
     --brand-amber: #FFC060;
     --brand-gold: #FFE060;
 
-    /* Surfaces — deep navy from logo background */
-    --background: #060D14;
-    /* deepest navy — logo bg vibe */
-    --surface: #0D1B2A;
-    /* elevated slightly */
-    --surface-2: #122333;
+    /* Surfaces — brand primary navy from logo background */
+    --background: #180B33;
+    /* rgb(24, 11, 51) — requested brand color */
+    --surface: #1E123D;
+    /* slightly lighter brand tint for elevation */
+    --surface-2: #251847;
     /* cards */
-    --surface-3: #1A3040;
+    --surface-3: #2D1F52;
     /* modals / popovers */
 
     /* Typography */
@@ -150,6 +154,8 @@
     --border: #1E3A4A;
     /* dark cyan-navy border */
     --border-soft: #142835;
+    --input: #334155;
+    --ring: #00C9A7;
 
     /* Semantic */
     --error: #FC6868;

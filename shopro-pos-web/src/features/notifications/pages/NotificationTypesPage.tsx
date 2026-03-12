@@ -72,7 +72,7 @@ export function NotificationTypesPage() {
                         <BellRing className="h-6 w-6 text-primary" />
                         Notification Types
                     </h1>
-                    <p className="text-muted text-sm mt-1">Configure system event types, severity levels, and their base templates.</p>
+                    <p className="text-muted-foreground text-sm mt-1">Configure system event types, severity levels, and their base templates.</p>
                 </div>
                 <button
                     onClick={handleCreate}
@@ -86,7 +86,7 @@ export function NotificationTypesPage() {
             {/* Toolbar */}
             <div className="flex items-center gap-4 mb-6">
                 <div className="relative flex-1 max-w-md">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <input
                         type="text"
                         placeholder="Search triggers by code or name..."
@@ -96,7 +96,7 @@ export function NotificationTypesPage() {
                     />
                 </div>
                 <button className="flex items-center gap-2 px-3 py-2 bg-surface border border-border rounded-lg text-sm font-medium text-foreground hover:bg-muted/10 transition-colors">
-                    <Filter size={16} className="text-muted" />
+                    <Filter size={16} className="text-muted-foreground" />
                     More Filters
                 </button>
             </div>
@@ -105,7 +105,7 @@ export function NotificationTypesPage() {
             <div className="flex-1 bg-surface border border-border rounded-xl shadow-sm overflow-hidden flex flex-col">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm whitespace-nowrap">
-                        <thead className="bg-muted/5 border-b border-border text-muted">
+                        <thead className="bg-muted/5 border-b border-border text-muted-foreground">
                             <tr>
                                 <th className="px-6 py-4 font-medium">Trigger Code</th>
                                 <th className="px-6 py-4 font-medium">Name & Category</th>
@@ -148,20 +148,20 @@ export function NotificationTypesPage() {
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-2">
                                             <div className={clsx("h-2 w-2 rounded-full", type.isActive ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" : "bg-muted")} />
-                                            <span className={type.isActive ? "text-foreground font-medium" : "text-muted"}>
+                                            <span className={type.isActive ? "text-foreground font-medium" : "text-muted-foreground"}>
                                                 {type.isActive ? 'Active' : 'Disabled'}
                                             </span>
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 text-right">
                                         <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <button onClick={() => handleEdit(type)} className="p-1.5 text-muted hover:text-primary hover:bg-primary/10 rounded transition-colors" title="Edit Template">
+                                            <button onClick={() => handleEdit(type)} className="p-1.5 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded transition-colors" title="Edit Template">
                                                 <Edit2 size={16} />
                                             </button>
-                                            <button className="p-1.5 text-muted hover:text-primary hover:bg-primary/10 rounded transition-colors" title="Settings">
+                                            <button className="p-1.5 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded transition-colors" title="Settings">
                                                 <Settings2 size={16} />
                                             </button>
-                                            <button className="p-1.5 text-muted hover:text-rose-500 hover:bg-rose-500/10 rounded transition-colors" title="Delete">
+                                            <button className="p-1.5 text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 rounded transition-colors" title="Delete">
                                                 <Trash2 size={16} />
                                             </button>
                                         </div>
@@ -170,7 +170,7 @@ export function NotificationTypesPage() {
                             ))}
                             {filteredTypes.length === 0 && (
                                 <tr>
-                                    <td colSpan={6} className="px-6 py-12 text-center text-muted">
+                                    <td colSpan={6} className="px-6 py-12 text-center text-muted-foreground">
                                         No notification types found matching "{search}"
                                     </td>
                                 </tr>
@@ -200,7 +200,7 @@ export function NotificationTypesPage() {
                     <h2 className="text-lg font-heading font-bold text-foreground">
                         {selectedType ? 'Edit Notification Template' : 'Create New Type'}
                     </h2>
-                    <button onClick={() => setIsEditorOpen(false)} className="p-2 text-muted hover:text-foreground hover:bg-muted/10 rounded-full transition-colors">
+                    <button onClick={() => setIsEditorOpen(false)} className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted/10 rounded-full transition-colors">
                         <X size={20} />
                     </button>
                 </div>
@@ -208,17 +208,17 @@ export function NotificationTypesPage() {
                 <div className="flex-1 overflow-y-auto p-6 space-y-6">
                     <div className="space-y-4">
                         <div>
-                            <label className="block text-xs font-semibold text-muted uppercase tracking-wider mb-1.5">Trigger Code</label>
+                            <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Trigger Code</label>
                             <input type="text" defaultValue={selectedType?.code} className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 font-mono" placeholder="e.g. USER_SIGNED_UP" />
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-xs font-semibold text-muted uppercase tracking-wider mb-1.5">Name</label>
+                                <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Name</label>
                                 <input type="text" defaultValue={selectedType?.name} className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50" placeholder="Display Name" />
                             </div>
                             <div>
-                                <label className="block text-xs font-semibold text-muted uppercase tracking-wider mb-1.5">Category</label>
+                                <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Category</label>
                                 <select className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50">
                                     <option>SYSTEM</option>
                                     <option>INVENTORY</option>
@@ -229,7 +229,7 @@ export function NotificationTypesPage() {
                         </div>
 
                         <div>
-                            <label className="block text-xs font-semibold text-muted uppercase tracking-wider mb-1.5">Severity</label>
+                            <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Severity</label>
                             <div className="flex gap-4">
                                 <label className="flex items-center gap-2 cursor-pointer">
                                     <input type="radio" name="severity" defaultChecked={selectedType?.severity === 'INFO'} className="text-blue-500 focus:ring-blue-500" />
@@ -249,7 +249,7 @@ export function NotificationTypesPage() {
                         <hr className="border-border my-2" />
 
                         <div>
-                            <label className="block text-xs font-semibold text-muted uppercase tracking-wider mb-1.5">Base Template (English)</label>
+                            <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Base Template (English)</label>
                             <div className="space-y-3 bg-muted/5 border border-border rounded-lg p-4">
                                 <div>
                                     <label className="block text-xs font-medium text-foreground mb-1">Subject / Notification Title</label>
@@ -266,7 +266,7 @@ export function NotificationTypesPage() {
                 </div>
 
                 <div className="p-6 border-t border-border bg-muted/5 flex items-center justify-end gap-3">
-                    <button onClick={() => setIsEditorOpen(false)} className="px-4 py-2 text-sm font-medium text-muted hover:text-foreground transition-colors">
+                    <button onClick={() => setIsEditorOpen(false)} className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
                         Cancel
                     </button>
                     <button onClick={() => setIsEditorOpen(false)} className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-lg font-medium text-sm transition-all shadow-sm active:scale-95">

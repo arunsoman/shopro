@@ -56,13 +56,13 @@ export function MenuItemsPage() {
             <div className="flex gap-4 border-b">
                 <button
                     onClick={() => setActiveTab("LIVE")}
-                    className={`pb-2 text-sm font-medium ${activeTab === "LIVE" ? "border-b-2 border-zinc-900 text-zinc-900 dark:border-zinc-50 dark:text-zinc-50" : "text-zinc-500 hover:text-zinc-700"}`}
+                    className={`pb-2 text-sm font-medium transition-all ${activeTab === "LIVE" ? "border-b-2 border-primary text-foreground" : "text-muted hover:text-foreground"}`}
                 >
                     Live Menu ({published?.length || 0})
                 </button>
                 <button
                     onClick={() => setActiveTab("DRAFT")}
-                    className={`pb-2 text-sm font-medium ${activeTab === "DRAFT" ? "border-b-2 border-zinc-900 text-zinc-900 dark:border-zinc-50 dark:text-zinc-50" : "text-zinc-500 hover:text-zinc-700"}`}
+                    className={`pb-2 text-sm font-medium transition-all ${activeTab === "DRAFT" ? "border-b-2 border-primary text-foreground" : "text-muted hover:text-foreground"}`}
                 >
                     Drafts & Archives ({drafts?.length || 0})
                 </button>
@@ -75,7 +75,7 @@ export function MenuItemsPage() {
                     ))}
                 </div>
             ) : displayItems.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 text-zinc-500">
+                <div className="flex flex-col items-center justify-center py-12 text-muted">
                     <p>No {activeTab.toLowerCase()} items found.</p>
                 </div>
             ) : (

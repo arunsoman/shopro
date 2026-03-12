@@ -44,7 +44,7 @@ export function ModifierGroupForm({ onComplete }: ModifierGroupFormProps) {
     };
 
     return (
-        <form onSubmit={form.handleSubmit(onSubmit)} className="max-w-3xl space-y-8 rounded-lg border bg-card p-6 shadow-sm">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="max-w-3xl space-y-8 rounded-lg border border-border bg-surface p-6 shadow-sm">
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div className="space-y-4 md:col-span-2">
                     <div className="space-y-2">
@@ -54,7 +54,7 @@ export function ModifierGroupForm({ onComplete }: ModifierGroupFormProps) {
                     </div>
                 </div>
 
-                <div className="flex flex-col justify-center space-y-2 rounded-md border p-4">
+                <div className="flex flex-col justify-center space-y-2 rounded-md border border-border p-4">
                     <div className="flex items-center justify-between">
                         <Label htmlFor="required" className="cursor-pointer">Required Modifier?</Label>
                         <Switch
@@ -73,7 +73,7 @@ export function ModifierGroupForm({ onComplete }: ModifierGroupFormProps) {
                     <p className="text-xs text-muted-foreground">If enabled, staff must select an option.</p>
                 </div>
 
-                <div className="space-y-4 rounded-md border p-4">
+                <div className="space-y-4 rounded-md border border-border p-4">
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <Label htmlFor="minSelections">Min Selections</Label>
@@ -103,7 +103,7 @@ export function ModifierGroupForm({ onComplete }: ModifierGroupFormProps) {
 
                 <div className="space-y-3">
                     {fields.map((field, index) => (
-                        <div key={field.id} className="flex items-start gap-4 rounded-md border bg-zinc-50 p-3 dark:bg-zinc-900">
+                        <div key={field.id} className="flex items-start gap-4 rounded-md border border-border bg-muted/5 p-3">
                             <div className="flex-1 space-y-2">
                                 <Label className="text-xs text-muted-foreground">Option Label</Label>
                                 <Input placeholder="e.g. Rare, Extra Cheese" {...form.register(`options.${index}.label`)} />

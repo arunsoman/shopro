@@ -29,7 +29,7 @@ export function CategoryDraggableList({ categories, onReorder, onEdit }: Categor
 
     if (categories.length === 0) {
         return (
-            <div className="flex h-32 flex-col items-center justify-center rounded-lg border border-dashed border-zinc-200 text-zinc-500 dark:border-zinc-800">
+            <div className="flex h-32 flex-col items-center justify-center rounded-lg border border-dashed border-border text-muted">
                 <p className="text-sm">No categories found.</p>
                 <p className="text-xs">Click '+ Create Category' to get started.</p>
             </div>
@@ -52,14 +52,14 @@ export function CategoryDraggableList({ categories, onReorder, onEdit }: Categor
                                         ref={provided.innerRef}
                                         {...provided.draggableProps}
                                         className={`flex items-center justify-between rounded-md border p-3 transition-colors ${snapshot.isDragging
-                                            ? 'border-zinc-950 bg-zinc-50 shadow-md dark:border-zinc-50 dark:bg-zinc-900'
-                                            : 'border-zinc-200 bg-white hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:bg-zinc-900'
+                                            ? 'border-primary bg-primary/5 shadow-md'
+                                            : 'border-border bg-surface hover:bg-muted/5'
                                             }`}
                                     >
                                         <div className="flex items-center gap-3">
                                             <div
                                                 {...provided.dragHandleProps}
-                                                className="text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-50"
+                                                className="text-muted-2 hover:text-primary transition-colors"
                                             >
                                                 <GripVertical className="h-5 w-5" />
                                             </div>
@@ -68,7 +68,7 @@ export function CategoryDraggableList({ categories, onReorder, onEdit }: Categor
 
                                         <button
                                             onClick={() => onEdit(category)}
-                                            className="rounded-full p-2 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-zinc-50"
+                                            className="rounded-full p-2 text-muted-2 hover:bg-muted/10 hover:text-foreground transition-colors"
                                         >
                                             <MoreVertical className="h-4 w-4" />
                                         </button>

@@ -25,7 +25,7 @@ export const SupplierDashboard: React.FC = () => {
 
     if (statsLoading || invLoading || posLoading) return (
         <div className="flex items-center justify-center h-64">
-            <div className="animate-pulse text-slate-400">Loading your performance metrics...</div>
+            <div className="animate-pulse text-muted-foreground">Loading your performance metrics...</div>
         </div>
     );
 
@@ -70,12 +70,12 @@ export const SupplierDashboard: React.FC = () => {
         <div className="space-y-8 animate-in fade-in duration-500">
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50">Performance Overview</h2>
-                    <p className="text-slate-500 font-medium">Real-time metrics for your supplier organization</p>
+                    <h2 className="text-2xl font-bold text-foreground">Performance Overview</h2>
+                    <p className="text-muted-foreground font-medium">Real-time metrics for your supplier organization</p>
                 </div>
                 <div className="text-right">
-                    <p className="text-xs font-medium text-slate-400 uppercase tracking-wider">Last Synced</p>
-                    <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Last Synced</p>
+                    <p className="text-sm font-semibold text-foreground/80">
                         {stats?.lastSyncAt ? format(new Date(stats.lastSyncAt), 'MMM d, HH:mm') : format(new Date(), 'MMM d, HH:mm')}
                     </p>
                 </div>
@@ -83,45 +83,45 @@ export const SupplierDashboard: React.FC = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {cards.map((card) => (
-                    <Card key={card.title} className="border-none shadow-sm bg-white dark:bg-slate-900 overflow-hidden group hover:shadow-md transition-all">
+                    <Card key={card.title} className="border-none shadow-sm bg-surface overflow-hidden group hover:shadow-md transition-all">
                         <CardContent className="p-6">
                             <div className="flex items-center justify-between mb-4">
                                 <div className={`${card.bg} p-2.5 rounded-lg transition-transform group-hover:scale-110`}>
                                     <card.icon className={`h-5 w-5 ${card.color}`} />
                                 </div>
-                                <ArrowUpRight className="h-4 w-4 text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                <ArrowUpRight className="h-4 w-4 text-muted-foreground/30 opacity-0 group-hover:opacity-100 transition-opacity" />
                             </div>
                             <div className="space-y-1">
-                                <h3 className="text-3xl font-bold text-slate-900 dark:text-slate-50">{card.value}</h3>
-                                <p className="text-sm font-medium text-slate-600 dark:text-slate-400">{card.title}</p>
+                                <h3 className="text-3xl font-bold text-foreground">{card.value}</h3>
+                                <p className="text-sm font-medium text-muted-foreground">{card.title}</p>
                             </div>
-                            <p className="mt-4 text-xs text-slate-400">{card.description}</p>
+                            <p className="mt-4 text-xs text-muted-foreground/60">{card.description}</p>
                         </CardContent>
                     </Card>
                 ))}
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <Card className="lg:col-span-2 border-none shadow-sm dark:bg-slate-900 overflow-hidden">
-                    <CardHeader className="flex flex-row items-center justify-between border-b border-slate-50 dark:border-slate-800">
+                <Card className="lg:col-span-2 border-none shadow-sm bg-surface overflow-hidden">
+                    <CardHeader className="flex flex-row items-center justify-between border-b border-border">
                         <CardTitle className="text-lg">Inventory Engagement</CardTitle>
                         <Button variant="ghost" size="sm" asChild>
-                            <Link to="/supplier/inventory" className="gap-2 text-indigo-600">
+                            <Link to="/supplier/inventory" className="gap-2 text-primary">
                                 View Full Catalog <ArrowRight className="h-4 w-4" />
                             </Link>
                         </Button>
                     </CardHeader>
                     <CardContent className="p-0">
-                        <div className="divide-y divide-slate-50 dark:divide-slate-800">
+                        <div className="divide-y divide-border">
                             {inventory?.slice(0, 5).map(item => (
-                                <div key={item.ingredientId} className="flex items-center justify-between p-4 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
+                                <div key={item.ingredientId} className="flex items-center justify-between p-4 hover:bg-muted/5 transition-colors">
                                     <div className="flex items-center gap-3">
-                                        <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded">
-                                            <Package className="h-4 w-4 text-slate-500" />
+                                        <div className="p-2 bg-muted/50 rounded">
+                                            <Package className="h-4 w-4 text-muted-foreground" />
                                         </div>
                                         <div>
                                             <p className="text-sm font-semibold">{item.ingredientName}</p>
-                                            <p className="text-xs text-slate-400">Current Price: ${item.currentVendorPrice.toFixed(2)}</p>
+                                            <p className="text-xs text-muted-foreground">Current Price: ${item.currentVendorPrice.toFixed(2)}</p>
                                         </div>
                                     </div>
                                     <div className="text-right">
@@ -136,7 +136,7 @@ export const SupplierDashboard: React.FC = () => {
                                 </div>
                             ))}
                             {(!inventory || inventory.length === 0) && (
-                                <div className="text-center py-12 text-slate-400 italic text-sm">
+                                <div className="text-center py-12 text-muted-foreground italic text-sm">
                                     No tracked ingredients in your catalog yet.
                                 </div>
                             )}
@@ -144,37 +144,37 @@ export const SupplierDashboard: React.FC = () => {
                     </CardContent>
                 </Card>
 
-                <Card className="lg:col-span-2 border-none shadow-sm dark:bg-slate-900 overflow-hidden">
-                    <CardHeader className="flex flex-row items-center justify-between border-b border-slate-50 dark:border-slate-800">
+                <Card className="lg:col-span-2 border-none shadow-sm bg-surface overflow-hidden">
+                    <CardHeader className="flex flex-row items-center justify-between border-b border-border">
                         <CardTitle className="text-lg flex items-center gap-2">
-                            <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                            <CheckCircle2 className="h-5 w-5 text-success" />
                             Awarded Purchase Orders
                         </CardTitle>
                         <Button variant="ghost" size="sm" asChild>
-                            <Link to="/supplier/pos" className="gap-2 text-indigo-600">
+                            <Link to="/supplier/pos" className="gap-2 text-primary">
                                 View All <ArrowRight className="h-4 w-4" />
                             </Link>
                         </Button>
                     </CardHeader>
                     <CardContent className="p-0">
-                        <div className="divide-y divide-slate-50 dark:divide-slate-800">
+                        <div className="divide-y divide-border">
                             {pos?.slice(0, 5).map(po => (
-                                <div key={po.id} className="flex items-center justify-between p-4 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
+                                <div key={po.id} className="flex items-center justify-between p-4 hover:bg-muted/5 transition-colors">
                                     <div className="flex items-center gap-3">
-                                        <div className="p-2 bg-emerald-50 dark:bg-emerald-900/20 rounded">
-                                            <Package className="h-4 w-4 text-emerald-600" />
+                                        <div className="p-2 bg-success/10 rounded">
+                                            <Package className="h-4 w-4 text-success" />
                                         </div>
                                         <div>
                                             <p className="text-sm font-semibold">PO #{po.id.slice(0, 8)}</p>
-                                            <p className="text-xs text-slate-400">Value: ${Number(po.totalValue || 0).toFixed(2)}</p>
+                                            <p className="text-xs text-muted-foreground">Value: ${Number(po.totalValue || 0).toFixed(2)}</p>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-4">
                                         <div className="text-right">
-                                            <p className="text-xs font-medium text-slate-500">
+                                            <p className="text-xs font-medium text-muted-foreground">
                                                 {po.status}
                                             </p>
-                                            <p className="text-[10px] text-slate-400">
+                                            <p className="text-[10px] text-muted-foreground/60">
                                                 Expected: {po.expectedDeliveryDate || 'N/A'}
                                             </p>
                                         </div>
@@ -192,7 +192,7 @@ export const SupplierDashboard: React.FC = () => {
                                 </div>
                             ))}
                             {(!pos || pos.length === 0) && (
-                                <div className="text-center py-12 text-slate-400 italic text-sm">
+                                <div className="text-center py-12 text-muted-foreground italic text-sm">
                                     No awarded purchase orders to fulfill.
                                 </div>
                             )}
@@ -248,9 +248,9 @@ export const SupplierDashboard: React.FC = () => {
                         </CardContent>
                     </Card>
 
-                    <Card className="border-none shadow-sm bg-white dark:bg-slate-900 group">
+                    <Card className="border-none shadow-sm bg-surface group">
                         <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-bold text-slate-400 uppercase tracking-widest">Quick Actions</CardTitle>
+                            <CardTitle className="text-sm font-bold text-muted-foreground/60 uppercase tracking-widest">Quick Actions</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-2">
                             <Button variant="ghost" className="w-full justify-start text-sm h-11 hover:bg-indigo-50 dark:hover:bg-indigo-950/20 hover:text-indigo-600 transition-all" asChild>

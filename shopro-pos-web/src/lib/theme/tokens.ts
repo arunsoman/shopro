@@ -46,6 +46,8 @@ export const tokens = {
     /* ── Borders & dividers ────────────────────────────────── */
     border:       "var(--border)",
     "border-soft":"var(--border-soft)",
+    input:        "var(--input)",
+    ring:         "var(--ring)",
 
     /* ── Semantic feedback ─────────────────────────────────── */
     error:   "var(--error)",

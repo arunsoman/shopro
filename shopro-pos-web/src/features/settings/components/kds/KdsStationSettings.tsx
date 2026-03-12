@@ -49,7 +49,7 @@ export const KdsStationSettings = () => {
             <CardHeader className="flex flex-row items-center justify-between">
                 <div>
                     <CardTitle className="text-xl font-bold">Kitchen Stations</CardTitle>
-                    <CardDescription className="text-muted">Manage KDS screens and display types</CardDescription>
+                    <CardDescription className="text-muted-foreground">Manage KDS screens and display types</CardDescription>
                 </div>
                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                     <DialogTrigger asChild>
@@ -72,12 +72,12 @@ export const KdsStationSettings = () => {
                 {isLoading ? (
                     <div className="py-20 text-center">
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-                        <p className="text-muted">Loading stations...</p>
+                        <p className="text-muted-foreground">Loading stations...</p>
                     </div>
                 ) : !stations?.length ? (
                     <div className="py-20 text-center border-2 border-dashed border-border rounded-xl">
-                        <Monitor className="w-12 h-12 text-muted/30 mx-auto mb-4" />
-                        <p className="text-muted">No kitchen stations configured yet.</p>
+                        <Monitor className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
+                        <p className="text-muted-foreground">No kitchen stations configured yet.</p>
                         <Button variant="link" onClick={openCreate} className="text-primary mt-2">
                             Add your first station
                         </Button>
@@ -87,10 +87,10 @@ export const KdsStationSettings = () => {
                         <Table>
                             <TableHeader className="bg-muted/5">
                                 <TableRow className="border-border hover:bg-transparent">
-                                    <TableHead className="text-muted">Name</TableHead>
-                                    <TableHead className="text-muted">Type</TableHead>
-                                    <TableHead className="text-muted">Status</TableHead>
-                                    <TableHead className="text-right text-muted">Actions</TableHead>
+                                    <TableHead className="text-muted-foreground">Name</TableHead>
+                                    <TableHead className="text-muted-foreground">Type</TableHead>
+                                    <TableHead className="text-muted-foreground">Status</TableHead>
+                                    <TableHead className="text-right text-muted-foreground">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -98,7 +98,7 @@ export const KdsStationSettings = () => {
                                     <TableRow key={station.id} className="border-border hover:bg-muted/5 transition-colors">
                                         <TableCell className="font-medium text-foreground">{station.name}</TableCell>
                                         <TableCell>
-                                            <Badge variant="outline" className="border-border text-muted">
+                                            <Badge variant="outline" className="border-border text-muted-foreground">
                                                 {station.stationType}
                                             </Badge>
                                         </TableCell>
@@ -115,8 +115,8 @@ export const KdsStationSettings = () => {
                                                     </div>
                                                 ) : (
                                                     <div className="flex items-center gap-2">
-                                                        <div className="w-2 h-2 rounded-full bg-muted"></div>
-                                                        <span className="text-xs text-muted font-medium">Offline</span>
+                                                        <div className="w-2 h-2 rounded-full bg-muted-foreground/50"></div>
+                                                        <span className="text-xs text-muted-foreground font-medium">Offline</span>
                                                     </div>
                                                 )}
                                             </button>
@@ -172,7 +172,7 @@ const KdsStationForm = ({ initialData, onSuccess }: KdsStationFormProps) => {
     return (
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 py-4">
             <div className="space-y-2">
-                <Label htmlFor="name" className="text-muted">Station Name</Label>
+                <Label htmlFor="name" className="text-muted-foreground">Station Name</Label>
                 <Input
                     id="name"
                     placeholder="e.g., Grill Station"
@@ -205,7 +205,7 @@ const KdsStationForm = ({ initialData, onSuccess }: KdsStationFormProps) => {
                     type="button"
                     variant="ghost"
                     onClick={() => onSuccess()}
-                    className="text-muted hover:text-foreground hover:bg-muted/10"
+                    className="text-muted-foreground hover:text-foreground hover:bg-muted/10"
                 >
                     Cancel
                 </Button>

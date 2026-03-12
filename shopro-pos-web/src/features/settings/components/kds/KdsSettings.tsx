@@ -11,7 +11,7 @@ export default function KdsSettings() {
                     <Monitor className="w-8 h-8 text-primary" />
                     Kitchen Display (KDS)
                 </h1>
-                <p className="text-muted mt-1">
+                <p className="text-muted-foreground mt-1">
                     Configure kitchen screens and define how orders are routed to them.
                 </p>
             </div>
@@ -20,14 +20,14 @@ export default function KdsSettings() {
                 <TabsList className="bg-surface border border-border p-1 mb-6">
                     <TabsTrigger
                         value="stations"
-                        className="data-[state=active]:bg-muted/20 data-[state=active]:text-foreground text-muted px-6"
+                        className="data-[state=active]:bg-muted/20 data-[state=active]:text-foreground text-muted-foreground px-6"
                     >
                         <Monitor className="w-4 h-4 mr-2" />
                         Stations
                     </TabsTrigger>
                     <TabsTrigger
                         value="routing"
-                        className="data-[state=active]:bg-muted/20 data-[state=active]:text-foreground text-muted px-6"
+                        className="data-[state=active]:bg-muted/20 data-[state=active]:text-foreground text-muted-foreground px-6"
                     >
                         <GitBranch className="w-4 h-4 mr-2" />
                         Routing Rules

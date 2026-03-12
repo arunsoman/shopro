@@ -30,7 +30,7 @@ export function MenuItemCard({ item, onEdit, onUpdateStatus }: MenuItemCardProps
     return (
         <div
             className={cn(
-                "group relative flex flex-col rounded-xl border bg-card text-card-foreground shadow transition-all hover:shadow-md",
+                "group relative flex flex-col rounded-xl border border-border bg-surface text-foreground shadow transition-all hover:shadow-md",
                 is86 && "opacity-60 grayscale"
             )}
         >
@@ -62,7 +62,7 @@ export function MenuItemCard({ item, onEdit, onUpdateStatus }: MenuItemCardProps
             </div>
 
             {/* Photo Area */}
-            <div className="relative aspect-[4/3] w-full overflow-hidden rounded-t-xl bg-zinc-100 dark:bg-zinc-800">
+            <div className="relative aspect-[4/3] w-full overflow-hidden rounded-t-xl bg-muted/20">
                 {item.photoUrl ? (
                     <img
                         src={item.photoUrl}
@@ -70,7 +70,7 @@ export function MenuItemCard({ item, onEdit, onUpdateStatus }: MenuItemCardProps
                         className="h-full w-full object-cover"
                     />
                 ) : (
-                    <div className="flex h-full w-full items-center justify-center text-zinc-400">
+                    <div className="flex h-full w-full items-center justify-center text-muted-foreground">
                         <ImageIcon className="h-8 w-8 opacity-50" />
                     </div>
                 )}

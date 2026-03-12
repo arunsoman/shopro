@@ -1,5 +1,6 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { sideNavItemClass } from '@/components/layout/SideNavItem';
 import { Users, Settings, History, LayoutDashboard, BarChart3 } from "lucide-react";
 
 export function CrmLayout() {
@@ -14,23 +15,21 @@ export function CrmLayout() {
     ];
 
     return (
-        <div className="flex min-h-screen w-full bg-zinc-50 dark:bg-zinc-950">
-            <aside className="w-64 border-r bg-white px-4 py-6 dark:bg-zinc-900">
-                <h2 className="mb-6 px-2 text-lg font-semibold tracking-tight">CRM & Loyalty</h2>
-                <nav className="space-y-1">
+        <div className="flex min-h-screen w-full bg-background">
+            <aside className="w-16 lg:w-64 border-r bg-surface px-3 lg:px-4 py-6 transition-all duration-300 shrink-0 flex flex-col items-center lg:items-stretch">
+                <h2 className="mb-6 px-2 text-lg font-semibold tracking-tight hidden lg:block truncate">CRM & Loyalty</h2>
+                <nav className="space-y-1 w-full text-center">
                     {navItems.map((item) => (
                         <Link
                             key={item.path}
                             to={item.path}
                             className={cn(
-                                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                                location.pathname === item.path
-                                    ? "bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-50"
-                                    : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-50"
+                                sideNavItemClass(location.pathname === item.path),
                             )}
+                            title={item.label}
                         >
                             {item.icon}
-                            {item.label}
+                            <span className="hidden lg:block truncate">{item.label}</span>
                         </Link>
                     ))}
                 </nav>

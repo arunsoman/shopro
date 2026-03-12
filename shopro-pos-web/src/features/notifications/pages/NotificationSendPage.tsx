@@ -75,13 +75,13 @@ export function NotificationSendPage() {
                         <Send className="h-6 w-6 text-primary" />
                         Manual Dispatch
                     </h1>
-                    <p className="text-muted text-sm mt-1">Trigger a test notification, emergency broadcast, or manual alert directly from the engine.</p>
+                    <p className="text-muted-foreground text-sm mt-1">Trigger a test notification, emergency broadcast, or manual alert directly from the engine.</p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="bg-surface border border-border rounded-xl shadow-sm p-8 space-y-6">
                     <div className="grid grid-cols-2 gap-6">
                         <div>
-                            <label className="block text-xs font-semibold text-muted uppercase tracking-wider mb-2">Event Type Code</label>
+                            <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Event Type Code</label>
                             <select
                                 value={formData.typeCode}
                                 onChange={e => setFormData(prev => ({ ...prev, typeCode: e.target.value }))}
@@ -101,7 +101,7 @@ export function NotificationSendPage() {
                         </div>
 
                         <div>
-                            <label className="block text-xs font-semibold text-muted uppercase tracking-wider mb-2">Delivery Target</label>
+                            <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Delivery Target</label>
                             <select
                                 value={formData.recipientGroup}
                                 onChange={e => setFormData(prev => ({ ...prev, recipientGroup: e.target.value }))}
@@ -118,7 +118,7 @@ export function NotificationSendPage() {
 
                     {formData.recipientGroup === 'SPECIFIC' && (
                         <div>
-                            <label className="block text-xs font-semibold text-muted uppercase tracking-wider mb-2">Target User ID</label>
+                            <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Target User ID</label>
                             <input
                                 type="text"
                                 placeholder="UUID of target recipient"
@@ -131,16 +131,16 @@ export function NotificationSendPage() {
                     )}
 
                     <div>
-                        <label className="block text-xs font-semibold text-muted uppercase tracking-wider mb-2 flex items-center gap-2">
+                        <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-2">
                             <Terminal size={14} /> Payload Data (JSON)
                         </label>
                         <textarea
                             rows={6}
                             value={formData.payload}
                             onChange={e => setFormData(prev => ({ ...prev, payload: e.target.value }))}
-                            className="w-full bg-[#1e1e1e] border border-border rounded-lg px-4 py-3 text-sm text-green-400 font-mono focus:outline-none focus:ring-2 focus:ring-primary/50"
+                            className="w-full bg-muted/10 border border-border rounded-lg px-4 py-3 text-sm text-foreground font-mono focus:outline-none focus:ring-2 focus:ring-primary/50"
                         />
-                        <p className="text-xs text-muted mt-2">This data will be injected into the Handlebars template for the chosen Event Type.</p>
+                        <p className="text-xs text-muted-foreground mt-2">This data will be injected into the Handlebars template for the chosen Event Type.</p>
                     </div>
 
                     <div className="pt-4 border-t border-border flex justify-end">

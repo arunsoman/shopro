@@ -37,16 +37,16 @@ export function ModifiersPage() {
             ) : error ? (
                 <div className="text-red-500">Failed to load modifier groups.</div>
             ) : !modifierGroups || modifierGroups.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 text-zinc-500">
+                <div className="flex flex-col items-center justify-center py-12 text-muted">
                     <p>No modifier groups found. Create one to get started.</p>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                     {modifierGroups.map(group => (
-                        <div key={group.id} className="flex flex-col rounded-xl border bg-card p-5 shadow-sm">
+                        <div key={group.id} className="flex flex-col rounded-xl border border-border bg-surface p-5 shadow-sm">
                             <div className="flex items-start justify-between">
                                 <div>
-                                    <h3 className="font-semibold">{group.name}</h3>
+                                    <h3 className="font-semibold text-foreground">{group.name}</h3>
                                     <p className="mt-1 text-xs text-muted-foreground">
                                         {group.required ? `Required (Min: ${group.minSelections}, Max: ${group.maxSelections})` : `Optional (Max: ${group.maxSelections})`}
                                     </p>
@@ -58,8 +58,8 @@ export function ModifiersPage() {
                                 )}
                             </div>
 
-                            <div className="mt-4 flex-1 space-y-2 rounded-md bg-zinc-50 p-3 dark:bg-zinc-900/50">
-                                <h4 className="text-xs font-medium text-zinc-500 uppercase tracking-wider">Options ({group.options.length})</h4>
+                            <div className="mt-4 flex-1 space-y-2 rounded-md bg-muted/5 p-3">
+                                <h4 className="text-xs font-medium text-muted uppercase tracking-wider">Options ({group.options.length})</h4>
                                 <ul className="space-y-1">
                                     {group.options.slice(0, 4).map(opt => (
                                         <li key={opt.id} className="flex justify-between text-sm">
