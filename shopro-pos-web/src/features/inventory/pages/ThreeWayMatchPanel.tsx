@@ -34,7 +34,7 @@ export const ThreeWayMatchPanel: React.FC = () => {
             const initialPrices: Record<string, number> = {};
             po.items.forEach(item => {
                 initialQty[item.ingredientId] = item.orderedQty; // In a real app, this might prepopulate with received qty
-                initialPrices[item.ingredientId] = item.unitPrice;
+                initialPrices[item.ingredientId] = item.unitCost;
             });
             setInvoicedQuantities(initialQty);
             setInvoicedPrices(initialPrices);
@@ -162,9 +162,9 @@ export const ThreeWayMatchPanel: React.FC = () => {
                                 <TableBody>
                                     {po.items.map(item => {
                                         const iQty = invoicedQuantities[item.ingredientId] ?? item.orderedQty;
-                                        const iPrice = invoicedPrices[item.ingredientId] ?? item.unitPrice;
+                                        const iPrice = invoicedPrices[item.ingredientId] ?? item.unitCost;
                                         const extPrice = iQty * iPrice;
-                                        const priceChanged = iPrice !== item.unitPrice;
+                                        const priceChanged = iPrice !== item.unitCost;
                                         
                                         return (
                                             <TableRow key={item.id} className={priceChanged ? 'bg-amber-50/20' : ''}>
@@ -173,7 +173,7 @@ export const ThreeWayMatchPanel: React.FC = () => {
                                                     <div className="text-xs text-slate-500">Ordered: {item.orderedQty} {item.unitOfMeasure}</div>
                                                 </TableCell>
                                                 <TableCell>
-                                                    <span className="text-slate-500">${item.unitPrice.toFixed(2)}</span>
+                                                    <span className="text-slate-500">${item.unitCost.toFixed(2)}</span>
                                                 </TableCell>
                                                 <TableCell className="text-right">
                                                     <Input 

@@ -10,7 +10,7 @@ import { Box, ArrowLeft, CheckCircle2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { usePurchaseOrders, useReceiveGoods } from '../hooks/usePO';
-import type { PurchaseOrder } from '../api/types';
+import type { } from '../api/types';
 
 export const GoodsReceivingPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();

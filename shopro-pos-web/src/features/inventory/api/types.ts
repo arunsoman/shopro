@@ -177,6 +177,7 @@ export interface PurchaseOrderLine {
     ingredientName: string;
     orderedQty: number;
     unitCost: number;
+    unitOfMeasure: string;
 }
 
 export interface BatchRecord {
