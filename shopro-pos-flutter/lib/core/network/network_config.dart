@@ -39,10 +39,14 @@ class NetworkConfig {
 
   static String get wsUrl {
     if (kIsWeb) {
-      // On web we often use relative or the same host
-      return 'ws://$host:$port/ws-raw';
+      final uri = Uri.base;
+      final protocol = uri.scheme == 'https' ? 'wss' : 'ws';
+      // Use the same host and port as the current page.
+      // This leverages the Nginx proxy for /ws-raw.
+      final portString = uri.hasPort ? ':${uri.port}' : '';
+      return '$protocol://${uri.host}$portString/ws-raw';
     }
-    // For mobile emulators
+    // For mobile emulators or specific environment overrides
     return 'ws://$host:$port/ws-raw';
   }
 }
