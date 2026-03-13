@@ -43,6 +43,7 @@ dependencies:
   flutter_animate: ^4.5.2
   shimmer: ^3.0.0
   stomp_dart_client: ^2.0.1
+  dart_jsonwebtoken: ^3.3.2
 
 dev_dependencies:
   flutter_test:

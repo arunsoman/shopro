@@ -19,17 +19,24 @@ import java.io.IOException;
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class GlobalCorsFilter extends OncePerRequestFilter {
 
+    @org.springframework.beans.factory.annotation.Value("${ALLOWED_ORIGINS:*}")
+    private String allowedOrigins;
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
         String origin = request.getHeader("Origin");
         
-        // Basic origin matching for local development
-        if (origin != null && (origin.contains("localhost") || origin.contains("127.0.0.1"))) {
-            response.setHeader("Access-Control-Allow-Origin", origin);
-        } else {
-            response.setHeader("Access-Control-Allow-Origin", "*");
+        if (origin != null) {
+            if ("*".equals(allowedOrigins)) {
+                response.setHeader("Access-Control-Allow-Origin", origin);
+            } else {
+                java.util.List<String> allowedList = java.util.Arrays.asList(allowedOrigins.split(","));
+                if (allowedList.contains(origin)) {
+                    response.setHeader("Access-Control-Allow-Origin", origin);
+                }
+            }
         }
 
         response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS");
