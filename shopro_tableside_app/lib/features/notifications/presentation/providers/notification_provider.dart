@@ -3,9 +3,9 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stomp_dart_client/stomp_dart_client.dart';
-import 'package:dio/dio.dart';
 import 'package:shopro_tableside_app/features/session/presentation/providers/session_providers.dart';
 import 'package:shopro_tableside_app/features/notifications/data/models/notification_model.dart';
+import 'package:shopro_tableside_app/core/network/api_client.dart';
 
 class NotificationState {
   final List<InAppNotification> notifications;
@@ -23,10 +23,6 @@ class NotificationState {
     );
   }
 }
-
-final dioProvider = Provider<Dio>(
-  (ref) => Dio(BaseOptions(baseUrl: 'http://localhost:8080/v1')),
-);
 
 final stompClientProvider = Provider.family<StompClient, StompConfig>((
   ref,

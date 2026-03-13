@@ -13,7 +13,7 @@ public interface AuthService {
      * @throws UnauthorizedException if PIN is wrong or account is inactive.
      * @throws TerminalLockedException if 5 consecutive failures have occurred.
      */
-    StaffSessionResponse login(PinLoginRequest request, String remoteAddr);
+    StaffSessionResponse login(PinLoginRequest request, String remoteAddr, String jkt);
 
     /**
      * Authenticates an external supplier using email/password.

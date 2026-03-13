@@ -12,5 +12,6 @@ public record StaffSessionResponse(
     UUID id,
     String fullName,
     String role,
-    List<String> permissions
+    List<String> permissions,
+    String jkt
 ) {}

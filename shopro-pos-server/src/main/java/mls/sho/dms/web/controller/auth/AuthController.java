@@ -31,6 +31,7 @@ public class AuthController {
             HttpServletRequest httpRequest
     ) {
         String remoteAddr = httpRequest.getRemoteAddr();
-        return authService.login(request, remoteAddr);
+        String jkt = (String) httpRequest.getAttribute("bound_dpop_jkt");
+        return authService.login(request, remoteAddr, jkt);
     }
 }

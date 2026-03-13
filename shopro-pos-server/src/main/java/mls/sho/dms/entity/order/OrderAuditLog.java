@@ -36,6 +36,12 @@ public class OrderAuditLog {
     @Column(name = "created_at", nullable = false)
     private Instant createdAt = Instant.now();
 
+    @Column(name = "signature_hash")
+    private String signatureHash;
+
+    @Column(name = "device_jkt")
+    private String deviceJkt;
+
     public OrderAuditLog(OrderTicket order, String eventType, String details, StaffMember performedBy) {
         this.order = order;
         this.eventType = eventType;

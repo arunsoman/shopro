@@ -3,50 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
 import 'package:shopro_tableside_app/features/menu/domain/models/menu_models.dart';
 import 'package:shopro_tableside_app/features/session/presentation/providers/session_providers.dart';
-import 'package:shopro_tableside_app/core/security/dpop_service.dart';
-
-final dioProvider = Provider<Dio>((ref) {
-  // Use a relative path so all API calls go through the same host
-  // the proxy (proxy.js) then routes /api/* to Spring Boot on port 8080.
-  // This completely eliminates CORS issues on mobile.
-  const apiBase = String.fromEnvironment(
-    'API_BASE_URL',
-    defaultValue: '/api/v1',
-  );
-
-  final dio = Dio(
-    BaseOptions(
-      baseUrl: apiBase,
-      headers: {'Content-Type': 'application/json'},
-      connectTimeout: const Duration(seconds: 8),
-      receiveTimeout: const Duration(seconds: 8),
-    ),
-  );
-
-    dio.interceptors.add(
-        LogInterceptor(
-            requestBody: true,
-            responseBody: true,
-            error: true,
-            logPrint: (obj) => debugPrint(obj.toString()),
-        ),
-    );
-
-    dio.interceptors.add(InterceptorsWrapper(
-        onRequest: (options, handler) {
-            final htm = options.method;
-            final htu = options.baseUrl.startsWith('http') 
-                ? '${options.baseUrl}${options.path}'
-                : '${Uri.base.scheme}://${Uri.base.host}${Uri.base.hasPort ? ":${Uri.base.port}" : ""}${options.baseUrl}${options.path}';
-            
-            final proof = DPoPService.generateProof(htm, htu);
-            options.headers['DPoP'] = proof;
-            return handler.next(options);
-        },
-    ));
-
-  return dio;
-});
+import 'package:shopro_tableside_app/core/network/api_client.dart';
 
 final categoriesProvider = FutureProvider<List<MenuCategory>>((ref) async {
   try {

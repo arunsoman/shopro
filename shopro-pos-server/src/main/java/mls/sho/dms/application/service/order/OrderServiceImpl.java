@@ -20,9 +20,13 @@ import mls.sho.dms.application.service.inventory.RecipeService;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.security.MessageDigest;
 import java.util.ArrayList;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -456,8 +460,27 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private void recordAuditLog(OrderTicket order, String eventType, String details, StaffMember performedBy) {
-        OrderAuditLog log = new OrderAuditLog(order, eventType, details, performedBy);
-        orderAuditLogRepository.save(log);
+        OrderAuditLog auditLog = new OrderAuditLog(order, eventType, details, performedBy);
+        
+        try {
+            ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+            if (attributes != null) {
+                HttpServletRequest request = attributes.getRequest();
+                String jkt = (String) request.getAttribute("bound_dpop_jkt");
+                auditLog.setDeviceJkt(jkt);
+                
+                String dpop = request.getHeader("DPoP");
+                if (dpop != null) {
+                    MessageDigest digest = MessageDigest.getInstance("SHA-256");
+                    byte[] hash = digest.digest(dpop.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                    auditLog.setSignatureHash(java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(hash));
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Failed to capture FAPI audit metadata: {}", e.getMessage());
+        }
+        
+        orderAuditLogRepository.save(auditLog);
     }
 
     private OrderItemResponse mapToItemResponse(OrderItem item) {

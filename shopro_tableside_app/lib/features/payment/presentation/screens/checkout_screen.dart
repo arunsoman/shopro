@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shopro_tableside_app/core/network/api_client.dart';
 import '../../../menu/presentation/providers/menu_providers.dart';
 import '../../../session/presentation/providers/session_providers.dart';
 import '../../domain/payment_models.dart';

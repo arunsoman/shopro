@@ -5,6 +5,7 @@ import 'package:mockito/annotations.dart';
 import 'package:dio/dio.dart';
 import 'package:stomp_dart_client/stomp_dart_client.dart';
 import 'package:shopro_tableside_app/features/notifications/presentation/providers/notification_provider.dart';
+import 'package:shopro_tableside_app/core/network/api_client.dart';
 import 'package:shopro_tableside_app/features/session/presentation/providers/session_providers.dart';
 
 @GenerateNiceMocks([MockSpec<Dio>(), MockSpec<StompClient>()])

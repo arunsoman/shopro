@@ -8,6 +8,7 @@ import mls.sho.dms.application.dto.auth.SupplierLoginRequest;
 import mls.sho.dms.application.dto.auth.SupplierSessionResponse;
 import mls.sho.dms.entity.staff.StaffMember;
 import mls.sho.dms.repository.staff.StaffRepository;
+import mls.sho.dms.repository.staff.DeviceBindingRepository;
 import mls.sho.dms.repository.inventory.SupplierUserRepository;
 import mls.sho.dms.entity.inventory.SupplierUser;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -32,14 +33,15 @@ public class AuthServiceImpl implements AuthService {
 
     private final StaffRepository staffRepository;
     private final SupplierUserRepository supplierUserRepository;
+    private final DeviceBindingRepository deviceBindingRepository;
     private final BCryptPasswordEncoder passwordEncoder;
 
     /** In-memory attempt tracker keyed by remote IP. */
     private final Map<String, FailureRecord> failureTracker = new ConcurrentHashMap<>();
 
     @Override
-    @Transactional(readOnly = true)
-    public StaffSessionResponse login(PinLoginRequest request, String remoteAddr) {
+    @Transactional
+    public StaffSessionResponse login(PinLoginRequest request, String remoteAddr, String jkt) {
         checkLockout(remoteAddr);
 
         List<StaffMember> activeStaff = staffRepository.findByActiveTrue();
@@ -57,6 +59,25 @@ public class AuthServiceImpl implements AuthService {
         failureTracker.remove(remoteAddr);
 
         StaffMember staff = matched.get();
+
+        // FAPI Device Binding
+        if (jkt != null) {
+            boolean alreadyBound = deviceBindingRepository.findByPublicKeyThumbprint(jkt)
+                    .map(b -> b.getStaffMember().getId().equals(staff.getId()))
+                    .orElse(false);
+            
+            if (!alreadyBound) {
+                // ... dpopService.bindDevice(staff.getId(), jkt, "POS Terminal");
+                // For simplicity and directness in this service:
+                mls.sho.dms.entity.staff.DeviceBinding binding = new mls.sho.dms.entity.staff.DeviceBinding();
+                binding.setStaffMember(staff);
+                binding.setPublicKeyThumbprint(jkt);
+                binding.setDeviceName("POS Terminal (" + remoteAddr + ")");
+                binding.setLastActiveAt(Instant.now());
+                deviceBindingRepository.save(binding);
+            }
+        }
+
         String roleName = (staff.getRole() != null) ? staff.getRole().getName() : "NONE";
         
         List<String> permissions = List.of();
@@ -66,7 +87,7 @@ public class AuthServiceImpl implements AuthService {
                     .collect(Collectors.toList());
         }
 
-        return new StaffSessionResponse(staff.getId(), staff.getFullName(), roleName, permissions);
+        return new StaffSessionResponse(staff.getId(), staff.getFullName(), roleName, permissions, jkt);
     }
 
     @Override

@@ -8,7 +8,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import mls.sho.dms.entity.staff.DeviceBinding;
+import mls.sho.dms.repository.staff.DeviceBindingRepository;
+
 import java.io.IOException;
+import java.util.UUID;
 
 /**
  * Enforces FAPI 2.0 / DPoP security for sensitive operations.
@@ -19,6 +23,8 @@ public class DPoPFilter extends OncePerRequestFilter {
 
     @Autowired
     private DPoPService dpopService;
+    @Autowired
+    private DeviceBindingRepository deviceBindingRepository;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -26,45 +32,58 @@ public class DPoPFilter extends OncePerRequestFilter {
         
         String path = request.getServletPath();
         String method = request.getMethod();
+        String staffIdHeader = request.getHeader("X-Staff-Id");
+        String dpopHeader = request.getHeader("DPoP");
         
-        // or if the DPoP header is present.
         boolean isStrictPath = isSensitivePath(path);
         
-        // Pragmatic transition: Only enforce DPoP on GET requests if the header is actually present.
-        // Always enforce on POST/PUT/DELETE for sensitive paths.
+        // Enforce DPoP for sensitive operations or if the header is present
         boolean shouldEnforce = (isStrictPath && !"GET".equalsIgnoreCase(method)) || 
-                                request.getHeader("DPoP") != null ||
+                                dpopHeader != null ||
                                 (isStrictPath && isHighValueOperation(path));
 
         if (shouldEnforce) {
-            String dpopHeader = request.getHeader("DPoP");
-            String expectedThumbprint = getExpectedThumbprint(request);
+            String expectedThumbprint = null;
             
-            if (!dpopService.validateProof(dpopHeader, request, expectedThumbprint)) {
+            if (staffIdHeader != null) {
+                try {
+                    UUID staffId = UUID.fromString(staffIdHeader);
+                    // Fetch the most recent active binding for this staff
+                    expectedThumbprint = deviceBindingRepository.findByStaffMemberId(staffId).stream()
+                            .filter(b -> !b.isRevoked())
+                            .map(DeviceBinding::getPublicKeyThumbprint)
+                            .findFirst()
+                            .orElse(null);
+                } catch (IllegalArgumentException e) {
+                    // Invalid ID
+                }
+            }
+            
+            String verifiedJkt = dpopService.validateProof(dpopHeader, request, expectedThumbprint);
+            
+            if (verifiedJkt == null) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.setContentType("application/json");
                 response.getWriter().write("{\"error\": \"invalid_dpop_proof\", \"message\": \"A valid DPoP proof is required for this operation.\"}");
                 return;
             }
+            
+            // Mark the request as verified with DPoP
+            request.setAttribute("dpop_verified", true);
+            request.setAttribute("bound_dpop_jkt", verifiedJkt);
         }
 
         filterChain.doFilter(request, response);
     }
 
     private boolean isHighValueOperation(String path) {
-        // Payments always require DPoP
-        return path.startsWith("/api/v1/payments");
+        return path.startsWith("/api/v1/payments") || path.startsWith("/api/v1/admin/settings");
     }
 
     private boolean isSensitivePath(String path) {
         return path.startsWith("/api/v1/payments") || 
                path.startsWith("/api/v1/admin") || 
                path.startsWith("/api/v1/staff") ||
-               path.startsWith("/api/v1/floor-plan");
-    }
-
-    private String getExpectedThumbprint(HttpServletRequest request) {
-        // Placeholder: retrieve from secure session or associated JWT claim
-        return request.getAttribute("bound_dpop_jkt") != null ? (String) request.getAttribute("bound_dpop_jkt") : null;
+               path.startsWith("/api/v1/floor-plan/tables"); // Table status changes are sensitive
     }
 }

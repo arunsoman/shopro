@@ -1,0 +1,33 @@
+import 'package:dio/dio.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shopro_tableside_app/core/security/dpop_service.dart';
+
+final dioProvider = Provider<Dio>((ref) {
+  const apiBase = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'http://localhost:8080/api/v1',
+  );
+
+  final dio = Dio(
+    BaseOptions(
+      baseUrl: apiBase,
+      connectTimeout: const Duration(seconds: 8),
+      receiveTimeout: const Duration(seconds: 8),
+    ),
+  );
+
+  dio.interceptors.add(InterceptorsWrapper(
+    onRequest: (options, handler) async {
+      try {
+        final url = '${options.baseUrl}${options.path}';
+        final proof = DPoPService.generateProof(options.method, url);
+        options.headers['DPoP'] = proof;
+      } catch (e) {
+        // Log or handle error
+      }
+      return handler.next(options);
+    },
+  ));
+
+  return dio;
+});
