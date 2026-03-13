@@ -92,7 +92,7 @@ class _NotificationRoutingScreenState
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
-                value: _selectedType,
+                initialValue: _selectedType,
                 hint: const Text('Select Notification Type'),
                 items: _notificationTypes
                     .map((t) => DropdownMenuItem(value: t, child: Text(t)))
@@ -105,7 +105,7 @@ class _NotificationRoutingScreenState
                 children: [
                   Expanded(
                     child: DropdownButtonFormField<String>(
-                      value: _selectedRecipientType,
+                      initialValue: _selectedRecipientType,
                       items: ['ROLE', 'USER']
                           .map(
                             (t) => DropdownMenuItem(value: t, child: Text(t)),

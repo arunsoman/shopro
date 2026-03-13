@@ -15,7 +15,7 @@ class NotificationCenterSidebar extends ConsumerWidget {
     return Drawer(
       child: Column(
         children: [
-          _buildHeader(context, notifications.length),
+          _buildHeader(context, ref, notifications.length),
           Expanded(
             child: notifications.isEmpty
                 ? _buildEmptyState()
@@ -35,7 +35,7 @@ class NotificationCenterSidebar extends ConsumerWidget {
     );
   }
 
-  Widget _buildHeader(BuildContext context, int count) {
+  Widget _buildHeader(BuildContext context, WidgetRef ref, int count) {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 48, 16, 16),
       color: Theme.of(context).primaryColor,
@@ -54,12 +54,29 @@ class NotificationCenterSidebar extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Text(
-                '$count New',
-                style: const TextStyle(color: Colors.white, fontSize: 12),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '$count New',
+                    style: const TextStyle(color: Colors.white, fontSize: 12),
+                  ),
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: () => ref.read(notificationProvider.notifier).dismissAll(),
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.clear_all, color: Colors.white, size: 14),
+                    ),
+                  ),
+                ],
               ),
             ),
         ],
@@ -154,7 +171,7 @@ class _NotificationTile extends ConsumerWidget {
     }
 
     return CircleAvatar(
-      backgroundColor: color.withOpacity(0.1),
+      backgroundColor: color.withValues(alpha: 0.1),
       child: Icon(icon, color: color, size: 20),
     );
   }

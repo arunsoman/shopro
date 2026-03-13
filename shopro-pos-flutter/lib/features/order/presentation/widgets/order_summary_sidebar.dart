@@ -75,7 +75,7 @@ class OrderSummarySidebar extends ConsumerWidget {
                     vertical: AppSpacing.xs,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
+                    color: AppColors.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                   ),
                   child: Text(
@@ -161,7 +161,7 @@ class OrderSummarySidebar extends ConsumerWidget {
       decoration: BoxDecoration(
         color: isSent
             ? AppColors.lightBackground
-            : AppColors.primary.withOpacity(0.05),
+            : AppColors.primary.withValues(alpha: 0.05),
         border: Border.all(
           color: isSent ? AppColors.lightBorder : AppColors.primary,
         ),
@@ -218,7 +218,7 @@ class OrderSummarySidebar extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: _getStatusColor(item.status).withOpacity(0.1),
+                  color: _getStatusColor(item.status).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
@@ -287,6 +287,21 @@ class OrderSummarySidebar extends ConsumerWidget {
       (i) => i.status == OrderItemStatus.pending,
     );
 
+    final allServedOrVoided = order!.items.every(
+      (i) =>
+          i.status == OrderItemStatus.delivered ||
+          i.status == OrderItemStatus.voided,
+    );
+
+    final canPay = !hasDraftItems && allServedOrVoided;
+
+    String buttonText = 'PAY NOW';
+    if (hasDraftItems) {
+      buttonText = 'SEND TO KITCHEN';
+    } else if (!allServedOrVoided) {
+      buttonText = 'WAITING FOR SERVICE';
+    }
+
     return Padding(
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
@@ -322,18 +337,19 @@ class OrderSummarySidebar extends ConsumerWidget {
             child: ElevatedButton(
               onPressed: hasDraftItems
                   ? () => ref.read(orderProvider.notifier).submitOrder()
-                  : () => context.push('/checkout'),
+                  : (canPay ? () => context.push('/checkout') : null),
               style: ElevatedButton.styleFrom(
                 backgroundColor: hasDraftItems
                     ? AppColors.primary
-                    : const Color(0xFF1A2233),
+                    : (canPay ? const Color(0xFF1A2233) : AppColors.lightMuted),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                 ),
+                disabledBackgroundColor: AppColors.lightMuted.withValues(alpha: 0.5),
               ),
               child: Text(
-                hasDraftItems ? 'SEND TO KITCHEN' : 'PAY NOW',
+                buttonText,
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 16,

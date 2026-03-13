@@ -1,12 +1,18 @@
 import 'package:dio/dio.dart';
+import 'network_config.dart';
 
 class ApiClient {
   late final Dio dio;
 
   ApiClient({String? baseUrl}) {
+    // Dual-Mode Base URL for seamless local dev vs docker/prod
+    // In local web dev, we point directly to the backend to bypass the missing proxy.
+    // In Docker/Release, we use relative paths to leverage Nginx/Proxy.
+    final String defaultBaseUrl = NetworkConfig.baseUrl;
+
     dio = Dio(
       BaseOptions(
-        baseUrl: baseUrl ?? '/api/v1',
+        baseUrl: baseUrl ?? defaultBaseUrl,
         connectTimeout: const Duration(seconds: 5),
         receiveTimeout: const Duration(seconds: 3),
       ),

@@ -13,10 +13,10 @@ class WaitlistSidebar extends ConsumerWidget {
     final floorState = ref.watch(floorPlanProvider);
 
     return Container(
-      width: 250, // Adjusted width based on design
+      width: 320, // Increased width for better usability
       decoration: const BoxDecoration(
         color: Colors.white,
-        border: Border(right: BorderSide(color: AppColors.lightBorder)),
+        border: Border(left: BorderSide(color: AppColors.lightBorder)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -40,7 +40,7 @@ class WaitlistSidebar extends ConsumerWidget {
                     ),
                     IconButton(
                       visualDensity: VisualDensity.compact,
-                      onPressed: () {},
+                      onPressed: () => _showAddWaitlistDialog(context, ref),
                       icon: const Icon(Icons.person_add_alt_1, size: 20),
                     ),
                   ],
@@ -66,7 +66,7 @@ class WaitlistSidebar extends ConsumerWidget {
               itemCount: floorState.waitlist.length,
               itemBuilder: (context, index) {
                 final entry = floorState.waitlist[index];
-                return _buildWaitlistCard(entry);
+                return _buildWaitlistCard(context, ref, entry);
               },
             ),
           ),
@@ -78,7 +78,7 @@ class WaitlistSidebar extends ConsumerWidget {
     );
   }
 
-  Widget _buildWaitlistCard(WaitlistEntry entry) {
+  Widget _buildWaitlistCard(BuildContext context, WidgetRef ref, WaitlistEntry entry) {
     // Determine color based on wait time or VIP status for high-fidelity look
     final Color tagColor = entry.isVIP ? AppColors.readyTag : AppColors.waitLow;
 
@@ -86,20 +86,22 @@ class WaitlistSidebar extends ConsumerWidget {
       data: entry,
       feedback: Material(
         color: Colors.transparent,
-        child: Container(
-          width: 220,
-          child: _buildCardContent(entry, tagColor, true),
+        child: SizedBox(
+          width: 280,
+          child: _buildCardContent(context, ref, entry, tagColor, true),
         ),
       ),
       childWhenDragging: Opacity(
         opacity: 0.3,
-        child: _buildCardContent(entry, tagColor, false),
+        child: _buildCardContent(context, ref, entry, tagColor, false),
       ),
-      child: _buildCardContent(entry, tagColor, false),
+      child: _buildCardContent(context, ref, entry, tagColor, false),
     );
   }
 
   Widget _buildCardContent(
+    BuildContext context,
+    WidgetRef ref,
     WaitlistEntry entry,
     Color tagColor,
     bool isSelected,
@@ -176,6 +178,53 @@ class WaitlistSidebar extends ConsumerWidget {
               ],
             ],
           ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    side: BorderSide(color: AppColors.primary.withValues(alpha: 0.5)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  onPressed: () => ref.read(floorPlanProvider.notifier).notifyWaitlistEntry(entry.id),
+                  child: Text(
+                    'Notify',
+                    style: GoogleFonts.outfit(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Drag this party to an available table to seat them.')),
+                    );
+                  },
+                  child: Text(
+                    'Seat',
+                    style: GoogleFonts.outfit(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -193,6 +242,7 @@ class WaitlistSidebar extends ConsumerWidget {
           Row(
             children: [
               _buildLegendItem('AVAILABLE', AppColors.statusAvailable),
+              _buildLegendItem('HELD', AppColors.statusHeld),
               _buildLegendItem('OCCUPIED', AppColors.statusOccupied),
             ],
           ),
@@ -201,13 +251,23 @@ class WaitlistSidebar extends ConsumerWidget {
             children: [
               _buildLegendItem('ORDERED', AppColors.statusOrdered),
               _buildLegendItem('DELIVERED', AppColors.statusDelivered),
+              _buildLegendItem('DESSERT', AppColors.statusDessert),
             ],
           ),
           const SizedBox(height: 8),
           Row(
             children: [
+              _buildLegendItem('CHECK', AppColors.statusCheckDropped),
+              _buildLegendItem('PAYING', AppColors.statusPaying),
               _buildLegendItem('DIRTY', AppColors.statusDirty),
-              _buildLegendItem('HELD', AppColors.statusHeld),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              _buildLegendItem('CLEANING', AppColors.statusCleaning),
+              _buildLegendItem('MAINT.', AppColors.statusMaintenance),
+              const Spacer(),
             ],
           ),
         ],
@@ -236,6 +296,94 @@ class WaitlistSidebar extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+
+  void _showAddWaitlistDialog(BuildContext context, WidgetRef ref) {
+    final nameController = TextEditingController();
+    int partySize = 2;
+    bool isVIP = false;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text('Add Guest', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: nameController,
+                    decoration: InputDecoration(
+                      labelText: 'Customer Name',
+                      labelStyle: GoogleFonts.outfit(),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    style: GoogleFonts.outfit(),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Party Size', style: GoogleFonts.outfit()),
+                      Row(
+                        children: [
+                          IconButton(
+                            onPressed: partySize > 1 ? () => setState(() => partySize--) : null,
+                            icon: const Icon(Icons.remove_circle_outline),
+                          ),
+                          Text('$partySize', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold)),
+                          IconButton(
+                            onPressed: () => setState(() => partySize++),
+                            icon: const Icon(Icons.add_circle_outline),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('VIP Status', style: GoogleFonts.outfit()),
+                      Switch(
+                        value: isVIP,
+                        activeThumbColor: AppColors.primary,
+                        onChanged: (val) => setState(() => isVIP = val),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text('Cancel', style: GoogleFonts.outfit(color: AppColors.lightMuted)),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  onPressed: () {
+                    if (nameController.text.isNotEmpty) {
+                      ref.read(floorPlanProvider.notifier).addToWaitlist(
+                            name: nameController.text,
+                            size: partySize,
+                            isVIP: isVIP,
+                          );
+                      Navigator.pop(context);
+                    }
+                  },
+                  child: Text('Add to Waitlist', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 }

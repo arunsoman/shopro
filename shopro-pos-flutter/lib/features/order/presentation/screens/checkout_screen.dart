@@ -71,7 +71,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
           ),
           if (_isProcessing)
             Container(
-              color: Colors.black.withOpacity(0.5),
+              color: Colors.black.withValues(alpha: 0.5),
               child: Center(
                 child: Card(
                   child: Padding(
@@ -302,7 +302,7 @@ class _PaymentMethodCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: isSelected ? AppColors.primary.withOpacity(0.05) : Colors.white,
+        color: isSelected ? AppColors.primary.withValues(alpha: 0.05) : Colors.white,
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
         border: Border.all(
           color: isSelected ? AppColors.primary : AppColors.lightBorder,

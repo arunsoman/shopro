@@ -23,15 +23,15 @@ Map<String, dynamic> _$$KDSStationImplToJson(_$KDSStationImpl instance) =>
     };
 
 const _$KDSStationTypeEnumMap = {
-  KDSStationType.PREP: 'PREP',
-  KDSStationType.EXPO: 'EXPO',
-  KDSStationType.BEVERAGE: 'BEVERAGE',
-  KDSStationType.GRILL: 'GRILL',
-  KDSStationType.BAR: 'BAR',
-  KDSStationType.PANTRY: 'PANTRY',
-  KDSStationType.FRY: 'FRY',
-  KDSStationType.PASTRY: 'PASTRY',
-  KDSStationType.GENERAL: 'GENERAL',
+  KDSStationType.prep: 'PREP',
+  KDSStationType.expo: 'EXPO',
+  KDSStationType.beverage: 'BEVERAGE',
+  KDSStationType.grill: 'GRILL',
+  KDSStationType.bar: 'BAR',
+  KDSStationType.pantry: 'PANTRY',
+  KDSStationType.fry: 'FRY',
+  KDSStationType.pastry: 'PASTRY',
+  KDSStationType.general: 'GENERAL',
 };
 
 _$KDSTicketImpl _$$KDSTicketImplFromJson(Map<String, dynamic> json) =>
@@ -59,10 +59,10 @@ Map<String, dynamic> _$$KDSTicketImplToJson(_$KDSTicketImpl instance) =>
     };
 
 const _$KDSTicketStatusEnumMap = {
-  KDSTicketStatus.NEW: 'NEW',
-  KDSTicketStatus.COOKING: 'COOKING',
-  KDSTicketStatus.READY: 'READY',
-  KDSTicketStatus.BUMPED: 'BUMPED',
+  KDSTicketStatus.newTicket: 'NEW',
+  KDSTicketStatus.cooking: 'COOKING',
+  KDSTicketStatus.ready: 'READY',
+  KDSTicketStatus.bumped: 'BUMPED',
 };
 
 _$KDSTicketItemImpl _$$KDSTicketItemImplFromJson(Map<String, dynamic> json) =>
@@ -78,6 +78,12 @@ _$KDSTicketItemImpl _$$KDSTicketItemImplFromJson(Map<String, dynamic> json) =>
               ?.map((e) => e as String)
               .toList() ??
           const [],
+      prepStartedAt: json['prepStartedAt'] == null
+          ? null
+          : DateTime.parse(json['prepStartedAt'] as String),
+      priority: (json['priority'] as num?)?.toInt() ?? 0,
+      preparationTimeMinutes:
+          (json['preparationTimeMinutes'] as num?)?.toInt() ?? 10,
     );
 
 Map<String, dynamic> _$$KDSTicketItemImplToJson(_$KDSTicketItemImpl instance) =>
@@ -89,10 +95,15 @@ Map<String, dynamic> _$$KDSTicketItemImplToJson(_$KDSTicketItemImpl instance) =>
       'status': _$KDSItemStatusEnumMap[instance.status]!,
       'customNote': instance.customNote,
       'modifiers': instance.modifiers,
+      'prepStartedAt': instance.prepStartedAt?.toIso8601String(),
+      'priority': instance.priority,
+      'preparationTimeMinutes': instance.preparationTimeMinutes,
     };
 
 const _$KDSItemStatusEnumMap = {
-  KDSItemStatus.PENDING: 'PENDING',
-  KDSItemStatus.COOKING: 'COOKING',
-  KDSItemStatus.READY: 'READY',
+  KDSItemStatus.pending: 'PENDING',
+  KDSItemStatus.cooking: 'COOKING',
+  KDSItemStatus.paused: 'PAUSED',
+  KDSItemStatus.ready: 'READY',
+  KDSItemStatus.served: 'SERVED',
 };

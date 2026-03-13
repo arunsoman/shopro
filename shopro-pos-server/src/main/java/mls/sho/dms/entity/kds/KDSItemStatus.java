@@ -1,5 +1,5 @@
 package mls.sho.dms.entity.kds;
 
 public enum KDSItemStatus {
-    PENDING, COOKING, READY
+    PENDING, COOKING, PAUSED, READY, SERVED
 }

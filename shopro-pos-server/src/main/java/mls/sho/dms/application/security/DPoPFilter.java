@@ -60,7 +60,8 @@ public class DPoPFilter extends OncePerRequestFilter {
     private boolean isSensitivePath(String path) {
         return path.startsWith("/api/v1/payments") || 
                path.startsWith("/api/v1/admin") || 
-               path.startsWith("/api/v1/staff");
+               path.startsWith("/api/v1/staff") ||
+               path.startsWith("/api/v1/floor-plan");
     }
 
     private String getExpectedThumbprint(HttpServletRequest request) {

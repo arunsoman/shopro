@@ -1,6 +1,7 @@
 package mls.sho.dms.service.kds;
 
 import mls.sho.dms.application.dto.kds.*;
+import mls.sho.dms.application.dto.floor.TableShapeResponse;
 import mls.sho.dms.entity.floor.TableStatus;
 import mls.sho.dms.repository.floor.TableShapeRepository;
 import mls.sho.dms.repository.order.OrderTicketRepository;
@@ -9,6 +10,9 @@ import mls.sho.dms.entity.floor.TableShape;
 import mls.sho.dms.entity.kds.*;
 import mls.sho.dms.entity.order.OrderTicket;
 import mls.sho.dms.entity.order.OrderItem;
+import mls.sho.dms.entity.order.OrderItemStatus;
+import mls.sho.dms.repository.order.OrderTicketRepository;
+import mls.sho.dms.repository.order.OrderItemRepository;
 import mls.sho.dms.repository.kds.*;
 import mls.sho.dms.repository.menu.MenuCategoryRepository;
 import mls.sho.dms.repository.menu.MenuItemRepository;
@@ -33,6 +37,7 @@ public class KDSService {
     private final SimpMessagingTemplate messagingTemplate;
     private final mls.sho.dms.application.mapper.KDSMapper kdsMapper;
     private final OrderTicketRepository orderTicketRepository;
+    private final OrderItemRepository orderItemRepository;
     private final StaffRepository staffRepo;
     private final TableShapeRepository tableShapeRepository;
 
@@ -45,6 +50,7 @@ public class KDSService {
                       SimpMessagingTemplate messagingTemplate,
                       mls.sho.dms.application.mapper.KDSMapper kdsMapper,
                       OrderTicketRepository orderTicketRepository,
+                      OrderItemRepository orderItemRepository,
                       StaffRepository staffRepo,
                       TableShapeRepository tableShapeRepository) {
         this.stationRepository = stationRepository;
@@ -56,6 +62,7 @@ public class KDSService {
         this.messagingTemplate = messagingTemplate;
         this.kdsMapper = kdsMapper;
         this.orderTicketRepository = orderTicketRepository;
+        this.orderItemRepository = orderItemRepository;
         this.staffRepo = staffRepo;
         this.tableShapeRepository = tableShapeRepository;
     }
@@ -155,40 +162,181 @@ public class KDSService {
     }
 
     @Transactional
-    public KDSTicketItem bumpItem(UUID kdsTicketItemId) {
+    public KDSTicketItem toggleItemStatus(UUID kdsTicketItemId) {
         KDSTicketItem item = ticketItemRepository.findById(kdsTicketItemId)
                 .orElseThrow(() -> new IllegalArgumentException("Item not found"));
         
-        if (item.getStatus() == KDSItemStatus.PENDING) {
-            item.setStatus(KDSItemStatus.COOKING);
-        } else if (item.getStatus() == KDSItemStatus.COOKING) {
-            item.setStatus(KDSItemStatus.READY);
-            item.setReadyAt(Instant.now());
+        KDSItemStatus currentStatus = item.getStatus();
+        KDSItemStatus newStatus;
+
+        if (currentStatus == KDSItemStatus.PENDING || currentStatus == KDSItemStatus.PAUSED) {
+            newStatus = KDSItemStatus.COOKING;
+        } else if (currentStatus == KDSItemStatus.COOKING) {
+            newStatus = KDSItemStatus.PAUSED;
+        } else {
+            return item; // Ready or Served items can't be toggled back to cooking/pause via this method
+        }
+
+        syncItemStatus(item.getOrderItem().getId(), newStatus, item.getPriority());
+        return ticketItemRepository.findById(kdsTicketItemId).orElse(item);
+    }
+
+    @Transactional
+    public KDSTicketItem markItemReady(UUID kdsTicketItemId) {
+        KDSTicketItem item = ticketItemRepository.findById(kdsTicketItemId)
+                .orElseThrow(() -> new IllegalArgumentException("Item not found"));
+        
+        syncItemStatus(item.getOrderItem().getId(), KDSItemStatus.READY, item.getPriority());
+        return ticketItemRepository.findById(kdsTicketItemId).orElse(item);
+    }
+
+    @Transactional
+    public KDSTicketItem serveItem(UUID kdsTicketItemId) {
+        KDSTicketItem item = ticketItemRepository.findById(kdsTicketItemId)
+                .orElseThrow(() -> new IllegalArgumentException("Item not found"));
+        
+        if (item.getStatus() != KDSItemStatus.READY) {
+            throw new IllegalStateException("Only READY items can be served");
+        }
+
+        syncItemStatus(item.getOrderItem().getId(), KDSItemStatus.SERVED, item.getPriority());
+        
+        // Notify the server
+        notifyServer(item);
+        
+        return ticketItemRepository.findById(kdsTicketItemId).orElse(item);
+    }
+
+    @Transactional
+    public void serveReadyItemsInTickets(List<UUID> ticketIds) {
+        log.info("[KDS] Bulk serving ready items in tickets: {}", ticketIds);
+        for (UUID ticketId : ticketIds) {
+            List<KDSTicketItem> items = ticketItemRepository.findByKdsTicket_Id(ticketId);
+            for (KDSTicketItem item : items) {
+                if (item.getStatus() == KDSItemStatus.READY) {
+                    log.debug("[KDS] Serving ready item: {} from ticket: {}", item.getOrderItem().getMenuItem().getName(), ticketId);
+                    syncItemStatus(item.getOrderItem().getId(), KDSItemStatus.SERVED, item.getPriority());
+                    notifyServer(item);
+                }
+            }
+        }
+    }
+
+    private void notifyServer(KDSTicketItem item) {
+        OrderTicket order = item.getKdsTicket().getOrderTicket();
+        String serverName = order.getServer() != null ? order.getServer().getFullName() : "Server";
+        String tableName = order.getTable() != null ? order.getTable().getName() : "N/A";
+        
+        Map<String, Object> notification = new HashMap<>();
+        notification.put("type", "ITEM_SERVED");
+        notification.put("itemName", item.getOrderItem().getMenuItem().getName());
+        notification.put("tableName", tableName);
+        notification.put("message", String.format("🛎️ %s for Table %s is READY TO SERVE!", 
+            item.getOrderItem().getMenuItem().getName(), tableName));
+        
+        // Broadcast to general notification topic and server-specific topic if possible
+        messagingTemplate.convertAndSend("/topic/pos/notifications", notification);
+        if (order.getServer() != null) {
+            messagingTemplate.convertAndSend("/topic/staff/" + order.getServer().getId() + "/notifications", notification);
+        }
+    }
+
+    @Transactional
+    public KDSTicketItem bumpItem(UUID kdsTicketItemId) {
+        return toggleItemStatus(kdsTicketItemId); // Default simple action is now toggle
+    }
+
+    private void syncItemStatus(UUID orderItemId, KDSItemStatus newStatus, int priority) {
+        List<KDSTicketItem> sameItems = ticketItemRepository.findByOrderItem_Id(orderItemId);
+        Instant now = Instant.now();
+        
+        for (KDSTicketItem peerItem : sameItems) {
+            peerItem.setStatus(newStatus);
+            peerItem.setPriority(priority);
+            if (newStatus == KDSItemStatus.READY) {
+                peerItem.setReadyAt(now);
+            }
             
-            // Notify POS that a specific item is ready
-            UUID orderId = item.getKdsTicket().getOrderTicket().getId();
-            String posTopic = "/topic/pos/notifications";
-            String message = String.format("Item %s for %s is ready at %s", 
-                item.getOrderItem().getMenuItem().getName(),
-                item.getKdsTicket().getOrderTicket().getTable() != null ? item.getKdsTicket().getOrderTicket().getTable().getName() : "Ticket",
-                item.getKdsTicket().getStation().getName());
+            KDSTicket ticket = peerItem.getKdsTicket();
+            if (newStatus == KDSItemStatus.COOKING && ticket.getStatus() == KDSTicketStatus.NEW) {
+                ticket.setStatus(KDSTicketStatus.COOKING);
+                ticket.setCookingAt(now);
+                ticketRepository.save(ticket);
+                broadcastTicketStatusUpdate(ticket);
+            }
             
-            log.debug("Item bumped to READY. Notifying POS on topic {}: {}", posTopic, message);
-            messagingTemplate.convertAndSend(posTopic, message);
-            
-            // Broadcast to KDS station that item was bumped
-            KDSTicket ticket = item.getKdsTicket();
-            String kdsTopic = "/topic/kds/station/" + ticket.getStation().getId();
-            log.debug("Broadcasting item update back to KDS station on topic: {}", kdsTopic);
-            
-            List<KDSTicketItemResponse> itemDtos = ticketItemRepository.findByKdsTicket_Id(ticket.getId())
-                    .stream().map(kdsMapper::toItemResponse).toList();
-            KDSTicketResponse response = kdsMapper.toResponse(ticket, itemDtos);
-            
-            messagingTemplate.convertAndSend(kdsTopic, response);
+            ticketItemRepository.saveAndFlush(peerItem);
+            broadcastTicketToStation(ticket);
         }
         
-        return ticketItemRepository.save(item);
+        // --- POS Synchronization ---
+        orderItemRepository.findById(orderItemId).ifPresent(orderItem -> {
+            boolean changed = false;
+            if (newStatus == KDSItemStatus.READY && orderItem.getStatus() != OrderItemStatus.READY) {
+                orderItem.setStatus(OrderItemStatus.READY);
+                changed = true;
+            } else if (newStatus == KDSItemStatus.SERVED && orderItem.getStatus() != OrderItemStatus.DELIVERED) {
+                orderItem.setStatus(OrderItemStatus.DELIVERED);
+                changed = true;
+            }
+
+            if (changed) {
+                orderItemRepository.save(orderItem);
+                
+                // Broadcast update to POS Order management screens
+                Map<String, Object> payload = new HashMap<>();
+                payload.put("type", "STATUS_UPDATE");
+                payload.put("orderId", orderItem.getTicket().getId());
+                payload.put("itemId", orderItemId);
+                payload.put("status", orderItem.getStatus().name());
+                
+                messagingTemplate.convertAndSend("/topic/orders/" + orderItem.getTicket().getId(), payload);
+            }
+        });
+
+        if (newStatus == KDSItemStatus.READY) {
+            messagingTemplate.convertAndSend("/topic/pos/notifications", "Item ready");
+        }
+    }
+
+    private void broadcastTicketStatusUpdate(KDSTicket ticket) {
+        Map<String, Object> update = new HashMap<>();
+        update.put("ticketId", ticket.getId());
+        update.put("stationName", ticket.getStation().getName());
+        update.put("status", ticket.getStatus().name());
+        update.put("orderId", ticket.getOrderTicket().getId());
+        messagingTemplate.convertAndSend("/topic/kds/status", update);
+    }
+
+    @Transactional
+    public KDSTicket startCookingTicket(UUID kdsTicketId) {
+        KDSTicket ticket = ticketRepository.findById(kdsTicketId)
+                .orElseThrow(() -> new IllegalArgumentException("Ticket not found"));
+        
+        if (ticket.getStatus() == KDSTicketStatus.NEW) {
+            ticket.setStatus(KDSTicketStatus.COOKING);
+            ticket.setCookingAt(Instant.now());
+            ticket = ticketRepository.save(ticket);
+            
+            // Sync all items on this ticket to COOKING status across all stations
+            List<KDSTicketItem> items = ticketItemRepository.findByKdsTicket_Id(ticket.getId());
+            for (KDSTicketItem item : items) {
+                syncItemStatus(item.getOrderItem().getId(), KDSItemStatus.COOKING, item.getPriority());
+            }
+
+            broadcastTicketStatusUpdate(ticket);
+            broadcastTicketToStation(ticket);
+        }
+        
+        return ticket;
+    }
+
+    private void broadcastTicketToStation(KDSTicket ticket) {
+        String kdsTopic = "/topic/kds/station/" + ticket.getStation().getId();
+        List<KDSTicketItemResponse> itemDtos = ticketItemRepository.findByKdsTicket_Id(ticket.getId())
+                .stream().map(kdsMapper::toItemResponse).toList();
+        KDSTicketResponse response = kdsMapper.toResponse(ticket, itemDtos);
+        messagingTemplate.convertAndSend(kdsTopic, response);
     }
 
     @Transactional
@@ -198,18 +346,13 @@ public class KDSService {
         
         ticket.setStatus(KDSTicketStatus.READY);
         ticket.setBumpedAt(Instant.now());
+        ticket = ticketRepository.saveAndFlush(ticket);
         
-        // Mark all contained items as ready
+        // Sync all items on this ticket to READY status across all stations
         List<KDSTicketItem> items = ticketItemRepository.findByKdsTicket_Id(ticket.getId());
         for (KDSTicketItem item : items) {
-            item.setStatus(KDSItemStatus.READY);
-            if (item.getReadyAt() == null) {
-                item.setReadyAt(Instant.now());
-            }
-            ticketItemRepository.save(item);
+            syncItemStatus(item.getOrderItem().getId(), KDSItemStatus.READY, item.getPriority());
         }
-        
-        ticket = ticketRepository.save(ticket);
         
         // US-4.1: Transition table to FOOD_DELIVERED if bumped at EXPO
         if (ticket.getStation().getStationType() == KDSStationType.EXPO) {
@@ -223,7 +366,28 @@ public class KDSService {
                     log.debug("Table {} transitioned to FOOD_DELIVERED via EXPO bump", table.getName());
                 }
             }
+
+            // EXPO special notification: Order Stats
+            Map<String, Object> stats = new HashMap<>();
+            stats.put("orderId", orderTicket.getId());
+            stats.put("prepDurationSeconds", java.time.Duration.between(ticket.getFiredAt(), Instant.now()).getSeconds());
+            stats.put("itemCount", items.size());
+            stats.put("tableName", orderTicket.getTable() != null ? orderTicket.getTable().getName() : "N/A");
+            
+            messagingTemplate.convertAndSend("/topic/pos/stats", stats);
+            
+            String expoMessage = String.format("🎉 Order for Table %s is READY for service!", 
+                orderTicket.getTable() != null ? orderTicket.getTable().getName() : "Ticket");
+            messagingTemplate.convertAndSend("/topic/pos/notifications", expoMessage);
         }
+
+        // Broadcast BUMPED status to KDS status topic
+        Map<String, Object> statusUpdate = new HashMap<>();
+        statusUpdate.put("ticketId", ticket.getId());
+        statusUpdate.put("stationName", ticket.getStation().getName());
+        statusUpdate.put("status", "BUMPED");
+        statusUpdate.put("orderId", ticket.getOrderTicket().getId());
+        messagingTemplate.convertAndSend("/topic/kds/status", statusUpdate);
 
         // Notify POS that the entire KDS ticket is ready
         UUID orderId = ticket.getOrderTicket().getId();
@@ -233,16 +397,27 @@ public class KDSService {
         log.debug("Ticket {} bumped to READY. Notifying POS on topic {}: {}", ticket.getId(), posTopic, message);
         messagingTemplate.convertAndSend(posTopic, message);
         
+        // Broadcast order update to POS for this specific order
+        messagingTemplate.convertAndSend("/topic/orders/" + orderId, "REFRESH");
+        if (ticket.getOrderTicket().getTable() != null) {
+            broadcastTableUpdate(ticket.getOrderTicket().getTable());
+        }
+        
         // Broadcast ticket update back to the KDS station queue
-        String kdsTopic = "/topic/kds/station/" + ticket.getStation().getId();
-        log.debug("Broadcasting ticket update back to KDS station on topic: {}", kdsTopic);
-        
-        List<KDSTicketItemResponse> itemDtos = items.stream().map(kdsMapper::toItemResponse).toList();
-        KDSTicketResponse response = kdsMapper.toResponse(ticket, itemDtos);
-        
-        messagingTemplate.convertAndSend(kdsTopic, response);
+        broadcastTicketToStation(ticket);
         
         return ticket;
+    }
+
+    @Transactional
+    public KDSTicketItem updateItemPriority(UUID itemId, int priority) {
+        KDSTicketItem item = ticketItemRepository.findById(itemId)
+                .orElseThrow(() -> new IllegalArgumentException("Item not found"));
+        
+        // Sync priority across all stations for this order item
+        syncItemStatus(item.getOrderItem().getId(), item.getStatus(), priority);
+        
+        return ticketItemRepository.findById(itemId).orElse(item);
     }
 
     @Transactional(readOnly = true)
@@ -353,5 +528,27 @@ public class KDSService {
                 rule.getTargetId(),
                 targetName
         );
+    }
+
+    private void broadcastTableUpdate(TableShape table) {
+        if (table == null) return;
+        
+        TableShapeResponse response = new TableShapeResponse(
+             table.getId(),
+             table.getName(),
+             table.getCapacity(),
+             table.getStatus().name(),
+             table.getSection().getId(),
+             table.getSection().getName(),
+             table.getPosX(),
+             table.getPosY(),
+             table.getWidth(),
+             table.getHeight(),
+             table.getShapeType(),
+             table.getAssignedStaff() != null ? table.getAssignedStaff().getId() : null,
+             table.getAssignedStaff() != null ? table.getAssignedStaff().getFullName() : null
+        );
+        
+        messagingTemplate.convertAndSend("/topic/tables", response);
     }
 }

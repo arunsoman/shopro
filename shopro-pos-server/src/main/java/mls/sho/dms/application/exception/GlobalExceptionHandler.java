@@ -54,6 +54,12 @@ public class GlobalExceptionHandler {
         return new ApiErrorResponse(401, ex.getMessage(), FMT.format(Instant.now()));
     }
 
+    @ExceptionHandler(AccessDeniedException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ApiErrorResponse handleAccessDenied(AccessDeniedException ex) {
+        return new ApiErrorResponse(403, ex.getMessage(), FMT.format(Instant.now()));
+    }
+
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ApiErrorResponse handleGeneralException(Exception ex) {

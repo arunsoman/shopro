@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stomp_dart_client/stomp_dart_client.dart';
 import 'package:http/http.dart' as http;
+import '../../../../core/network/network_config.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../data/models/notification_model.dart';
 
@@ -24,8 +26,10 @@ class NotificationState {
 }
 
 class NotificationNotifier extends StateNotifier<NotificationState> {
-  StompClient? _stompClient;
+  StompClient? stompClient;
   final Ref _ref;
+  final _newNotificationController = StreamController<InAppNotification>.broadcast();
+  Stream<InAppNotification> get newNotifications => _newNotificationController.stream;
 
   NotificationNotifier(this._ref)
     : super(NotificationState(notifications: [])) {
@@ -46,7 +50,7 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
     try {
       // Assuming a global HTTP client or using a base URL constant
       final response = await http.get(
-        Uri.parse('http://localhost:8080/api/v1/notifications?userId=$userId&page=0&size=50'),
+        Uri.parse('${NetworkConfig.baseUrl}/notifications?userId=$userId&page=0&size=50'),
       );
 
       if (response.statusCode == 200) {
@@ -59,19 +63,19 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
         state = state.copyWith(notifications: history);
       }
     } catch (e) {
-      print('Failed to fetch notification history: $e');
+      debugPrint('Failed to fetch notification history: $e');
     }
   }
 
   void _connect(String userId, String role) {
-    _stompClient = StompClient(
+    stompClient = StompClient(
       config: StompConfig(
-        url: 'ws://localhost:8080/ws-raw',
+        url: NetworkConfig.wsUrl,
         onConnect: (frame) {
           state = state.copyWith(isConnected: true);
 
           // Subscribe to User-specific notifications
-          _stompClient?.subscribe(
+          stompClient?.subscribe(
             destination: '/user/queue/notifications',
             callback: (frame) {
               if (frame.body != null) {
@@ -83,7 +87,7 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
           );
 
           // Subscribe to Role-specific notifications
-          _stompClient?.subscribe(
+          stompClient?.subscribe(
             destination: '/topic/role/$role/notifications',
             callback: (frame) {
               if (frame.body != null) {
@@ -95,7 +99,7 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
           );
 
           // Subscribe to Sync commands (Read/Dismissed on other devices)
-          _stompClient?.subscribe(
+          stompClient?.subscribe(
             destination: '/user/queue/notifications/sync',
             callback: (frame) {
               if (frame.body != null) {
@@ -105,7 +109,7 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
           );
 
           // Subscribe to Recall commands (System-wide)
-          _stompClient?.subscribe(
+          stompClient?.subscribe(
             destination: '/topic/notifications/recall',
             callback: (frame) {
               if (frame.body != null) {
@@ -119,7 +123,7 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
         onDisconnect: (frame) => state = state.copyWith(isConnected: false),
       ),
     );
-    _stompClient?.activate();
+    stompClient?.activate();
   }
 
   void _onNotificationReceived(InAppNotification notification) {
@@ -129,11 +133,17 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
     state = state.copyWith(
       notifications: [notification, ...state.notifications],
     );
+    _newNotificationController.add(notification);
   }
 
   void _onSyncReceived(Map<String, dynamic> syncData) {
     final id = syncData['id'];
     final action = syncData['action'];
+
+    if (action == 'DISMISS_ALL') {
+      state = state.copyWith(notifications: []);
+      return;
+    }
 
     state = state.copyWith(
       notifications: state.notifications
@@ -159,7 +169,7 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
   }
 
   void _disconnect() {
-    _stompClient?.deactivate();
+    stompClient?.deactivate();
     state = NotificationState(notifications: [], isConnected: false);
   }
 
@@ -173,10 +183,10 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
     
     try {
       await http.patch(
-        Uri.parse('http://localhost:8080/api/v1/notifications/$id/read'),
+        Uri.parse('${NetworkConfig.baseUrl}/notifications/$id/read'),
       );
     } catch (e) {
-      print('Failed to mark notification as read: $e');
+      debugPrint('Failed to mark notification as read: $e');
     }
   }
 
@@ -188,16 +198,33 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
 
     try {
       await http.patch(
-        Uri.parse('http://localhost:8080/api/v1/notifications/$id/dismiss'),
+        Uri.parse('${NetworkConfig.baseUrl}/notifications/$id/dismiss'),
       );
     } catch (e) {
-      print('Failed to dismiss notification: $e');
+      debugPrint('Failed to dismiss notification: $e');
+    }
+  }
+
+  Future<void> dismissAll() async {
+    final userId = _ref.read(authProvider).staffId;
+    if (userId == null) return;
+
+    // Optimistic UI update
+    state = state.copyWith(notifications: []);
+
+    try {
+      await http.delete(
+        Uri.parse('${NetworkConfig.baseUrl}/notifications/dismiss-all?userId=$userId'),
+      );
+    } catch (e) {
+      debugPrint('Failed to dismiss all notifications: $e');
     }
   }
 
   @override
   void dispose() {
-    _stompClient?.deactivate();
+    _newNotificationController.close();
+    stompClient?.deactivate();
     super.dispose();
   }
 }

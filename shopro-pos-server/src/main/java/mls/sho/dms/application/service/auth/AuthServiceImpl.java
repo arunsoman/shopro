@@ -18,7 +18,10 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
+import mls.sho.dms.entity.staff.Permission;
 
 @Service
 @RequiredArgsConstructor
@@ -55,7 +58,15 @@ public class AuthServiceImpl implements AuthService {
 
         StaffMember staff = matched.get();
         String roleName = (staff.getRole() != null) ? staff.getRole().getName() : "NONE";
-        return new StaffSessionResponse(staff.getId(), staff.getFullName(), roleName);
+        
+        List<String> permissions = List.of();
+        if (staff.getRole() != null) {
+            permissions = staff.getRole().getEffectivePermissions().stream()
+                    .map(Permission::getName)
+                    .collect(Collectors.toList());
+        }
+
+        return new StaffSessionResponse(staff.getId(), staff.getFullName(), roleName, permissions);
     }
 
     @Override

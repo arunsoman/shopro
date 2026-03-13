@@ -45,4 +45,36 @@ public class KDSController {
                 .map(kdsMapper::toItemResponse).toList();
         return ResponseEntity.ok(kdsMapper.toResponse(ticket, items));
     }
+
+    @PostMapping("/tickets/{ticketId}/start")
+    public ResponseEntity<KDSTicketResponse> startTicket(@PathVariable UUID ticketId) {
+        KDSTicket ticket = kdsService.startCookingTicket(ticketId);
+        List<KDSTicketItemResponse> items = ticketItemRepository.findByKdsTicket_Id(ticket.getId()).stream()
+                .map(kdsMapper::toItemResponse).toList();
+        return ResponseEntity.ok(kdsMapper.toResponse(ticket, items));
+    }
+
+    @PostMapping("/items/{itemId}/priority")
+    public ResponseEntity<KDSTicketItemResponse> updatePriority(@PathVariable UUID itemId, @RequestParam int priority) {
+        KDSTicketItem item = kdsService.updateItemPriority(itemId, priority);
+        return ResponseEntity.ok(kdsMapper.toItemResponse(item));
+    }
+
+    @PostMapping("/items/{itemId}/toggle")
+    public ResponseEntity<KDSTicketItemResponse> toggleItem(@PathVariable UUID itemId) {
+        KDSTicketItem item = kdsService.toggleItemStatus(itemId);
+        return ResponseEntity.ok(kdsMapper.toItemResponse(item));
+    }
+
+    @PostMapping("/items/{itemId}/ready")
+    public ResponseEntity<KDSTicketItemResponse> markItemReady(@PathVariable UUID itemId) {
+        KDSTicketItem item = kdsService.markItemReady(itemId);
+        return ResponseEntity.ok(kdsMapper.toItemResponse(item));
+    }
+
+    @PostMapping("/tickets/serve-ready")
+    public ResponseEntity<Void> serveReadyItems(@RequestBody List<UUID> ticketIds) {
+        kdsService.serveReadyItemsInTickets(ticketIds);
+        return ResponseEntity.ok().build();
+    }
 }

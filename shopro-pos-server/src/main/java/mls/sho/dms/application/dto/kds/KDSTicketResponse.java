@@ -11,5 +11,6 @@ public record KDSTicketResponse(
     String serverName,
     KDSTicketStatus status,
     Instant firedAt,
+    Instant cookingAt,
     List<KDSTicketItemResponse> items
 ) {}

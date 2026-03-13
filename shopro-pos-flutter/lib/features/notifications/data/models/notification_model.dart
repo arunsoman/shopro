@@ -28,15 +28,15 @@ class InAppNotification {
   factory InAppNotification.fromMap(Map<String, dynamic> map) {
     return InAppNotification(
       id: map['id'],
-      title: map['title'],
-      message: map['message'],
-      category: map['category'],
-      priority: map['priority'],
-      isRead: map['is_read'] ?? map['read'] ?? false,
-      isDismissed: map['is_dismissed'] ?? map['dismissed'] ?? false,
+      title: map['title'] ?? '',
+      message: map['message'] ?? map['body'] ?? '',
+      category: map['category'] ?? map['typeCode'] ?? 'GENERAL',
+      priority: map['priority'] ?? 'MEDIUM',
+      isRead: map['is_read'] ?? map['read'] ?? map['isRead'] ?? false,
+      isDismissed: map['is_dismissed'] ?? map['dismissed'] ?? map['isDismissed'] ?? false,
       data: map['data'] != null ? Map<String, dynamic>.from(map['data']) : null,
       correlationId: map['correlation_id'] ?? map['correlationId'],
-      createdAt: DateTime.parse(map['created_at'] ?? map['createdAt']),
+      createdAt: DateTime.parse(map['created_at'] ?? map['createdAt'] ?? DateTime.now().toIso8601String()),
     );
   }
 

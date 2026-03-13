@@ -14,7 +14,7 @@ class TableWidget extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final color = _getStatusColor(table);
     final isRound = table.shape == TableShape.round;
-    final isOval = table.shape == TableShape.oval;
+    final isStool = table.shape == TableShape.stool;
     final isDecor = table.shape == TableShape.decor;
 
     if (isDecor) {
@@ -49,7 +49,9 @@ class TableWidget extends ConsumerWidget {
 
     return DragTarget<WaitlistEntry>(
       onWillAcceptWithDetails: (details) =>
-          table.status == TableStatus.available,
+          table.status == TableStatus.available &&
+          table.capacity >= details.data.partySize &&
+          table.capacity > 0,
       onAcceptWithDetails: (details) {
         ref
             .read(floorPlanProvider.notifier)
@@ -63,8 +65,8 @@ class TableWidget extends ConsumerWidget {
           height: table.height,
           decoration: BoxDecoration(
             color: isOver ? color.withValues(alpha: 0.1) : Colors.white,
-            shape: (isRound || isOval) ? BoxShape.circle : BoxShape.rectangle,
-            borderRadius: (isRound || isOval)
+            shape: (isRound || isStool) ? BoxShape.circle : BoxShape.rectangle,
+            borderRadius: (isRound || isStool)
                 ? null
                 : BorderRadius.circular(16),
             border: Border.all(
@@ -86,7 +88,7 @@ class TableWidget extends ConsumerWidget {
                 initials != null ? '${table.name} ($initials)' : table.name,
                 style: GoogleFonts.outfit(
                   fontWeight: FontWeight.bold,
-                  fontSize: isOval ? 13 : 15,
+                  fontSize: isStool ? 13 : 15,
                   color: AppColors.lightText,
                 ),
               ),
@@ -148,18 +150,26 @@ class TableWidget extends ConsumerWidget {
     switch (table.status) {
       case TableStatus.available:
         return AppColors.statusAvailable;
+      case TableStatus.held:
+        return AppColors.statusHeld;
       case TableStatus.occupied:
         return AppColors.statusOccupied;
       case TableStatus.ordered:
         return AppColors.statusOrdered;
-      case TableStatus.delivered:
+      case TableStatus.foodDelivered:
         return AppColors.statusDelivered;
+      case TableStatus.dessertCourse:
+        return AppColors.statusDessert;
+      case TableStatus.checkDropped:
+        return AppColors.statusCheckDropped;
+      case TableStatus.paying:
+        return AppColors.statusPaying;
       case TableStatus.dirty:
         return AppColors.statusDirty;
-      case TableStatus.held:
-        return AppColors.statusHeld;
-      case TableStatus.inactive:
-        return Colors.grey;
+      case TableStatus.cleaning:
+        return AppColors.statusCleaning;
+      case TableStatus.maintenance:
+        return AppColors.statusMaintenance;
     }
   }
 }

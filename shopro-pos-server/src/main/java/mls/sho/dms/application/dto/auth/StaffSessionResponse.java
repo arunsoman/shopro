@@ -1,5 +1,6 @@
 package mls.sho.dms.application.dto.auth;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -10,5 +11,6 @@ import java.util.UUID;
 public record StaffSessionResponse(
     UUID id,
     String fullName,
-    String role
+    String role,
+    List<String> permissions
 ) {}

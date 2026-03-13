@@ -24,6 +24,8 @@ import mls.sho.dms.entity.order.OrderType;
 import mls.sho.dms.entity.order.TicketStatus;
 import mls.sho.dms.entity.staff.StaffMember;
 import mls.sho.dms.application.service.inventory.RecipeService;
+import mls.sho.dms.application.dto.floor.TableShapeResponse;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,6 +47,7 @@ public class TablesideServiceImpl implements TablesideService {
     private final mls.sho.dms.repository.order.OrderTicketRepository orderTicketRepo;
     private final mls.sho.dms.repository.staff.StaffRepository staffRepo;
     private final RecipeService recipeService;
+    private final SimpMessagingTemplate messagingTemplate;
 
     public TablesideServiceImpl(
             TablesideSessionRepository sessionRepo,
@@ -54,7 +57,8 @@ public class TablesideServiceImpl implements TablesideService {
             MenuCategoryRepository categoryRepo,
             mls.sho.dms.repository.order.OrderTicketRepository orderTicketRepo,
             mls.sho.dms.repository.staff.StaffRepository staffRepo,
-            RecipeService recipeService) {
+            RecipeService recipeService,
+            SimpMessagingTemplate messagingTemplate) {
         this.sessionRepo = sessionRepo;
         this.cartItemRepo = cartItemRepo;
         this.tableRepo = tableRepo;
@@ -63,6 +67,7 @@ public class TablesideServiceImpl implements TablesideService {
         this.orderTicketRepo = orderTicketRepo;
         this.staffRepo = staffRepo;
         this.recipeService = recipeService;
+        this.messagingTemplate = messagingTemplate;
     }
 
     @Override
@@ -212,7 +217,32 @@ public class TablesideServiceImpl implements TablesideService {
         orderTicketRepo.save(ticket);
         cartItemRepo.deleteAll(cartItems);
         
+        // 5. Broadcast table update to floor plan
+        broadcastTableUpdate(session.getTable());
+        
         return ticket.getId();
+    }
+
+    private void broadcastTableUpdate(TableShape table) {
+        if (table == null) return;
+        
+        TableShapeResponse response = new TableShapeResponse(
+             table.getId(),
+             table.getName(),
+             table.getCapacity(),
+             table.getStatus().name(),
+             table.getSection().getId(),
+             table.getSection().getName(),
+             table.getPosX(),
+             table.getPosY(),
+             table.getWidth(),
+             table.getHeight(),
+             table.getShapeType(),
+             table.getAssignedStaff() != null ? table.getAssignedStaff().getId() : null,
+             table.getAssignedStaff() != null ? table.getAssignedStaff().getFullName() : null
+        );
+        
+        messagingTemplate.convertAndSend("/topic/tables", response);
     }
 
     @Override

@@ -28,4 +28,7 @@ public interface InAppNotificationRepository extends JpaRepository<InAppNotifica
     @Modifying
     @Query("UPDATE InAppNotification n SET n.isDismissed = true WHERE n.correlationId = :correlationId AND n.recipientId = :recipientId AND n.isDismissed = false")
     void dismissByCorrelationId(@Param("correlationId") String correlationId, @Param("recipientId") UUID recipientId);
+    @Modifying
+    @Query("UPDATE InAppNotification n SET n.isDismissed = true WHERE n.recipientId = :recipientId AND n.isDismissed = false")
+    void dismissAllByRecipientId(@Param("recipientId") UUID recipientId);
 }

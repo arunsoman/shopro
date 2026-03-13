@@ -519,6 +519,9 @@ mixin _$KDSTicketItem {
   KDSItemStatus get status => throw _privateConstructorUsedError;
   String? get customNote => throw _privateConstructorUsedError;
   List<String> get modifiers => throw _privateConstructorUsedError;
+  DateTime? get prepStartedAt => throw _privateConstructorUsedError;
+  int get priority => throw _privateConstructorUsedError;
+  int get preparationTimeMinutes => throw _privateConstructorUsedError;
 
   /// Serializes this KDSTicketItem to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -545,6 +548,9 @@ abstract class $KDSTicketItemCopyWith<$Res> {
     KDSItemStatus status,
     String? customNote,
     List<String> modifiers,
+    DateTime? prepStartedAt,
+    int priority,
+    int preparationTimeMinutes,
   });
 }
 
@@ -570,6 +576,9 @@ class _$KDSTicketItemCopyWithImpl<$Res, $Val extends KDSTicketItem>
     Object? status = null,
     Object? customNote = freezed,
     Object? modifiers = null,
+    Object? prepStartedAt = freezed,
+    Object? priority = null,
+    Object? preparationTimeMinutes = null,
   }) {
     return _then(
       _value.copyWith(
@@ -601,6 +610,18 @@ class _$KDSTicketItemCopyWithImpl<$Res, $Val extends KDSTicketItem>
                 ? _value.modifiers
                 : modifiers // ignore: cast_nullable_to_non_nullable
                       as List<String>,
+            prepStartedAt: freezed == prepStartedAt
+                ? _value.prepStartedAt
+                : prepStartedAt // ignore: cast_nullable_to_non_nullable
+                      as DateTime?,
+            priority: null == priority
+                ? _value.priority
+                : priority // ignore: cast_nullable_to_non_nullable
+                      as int,
+            preparationTimeMinutes: null == preparationTimeMinutes
+                ? _value.preparationTimeMinutes
+                : preparationTimeMinutes // ignore: cast_nullable_to_non_nullable
+                      as int,
           )
           as $Val,
     );
@@ -624,6 +645,9 @@ abstract class _$$KDSTicketItemImplCopyWith<$Res>
     KDSItemStatus status,
     String? customNote,
     List<String> modifiers,
+    DateTime? prepStartedAt,
+    int priority,
+    int preparationTimeMinutes,
   });
 }
 
@@ -648,6 +672,9 @@ class __$$KDSTicketItemImplCopyWithImpl<$Res>
     Object? status = null,
     Object? customNote = freezed,
     Object? modifiers = null,
+    Object? prepStartedAt = freezed,
+    Object? priority = null,
+    Object? preparationTimeMinutes = null,
   }) {
     return _then(
       _$KDSTicketItemImpl(
@@ -679,6 +706,18 @@ class __$$KDSTicketItemImplCopyWithImpl<$Res>
             ? _value._modifiers
             : modifiers // ignore: cast_nullable_to_non_nullable
                   as List<String>,
+        prepStartedAt: freezed == prepStartedAt
+            ? _value.prepStartedAt
+            : prepStartedAt // ignore: cast_nullable_to_non_nullable
+                  as DateTime?,
+        priority: null == priority
+            ? _value.priority
+            : priority // ignore: cast_nullable_to_non_nullable
+                  as int,
+        preparationTimeMinutes: null == preparationTimeMinutes
+            ? _value.preparationTimeMinutes
+            : preparationTimeMinutes // ignore: cast_nullable_to_non_nullable
+                  as int,
       ),
     );
   }
@@ -695,6 +734,9 @@ class _$KDSTicketItemImpl implements _KDSTicketItem {
     required this.status,
     this.customNote,
     final List<String> modifiers = const [],
+    this.prepStartedAt,
+    this.priority = 0,
+    this.preparationTimeMinutes = 10,
   }) : _modifiers = modifiers;
 
   factory _$KDSTicketItemImpl.fromJson(Map<String, dynamic> json) =>
@@ -722,8 +764,17 @@ class _$KDSTicketItemImpl implements _KDSTicketItem {
   }
 
   @override
+  final DateTime? prepStartedAt;
+  @override
+  @JsonKey()
+  final int priority;
+  @override
+  @JsonKey()
+  final int preparationTimeMinutes;
+
+  @override
   String toString() {
-    return 'KDSTicketItem(id: $id, menuItemId: $menuItemId, name: $name, quantity: $quantity, status: $status, customNote: $customNote, modifiers: $modifiers)';
+    return 'KDSTicketItem(id: $id, menuItemId: $menuItemId, name: $name, quantity: $quantity, status: $status, customNote: $customNote, modifiers: $modifiers, prepStartedAt: $prepStartedAt, priority: $priority, preparationTimeMinutes: $preparationTimeMinutes)';
   }
 
   @override
@@ -743,7 +794,13 @@ class _$KDSTicketItemImpl implements _KDSTicketItem {
             const DeepCollectionEquality().equals(
               other._modifiers,
               _modifiers,
-            ));
+            ) &&
+            (identical(other.prepStartedAt, prepStartedAt) ||
+                other.prepStartedAt == prepStartedAt) &&
+            (identical(other.priority, priority) ||
+                other.priority == priority) &&
+            (identical(other.preparationTimeMinutes, preparationTimeMinutes) ||
+                other.preparationTimeMinutes == preparationTimeMinutes));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -757,6 +814,9 @@ class _$KDSTicketItemImpl implements _KDSTicketItem {
     status,
     customNote,
     const DeepCollectionEquality().hash(_modifiers),
+    prepStartedAt,
+    priority,
+    preparationTimeMinutes,
   );
 
   /// Create a copy of KDSTicketItem
@@ -782,6 +842,9 @@ abstract class _KDSTicketItem implements KDSTicketItem {
     required final KDSItemStatus status,
     final String? customNote,
     final List<String> modifiers,
+    final DateTime? prepStartedAt,
+    final int priority,
+    final int preparationTimeMinutes,
   }) = _$KDSTicketItemImpl;
 
   factory _KDSTicketItem.fromJson(Map<String, dynamic> json) =
@@ -801,11 +864,525 @@ abstract class _KDSTicketItem implements KDSTicketItem {
   String? get customNote;
   @override
   List<String> get modifiers;
+  @override
+  DateTime? get prepStartedAt;
+  @override
+  int get priority;
+  @override
+  int get preparationTimeMinutes;
 
   /// Create a copy of KDSTicketItem
   /// with the given fields replaced by the non-null parameter values.
   @override
   @JsonKey(includeFromJson: false, includeToJson: false)
   _$$KDSTicketItemImplCopyWith<_$KDSTicketItemImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+mixin _$KDSExpoGroup {
+  String get tableNumber => throw _privateConstructorUsedError;
+  DateTime? get occupancyStart => throw _privateConstructorUsedError;
+  String? get serverName => throw _privateConstructorUsedError;
+  int? get guestCount => throw _privateConstructorUsedError;
+  List<KDSTicketItem> get items => throw _privateConstructorUsedError;
+  List<String> get ticketIds => throw _privateConstructorUsedError;
+
+  /// Create a copy of KDSExpoGroup
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  $KDSExpoGroupCopyWith<KDSExpoGroup> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $KDSExpoGroupCopyWith<$Res> {
+  factory $KDSExpoGroupCopyWith(
+    KDSExpoGroup value,
+    $Res Function(KDSExpoGroup) then,
+  ) = _$KDSExpoGroupCopyWithImpl<$Res, KDSExpoGroup>;
+  @useResult
+  $Res call({
+    String tableNumber,
+    DateTime? occupancyStart,
+    String? serverName,
+    int? guestCount,
+    List<KDSTicketItem> items,
+    List<String> ticketIds,
+  });
+}
+
+/// @nodoc
+class _$KDSExpoGroupCopyWithImpl<$Res, $Val extends KDSExpoGroup>
+    implements $KDSExpoGroupCopyWith<$Res> {
+  _$KDSExpoGroupCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  /// Create a copy of KDSExpoGroup
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? tableNumber = null,
+    Object? occupancyStart = freezed,
+    Object? serverName = freezed,
+    Object? guestCount = freezed,
+    Object? items = null,
+    Object? ticketIds = null,
+  }) {
+    return _then(
+      _value.copyWith(
+            tableNumber: null == tableNumber
+                ? _value.tableNumber
+                : tableNumber // ignore: cast_nullable_to_non_nullable
+                      as String,
+            occupancyStart: freezed == occupancyStart
+                ? _value.occupancyStart
+                : occupancyStart // ignore: cast_nullable_to_non_nullable
+                      as DateTime?,
+            serverName: freezed == serverName
+                ? _value.serverName
+                : serverName // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            guestCount: freezed == guestCount
+                ? _value.guestCount
+                : guestCount // ignore: cast_nullable_to_non_nullable
+                      as int?,
+            items: null == items
+                ? _value.items
+                : items // ignore: cast_nullable_to_non_nullable
+                      as List<KDSTicketItem>,
+            ticketIds: null == ticketIds
+                ? _value.ticketIds
+                : ticketIds // ignore: cast_nullable_to_non_nullable
+                      as List<String>,
+          )
+          as $Val,
+    );
+  }
+}
+
+/// @nodoc
+abstract class _$$KDSExpoGroupImplCopyWith<$Res>
+    implements $KDSExpoGroupCopyWith<$Res> {
+  factory _$$KDSExpoGroupImplCopyWith(
+    _$KDSExpoGroupImpl value,
+    $Res Function(_$KDSExpoGroupImpl) then,
+  ) = __$$KDSExpoGroupImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({
+    String tableNumber,
+    DateTime? occupancyStart,
+    String? serverName,
+    int? guestCount,
+    List<KDSTicketItem> items,
+    List<String> ticketIds,
+  });
+}
+
+/// @nodoc
+class __$$KDSExpoGroupImplCopyWithImpl<$Res>
+    extends _$KDSExpoGroupCopyWithImpl<$Res, _$KDSExpoGroupImpl>
+    implements _$$KDSExpoGroupImplCopyWith<$Res> {
+  __$$KDSExpoGroupImplCopyWithImpl(
+    _$KDSExpoGroupImpl _value,
+    $Res Function(_$KDSExpoGroupImpl) _then,
+  ) : super(_value, _then);
+
+  /// Create a copy of KDSExpoGroup
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? tableNumber = null,
+    Object? occupancyStart = freezed,
+    Object? serverName = freezed,
+    Object? guestCount = freezed,
+    Object? items = null,
+    Object? ticketIds = null,
+  }) {
+    return _then(
+      _$KDSExpoGroupImpl(
+        tableNumber: null == tableNumber
+            ? _value.tableNumber
+            : tableNumber // ignore: cast_nullable_to_non_nullable
+                  as String,
+        occupancyStart: freezed == occupancyStart
+            ? _value.occupancyStart
+            : occupancyStart // ignore: cast_nullable_to_non_nullable
+                  as DateTime?,
+        serverName: freezed == serverName
+            ? _value.serverName
+            : serverName // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        guestCount: freezed == guestCount
+            ? _value.guestCount
+            : guestCount // ignore: cast_nullable_to_non_nullable
+                  as int?,
+        items: null == items
+            ? _value._items
+            : items // ignore: cast_nullable_to_non_nullable
+                  as List<KDSTicketItem>,
+        ticketIds: null == ticketIds
+            ? _value._ticketIds
+            : ticketIds // ignore: cast_nullable_to_non_nullable
+                  as List<String>,
+      ),
+    );
+  }
+}
+
+/// @nodoc
+
+class _$KDSExpoGroupImpl implements _KDSExpoGroup {
+  const _$KDSExpoGroupImpl({
+    required this.tableNumber,
+    required this.occupancyStart,
+    this.serverName,
+    this.guestCount,
+    final List<KDSTicketItem> items = const [],
+    final List<String> ticketIds = const [],
+  }) : _items = items,
+       _ticketIds = ticketIds;
+
+  @override
+  final String tableNumber;
+  @override
+  final DateTime? occupancyStart;
+  @override
+  final String? serverName;
+  @override
+  final int? guestCount;
+  final List<KDSTicketItem> _items;
+  @override
+  @JsonKey()
+  List<KDSTicketItem> get items {
+    if (_items is EqualUnmodifiableListView) return _items;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_items);
+  }
+
+  final List<String> _ticketIds;
+  @override
+  @JsonKey()
+  List<String> get ticketIds {
+    if (_ticketIds is EqualUnmodifiableListView) return _ticketIds;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_ticketIds);
+  }
+
+  @override
+  String toString() {
+    return 'KDSExpoGroup(tableNumber: $tableNumber, occupancyStart: $occupancyStart, serverName: $serverName, guestCount: $guestCount, items: $items, ticketIds: $ticketIds)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$KDSExpoGroupImpl &&
+            (identical(other.tableNumber, tableNumber) ||
+                other.tableNumber == tableNumber) &&
+            (identical(other.occupancyStart, occupancyStart) ||
+                other.occupancyStart == occupancyStart) &&
+            (identical(other.serverName, serverName) ||
+                other.serverName == serverName) &&
+            (identical(other.guestCount, guestCount) ||
+                other.guestCount == guestCount) &&
+            const DeepCollectionEquality().equals(other._items, _items) &&
+            const DeepCollectionEquality().equals(
+              other._ticketIds,
+              _ticketIds,
+            ));
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    runtimeType,
+    tableNumber,
+    occupancyStart,
+    serverName,
+    guestCount,
+    const DeepCollectionEquality().hash(_items),
+    const DeepCollectionEquality().hash(_ticketIds),
+  );
+
+  /// Create a copy of KDSExpoGroup
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$KDSExpoGroupImplCopyWith<_$KDSExpoGroupImpl> get copyWith =>
+      __$$KDSExpoGroupImplCopyWithImpl<_$KDSExpoGroupImpl>(this, _$identity);
+}
+
+abstract class _KDSExpoGroup implements KDSExpoGroup {
+  const factory _KDSExpoGroup({
+    required final String tableNumber,
+    required final DateTime? occupancyStart,
+    final String? serverName,
+    final int? guestCount,
+    final List<KDSTicketItem> items,
+    final List<String> ticketIds,
+  }) = _$KDSExpoGroupImpl;
+
+  @override
+  String get tableNumber;
+  @override
+  DateTime? get occupancyStart;
+  @override
+  String? get serverName;
+  @override
+  int? get guestCount;
+  @override
+  List<KDSTicketItem> get items;
+  @override
+  List<String> get ticketIds;
+
+  /// Create a copy of KDSExpoGroup
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$KDSExpoGroupImplCopyWith<_$KDSExpoGroupImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+mixin _$KDSAllDayItem {
+  String get name => throw _privateConstructorUsedError;
+  int get totalQuantity => throw _privateConstructorUsedError;
+  int get quantityPending => throw _privateConstructorUsedError;
+  int get quantityReady => throw _privateConstructorUsedError;
+  String get category => throw _privateConstructorUsedError;
+
+  /// Create a copy of KDSAllDayItem
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  $KDSAllDayItemCopyWith<KDSAllDayItem> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $KDSAllDayItemCopyWith<$Res> {
+  factory $KDSAllDayItemCopyWith(
+    KDSAllDayItem value,
+    $Res Function(KDSAllDayItem) then,
+  ) = _$KDSAllDayItemCopyWithImpl<$Res, KDSAllDayItem>;
+  @useResult
+  $Res call({
+    String name,
+    int totalQuantity,
+    int quantityPending,
+    int quantityReady,
+    String category,
+  });
+}
+
+/// @nodoc
+class _$KDSAllDayItemCopyWithImpl<$Res, $Val extends KDSAllDayItem>
+    implements $KDSAllDayItemCopyWith<$Res> {
+  _$KDSAllDayItemCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  /// Create a copy of KDSAllDayItem
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? name = null,
+    Object? totalQuantity = null,
+    Object? quantityPending = null,
+    Object? quantityReady = null,
+    Object? category = null,
+  }) {
+    return _then(
+      _value.copyWith(
+            name: null == name
+                ? _value.name
+                : name // ignore: cast_nullable_to_non_nullable
+                      as String,
+            totalQuantity: null == totalQuantity
+                ? _value.totalQuantity
+                : totalQuantity // ignore: cast_nullable_to_non_nullable
+                      as int,
+            quantityPending: null == quantityPending
+                ? _value.quantityPending
+                : quantityPending // ignore: cast_nullable_to_non_nullable
+                      as int,
+            quantityReady: null == quantityReady
+                ? _value.quantityReady
+                : quantityReady // ignore: cast_nullable_to_non_nullable
+                      as int,
+            category: null == category
+                ? _value.category
+                : category // ignore: cast_nullable_to_non_nullable
+                      as String,
+          )
+          as $Val,
+    );
+  }
+}
+
+/// @nodoc
+abstract class _$$KDSAllDayItemImplCopyWith<$Res>
+    implements $KDSAllDayItemCopyWith<$Res> {
+  factory _$$KDSAllDayItemImplCopyWith(
+    _$KDSAllDayItemImpl value,
+    $Res Function(_$KDSAllDayItemImpl) then,
+  ) = __$$KDSAllDayItemImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({
+    String name,
+    int totalQuantity,
+    int quantityPending,
+    int quantityReady,
+    String category,
+  });
+}
+
+/// @nodoc
+class __$$KDSAllDayItemImplCopyWithImpl<$Res>
+    extends _$KDSAllDayItemCopyWithImpl<$Res, _$KDSAllDayItemImpl>
+    implements _$$KDSAllDayItemImplCopyWith<$Res> {
+  __$$KDSAllDayItemImplCopyWithImpl(
+    _$KDSAllDayItemImpl _value,
+    $Res Function(_$KDSAllDayItemImpl) _then,
+  ) : super(_value, _then);
+
+  /// Create a copy of KDSAllDayItem
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? name = null,
+    Object? totalQuantity = null,
+    Object? quantityPending = null,
+    Object? quantityReady = null,
+    Object? category = null,
+  }) {
+    return _then(
+      _$KDSAllDayItemImpl(
+        name: null == name
+            ? _value.name
+            : name // ignore: cast_nullable_to_non_nullable
+                  as String,
+        totalQuantity: null == totalQuantity
+            ? _value.totalQuantity
+            : totalQuantity // ignore: cast_nullable_to_non_nullable
+                  as int,
+        quantityPending: null == quantityPending
+            ? _value.quantityPending
+            : quantityPending // ignore: cast_nullable_to_non_nullable
+                  as int,
+        quantityReady: null == quantityReady
+            ? _value.quantityReady
+            : quantityReady // ignore: cast_nullable_to_non_nullable
+                  as int,
+        category: null == category
+            ? _value.category
+            : category // ignore: cast_nullable_to_non_nullable
+                  as String,
+      ),
+    );
+  }
+}
+
+/// @nodoc
+
+class _$KDSAllDayItemImpl implements _KDSAllDayItem {
+  const _$KDSAllDayItemImpl({
+    required this.name,
+    required this.totalQuantity,
+    required this.quantityPending,
+    required this.quantityReady,
+    required this.category,
+  });
+
+  @override
+  final String name;
+  @override
+  final int totalQuantity;
+  @override
+  final int quantityPending;
+  @override
+  final int quantityReady;
+  @override
+  final String category;
+
+  @override
+  String toString() {
+    return 'KDSAllDayItem(name: $name, totalQuantity: $totalQuantity, quantityPending: $quantityPending, quantityReady: $quantityReady, category: $category)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$KDSAllDayItemImpl &&
+            (identical(other.name, name) || other.name == name) &&
+            (identical(other.totalQuantity, totalQuantity) ||
+                other.totalQuantity == totalQuantity) &&
+            (identical(other.quantityPending, quantityPending) ||
+                other.quantityPending == quantityPending) &&
+            (identical(other.quantityReady, quantityReady) ||
+                other.quantityReady == quantityReady) &&
+            (identical(other.category, category) ||
+                other.category == category));
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    runtimeType,
+    name,
+    totalQuantity,
+    quantityPending,
+    quantityReady,
+    category,
+  );
+
+  /// Create a copy of KDSAllDayItem
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$KDSAllDayItemImplCopyWith<_$KDSAllDayItemImpl> get copyWith =>
+      __$$KDSAllDayItemImplCopyWithImpl<_$KDSAllDayItemImpl>(this, _$identity);
+}
+
+abstract class _KDSAllDayItem implements KDSAllDayItem {
+  const factory _KDSAllDayItem({
+    required final String name,
+    required final int totalQuantity,
+    required final int quantityPending,
+    required final int quantityReady,
+    required final String category,
+  }) = _$KDSAllDayItemImpl;
+
+  @override
+  String get name;
+  @override
+  int get totalQuantity;
+  @override
+  int get quantityPending;
+  @override
+  int get quantityReady;
+  @override
+  String get category;
+
+  /// Create a copy of KDSAllDayItem
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$KDSAllDayItemImplCopyWith<_$KDSAllDayItemImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

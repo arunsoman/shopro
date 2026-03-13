@@ -4,20 +4,31 @@ part 'kds_models.freezed.dart';
 part 'kds_models.g.dart';
 
 enum KDSStationType {
-  PREP,
-  EXPO,
-  BEVERAGE,
-  GRILL,
-  BAR,
-  PANTRY,
-  FRY,
-  PASTRY,
-  GENERAL,
+  @JsonValue('PREP') prep,
+  @JsonValue('EXPO') expo,
+  @JsonValue('BEVERAGE') beverage,
+  @JsonValue('GRILL') grill,
+  @JsonValue('BAR') bar,
+  @JsonValue('PANTRY') pantry,
+  @JsonValue('FRY') fry,
+  @JsonValue('PASTRY') pastry,
+  @JsonValue('GENERAL') general,
 }
 
-enum KDSTicketStatus { NEW, COOKING, READY, BUMPED }
+enum KDSTicketStatus {
+  @JsonValue('NEW') newTicket,
+  @JsonValue('COOKING') cooking,
+  @JsonValue('READY') ready,
+  @JsonValue('BUMPED') bumped,
+}
 
-enum KDSItemStatus { PENDING, COOKING, READY }
+enum KDSItemStatus {
+  @JsonValue('PENDING') pending,
+  @JsonValue('COOKING') cooking,
+  @JsonValue('PAUSED') paused,
+  @JsonValue('READY') ready,
+  @JsonValue('SERVED') served,
+}
 
 @freezed
 class KDSStation with _$KDSStation {
@@ -57,8 +68,34 @@ class KDSTicketItem with _$KDSTicketItem {
     required KDSItemStatus status,
     String? customNote,
     @Default([]) List<String> modifiers,
+    DateTime? prepStartedAt,
+    @Default(0) int priority,
+    @Default(10) int preparationTimeMinutes,
   }) = _KDSTicketItem;
 
   factory KDSTicketItem.fromJson(Map<String, dynamic> json) =>
       _$KDSTicketItemFromJson(json);
+}
+
+@freezed
+class KDSExpoGroup with _$KDSExpoGroup {
+  const factory KDSExpoGroup({
+    required String tableNumber,
+    required DateTime? occupancyStart,
+    String? serverName,
+    int? guestCount,
+    @Default([]) List<KDSTicketItem> items,
+    @Default([]) List<String> ticketIds,
+  }) = _KDSExpoGroup;
+}
+
+@freezed
+class KDSAllDayItem with _$KDSAllDayItem {
+  const factory KDSAllDayItem({
+    required String name,
+    required int totalQuantity,
+    required int quantityPending,
+    required int quantityReady,
+    required String category,
+  }) = _KDSAllDayItem;
 }

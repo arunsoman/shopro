@@ -1,9 +1,12 @@
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shopro_pos_flutter/features/order/domain/models/order_models.dart';
 import 'package:shopro_pos_flutter/features/order/domain/repositories/order_repository.dart';
 import 'package:shopro_pos_flutter/features/menu/domain/models/menu_models.dart';
 import 'package:shopro_pos_flutter/features/menu/presentation/providers/menu_provider.dart';
 import 'package:shopro_pos_flutter/features/floor_plan/presentation/providers/floor_plan_provider.dart';
+import 'package:shopro_pos_flutter/features/notifications/presentation/providers/notification_provider.dart';
 
 class OrderState {
   final OrderTicket? activeOrder;
@@ -36,11 +39,62 @@ class OrderState {
 }
 
 class OrderNotifier extends Notifier<OrderState> {
+  void Function()? _unsub;
+
   @override
-  OrderState build() => OrderState.initial();
+  OrderState build() {
+    ref.onDispose(() => _unsub?.call());
+    return OrderState.initial();
+  }
 
   void setActiveOrder(OrderTicket order) {
     state = state.copyWith(activeOrder: order);
+    _subscribeToOrder(order.id);
+  }
+
+  void _subscribeToOrder(String orderId) {
+    _unsub?.call();
+    _unsub = null;
+
+    final notificationState = ref.read(notificationProvider);
+    if (!notificationState.isConnected) {
+      // If not connected, we wait for connection in ref.listen
+      _listenForConnection();
+      return;
+    }
+
+    final stompClient = ref.read(notificationProvider.notifier).stompClient;
+    if (stompClient != null) {
+      final unsubscribe = stompClient.subscribe(
+        destination: '/topic/orders/$orderId',
+        callback: (frame) {
+          if (frame.body != null) {
+            _handleOrderUpdate(json.decode(frame.body!));
+          }
+        },
+      );
+      _unsub = unsubscribe;
+    }
+  }
+
+  void _listenForConnection() {
+    // This will be called if we tried to subscribe while disconnected
+    ref.listen(notificationProvider, (previous, next) {
+      if (next.isConnected && (previous == null || !previous.isConnected)) {
+        if (state.activeOrder != null) {
+          _subscribeToOrder(state.activeOrder!.id);
+        }
+      }
+    });
+  }
+
+  void _handleOrderUpdate(Map<String, dynamic> data) {
+    debugPrint('[OrderWatcher] Received update: $data');
+    final orderId = data['orderId'] ?? state.activeOrder?.id;
+    if (orderId != null) {
+      // Simple strategy: reload the whole order to ensure we have consistent status
+      loadOrder(orderId.toString());
+    }
   }
 
   Future<void> loadOrder(String orderId) async {
@@ -133,17 +187,17 @@ class OrderNotifier extends Notifier<OrderState> {
         'courseNumber': finalCourse,
         'modifierOptionIds': modifiers.map((o) => o.id).toList(),
       };
-      print('Sending payload to addOrderItem: $payload');
+      debugPrint('Sending payload to addOrderItem: $payload');
 
       final updatedOrder = await repository.addOrderItem(
         state.activeOrder!.id,
         payload,
       );
-      print('Item added successfully. Updated order: ${updatedOrder.id}');
+      debugPrint('Item added successfully. Updated order: ${updatedOrder.id}');
       state = state.copyWith(activeOrder: updatedOrder, isLoading: false);
     } catch (e, stackTrace) {
-      print('ERROR ADDING ITEM: $e');
-      print(stackTrace);
+      debugPrint('ERROR ADDING ITEM: $e');
+      debugPrint(stackTrace.toString());
       state = state.copyWith(isLoading: false, error: e.toString());
     }
   }

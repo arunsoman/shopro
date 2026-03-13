@@ -119,7 +119,7 @@ class _TableDashboardScreenState extends ConsumerState<TableDashboardScreen> {
         children: [
           CircleAvatar(
             radius: 30,
-            backgroundColor: AppColors.primary.withOpacity(0.1),
+            backgroundColor: AppColors.primary.withValues(alpha: 0.1),
             child: const Icon(
               Icons.table_restaurant,
               color: AppColors.primary,
@@ -243,7 +243,7 @@ class _OrderTile extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
-                color: _getStatusColor(order.status).withOpacity(0.1),
+                color: _getStatusColor(order.status).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(

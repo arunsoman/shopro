@@ -37,9 +37,9 @@ final routerProvider = Provider<GoRouter>((ref) {
         return isOnLogin ? null : '/login';
       }
 
-      // Authenticated: if trying to go to /login, send to floor plan
+      // Authenticated: if trying to go to /login, send to the default landing page
       if (isOnLogin) {
-        return '/floor-plan';
+        return ref.read(authProvider.notifier).getLandingPage();
       }
 
       return null;

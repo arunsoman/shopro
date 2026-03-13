@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../../theme/app_colors.dart';
 import '../../../features/notifications/presentation/providers/notification_provider.dart';
 import '../../../features/notifications/presentation/widgets/notification_center_sidebar.dart';
+import '../../../features/notifications/presentation/widgets/global_notification_listener.dart';
+import '../../../features/auth/presentation/providers/auth_provider.dart';
 
 class MainNavigationLayout extends ConsumerStatefulWidget {
   final Widget child;
@@ -23,34 +25,6 @@ class MainNavigationLayout extends ConsumerStatefulWidget {
 
 class _MainNavigationLayoutState extends ConsumerState<MainNavigationLayout> {
   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.listenManual(notificationProvider, (previous, next) {
-        if (!mounted) return;
-        final newCount = next.notifications.length;
-        final oldCount = previous?.notifications.length ?? 0;
-
-        if (newCount > oldCount) {
-          final newNotif = next.notifications.first;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(newNotif.message),
-              behavior: SnackBarBehavior.floating,
-              backgroundColor: AppColors.primary,
-              action: SnackBarAction(
-                label: 'View',
-                textColor: Colors.white,
-                onPressed: () => Scaffold.of(context).openEndDrawer(),
-              ),
-            ),
-          );
-        }
-      });
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
     final notificationState = ref.watch(notificationProvider);
     final count = notificationState.notifications
@@ -59,172 +33,160 @@ class _MainNavigationLayoutState extends ConsumerState<MainNavigationLayout> {
     final location = widget.location;
 
     return Scaffold(
-      key: GlobalKey<ScaffoldState>(), // Key for opening drawer
       endDrawer: const NotificationCenterSidebar(),
       backgroundColor: AppColors.lightBorder,
-      body: Center(
-        child: Container(
-          clipBehavior: Clip.antiAlias,
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            boxShadow: [
-              BoxShadow(color: Colors.black12, blurRadius: 20, spreadRadius: 5),
-            ],
-          ),
-          constraints: const BoxConstraints(maxWidth: 1024, maxHeight: 1024),
-          child: Column(
-            children: [
-              // Top Navigation Bar
-              Container(
-                height: 80,
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  border: Border(
-                    bottom: BorderSide(color: AppColors.lightBorder),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    // Logo
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: const Icon(
-                            Icons.restaurant,
-                            color: Colors.white,
-                            size: 24,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          'Shopro POS',
-                          style: GoogleFonts.outfit(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 22,
-                            color: AppColors.lightText,
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const Spacer(),
-
-                    // Center Navigation Items
-                    Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF1F3F5),
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          _buildNavItem(
-                            context,
-                            'Floor Plan',
-                            '/floor-plan',
-                            location == '/floor-plan',
-                          ),
-                          _buildNavItem(
-                            context,
-                            'Staff',
-                            '/staff-dashboard',
-                            location == '/staff-dashboard',
-                          ),
-                          _buildNavItem(
-                            context,
-                            'Menu',
-                            '/menu',
-                            location == '/menu',
-                          ),
-                          _buildNavItem(
-                            context,
-                            'Inventory',
-                            '/inventory',
-                            location == '/inventory',
-                          ),
-                          _buildNavItem(
-                            context,
-                            'History',
-                            '/history',
-                            location == '/history',
-                          ),
-                          _buildNavItem(
-                            context,
-                            'KDS',
-                            '/kds',
-                            location == '/kds' || location.startsWith('/kds/'),
-                          ),
-                        ],
+      body: GlobalNotificationListener(
+        child: Builder(
+          builder: (scaffoldContext) => Center(
+            child: Container(
+              clipBehavior: Clip.antiAlias,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(color: Colors.black12, blurRadius: 20, spreadRadius: 5),
+                ],
+              ),
+              constraints: const BoxConstraints(maxWidth: 1024, maxHeight: 1024),
+              child: Column(
+                children: [
+                  // Top Navigation Bar
+                  Container(
+                    height: 80,
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      border: Border(
+                        bottom: BorderSide(color: AppColors.lightBorder),
                       ),
                     ),
-
-                    const Spacer(),
-
-                    // Right actions
-                    Row(
+                    child: Row(
                       children: [
+                        // Logo
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: const Icon(
+                                Icons.restaurant,
+                                color: Colors.white,
+                                size: 24,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              'Shopro POS',
+                              style: GoogleFonts.outfit(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 22,
+                                color: AppColors.lightText,
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const Spacer(),
+
+                        // Center Navigation Items
                         Container(
-                          width: 160,
-                          height: 40,
-                          padding: const EdgeInsets.symmetric(horizontal: 10),
+                          padding: const EdgeInsets.all(4),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFF8F9FA),
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: const Color(0xFFE9ECEF)),
+                            color: const Color(0xFFF1F3F5),
+                            borderRadius: BorderRadius.circular(14),
                           ),
                           child: Row(
-                            children: [
-                              const Icon(
-                                Icons.search,
-                                color: AppColors.lightMuted,
-                                size: 18,
-                              ),
-                              const SizedBox(width: 4),
-                              Expanded(
-                                child: Text(
-                                  'Search...',
-                                  style: GoogleFonts.outfit(
-                                    color: AppColors.lightMuted,
-                                    fontSize: 13,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ],
+                            mainAxisSize: MainAxisSize.min,
+                            children: _buildFilteredNavItems(context, location),
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        const SizedBox(width: 12),
-                        _buildNotificationBadge(context, count),
-                        const SizedBox(width: 6),
-                        _buildIconBtn(Icons.person_outline),
-                        const SizedBox(width: 12),
-                        const CircleAvatar(
-                          radius: 18,
-                          backgroundImage: NetworkImage(
-                            'https://i.pravatar.cc/150?u=mario',
-                          ),
+
+                        const Spacer(),
+
+                        // Right actions
+                        Row(
+                          children: [
+                            Container(
+                              width: 120, // Reduced from 160
+                              height: 40,
+                              padding: const EdgeInsets.symmetric(horizontal: 10),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF8F9FA),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(color: const Color(0xFFE9ECEF)),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(
+                                    Icons.search,
+                                    color: AppColors.lightMuted,
+                                    size: 18,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Expanded(
+                                    child: Text(
+                                      'Search...',
+                                      style: GoogleFonts.outfit(
+                                        color: AppColors.lightMuted,
+                                        fontSize: 13,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            // Removed one SizedBox(width: 12) here
+                            _buildNotificationBadge(scaffoldContext, count),
+                            const SizedBox(width: 6),
+                            _buildIconBtn(Icons.person_outline),
+                            const SizedBox(width: 12),
+                            const CircleAvatar(
+                              radius: 18,
+                              backgroundImage: NetworkImage(
+                                'https://i.pravatar.cc/150?u=mario',
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
-                ),
-              ),
+                  ),
 
-              // Main Content
-              Expanded(child: widget.child),
-            ],
+                  // Main Content
+                  Expanded(child: widget.child),
+                ],
+              ),
+            ),
           ),
         ),
       ),
     );
+  }
+
+  List<Widget> _buildFilteredNavItems(BuildContext context, String location) {
+    final authNotifier = ref.read(authProvider.notifier);
+    final permittedRoutes = authNotifier.getPermittedRoutes();
+
+    final navLabels = {
+      '/floor-plan': 'Floor Plan',
+      '/staff-dashboard': 'Staff',
+      '/menu': 'Menu',
+      '/inventory': 'Inventory',
+      '/history': 'History',
+      '/kds': 'KDS',
+    };
+
+    return permittedRoutes.map((route) {
+      final isActive = route == '/kds'
+          ? (location == '/kds' || location.startsWith('/kds/'))
+          : location == route;
+
+      return _buildNavItem(context, navLabels[route] ?? 'Unknown', route, isActive);
+    }).toList();
   }
 
   Widget _buildNotificationBadge(BuildContext context, int count) {
@@ -271,7 +233,7 @@ class _MainNavigationLayoutState extends ConsumerState<MainNavigationLayout> {
     return GestureDetector(
       onTap: () => context.go(route),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10), // Reduced from 18
         decoration: BoxDecoration(
           color: active ? Colors.white : Colors.transparent,
           borderRadius: BorderRadius.circular(10),

@@ -42,105 +42,152 @@ class TableLayoutCanvas extends ConsumerWidget {
 
     return Column(
       children: [
-        // Persistent Toolbar
+        // Persistent Toolbar with Scroll and More menu
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          height: 60,
           decoration: const BoxDecoration(
             color: Colors.white,
             border: Border(bottom: BorderSide(color: Color(0xFFE9ECEF))),
           ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF1F3F5),
-                  borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Row(
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF1F3F5),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          _buildSectionFilter(ref, 'ALL', floorState.selectedSection == 'ALL'),
+                          const SizedBox(width: 4),
+                          _buildSectionFilter(ref, 'BOOTHS', floorState.selectedSection == 'BOOTHS'),
+                          const SizedBox(width: 4),
+                          _buildSectionFilter(ref, 'PRIVATE', floorState.selectedSection == 'PRIVATE'),
+                          const SizedBox(width: 4),
+                          _buildSectionFilter(ref, 'MAIN', floorState.selectedSection == 'MAIN'),
+                          const SizedBox(width: 4),
+                          _buildSectionFilter(ref, 'BAR', floorState.selectedSection == 'BAR'),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
-                child: Row(
-                  children: [
-                    _buildSectionFilter(
-                      ref,
-                      'ALL',
-                      floorState.selectedSection == 'ALL',
+                const SizedBox(width: 12),
+                // More Options Menu (3 dots)
+                PopupMenuButton<String>(
+                  icon: const Icon(Icons.more_vert, color: AppColors.secondary),
+                  onSelected: (value) {
+                    switch (value) {
+                      case 'my_tables':
+                        ref.read(floorPlanProvider.notifier).toggleMyTables(true);
+                        break;
+                      case 'all_tables':
+                        ref.read(floorPlanProvider.notifier).toggleMyTables(false);
+                        break;
+                      case 'map_view':
+                        if (floorState.viewMode != FloorViewMode.map) {
+                          ref.read(floorPlanProvider.notifier).toggleViewMode();
+                        }
+                        break;
+                      case 'grid_view':
+                        if (floorState.viewMode != FloorViewMode.grid) {
+                          ref.read(floorPlanProvider.notifier).toggleViewMode();
+                        }
+                        break;
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                      value: 'my_tables',
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.person_outline,
+                            size: 20,
+                            color: floorState.showOnlyMyTables ? AppColors.primary : AppColors.secondary,
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            'My Tables',
+                            style: GoogleFonts.outfit(
+                              fontWeight: floorState.showOnlyMyTables ? FontWeight.bold : FontWeight.normal,
+                              color: floorState.showOnlyMyTables ? AppColors.primary : AppColors.lightText,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    const SizedBox(width: 4),
-                    _buildSectionFilter(
-                      ref,
-                      'BOOTHS',
-                      floorState.selectedSection == 'BOOTHS',
+                    PopupMenuItem(
+                      value: 'all_tables',
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.group_outlined,
+                            size: 20,
+                            color: !floorState.showOnlyMyTables ? AppColors.primary : AppColors.secondary,
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            'All Tables',
+                            style: GoogleFonts.outfit(
+                              fontWeight: !floorState.showOnlyMyTables ? FontWeight.bold : FontWeight.normal,
+                              color: !floorState.showOnlyMyTables ? AppColors.primary : AppColors.lightText,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    const SizedBox(width: 4),
-                    _buildSectionFilter(
-                      ref,
-                      'PRIVATE',
-                      floorState.selectedSection == 'PRIVATE',
+                    const PopupMenuDivider(),
+                    PopupMenuItem(
+                      value: 'map_view',
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.map_outlined,
+                            size: 20,
+                            color: floorState.viewMode == FloorViewMode.map ? AppColors.primary : AppColors.secondary,
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            'Map View',
+                            style: GoogleFonts.outfit(
+                              fontWeight: floorState.viewMode == FloorViewMode.map ? FontWeight.bold : FontWeight.normal,
+                              color: floorState.viewMode == FloorViewMode.map ? AppColors.primary : AppColors.lightText,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    const SizedBox(width: 4),
-                    _buildSectionFilter(
-                      ref,
-                      'MAIN',
-                      floorState.selectedSection == 'MAIN',
-                    ),
-                    const SizedBox(width: 4),
-                    _buildSectionFilter(
-                      ref,
-                      'BAR',
-                      floorState.selectedSection == 'BAR',
+                    PopupMenuItem(
+                      value: 'grid_view',
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.grid_view_outlined,
+                            size: 20,
+                            color: floorState.viewMode == FloorViewMode.grid ? AppColors.primary : AppColors.secondary,
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            'Grid View',
+                            style: GoogleFonts.outfit(
+                              fontWeight: floorState.viewMode == FloorViewMode.grid ? FontWeight.bold : FontWeight.normal,
+                              color: floorState.viewMode == FloorViewMode.grid ? AppColors.primary : AppColors.lightText,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
-              ),
-              const Spacer(),
-              Container(
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF1F3F5),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  children: [
-                    _buildToggleBtn(
-                      ref,
-                      'My Tables',
-                      floorState.showOnlyMyTables,
-                      () => ref
-                          .read(floorPlanProvider.notifier)
-                          .toggleMyTables(true),
-                    ),
-                    _buildToggleBtn(
-                      ref,
-                      'All Tables',
-                      !floorState.showOnlyMyTables,
-                      () => ref
-                          .read(floorPlanProvider.notifier)
-                          .toggleMyTables(false),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      width: 1,
-                      height: 20,
-                      color: const Color(0xFFDEE2E6),
-                    ),
-                    const SizedBox(width: 8),
-                    _buildToggleBtn(
-                      ref,
-                      'Map',
-                      floorState.viewMode == FloorViewMode.map,
-                      () =>
-                          ref.read(floorPlanProvider.notifier).toggleViewMode(),
-                    ),
-                    _buildToggleBtn(
-                      ref,
-                      'Grid',
-                      floorState.viewMode == FloorViewMode.grid,
-                      () =>
-                          ref.read(floorPlanProvider.notifier).toggleViewMode(),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
 
@@ -166,19 +213,51 @@ class TableLayoutCanvas extends ConsumerWidget {
                       if (floorState.viewMode == FloorViewMode.map)
                         ...filteredTables.map((table) {
                           final isDecor = table.shape == TableShape.decor;
+                          
+                          Widget tableWidget = TableWidget(table: table);
+                          
+                          // If not decor and not in edit mode, allow selection
+                          if (!isDecor && !floorState.isEditMode) {
+                            tableWidget = GestureDetector(
+                              onTap: () => _handleTableSelection(context, ref, table),
+                              child: tableWidget,
+                            );
+                          }
+
+                          // If in edit mode, wrap with Draggable (unless it's decor)
+                          if (floorState.isEditMode && !isDecor) {
+                            return Positioned(
+                              left: table.posX,
+                              top: table.posY,
+                              child: Draggable<String>(
+                                data: table.id,
+                                feedback: Opacity(
+                                  opacity: 0.6,
+                                  child: tableWidget,
+                                ),
+                                childWhenDragging: const SizedBox.shrink(),
+                                onDragEnd: (details) {
+                                  // Convert global position to local canvas position
+                                  final RenderBox box = context.findRenderObject() as RenderBox;
+                                  final Offset localOffset = box.globalToLocal(details.offset);
+                                  
+                                  // Adjust for InteractiveViewer scale/translation if needed
+                                  // For now, simpler: we assume the canvas is what we drag on
+                                  ref.read(floorPlanProvider.notifier).updateTablePosition(
+                                    table.id,
+                                    localOffset.dx,
+                                    localOffset.dy,
+                                  );
+                                },
+                                child: tableWidget,
+                              ),
+                            );
+                          }
+
                           return Positioned(
                             left: table.posX,
-                            top: table.posY + 40,
-                            child: isDecor
-                                ? TableWidget(table: table)
-                                : GestureDetector(
-                                    onTap: () => _handleTableSelection(
-                                      context,
-                                      ref,
-                                      table,
-                                    ),
-                                    child: TableWidget(table: table),
-                                  ),
+                            top: table.posY,
+                            child: tableWidget,
                           );
                         })
                       else
@@ -294,31 +373,6 @@ class TableLayoutCanvas extends ConsumerWidget {
     );
   }
 
-  Widget _buildToggleBtn(
-    WidgetRef ref,
-    String label,
-    bool active,
-    VoidCallback onTap,
-  ) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: active ? AppColors.primary : Colors.transparent,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Text(
-          label,
-          style: GoogleFonts.outfit(
-            fontSize: 12,
-            fontWeight: FontWeight.bold,
-            color: active ? Colors.white : AppColors.lightMuted,
-          ),
-        ),
-      ),
-    );
-  }
 
   Widget _buildSectionFilter(WidgetRef ref, String label, bool active) {
     return GestureDetector(
@@ -349,20 +403,79 @@ class TableLayoutCanvas extends ConsumerWidget {
     if (table.status == TableStatus.dirty) {
       ref.read(floorPlanProvider.notifier).markTableAsAvailable(table.id);
     } else if (table.status == TableStatus.available) {
-      await ref
-          .read(orderProvider.notifier)
-          .createOrder(
-            tableId: table.id,
-            guestCount: 1,
-            orderType: OrderType.dineIn,
-          );
-      final orderState = ref.read(orderProvider);
-      if (orderState.activeOrder != null && context.mounted) {
-        context.go('/menu');
-      }
+      _showSeatingDialog(context, ref, table);
     } else {
       context.go('/table-dashboard', extra: table);
     }
+  }
+
+  void _showSeatingDialog(BuildContext context, WidgetRef ref, TableInfo table) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        int guestCount = 2; // Default
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text('Seat Table ${table.name}', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('How many guests?', style: GoogleFonts.outfit()),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      IconButton(
+                        onPressed: guestCount > 1 ? () => setState(() => guestCount--) : null,
+                        icon: const Icon(Icons.remove_circle_outline),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Text(
+                          '$guestCount',
+                          style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: guestCount < table.capacity
+                            ? () => setState(() => guestCount++)
+                            : null,
+                        icon: const Icon(Icons.add_circle_outline),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text('Cancel', style: GoogleFonts.outfit(color: AppColors.lightMuted)),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                  ),
+                  onPressed: () async {
+                    Navigator.pop(context);
+                    await ref.read(orderProvider.notifier).createOrder(
+                          tableId: table.id,
+                          guestCount: guestCount,
+                          orderType: OrderType.dineIn,
+                        );
+                    if (context.mounted) {
+                      context.go('/menu');
+                    }
+                  },
+                  child: Text('Start Order', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 }
 

@@ -30,6 +30,7 @@ public class FloorPlanServiceImpl implements FloorPlanService {
     private final WaitlistEntryRepository waitlistEntryRepository;
     private final ReservationRepository reservationRepository;
     private final mls.sho.dms.application.service.core.NotificationEngine notificationEngine;
+    private final org.springframework.messaging.simp.SimpMessagingTemplate messagingTemplate;
 
     private static final int RESERVATION_HOLD_WINDOW_MINS = 15;
 
@@ -155,7 +156,12 @@ public class FloorPlanServiceImpl implements FloorPlanService {
         
         tableShapeRepository.save(table);
 
-        // Notify Servers
+        TableShapeResponse tableResponse = mapToTableShapeResponse(table);
+        
+        // Broadcast table update to all clients
+        messagingTemplate.convertAndSend("/topic/tables", tableResponse);
+
+        // Notify Servers via in-app notification engine
         notificationEngine.sendNotification(
             "TABLE_OCCUPIED",
             "Table Seated: " + table.getName(),
@@ -164,7 +170,16 @@ public class FloorPlanServiceImpl implements FloorPlanService {
             "TABLE_OCCUPIED_" + table.getId()
         );
 
-        return mapToTableShapeResponse(table);
+        if (waitlistEntryId != null) {
+            WaitlistEntry entry = waitlistEntryRepository.findById(waitlistEntryId).orElse(null);
+            if (entry != null) {
+                // Broadcast waitlist removal
+                messagingTemplate.convertAndSend("/topic/waitlist", 
+                    java.util.Map.of("id", waitlistEntryId, "action", "SEATED"));
+            }
+        }
+
+        return tableResponse;
     }
 
     @Override
@@ -178,6 +193,10 @@ public class FloorPlanServiceImpl implements FloorPlanService {
 
         table.setStatus(TableStatus.AVAILABLE);
         TableShape saved = tableShapeRepository.save(table);
+        TableShapeResponse tableResponse = mapToTableShapeResponse(saved);
+
+        // Broadcast table update
+        messagingTemplate.convertAndSend("/topic/tables", tableResponse);
 
         // Notify Hosts
         notificationEngine.sendNotification(
@@ -188,7 +207,7 @@ public class FloorPlanServiceImpl implements FloorPlanService {
             "TABLE_VACANT_" + saved.getId()
         );
 
-        return mapToTableShapeResponse(saved);
+        return tableResponse;
     }
 
     @Override
@@ -203,6 +222,10 @@ public class FloorPlanServiceImpl implements FloorPlanService {
         }
         table.setStatus(status);
         TableShape saved = tableShapeRepository.save(table);
+        TableShapeResponse tableResponse = mapToTableShapeResponse(saved);
+
+        // Broadcast table update
+        messagingTemplate.convertAndSend("/topic/tables", tableResponse);
 
         // If manually setting to OCCUPIED, notify servers too
         if (status == TableStatus.OCCUPIED) {
@@ -215,7 +238,7 @@ public class FloorPlanServiceImpl implements FloorPlanService {
             );
         }
 
-        return mapToTableShapeResponse(saved);
+        return tableResponse;
     }
 
     @Override
@@ -238,7 +261,10 @@ public class FloorPlanServiceImpl implements FloorPlanService {
                 res.getTable().getStatus() == TableStatus.AVAILABLE) {
                 
                 res.getTable().setStatus(TableStatus.HELD);
-                tableShapeRepository.save(res.getTable());
+                TableShape saved = tableShapeRepository.save(res.getTable());
+                
+                // Broadcast the change to the floor plan
+                messagingTemplate.convertAndSend("/topic/tables", mapToTableShapeResponse(saved));
             }
         }
     }

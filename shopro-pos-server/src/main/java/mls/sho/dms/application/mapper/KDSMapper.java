@@ -19,6 +19,7 @@ public interface KDSMapper {
     @Mapping(target = "id", source = "entity.id")
     @Mapping(target = "status", source = "entity.status")
     @Mapping(target = "firedAt", source = "entity.firedAt")
+    @Mapping(target = "cookingAt", source = "entity.cookingAt")
     KDSTicketResponse toResponse(KDSTicket entity, List<KDSTicketItemResponse> items);
 
     @Mapping(target = "id", source = "entity.id")
@@ -28,5 +29,7 @@ public interface KDSMapper {
     @Mapping(target = "status", source = "entity.status")
     @Mapping(target = "customNote", source = "entity.orderItem.customNote")
     @Mapping(target = "modifiers", ignore = true) // Will support modifiers later
+    @Mapping(target = "priority", source = "entity.priority")
+    @Mapping(target = "preparationTimeMinutes", source = "entity.orderItem.menuItem.preparationTimeMinutes")
     KDSTicketItemResponse toItemResponse(KDSTicketItem entity);
 }

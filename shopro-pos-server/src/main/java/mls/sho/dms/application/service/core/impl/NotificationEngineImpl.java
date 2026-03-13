@@ -210,4 +210,13 @@ public class NotificationEngineImpl implements NotificationEngine {
                     Map.of("id", notificationId, "action", "DISMISSED"));
         }
     }
+    @Override
+    public void dismissAll(UUID userId) {
+        inAppRepository.dismissAllByRecipientId(userId);
+        
+        messagingTemplate.convertAndSendToUser(
+                userId.toString(), 
+                "/queue/notifications/sync", 
+                Map.of("action", "DISMISS_ALL"));
+    }
 }

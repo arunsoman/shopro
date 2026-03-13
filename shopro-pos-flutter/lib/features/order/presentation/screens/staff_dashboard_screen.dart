@@ -61,7 +61,7 @@ class _StaffDashboardScreenState extends ConsumerState<StaffDashboardScreen> {
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
@@ -107,7 +107,7 @@ class _StaffDashboardScreenState extends ConsumerState<StaffDashboardScreen> {
           Icon(
             Icons.assignment_outlined,
             size: 64,
-            color: AppColors.lightMuted.withOpacity(0.5),
+            color: AppColors.lightMuted.withValues(alpha: 0.5),
           ),
           const SizedBox(height: AppSpacing.md),
           const Text(
@@ -151,7 +151,7 @@ class _OrderDashboardCard extends ConsumerWidget {
           borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -189,7 +189,7 @@ class _OrderDashboardCard extends ConsumerWidget {
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.1),
+                    color: statusColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(

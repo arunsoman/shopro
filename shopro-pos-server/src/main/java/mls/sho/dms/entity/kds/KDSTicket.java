@@ -46,6 +46,10 @@ public class KDSTicket extends BaseEntity {
     @Column(name = "bumped_at")
     private Instant bumpedAt;
 
+    /** Timestamp when the preparation started. */
+    @Column(name = "cooking_at")
+    private Instant cookingAt;
+
     public OrderTicket getOrderTicket() { return orderTicket; }
     public void setOrderTicket(OrderTicket orderTicket) { this.orderTicket = orderTicket; }
     public KDSStation getStation() { return station; }
@@ -56,4 +60,6 @@ public class KDSTicket extends BaseEntity {
     public void setFiredAt(Instant firedAt) { this.firedAt = firedAt; }
     public Instant getBumpedAt() { return bumpedAt; }
     public void setBumpedAt(Instant bumpedAt) { this.bumpedAt = bumpedAt; }
+    public Instant getCookingAt() { return cookingAt; }
+    public void setCookingAt(Instant cookingAt) { this.cookingAt = cookingAt; }
 }

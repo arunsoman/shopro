@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
+import '../../../../core/network/network_config.dart';
 import '../../data/models/mapping_model.dart';
 
 class MappingState {
@@ -24,7 +25,7 @@ class MappingState {
 }
 
 class MappingNotifier extends StateNotifier<MappingState> {
-  final String _baseUrl = 'http://localhost:8080/v1/notifications/mappings';
+  final String _baseUrl = '${NetworkConfig.baseUrl}/v1/notifications/mappings';
 
   MappingNotifier() : super(MappingState(mappings: [])) {
     loadMappings();

@@ -1,6 +1,10 @@
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:stomp_dart_client/stomp_dart_client.dart';
 import '../../domain/models/floor_models.dart';
 import '../../domain/repositories/floor_plan_repository.dart';
+import '../../../notifications/presentation/providers/notification_provider.dart';
 
 enum FloorViewMode { map, grid }
 
@@ -12,6 +16,7 @@ class FloorPlanState {
   final bool showOnlyMyTables;
   final FloorViewMode viewMode;
   final bool isLoading;
+  final bool isEditMode;
 
   FloorPlanState({
     required this.tables,
@@ -21,6 +26,7 @@ class FloorPlanState {
     this.showOnlyMyTables = false,
     this.viewMode = FloorViewMode.map,
     this.isLoading = false,
+    this.isEditMode = false,
   });
 
   factory FloorPlanState.initial() => FloorPlanState(tables: [], waitlist: []);
@@ -33,6 +39,7 @@ class FloorPlanState {
     bool? showOnlyMyTables,
     FloorViewMode? viewMode,
     bool? isLoading,
+    bool? isEditMode,
   }) {
     return FloorPlanState(
       tables: tables ?? this.tables,
@@ -42,6 +49,7 @@ class FloorPlanState {
       showOnlyMyTables: showOnlyMyTables ?? this.showOnlyMyTables,
       viewMode: viewMode ?? this.viewMode,
       isLoading: isLoading ?? this.isLoading,
+      isEditMode: isEditMode ?? this.isEditMode,
     );
   }
 }
@@ -51,6 +59,10 @@ class FloorPlanNotifier extends Notifier<FloorPlanState> {
   FloorPlanState build() {
     // Proactively fetch on build
     Future.microtask(() => refresh());
+
+    // Listen to real-time updates via NotificationNotifier's stompClient
+    _setupWebSocketListeners();
+
     return FloorPlanState(
       tables: [], // Start empty, wait for refresh
       waitlist: [],
@@ -61,23 +73,152 @@ class FloorPlanNotifier extends Notifier<FloorPlanState> {
     );
   }
 
+  void _setupWebSocketListeners() {
+    final List<void Function()> unsubs = [];
+    
+    void subscribe(StompClient stompClient) {
+      // Clear old subs if re-subscribing
+      for (final unsub in unsubs) {
+        unsub();
+      }
+      unsubs.clear();
+
+      final unsubTables = stompClient.subscribe(
+        destination: '/topic/tables',
+        callback: (frame) {
+          if (frame.body != null) {
+            _handleTableUpdate(json.decode(frame.body!));
+          }
+        },
+      );
+      unsubs.add(unsubTables);
+
+      final unsubWaitlist = stompClient.subscribe(
+        destination: '/topic/waitlist',
+        callback: (frame) {
+          if (frame.body != null) {
+            _handleWaitlistUpdate(json.decode(frame.body!));
+          }
+        },
+      );
+      unsubs.add(unsubWaitlist);
+    }
+
+    // 1. Handle initial state if already connected
+    final notificationState = ref.read(notificationProvider);
+    if (notificationState.isConnected) {
+      final stompClient = ref.read(notificationProvider.notifier).stompClient;
+      if (stompClient != null) {
+        subscribe(stompClient);
+      }
+    }
+
+    // 2. Listen for connection transitions
+    ref.listen(notificationProvider, (previous, next) {
+      if (next.isConnected && (previous == null || !previous.isConnected)) {
+        final stompClient = ref.read(notificationProvider.notifier).stompClient;
+        if (stompClient != null) {
+          subscribe(stompClient);
+        }
+      }
+    });
+
+    // Clean up on dispose
+    ref.onDispose(() {
+      for (final unsub in unsubs) {
+        unsub();
+      }
+    });
+  }
+
+  void _handleTableUpdate(Map<String, dynamic> data) {
+    debugPrint('Received table update: $data');
+    final tableId = data['id'];
+    if (tableId == null) return;
+
+    final statusStr = (data['status'] as String?)?.toUpperCase() ?? 'AVAILABLE';
+    final TableStatus status = _mapBackendStatus(statusStr);
+    
+    state = state.copyWith(
+      tables: state.tables.map((t) {
+        if (t.id == tableId) {
+          return t.copyWith(
+            status: status,
+            name: data['name'] ?? t.name,
+            capacity: data['capacity'] ?? t.capacity,
+            posX: (data['posX'] as num?)?.toDouble() ?? t.posX,
+            posY: (data['posY'] as num?)?.toDouble() ?? t.posY,
+            width: (data['width'] as num?)?.toDouble() ?? t.width,
+            height: (data['height'] as num?)?.toDouble() ?? t.height,
+            sectionId: data['sectionId'] ?? t.sectionId,
+            assignedStaffId: data['assignedStaffId'] ?? t.assignedStaffId,
+            assignedStaffName: data['assignedStaffName'] ?? t.assignedStaffName,
+          );
+        }
+        return t;
+      }).toList(),
+    );
+  }
+
+  TableStatus _mapBackendStatus(String status) {
+    switch (status) {
+      case 'HELD':
+      case 'RESERVED':
+        return TableStatus.held;
+      case 'OCCUPIED':
+        return TableStatus.occupied;
+      case 'ORDERED':
+      case 'ORDER_PLACED':
+        return TableStatus.ordered;
+      case 'FOOD_DELIVERED':
+      case 'DELIVERED':
+        return TableStatus.foodDelivered;
+      case 'DESSERT_COURSE':
+        return TableStatus.dessertCourse;
+      case 'CHECK_DROPPED':
+        return TableStatus.checkDropped;
+      case 'PAYING':
+        return TableStatus.paying;
+      case 'DIRTY':
+        return TableStatus.dirty;
+      case 'CLEANING':
+        return TableStatus.cleaning;
+      case 'MAINTENANCE':
+        return TableStatus.maintenance;
+      default:
+        return TableStatus.available;
+    }
+  }
+
+  void _handleWaitlistUpdate(Map<String, dynamic> data) {
+    debugPrint('Received waitlist update: $data');
+    final waitlistId = data['id'];
+    final action = data['action'];
+
+    if (action == 'SEATED') {
+      state = state.copyWith(
+        waitlist: state.waitlist.where((e) => e.id != waitlistId).toList(),
+      );
+    }
+  }
+
   Future<void> refresh() async {
     try {
       state = state.copyWith(isLoading: true);
       final tables = await floorPlanRepository.getTables();
       final sections = await floorPlanRepository.getSections();
+      final waitlist = await floorPlanRepository.getWaitlist();
 
       state = state.copyWith(
         tables: tables,
-        waitlist: _mockWaitlist,
+        waitlist: waitlist,
         sections: sections,
         isLoading: false,
       );
-    } catch (e) {
-      // Fallback to minimal mock if error
+    } catch (e, stack) {
+      debugPrint('Error refreshing floor plan: $e');
+      debugPrint('Stack trace: $stack');
       state = state.copyWith(
-        tables: _mockTables,
-        waitlist: _mockWaitlist,
         isLoading: false,
       );
     }
@@ -99,154 +240,107 @@ class FloorPlanNotifier extends Notifier<FloorPlanState> {
     );
   }
 
-  void assignPartyToTable(String waitlistId, String tableId) {
-    // 1. Find the waitlist entry
-    final waitlistIndex = state.waitlist.indexWhere((e) => e.id == waitlistId);
-    if (waitlistIndex == -1) return;
+  Future<void> assignPartyToTable(String waitlistId, String tableId) async {
+    try {
+      // Optimistic update
+      final tableIndex = state.tables.indexWhere((t) => t.id == tableId);
+      if (tableIndex != -1) {
+        final table = state.tables[tableIndex];
+        final updatedTables = List<TableInfo>.from(state.tables)
+          ..[tableIndex] = table.copyWith(
+            status: TableStatus.occupied,
+            currentOrderTime: 'Just now',
+          );
+        state = state.copyWith(
+          tables: updatedTables,
+          waitlist: state.waitlist.where((e) => e.id != waitlistId).toList(),
+        );
+      }
 
-    // 2. Find the table
-    final tableIndex = state.tables.indexWhere((t) => t.id == tableId);
-    if (tableIndex == -1) return;
-    final table = state.tables[tableIndex];
-
-    // US-4.1 Guard: Only allow seating at AVAILABLE or HELD tables
-    if (table.status != TableStatus.available &&
-        table.status != TableStatus.held) {
-      print('DEBUG: Cannot seat party. Table ${table.name} is ${table.status}');
-      return;
+      await floorPlanRepository.seatParty(tableId, waitlistId);
+    } catch (e) {
+      debugPrint('Error seating party: $e');
+      // On error, refresh to consistent state
+      refresh();
     }
-
-    // 3. Update table status to occupied
-    final updatedTable = table.copyWith(
-      status: TableStatus.occupied,
-      currentOrderTime: 'Just now',
-    );
-
-    // 4. Update waitlist entry status to seated (or remove)
-    final updatedWaitlist = List<WaitlistEntry>.from(state.waitlist)
-      ..removeAt(waitlistIndex);
-
-    final updatedTables = List<TableInfo>.from(state.tables)
-      ..[tableIndex] = updatedTable;
-
-    state = state.copyWith(tables: updatedTables, waitlist: updatedWaitlist);
   }
 
-  void markTableAsAvailable(String tableId) {
-    final index = state.tables.indexWhere((t) => t.id == tableId);
+  void notifyWaitlistEntry(String waitlistId) {
+    // In a real app, this would call an SMS/Notify service
+    final index = state.waitlist.indexWhere((e) => e.id == waitlistId);
     if (index == -1) return;
-    final table = state.tables[index];
-
-    // Only allow Available if it was Dirty
-    if (table.status != TableStatus.dirty) return;
-
-    final updatedTable = table.copyWith(
-      status: TableStatus.available,
-      currentOrderTime: null,
-    );
-
-    final updatedTables = List<TableInfo>.from(state.tables)
-      ..[index] = updatedTable;
-
-    state = state.copyWith(tables: updatedTables);
+    
+    final updatedWaitlist = List<WaitlistEntry>.from(state.waitlist)
+      ..[index] = state.waitlist[index].copyWith(status: WaitlistStatus.ready, waitTimeDisplay: 'READY');
+      
+    state = state.copyWith(waitlist: updatedWaitlist);
   }
 
-  static final List<TableInfo> _mockTables = [
-    TableInfo(
-      id: '1',
-      name: 'T-01',
-      capacity: 4,
-      status: TableStatus.available,
-      posX: 100,
-      posY: 100,
-      width: 120,
-      height: 120,
-    ),
-    TableInfo(
-      id: '2',
-      name: 'T-02',
-      capacity: 2,
-      status: TableStatus.occupied,
-      posX: 300,
-      posY: 100,
-      width: 120,
-      height: 120,
-    ),
-    TableInfo(
-      id: '3',
-      name: 'T-03',
-      capacity: 8,
-      status: TableStatus.ordered,
-      posX: 500,
-      posY: 100,
-      width: 250,
-      height: 120,
-      currentOrderTime: '12m ago',
-    ),
-    TableInfo(
-      id: '4',
-      name: 'R-01',
-      capacity: 2,
-      status: TableStatus.delivered,
-      posX: 100,
-      posY: 300,
-      width: 120,
-      height: 120,
-      currentOrderTime: '45m ago',
-    ),
-    TableInfo(
-      id: '5',
-      name: 'T-04',
-      capacity: 4,
-      status: TableStatus.dirty,
-      posX: 300,
-      posY: 300,
-      width: 120,
-      height: 120,
-    ),
-    TableInfo(
-      id: '6',
-      name: 'T-05',
-      capacity: 4,
-      status: TableStatus.held,
-      posX: 500,
-      posY: 300,
-      width: 120,
-      height: 120,
-    ),
-  ];
+  Future<void> addToWaitlist({required String name, required int size, bool isVIP = false}) async {
+    try {
+      // Optimistic update
+      final tempEntry = WaitlistEntry(
+        id: 'temp-${DateTime.now().millisecondsSinceEpoch}',
+        customerName: name,
+        partySize: size,
+        waitTimeDisplay: 'Joining...',
+        status: WaitlistStatus.waiting,
+        isVIP: isVIP,
+      );
+      state = state.copyWith(waitlist: [...state.waitlist, tempEntry]);
 
-  static final List<WaitlistEntry> _mockWaitlist = [
-    WaitlistEntry(
-      id: 'w1',
-      customerName: 'Miller Party',
-      partySize: 4,
-      waitTimeDisplay: '15m wait',
-      status: WaitlistStatus.waiting,
-    ),
-    WaitlistEntry(
-      id: 'w2',
-      customerName: 'Thompson',
-      partySize: 2,
-      waitTimeDisplay: '42m wait',
-      status: WaitlistStatus.waiting,
-    ),
-    WaitlistEntry(
-      id: 'w3',
-      customerName: 'Sarah Jenkins',
-      partySize: 6,
-      waitTimeDisplay: 'READY',
-      status: WaitlistStatus.ready,
-      isVIP: true,
-    ),
-    WaitlistEntry(
-      id: 'w4',
-      customerName: 'Henderson',
-      partySize: 2,
-      waitTimeDisplay: '5m wait',
-      status: WaitlistStatus.waiting,
-    ),
-  ];
+      await floorPlanRepository.addToWaitlist(name: name, size: size);
+      // Wait for WebSocket update or refresh
+      refresh();
+    } catch (e) {
+      debugPrint('Error adding to waitlist: $e');
+      refresh();
+    }
+  }
+
+  Future<void> markTableAsAvailable(String tableId) async {
+    try {
+      // Optimistic update
+      final index = state.tables.indexWhere((t) => t.id == tableId);
+      if (index != -1) {
+        final updatedTables = List<TableInfo>.from(state.tables)
+          ..[index] = state.tables[index].copyWith(
+            status: TableStatus.available,
+            currentOrderTime: null,
+          );
+        state = state.copyWith(tables: updatedTables);
+      }
+
+      await floorPlanRepository.markTableClean(tableId);
+    } catch (e) {
+      debugPrint('Error marking table clean: $e');
+      refresh();
+    }
+  }
+
+  void toggleEditMode() {
+    state = state.copyWith(isEditMode: !state.isEditMode);
+  }
+
+  Future<void> updateTablePosition(String tableId, double dx, double dy) async {
+    try {
+      // Optimistic update
+      final index = state.tables.indexWhere((t) => t.id == tableId);
+      if (index != -1) {
+        final updatedTables = List<TableInfo>.from(state.tables)
+          ..[index] = state.tables[index].copyWith(
+            posX: dx,
+            posY: dy,
+          );
+        state = state.copyWith(tables: updatedTables);
+      }
+
+      await floorPlanRepository.updateTablePosition(tableId, dx, dy);
+    } catch (e) {
+      debugPrint('Error updating table position: $e');
+      refresh();
+    }
+  }
 }
 
 final floorPlanProvider = NotifierProvider<FloorPlanNotifier, FloorPlanState>(

@@ -11,21 +11,31 @@
     *   **Manager:** Configures the physical layout of the floor plan and defines sections.
 
     ## 3. Table Lifecycle & State Management
-    The Shopro POS uses a sophisticated 11-state machine to track table readiness and dining progress.
+    The Shopro POS uses a sophisticated 11-state machine to track table readiness and dining progress. For the full end-to-end technical flow, including iterative coursing loops and responsibility matrices, refer to the [Integrated Table Lifecycle Flow](file:///home/arun/IdeaProjects/shopro-pos/docs/flows/TABLE_LIFECYCLE_FLOW.md).
 
-    | State | Color | Description | Transitions |
+    ### 3.1 State Definitions & Primary Actors
+
+    | State | Color | Primary Actor | Description |
     | :--- | :--- | :--- | :--- |
-    | **AVAILABLE** | 🟢 Green | Clean and ready | → HELD, OCCUPIED |
-    | **HELD** | 🟡 Yellow | Reserved for upcoming reservation | → AVAILABLE, OCCUPIED |
-    | **OCCUPIED** | 🔵 Blue | Guests seated, at least one DRAFT order | → ORDERED, AVAILABLE (no-show) |
-    | **ORDERED** | 🟣 Purple | At least one order sent to kitchen | → FOOD_DELIVERED, CHECK_DROPPED |
-    | **FOOD_DELIVERED** | 🟠 Orange | Food at table, eating in progress | → CHECK_DROPPED, DESSERT_COURSE |
-    | **DESSERT_COURSE** | 🩷 Pink | Main cleared, dessert/drinks ongoing | → CHECK_DROPPED |
-    | **CHECK_DROPPED** | ⚫ Black | Bill presented, awaiting payment | → PAYING, AVAILABLE (if cash grabbed) |
-    | **PAYING** | ⚪ Gray | Payment processing | → DIRTY, AVAILABLE |
-    | **DIRTY** | 🔴 Red | Guests left, needs bussing | → CLEANING, AVAILABLE (if auto-marked) |
-    | **CLEANING** | 🟤 Brown | Staff cleaning, not ready | → AVAILABLE |
-    | **MAINTENANCE** | ⬜ White | Out of service | → AVAILABLE (manager only) |
+    | **AVAILABLE** | 🟢 Green | Busser | Clean and ready for the next guest. |
+    | **HELD** | 🟡 Yellow | System | Reserved for upcoming reservation (15m buffer). |
+    | **OCCUPIED** | 🔵 Blue | Host/Server | Guests seated, at least one DRAFT order. |
+    | **ORDERED** | 🟣 Purple | Server | Items/Courses fired to the kitchen. |
+    | **FOOD_DELIVERED**| 🟠 Orange | Runner/Expo | Food delivered; "Engagement Loop" active. |
+    | **DESSERT_COURSE**| 🩷 Pink | Server | Main course cleared, dessert/coffee served. |
+    | **CHECK_DROPPED** | ⚫ Black | Server | Bill presented, awaiting payment. |
+    | **PAYING** | ⚪ Gray | Guest/System | Payment processing initiated. |
+    | **DIRTY** | 🔴 Red | System | Guests left, table needs clearing (Auto-triggered). |
+    | **CLEANING** | 🟤 Brown | Busser | Turnover in progress. |
+    | **MAINTENANCE** | ⬜ White | Manager | Out of service (PIN required). |
+
+    ### Notification Templates ← resolved in iteration 1
+    > **Source:** Standard Restaurant Communication Patterns
+    > **Rationale:** Consistent messaging improves staff communication and guest experience.
+
+    - **Guest (SMS):** "Hi [Name], your table [TableID] at Shopro is ready! Please proceed to the host stand."
+    - **Staff (Toast):** "Table [ID] Transfer: Order #[OrderNum] moved from [ServerA] to you."
+    - **Staff (KDS):** "ALERT: Table [ID] status changed to DESSERT_COURSE."
 
     ### 3.1 Allowed Operations per State
     
@@ -202,6 +212,25 @@
 | `party_size` | INTEGER | NOT NULL | > 0 |
 | `status` | VARCHAR(20) | NOT NULL | WAITING, NOTIFIED, SEATED, CANCEL |
 
+### Monetary Data Standards ← resolved in iteration 1
+> **Source:** PostgreSQL Documentation / ISO 4217 Industry Standards
+> **Rationale:** NUMERIC/DECIMAL prevents floating-point inaccuracies. 4 decimal places for scale is the accounting standard to minimize intermediate calculation errors. Round-Half-Up is the standard for retail/restaurant financial reporting.
+
+| Standard | Implementation |
+|---|---|
+| Data Type | `NUMERIC(12,4)` |
+| Rounding Rule | Round-Half-Up |
+| Display Precision| 2 decimal places |
+| Timezone | All timestamps stored in `TIMESTAMPTZ` (UTC) |
+
+### Data Retention & Archive Policy ← resolved in iteration 1
+> **Source:** Sarbanes-Oxley (SOX) / GDPR Compliance Guidelines
+> **Rationale:** Maintains referential integrity for reporting while keeping active tables lean. 7-year retention follows financial record-keeping standards.
+
+- **Soft-Delete:** Use `status='archived'` or `is_archived=true`. Row-level physical deletion is prohibited for 90 days to allow recovery.
+- **Cold Storage:** Records older than 90 days are migrated to `audit_archive` tables weekly.
+- **Audit Logs:** System-wide audit trails must be retained for 7 years minimum.
+
 ---
 
 ## 8. Security & Permissions
@@ -221,6 +250,27 @@
 ### 8.2 Logic Guards
 - **Manager Override:** Required when moving an order into a table that is already `OCCUPIED` (Party Merge).
 - **Masking:** Customer phone numbers in the Waitlist sidebar follow PET partial masking: `***-***-1234`.
+
+### Surface Access Restrictions ← resolved in iteration 1
+> **Source:** OWASP RBAC Best Practices
+> **Rationale:** Principle of Least Privilege (PoLP) ensures staff only interact with data necessary for their workflow, reducing fraud risk.
+
+- **Host/Hostess:** Restricted from `/admin/*`, Financial Audit Trails, and Staff Payroll views.
+- **Server:** Restricted from Global Menu Management and Financial Settings.
+- **Busser:** Restricted from all financial operations and ordering systems (View only).
+
+### Operations Permission Matrix ← resolved in iteration 1
+> **Source:** Standard POS Security Matrix (Square/Toast comparable)
+> **Rationale:** Enforces deterministic access control across the POS ecosystem.
+
+| Role | Seat | Transfer Own | Transfer Any | Edit Layout | Waitlist |
+|---|---|---|---|---|---|
+| MANAGER | ALLOW | ALLOW | ALLOW | ALLOW | ALLOW |
+| HOST | ALLOW | DENY | DENY | DENY | ALLOW |
+| SERVER | ALLOW | ALLOW | CONDITIONAL*| DENY | DENY |
+| BUSSER | DENY | DENY | DENY | DENY | DENY |
+
+*CONDITIONAL: Transfer Any requires Manager PIN override.
 
 ---
 
@@ -379,3 +429,32 @@
         *   *Acceptance Criteria:* One-tap "Delivered" action on runner mobile app. Table status auto-updates.
         *   **Entities:** `TableShape`, `OrderItem`
         *   **Tech Stack:** Flutter
+
+## Navigation & Routing ← resolved in iteration 1
+> **Source:** Shadcn/ui and Radix UI Interaction Patterns
+> **Rationale:** Side-sheets maintain spatial awareness of the floor plan while making secondary selections. Centered Dialogs capture focused attention for critical data entry.
+
+### UI Interaction Standards
+- **Table Configuration (US-1.2):** Triggered by long-press; opens `Sheet` from right.
+- **Table Transfer (US-6.2):** Drag-and-drop initiates `Sheet` on source drop; target selection via secondary `Sheet` list.
+- **Input Keypads (US-2.2):** Centered `Dialog` with `44px` minimum touch targets.
+
+## Component Mapping ← resolved in iteration 1
+> **Source:** NPM Usage Statistics / Queueing Theory Standards
+> **Rationale:** qrcode.react is the industry standard for SVG-based QR generation in React. FCFS is the fairest waitlist mechanism when combined with dynamic buffers.
+
+### Implementation Libraries
+- **QR Engine:** `qrcode.react` (React/Web) and `qr_flutter` (Flutter/Mobile).
+- **Waitlist Algorithm:** First-Come-First-Served (FCFS) with a dynamic buffer (Configurable via `SYSTEM:WAIT_BUFFER` set to 15m default).
+
+---
+## Resolved Gaps Log
+| Gap ID | Iteration | Category | Resolution Summary |
+|---|---|---|---|
+| GAP-DR-001 | 1 | DATA_SCHEMA | Monetary: NUMERIC(12,4), Round-Half-Up |
+| GAP-DR-002 | 1 | DATA_SCHEMA | Soft-delete 90d, Audit 7y |
+| GAP-RL-001 | 1 | ROLE_ACTOR | Role restrictions for Host/Server |
+| GAP-RL-002 | 1 | SECURITY | RBAC Operations Permission Matrix |
+| GAP-UI-001 | 1 | NAVIGATION | Interaction patterns: Sheet for context, Dialog for input |
+| GAP-NT-001 | 1 | STATE_MACHINE | SMS and Toast notification templates |
+| GAP-TS-001 | 1 | COMPONENT_SPEC | QR Libraries and FCFS waitlist algorithm |

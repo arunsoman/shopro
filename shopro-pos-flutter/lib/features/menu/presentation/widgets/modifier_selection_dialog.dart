@@ -211,7 +211,7 @@ class _ModifierSelectionDialogState extends State<ModifierSelectionDialog> {
               label: Text(sub, style: GoogleFonts.outfit(fontSize: 13)),
               selected: isSelected,
               onSelected: (_) => _toggleSubtraction(sub),
-              selectedColor: Colors.red.withOpacity(0.1),
+              selectedColor: Colors.red.withValues(alpha: 0.1),
               checkmarkColor: Colors.red,
               labelStyle: TextStyle(
                 color: isSelected ? Colors.red : AppColors.lightText,
@@ -298,7 +298,7 @@ class _ModifierSelectionDialogState extends State<ModifierSelectionDialog> {
         ),
         Switch.adaptive(
           value: _hasAllergyFlag,
-          activeColor: AppColors.primary,
+          activeThumbColor: AppColors.primary,
           onChanged: (val) => setState(() => _hasAllergyFlag = val),
         ),
       ],
@@ -405,7 +405,7 @@ class _ModifierSelectionDialogState extends State<ModifierSelectionDialog> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
@@ -448,7 +448,7 @@ class _ModifierSelectionDialogState extends State<ModifierSelectionDialog> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.primary.withOpacity(0.05)
+              ? AppColors.primary.withValues(alpha: 0.05)
               : Colors.white,
           borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
           border: Border.all(

@@ -67,7 +67,7 @@ class _KDSStationSelectionScreenState
                 itemCount: kdsState.stations.length,
                 itemBuilder: (context, index) {
                   final station = kdsState.stations[index];
-                  final isExpo = station.stationType == KDSStationType.EXPO;
+                  final isExpo = station.stationType == KDSStationType.expo;
 
                   return InkWell(
                     onTap: () =>

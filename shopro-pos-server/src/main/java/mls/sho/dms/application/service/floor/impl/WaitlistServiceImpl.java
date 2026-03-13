@@ -49,7 +49,8 @@ public class WaitlistServiceImpl implements WaitlistService {
     @Override
     @Transactional(readOnly = true)
     public List<WaitlistEntryResponse> getActiveWaitlist() {
-        return waitlistEntryRepository.findByStatusOrderByCreatedAtAsc(WaitlistStatus.WAITING).stream()
+        return waitlistEntryRepository.findByStatusInOrderByCreatedAtAsc(
+                List.of(WaitlistStatus.WAITING, WaitlistStatus.NOTIFIED)).stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }

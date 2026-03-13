@@ -35,4 +35,8 @@ public interface NotificationEngine {
      * Syncs a notification's "dismissed" state across all user's sessions.
      */
     void markAsDismissed(UUID notificationId);
+    /**
+     * Dismisses all notifications for a user.
+     */
+    void dismissAll(UUID userId);
 }

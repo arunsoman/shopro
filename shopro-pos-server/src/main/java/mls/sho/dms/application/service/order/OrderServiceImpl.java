@@ -3,6 +3,7 @@ package mls.sho.dms.application.service.order;
 import lombok.RequiredArgsConstructor;
 import mls.sho.dms.application.dto.order.*;
 import mls.sho.dms.application.exception.ResourceNotFoundException;
+import mls.sho.dms.application.dto.floor.TableShapeResponse;
 import mls.sho.dms.entity.crm.CustomerProfile;
 import mls.sho.dms.entity.floor.TableShape;
 import mls.sho.dms.entity.menu.MenuItem;
@@ -16,6 +17,7 @@ import mls.sho.dms.repository.menu.ModifierOptionRepository;
 import mls.sho.dms.repository.order.*;
 import mls.sho.dms.repository.staff.StaffRepository;
 import mls.sho.dms.application.service.inventory.RecipeService;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -48,6 +50,7 @@ public class OrderServiceImpl implements OrderService {
     private final mls.sho.dms.service.kds.KDSService kdsService;
     private final OrderAuditLogRepository orderAuditLogRepository;
     private final mls.sho.dms.application.service.core.NotificationEngine notificationEngine;
+    private final SimpMessagingTemplate messagingTemplate;
 
     @Override
     public OrderResponse createOrder(CreateOrderRequest request, String performedBy) {
@@ -98,7 +101,14 @@ public class OrderServiceImpl implements OrderService {
 
         ticket = orderTicketRepository.save(ticket);
         recordAuditLog(ticket, "ORDER_CREATED", "Order started for " + request.orderType(), server);
-        return mapToResponse(ticket);
+        
+        if (ticket.getTable() != null) {
+            broadcastTableUpdate(ticket.getTable());
+        }
+
+        OrderResponse response = mapToResponse(ticket);
+        messagingTemplate.convertAndSend("/topic/orders", response);
+        return response;
     }
 
     @Override
@@ -155,6 +165,8 @@ public class OrderServiceImpl implements OrderService {
         recalculateTicket(ticket);
         OrderResponse result = findById(orderId);
         log.warn("Returning {} items. New item ID is {}", result.items().size(), item.getId());
+        
+        messagingTemplate.convertAndSend("/topic/orders/" + orderId, result);
         return result;
     }
 
@@ -174,7 +186,9 @@ public class OrderServiceImpl implements OrderService {
         }
 
         recalculateTicket(ticket);
-        return findById(orderId);
+         OrderResponse response = findById(orderId);
+         messagingTemplate.convertAndSend("/topic/orders/" + orderId, response);
+         return response;
     }
 
     @Override
@@ -203,6 +217,7 @@ public class OrderServiceImpl implements OrderService {
                 TableShape table = ticket.getTable();
                 table.setStatus(mls.sho.dms.entity.floor.TableStatus.ORDER_PLACED);
                 tableShapeRepository.save(table);
+                broadcastTableUpdate(table);
             }
             
             // Route the items to KDS stations
@@ -213,7 +228,9 @@ public class OrderServiceImpl implements OrderService {
             log.debug("No pending items found for order {} when sending to kitchen", orderId);
         }
 
-        return findById(orderId);
+        OrderResponse response = findById(orderId);
+        messagingTemplate.convertAndSend("/topic/orders/" + orderId, response);
+        return response;
     }
 
     @Override
@@ -241,7 +258,10 @@ public class OrderServiceImpl implements OrderService {
 
         kdsService.routeOrder(ticket, courseItems);
         recordAuditLog(ticket, "COURSE_FIRED", "Course #" + courseNumber + " fired to kitchen", ticket.getServer());
-        return findById(orderId);
+        
+        OrderResponse response = findById(orderId);
+        messagingTemplate.convertAndSend("/topic/orders/" + orderId, response);
+        return response;
     }
 
     @Override
@@ -305,7 +325,14 @@ public class OrderServiceImpl implements OrderService {
         }
 
         orderTicketRepository.save(ticket);
-        return mapToResponse(ticket);
+        OrderResponse response = mapToResponse(ticket);
+        messagingTemplate.convertAndSend("/topic/orders/" + orderId, response);
+        
+        if (ticket.getTable() != null) {
+            broadcastTableUpdate(ticket.getTable());
+        }
+        
+        return response;
     }
 
     @Override
@@ -321,8 +348,21 @@ public class OrderServiceImpl implements OrderService {
         ticket.setStatus(TicketStatus.SERVED);
         recordAuditLog(ticket, "ORDER_SERVED", "Order items delivered to guest", ticket.getServer());
         
+        if (ticket.getTable() != null) {
+            TableShape table = ticket.getTable();
+            // Only transition if it's currently ORDER_PLACED or ORDERED
+            if (table.getStatus() == mls.sho.dms.entity.floor.TableStatus.ORDER_PLACED || 
+                table.getStatus() == mls.sho.dms.entity.floor.TableStatus.ORDERED) {
+                table.setStatus(mls.sho.dms.entity.floor.TableStatus.FOOD_DELIVERED);
+                tableShapeRepository.save(table);
+                broadcastTableUpdate(table);
+            }
+        }
+
         ticket = orderTicketRepository.save(ticket);
-        return mapToResponse(ticket);
+        OrderResponse response = mapToResponse(ticket);
+        messagingTemplate.convertAndSend("/topic/orders/" + orderId, response);
+        return response;
     }
 
     @Override
@@ -345,7 +385,9 @@ public class OrderServiceImpl implements OrderService {
             ticket.setPaidAt(java.time.Instant.now());
         }
         ticket = orderTicketRepository.save(ticket);
-        return mapToResponse(ticket);
+        OrderResponse response = mapToResponse(ticket);
+        messagingTemplate.convertAndSend("/topic/orders/" + orderId, response);
+        return response;
     }
 
     private void recalculateTicket(OrderTicket ticket) {
@@ -490,7 +532,13 @@ public class OrderServiceImpl implements OrderService {
         orderTicketRepository.save(ticket);
         StaffMember staff = staffMemberRepository.findByFullName(performedBy).orElse(null);
         recordAuditLog(ticket, "ORDER_CANCELLED", "Order cancelled by " + performedBy, staff);
-        return mapToResponse(ticket);
+        
+        OrderResponse response = mapToResponse(ticket);
+        messagingTemplate.convertAndSend("/topic/orders/" + orderId, response);
+        if (ticket.getTable() != null) {
+            broadcastTableUpdate(ticket.getTable());
+        }
+        return response;
     }
 
     @Override
@@ -508,6 +556,28 @@ public class OrderServiceImpl implements OrderService {
         recalculateTicket(ticket);
         StaffMember staff = staffMemberRepository.findByFullName(performedBy).orElse(null);
         recordAuditLog(ticket, "ITEM_VOIDED", "Item " + item.getMenuItem().getName() + " voided: " + reason, staff);
-        return mapToResponse(ticket);
+        
+        OrderResponse response = mapToResponse(ticket);
+        messagingTemplate.convertAndSend("/topic/orders/" + orderId, response);
+        return response;
+    }
+
+    private void broadcastTableUpdate(TableShape table) {
+        TableShapeResponse tableResponse = new TableShapeResponse(
+             table.getId(),
+             table.getName(),
+             table.getCapacity(),
+             table.getStatus().name(),
+             table.getSection().getId(),
+             table.getSection().getName(),
+             table.getPosX(),
+             table.getPosY(),
+             table.getWidth(),
+             table.getHeight(),
+             table.getShapeType(),
+             table.getAssignedStaff() != null ? table.getAssignedStaff().getId() : null,
+             table.getAssignedStaff() != null ? table.getAssignedStaff().getFullName() : null
+        );
+        messagingTemplate.convertAndSend("/topic/tables", tableResponse);
     }
 }

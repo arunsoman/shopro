@@ -1,14 +1,18 @@
 enum TableStatus {
-  available,
-  occupied,
-  ordered,
-  delivered,
-  dirty,
-  held,
-  inactive,
+  available,    // Green
+  held,         // Yellow
+  occupied,     // Blue
+  ordered,      // Purple
+  foodDelivered,// Orange
+  dessertCourse,// Pink
+  checkDropped, // Black
+  paying,       // Gray
+  dirty,        // Red
+  cleaning,     // Brown
+  maintenance,  // White
 }
 
-enum TableShape { rectangle, round, oval, decor }
+enum TableShape { square, round, rectangle, stool, decor }
 
 class TableInfo {
   final String id;

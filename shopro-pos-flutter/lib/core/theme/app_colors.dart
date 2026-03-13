@@ -13,13 +13,18 @@ class AppColors {
   static const Color lightMuted = Color(0xFF6C757D);
   static const Color lightText = Color(0xFF212529);
 
-  // Status Colors (Matching Design Legend)
-  static const Color statusAvailable = Color(0xFF00C897); // Vibrant Emerald
-  static const Color statusOccupied = Color(0xFF4A90E2); // Bright Blue
-  static const Color statusOrdered = Color(0xFFBD10E0); // Purple/Magenta
-  static const Color statusDelivered = Color(0xFFF5A623); // Orange/Amber
-  static const Color statusDirty = Color(0xFFD0021B); // Solid Red
-  static const Color statusHeld = Color(0xFFF8E71C); // Bright Yellow
+  // Status Colors (Matching 11-State Machine)
+  static const Color statusAvailable = Color(0xFF00C897); // Green
+  static const Color statusHeld = Color(0xFFF8E71C);      // Yellow
+  static const Color statusOccupied = Color(0xFF4A90E2);  // Blue
+  static const Color statusOrdered = Color(0xFFBD10E0);   // Purple
+  static const Color statusDelivered = Color(0xFFF5A623); // Orange
+  static const Color statusDessert = Color(0xFFFF69B4);   // Pink
+  static const Color statusCheckDropped = Color(0xFF2D3436); // Black
+  static const Color statusPaying = Color(0xFF9E9E9E);    // Gray
+  static const Color statusDirty = Color(0xFFD0021B);     // Red
+  static const Color statusCleaning = Color(0xFF8B4513);  // Brown
+  static const Color statusMaintenance = Color(0xFFFFFFFF); // White
 
   // Tag Display Colors (From Screenshot)
   static const Color tagSentBackground = Color(0xFFE6F4EA);

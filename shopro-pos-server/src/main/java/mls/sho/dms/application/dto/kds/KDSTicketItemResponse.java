@@ -11,5 +11,7 @@ public record KDSTicketItemResponse(
     Integer quantity,
     KDSItemStatus status,
     String customNote,
-    List<String> modifiers
+    List<String> modifiers,
+    int priority,
+    int preparationTimeMinutes
 ) {}

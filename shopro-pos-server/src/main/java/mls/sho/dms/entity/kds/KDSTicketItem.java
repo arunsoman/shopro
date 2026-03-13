@@ -32,6 +32,9 @@ public class KDSTicketItem extends BaseEntity {
     @Column(name = "status", nullable = false, length = 20)
     private KDSItemStatus status = KDSItemStatus.PENDING;
 
+    @Column(name = "priority", nullable = false)
+    private int priority = 0;
+
     /** Timestamp when this specific item was marked ready by the cook. */
     @Column(name = "ready_at")
     private Instant readyAt;
@@ -42,6 +45,8 @@ public class KDSTicketItem extends BaseEntity {
     public void setOrderItem(OrderItem orderItem) { this.orderItem = orderItem; }
     public KDSItemStatus getStatus() { return status; }
     public void setStatus(KDSItemStatus status) { this.status = status; }
+    public int getPriority() { return priority; }
+    public void setPriority(int priority) { this.priority = priority; }
     public Instant getReadyAt() { return readyAt; }
     public void setReadyAt(Instant readyAt) { this.readyAt = readyAt; }
 }

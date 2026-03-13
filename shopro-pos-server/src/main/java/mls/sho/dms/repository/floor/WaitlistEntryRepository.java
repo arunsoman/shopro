@@ -11,6 +11,7 @@ import java.util.UUID;
 public interface WaitlistEntryRepository extends JpaRepository<WaitlistEntry, UUID> {
 
     List<WaitlistEntry> findByStatusOrderByCreatedAtAsc(WaitlistStatus status);
+    List<WaitlistEntry> findByStatusInOrderByCreatedAtAsc(List<WaitlistStatus> statuses);
 
     List<WaitlistEntry> findByCreatedAtAfterOrderByCreatedAtAsc(Instant since);
     

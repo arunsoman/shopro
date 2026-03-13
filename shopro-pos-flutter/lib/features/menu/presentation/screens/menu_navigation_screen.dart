@@ -68,7 +68,7 @@ class _MenuNavigationScreenState extends ConsumerState<MenuNavigationScreen> {
                             .read(menuProvider.notifier)
                             .selectCategory(category.id),
                         selected: isSelected,
-                        selectedTileColor: AppColors.primary.withOpacity(0.08),
+                        selectedTileColor: AppColors.primary.withValues(alpha: 0.08),
                         title: Text(
                           category.name,
                           style: GoogleFonts.outfit(
@@ -196,7 +196,7 @@ class _MenuItemCard extends ConsumerWidget {
           border: Border.all(color: AppColors.lightBorder),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 8,
               offset: const Offset(0, 4),
             ),
@@ -254,7 +254,7 @@ class _MenuItemCard extends ConsumerWidget {
                       Container(
                         padding: const EdgeInsets.all(4),
                         decoration: BoxDecoration(
-                          color: AppColors.primary.withOpacity(0.1),
+                          color: AppColors.primary.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(

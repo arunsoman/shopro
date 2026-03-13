@@ -179,7 +179,7 @@ class _DiscountDialogState extends State<DiscountDialog> {
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.primary.withOpacity(0.05)
+              ? AppColors.primary.withValues(alpha: 0.05)
               : Colors.white,
           borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
           border: Border.all(

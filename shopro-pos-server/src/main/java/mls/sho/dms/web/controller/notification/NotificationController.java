@@ -53,4 +53,10 @@ public class NotificationController {
         notificationEngine.dispatchManualNotification(request);
         return ResponseEntity.ok().build();
     }
+
+    @DeleteMapping("/dismiss-all")
+    public ResponseEntity<Void> dismissAll(@RequestParam UUID userId) {
+        notificationEngine.dismissAll(userId);
+        return ResponseEntity.noContent().build();
+    }
 }
