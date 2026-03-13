@@ -562,6 +562,60 @@ public class OrderServiceImpl implements OrderService {
         return response;
     }
 
+    @Override
+    @Transactional
+    public OrderResponse updateTicketStatusFromItems(UUID ticketId) {
+        OrderTicket ticket = orderTicketRepository.findById(ticketId)
+            .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + ticketId));
+
+        if (ticket.getStatus() == TicketStatus.PAID || ticket.getStatus() == TicketStatus.VOIDED) {
+            return mapToResponse(ticket);
+        }
+
+        List<OrderItem> items = orderItemRepository.findByTicketAndStatusNotOrderByCreatedAtAsc(ticket, OrderItemStatus.VOIDED);
+        if (items.isEmpty()) {
+            return mapToResponse(ticket);
+        }
+
+        boolean allDelivered = items.stream().allMatch(i -> i.getStatus() == OrderItemStatus.DELIVERED);
+        boolean allReadyOrDelivered = items.stream().allMatch(i -> i.getStatus() == OrderItemStatus.READY || i.getStatus() == OrderItemStatus.DELIVERED);
+        boolean anySentOrReady = items.stream().anyMatch(i -> i.getStatus() == OrderItemStatus.SENT || i.getStatus() == OrderItemStatus.READY || i.getStatus() == OrderItemStatus.DELIVERED);
+
+        TicketStatus newStatus = ticket.getStatus();
+        if (allDelivered) {
+            newStatus = TicketStatus.SERVED;
+        } else if (allReadyOrDelivered) {
+            newStatus = TicketStatus.READY;
+        } else if (anySentOrReady) {
+            newStatus = TicketStatus.SUBMITTED;
+        }
+
+        if (newStatus != ticket.getStatus()) {
+            log.info("Transitioning ticket {} status from {} to {} based on items", ticketId, ticket.getStatus(), newStatus);
+            ticket.setStatus(newStatus);
+            
+            // Handle Table Status transition if it became SERVED
+            if (newStatus == TicketStatus.SERVED && ticket.getTable() != null) {
+                TableShape table = ticket.getTable();
+                if (table.getStatus() == mls.sho.dms.entity.floor.TableStatus.ORDER_PLACED || 
+                    table.getStatus() == mls.sho.dms.entity.floor.TableStatus.ORDERED) {
+                    table.setStatus(mls.sho.dms.entity.floor.TableStatus.FOOD_DELIVERED);
+                    tableShapeRepository.save(table);
+                    broadcastTableUpdate(table);
+                }
+            }
+            
+            orderTicketRepository.save(ticket);
+            recordAuditLog(ticket, "TICKET_AUTO_UPDATE", "Status automatically updated to " + newStatus, null);
+            
+            OrderResponse response = mapToResponse(ticket);
+            messagingTemplate.convertAndSend("/topic/orders/" + ticketId, response);
+            return response;
+        }
+
+        return mapToResponse(ticket);
+    }
+
     private void broadcastTableUpdate(TableShape table) {
         TableShapeResponse tableResponse = new TableShapeResponse(
              table.getId(),

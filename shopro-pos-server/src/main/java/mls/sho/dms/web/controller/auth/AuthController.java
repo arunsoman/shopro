@@ -8,6 +8,7 @@ import mls.sho.dms.application.dto.auth.PinLoginRequest;
 import mls.sho.dms.application.dto.auth.StaffSessionResponse;
 import mls.sho.dms.application.service.auth.AuthService;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -23,7 +24,7 @@ public class AuthController {
      * Returns their session info (id, name, role) on success.
      * Locks the terminal after 5 consecutive failures per IP.
      */
-    @PostMapping("/login")
+    @PostMapping(value = "/login", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseStatus(HttpStatus.OK)
     public StaffSessionResponse login(
             @Valid @RequestBody PinLoginRequest request,

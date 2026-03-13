@@ -9,7 +9,7 @@ class NetworkConfig {
       // Use the host from which the app was loaded
       final uri = Uri.base;
       final webHost = uri.host;
-      if (webHost.isNotEmpty && webHost != 'localhost') return webHost;
+      if (webHost.isNotEmpty) return webHost;
     }
     
     // Allow environment override
@@ -39,6 +39,9 @@ class NetworkConfig {
 
   static String get wsUrl {
     if (kIsWeb) {
+      if (kDebugMode) {
+        return 'ws://$host:$port/ws-raw';
+      }
       final uri = Uri.base;
       final protocol = uri.scheme == 'https' ? 'wss' : 'ws';
       // Use the same host and port as the current page.

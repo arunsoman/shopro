@@ -7,6 +7,7 @@ import mls.sho.dms.application.dto.order.*;
 import mls.sho.dms.application.service.order.OrderService;
 import mls.sho.dms.entity.order.TicketStatus;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -21,7 +22,7 @@ public class OrderController {
 
     private final OrderService orderService;
 
-    @PostMapping
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
     public OrderResponse createOrder(
         @Valid @RequestBody CreateOrderRequest request
@@ -48,7 +49,7 @@ public class OrderController {
         return orderService.findById(id);
     }
 
-    @PostMapping("/{id:[0-9a-fA-F-]{36}}/items")
+    @PostMapping(value = "/{id:[0-9a-fA-F-]{36}}/items", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
     public OrderResponse addOrderItem(
         @PathVariable UUID id,

@@ -7,6 +7,7 @@ import mls.sho.dms.entity.kds.KDSTicket;
 import mls.sho.dms.entity.kds.KDSTicketItem;
 import mls.sho.dms.repository.kds.KDSTicketItemRepository;
 import mls.sho.dms.service.kds.KDSService;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -35,6 +36,12 @@ public class KDSController {
     @PostMapping("/items/{itemId}/bump")
     public ResponseEntity<KDSTicketItemResponse> bumpItem(@PathVariable UUID itemId) {
         KDSTicketItem item = kdsService.bumpItem(itemId);
+        return ResponseEntity.ok(kdsMapper.toItemResponse(item));
+    }
+
+    @PostMapping("/items/{itemId}/serve")
+    public ResponseEntity<KDSTicketItemResponse> serveItem(@PathVariable UUID itemId) {
+        KDSTicketItem item = kdsService.serveItem(itemId);
         return ResponseEntity.ok(kdsMapper.toItemResponse(item));
     }
 
@@ -72,7 +79,7 @@ public class KDSController {
         return ResponseEntity.ok(kdsMapper.toItemResponse(item));
     }
 
-    @PostMapping("/tickets/serve-ready")
+    @PostMapping(value = "/tickets/serve-ready", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Void> serveReadyItems(@RequestBody List<UUID> ticketIds) {
         kdsService.serveReadyItemsInTickets(ticketIds);
         return ResponseEntity.ok().build();

@@ -54,4 +54,7 @@ public interface OrderService {
 
     /** Void a specific item from an order. */
     OrderResponse voidOrderItem(UUID orderId, UUID itemId, String reason, String performedBy, String managerPin);
+
+    /** Re-evaluate and update ticket status based on individual item statuses (READY, DELIVERED). */
+    OrderResponse updateTicketStatusFromItems(UUID ticketId);
 }

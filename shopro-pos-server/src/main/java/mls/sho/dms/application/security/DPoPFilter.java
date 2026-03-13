@@ -27,7 +27,6 @@ public class DPoPFilter extends OncePerRequestFilter {
         String path = request.getServletPath();
         String method = request.getMethod();
         
-        // Only enforce DPoP for specific sensitive paths (e.g., payments, admin)
         // or if the DPoP header is present.
         boolean isStrictPath = isSensitivePath(path);
         

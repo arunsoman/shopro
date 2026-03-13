@@ -12,9 +12,13 @@ public class FloorPlanPermissionInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        String path = request.getServletPath();
         String method = request.getMethod();
-
+        String path = request.getServletPath();
+        
+        // Always allow preflight OPTIONS requests to pass CORS check
+        if ("OPTIONS".equalsIgnoreCase(method)) {
+            return true;
+        }
         if (!path.startsWith("/api/v1/floor-plan")) {
             return true;
         }

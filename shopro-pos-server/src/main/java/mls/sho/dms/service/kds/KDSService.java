@@ -19,6 +19,8 @@ import mls.sho.dms.repository.menu.MenuItemRepository;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.context.annotation.Lazy;
+import mls.sho.dms.application.service.order.OrderService;
 
 import java.time.Instant;
 import java.util.*;
@@ -40,6 +42,7 @@ public class KDSService {
     private final OrderItemRepository orderItemRepository;
     private final StaffRepository staffRepo;
     private final TableShapeRepository tableShapeRepository;
+    private final OrderService orderService;
 
     public KDSService(KDSStationRepository stationRepository,
                       KDSRoutingRuleRepository routingRuleRepository,
@@ -52,7 +55,8 @@ public class KDSService {
                       OrderTicketRepository orderTicketRepository,
                       OrderItemRepository orderItemRepository,
                       StaffRepository staffRepo,
-                      TableShapeRepository tableShapeRepository) {
+                      TableShapeRepository tableShapeRepository,
+                      @Lazy OrderService orderService) {
         this.stationRepository = stationRepository;
         this.routingRuleRepository = routingRuleRepository;
         this.ticketRepository = ticketRepository;
@@ -65,6 +69,7 @@ public class KDSService {
         this.orderItemRepository = orderItemRepository;
         this.staffRepo = staffRepo;
         this.tableShapeRepository = tableShapeRepository;
+        this.orderService = orderService;
     }
 
     @Transactional
@@ -209,12 +214,17 @@ public class KDSService {
 
     @Transactional
     public void serveReadyItemsInTickets(List<UUID> ticketIds) {
+        if (ticketIds == null) return;
         log.info("[KDS] Bulk serving ready items in tickets: {}", ticketIds);
         for (UUID ticketId : ticketIds) {
             List<KDSTicketItem> items = ticketItemRepository.findByKdsTicket_Id(ticketId);
             for (KDSTicketItem item : items) {
                 if (item.getStatus() == KDSItemStatus.READY) {
-                    log.debug("[KDS] Serving ready item: {} from ticket: {}", item.getOrderItem().getMenuItem().getName(), ticketId);
+                    String itemName = "Unknown Item";
+                    if (item.getOrderItem() != null && item.getOrderItem().getMenuItem() != null) {
+                        itemName = item.getOrderItem().getMenuItem().getName();
+                    }
+                    log.debug("[KDS] Serving ready item: {} from ticket: {}", itemName, ticketId);
                     syncItemStatus(item.getOrderItem().getId(), KDSItemStatus.SERVED, item.getPriority());
                     notifyServer(item);
                 }
@@ -243,7 +253,16 @@ public class KDSService {
 
     @Transactional
     public KDSTicketItem bumpItem(UUID kdsTicketItemId) {
-        return toggleItemStatus(kdsTicketItemId); // Default simple action is now toggle
+        KDSTicketItem item = ticketItemRepository.findById(kdsTicketItemId)
+                .orElseThrow(() -> new IllegalArgumentException("Item not found"));
+        
+        KDSItemStatus status = item.getStatus();
+        if (status == KDSItemStatus.PENDING || status == KDSItemStatus.COOKING || status == KDSItemStatus.PAUSED) {
+            return markItemReady(kdsTicketItemId);
+        } else if (status == KDSItemStatus.READY) {
+            return serveItem(kdsTicketItemId);
+        }
+        return item;
     }
 
     private void syncItemStatus(UUID orderItemId, KDSItemStatus newStatus, int priority) {
@@ -291,6 +310,9 @@ public class KDSService {
                 payload.put("status", orderItem.getStatus().name());
                 
                 messagingTemplate.convertAndSend("/topic/orders/" + orderItem.getTicket().getId(), payload);
+                
+                // Re-evaluate parent ticket status (US-3.7/4.1 Fix)
+                orderService.updateTicketStatusFromItems(orderItem.getTicket().getId());
             }
         });
 

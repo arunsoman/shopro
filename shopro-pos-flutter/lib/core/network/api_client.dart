@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'network_config.dart';
+import '../security/dpop_service.dart';
 
 class ApiClient {
   late final Dio dio;
@@ -15,11 +16,26 @@ class ApiClient {
         baseUrl: baseUrl ?? defaultBaseUrl,
         connectTimeout: const Duration(seconds: 5),
         receiveTimeout: const Duration(seconds: 3),
+        contentType: 'application/json',
       ),
     );
 
     // Add logging interceptor for easier debugging
     dio.interceptors.add(LogInterceptor(requestBody: true, responseBody: true));
+
+    // Add DPoP Interceptor for FAPI 2.0 Compliance
+    dio.interceptors.add(InterceptorsWrapper(
+      onRequest: (options, handler) {
+        final htm = options.method;
+        final htu = '${dio.options.baseUrl}${options.path}';
+        
+        // Generate DPoP hint/proof
+        final proof = DPoPService.generateProof(htm, htu);
+        options.headers['DPoP'] = proof;
+        
+        return handler.next(options);
+      },
+    ));
   }
 
   Future<Response> post(

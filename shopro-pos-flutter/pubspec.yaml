@@ -43,6 +43,7 @@ dependencies:
   json_annotation: ^4.9.0
   stomp_dart_client: ^3.0.1
   http: ^1.6.0
+  dart_jsonwebtoken: ^3.3.2
 
 dev_dependencies:
   flutter_test:

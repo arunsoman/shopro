@@ -13,6 +13,7 @@ import mls.sho.dms.repository.order.PaymentRepository;
 import mls.sho.dms.repository.order.OrderTicketRepository;
 import mls.sho.dms.entity.order.OrderTicket;
 import mls.sho.dms.application.exception.ResourceNotFoundException;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -26,7 +27,7 @@ public class PaymentController {
     private final PaymentRepository paymentRepository;
     private final OrderTicketRepository orderTicketRepository;
 
-    @PostMapping("/mipay/initiate")
+    @PostMapping(value = "/mipay/initiate", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public OrderResponse initiateMiPay(@Valid @RequestBody MiPayRequest request) {
         log.info("Initiating MiPay for order: {} and phone: {}", request.orderId(), request.phoneNumber());
 
