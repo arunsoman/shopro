@@ -8,7 +8,9 @@ RUN --mount=type=cache,target=/root/.pub-cache flutter pub get
 
 # Copy source and build web
 COPY . .
-RUN flutter build web --release
+ARG API_HOST=shopro.afriqpay.com
+ARG API_PORT=8080
+RUN flutter build web --release --dart-define=API_HOST=$API_HOST --dart-define=API_PORT=$API_PORT
 
 # Run stage
 FROM nginx:alpine

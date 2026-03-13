@@ -7,6 +7,7 @@ import '../../domain/repositories/kds_repository.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../floor_plan/presentation/providers/floor_plan_provider.dart';
 import '../../../floor_plan/domain/models/floor_models.dart';
+import '../../../../core/network/network_config.dart';
 
 class KDSState {
   final List<KDSTicket> tickets;
@@ -112,8 +113,7 @@ class KDSNotifier extends StateNotifier<KDSState> {
   void _connectWebSocket(String stationId) {
     _stompClient = StompClient(
       config: StompConfig(
-        url:
-            'ws://localhost:8080/ws-raw', // Should be dynamic based on environment
+        url: NetworkConfig.wsUrl,
         onConnect: (frame) {
           _stompClient?.subscribe(
             destination: '/topic/kds/station/$stationId',

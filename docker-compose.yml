@@ -28,6 +28,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/shopro_pos
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: password
+      PORT: 8080
     ports:
       - "5172:8080"
     healthcheck:
@@ -53,6 +54,9 @@ services:
     build:
       context: ./shopro-pos-flutter
       dockerfile: Dockerfile
+      args:
+        API_HOST: shopro.afriqpay.com
+        API_PORT: 8080
     container_name: shopro-flutter-pos
     ports:
       - "5171:80"
@@ -64,6 +68,9 @@ services:
     build:
       context: ./shopro_tableside_app
       dockerfile: Dockerfile
+      args:
+        API_HOST: shopro.afriqpay.com
+        API_PORT: 8080
     container_name: shopro-flutter-tableside
     ports:
       - "5170:80"

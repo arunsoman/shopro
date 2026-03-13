@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stomp_dart_client/stomp_dart_client.dart';
+import '../../../../core/network/network_config.dart';
 
 class KDSNotification {
   final String message;
@@ -18,7 +19,7 @@ class KDSNotificationsNotifier extends StateNotifier<List<KDSNotification>> {
   void _connect() {
     _stompClient = StompClient(
       config: StompConfig(
-        url: 'ws://localhost:8080/ws-raw',
+        url: NetworkConfig.wsUrl,
         onConnect: (frame) {
           _stompClient?.subscribe(
             destination: '/topic/pos/notifications',

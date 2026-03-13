@@ -2,15 +2,19 @@ import 'package:flutter/foundation.dart';
 import 'dart:io' show Platform;
 
 class NetworkConfig {
-  static const int port = 8080;
+  static const int port = int.fromEnvironment('API_PORT', defaultValue: 8080);
 
   static String get host {
     if (kIsWeb) {
-      // Use the host from which the app was loaded (e.g. 192.168.1.5 or localhost)
+      // Use the host from which the app was loaded
       final uri = Uri.base;
       final webHost = uri.host;
-      if (webHost.isNotEmpty) return webHost;
+      if (webHost.isNotEmpty && webHost != 'localhost') return webHost;
     }
+    
+    // Allow environment override
+    const envHost = String.fromEnvironment('API_HOST');
+    if (envHost.isNotEmpty) return envHost;
     
     // Fallback for mobile emulators or specific platform logic
     try {
@@ -19,7 +23,7 @@ class NetworkConfig {
       }
     } catch (_) {}
     
-    return 'localhost';
+    return 'shopro.afriqpay.com';
   }
 
   static String get baseUrl {
