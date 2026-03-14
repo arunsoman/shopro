@@ -100,11 +100,11 @@ export function LoginPage() {
             {/* Top Navigation Bar */}
             <nav className="flex items-center justify-between px-6 md:px-10 py-6">
                 <div className="flex items-center gap-3">
-                    <img 
-                        alt="Shopro Logo" 
-                        className="h-9 w-auto" 
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuBt9sR8-LjBSGdtj7xh_nfysKtc09aAKqzDcvS1PKltd6JZXyDg_H0wwgDPCeCc0KjKRmpQy6tbWpfaWnn8vSh89QM2SChdxGHxST-XAahZxfnBk09Bap1wjqn-MgqulGGq8VWfOK-igSzT9tcIoT5dE_vg1jAWoDfc2sQVHt1DhKLgFzQ5IItPMkgpmRP-oTrHa2fqzvt4isN1umlwlu0ibsx0ksao5cRJ9-bDQegqGh4drUODQxMrp67k007rsTKiX8vo6SMIYw" 
-                    />
+                    {/* Inline SVG logo — no external dependency */}
+                    <svg className="h-9 w-9" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="36" height="36" rx="10" fill="#005bad"/>
+                        <path d="M18 8C12.477 8 8 12.477 8 18C8 23.523 12.477 28 18 28C23.523 28 28 23.523 28 18C28 12.477 23.523 8 18 8ZM18 11C21.866 11 25 14.134 25 18C25 21.866 21.866 25 18 25C14.134 25 11 21.866 11 18C11 14.134 14.134 11 18 11ZM15 15.5C15 14.672 15.672 14 16.5 14H19.5C20.328 14 21 14.672 21 15.5C21 16.328 20.328 17 19.5 17H16.5C15.672 17 15 16.328 15 15.5ZM15 20.5C15 19.672 15.672 19 16.5 19H19.5C20.328 19 21 19.672 21 20.5C21 21.328 20.328 22 19.5 22H16.5C15.672 22 15 21.328 15 20.5Z" fill="white"/>
+                    </svg>
                     <span className="font-extrabold text-2xl tracking-tight text-slate-800 dark:text-slate-100">Shopro</span>
                 </div>
                 <div className="flex items-center gap-6">

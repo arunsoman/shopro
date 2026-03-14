@@ -79,13 +79,26 @@ export function TablesideSettingsPage() {
                 <head>
                     <title>Shopro QR Codes</title>
                     <style>
-                        body { font-family: sans-serif; display: flex; flex-wrap: wrap; gap: 20px; padding: 40px; }
+                        body { font-family: sans-serif; padding: 40px; }
+                        .toolbar { display: flex; gap: 12px; margin-bottom: 32px; align-items: center; }
+                        .btn { padding: 10px 20px; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; }
+                        .btn-print { background: #005bad; color: white; }
+                        .btn-close { background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; }
+                        .btn:hover { opacity: 0.85; }
+                        .grid { display: flex; flex-wrap: wrap; gap: 20px; }
                         .qr-item { border: 1px solid #ccc; padding: 20px; text-align: center; width: 200px; }
                         img { width: 100%; height: auto; }
                         .name { font-weight: bold; font-size: 20px; margin-bottom: 10px; }
+                        @media print { .toolbar { display: none; } }
                     </style>
                 </head>
                 <body>
+                    <div class="toolbar">
+                        <button class="btn btn-print" onclick="window.print()">🖨️ Print</button>
+                        <button class="btn btn-close" onclick="window.close()">✕ Close Window</button>
+                        <span style="color:#64748b;font-size:13px">${qrCodes.length} QR code(s) ready</span>
+                    </div>
+                    <div class="grid">
                     ${qrCodes.map(qr => `
                         <div class="qr-item">
                             <div class="name">${qr.tableName}</div>
@@ -93,7 +106,7 @@ export function TablesideSettingsPage() {
                             <div style="font-size: 10px; margin-top: 10px;">tableasist.afriqpay.com</div>
                         </div>
                     `).join('')}
-                    <script>window.onload = () => { window.print(); window.close(); }</script>
+                    </div>
                 </body>
             </html>
         `);
@@ -109,19 +122,28 @@ export function TablesideSettingsPage() {
                 <head>
                     <title>QR Code - ${qr.tableName}</title>
                     <style>
-                        body { display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-                        .qr-card { text-align: center; padding: 40px; border: 2px solid #000; }
-                        img { width: 400px; height: 400px; }
-                        .name { font-size: 48px; font-weight: bold; margin-bottom: 20px; }
+                        body { font-family: sans-serif; margin: 0; padding: 32px; display: flex; flex-direction: column; align-items: center; }
+                        .toolbar { display: flex; gap: 12px; margin-bottom: 32px; align-self: flex-start; }
+                        .btn { padding: 10px 20px; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; }
+                        .btn-print { background: #005bad; color: white; }
+                        .btn-close { background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; }
+                        .btn:hover { opacity: 0.85; }
+                        .qr-card { text-align: center; padding: 40px; border: 2px solid #000; border-radius: 12px; }
+                        img { width: 300px; height: 300px; }
+                        .name { font-size: 36px; font-weight: bold; margin-bottom: 20px; }
+                        @media print { .toolbar { display: none; } }
                     </style>
                 </head>
                 <body>
+                    <div class="toolbar">
+                        <button class="btn btn-print" onclick="window.print()">🖨️ Print</button>
+                        <button class="btn btn-close" onclick="window.close()">✕ Close Window</button>
+                    </div>
                     <div class="qr-card">
                         <div class="name">${qr.tableName}</div>
                         <img src="${qr.qrCodeBase64}" />
                         <div style="font-size: 14px; margin-top: 20px;">tableasist.afriqpay.com</div>
                     </div>
-                    <script>window.onload = () => { window.print(); window.close(); }</script>
                 </body>
             </html>
         `);
