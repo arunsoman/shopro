@@ -25,12 +25,13 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
   @override
   void initState() {
     super.initState();
-    // Resolution chain (GoRouter may rewrite the URL before initState runs):
-    // 1. Token passed via GoRouter route param
-    // 2. Token read from Uri.base at this moment
-    // 3. Token captured in main() BEFORE GoRouter initialised (most reliable)
     final uriToken = Uri.base.queryParameters['qrToken'];
+    debugPrint('[SHOPRO] initState: widget.qrToken = ${widget.qrToken}');
+    debugPrint('[SHOPRO] initState: Uri.base = ${Uri.base}');
+    debugPrint('[SHOPRO] initState: uriToken = $uriToken');
+    debugPrint('[SHOPRO] initState: initialQrToken (from main) = $initialQrToken');
     _resolvedToken = widget.qrToken ?? uriToken ?? initialQrToken;
+    debugPrint('[SHOPRO] initState: _resolvedToken = $_resolvedToken');
   }
 
   Future<void> _startOrdering() async {
