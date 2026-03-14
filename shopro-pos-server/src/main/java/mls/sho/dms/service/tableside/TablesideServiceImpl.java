@@ -87,7 +87,7 @@ public class TablesideServiceImpl implements TablesideService {
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public TablesideSessionDto getSessionByQrToken(UUID qrToken) {
         TablesideSession session = sessionRepo.findByQrToken(qrToken)
             .orElseThrow(() -> new IllegalArgumentException("Invalid or expired QR code"));
