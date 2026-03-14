@@ -70,8 +70,8 @@ services:
       context: ./shopro_tableside_app
       dockerfile: Dockerfile
       args:
-        API_HOST: ${API_HOST:-localhost}
-        API_PORT: ${API_PORT:-8080}
+        API_HOST: ${API_HOST:-web.afriqpay.com}
+        API_PORT: ${API_PORT:-}
     container_name: shopro-flutter-tableside
     ports:
       - "5170:80"
