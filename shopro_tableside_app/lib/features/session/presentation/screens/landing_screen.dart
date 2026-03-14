@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:shopro_tableside_app/core/theme/app_colors.dart';
 import 'package:shopro_tableside_app/core/theme/app_spacing.dart';
+import 'package:shopro_tableside_app/main.dart' show initialQrToken;
 import '../providers/session_providers.dart';
 
 class LandingScreen extends ConsumerStatefulWidget {
@@ -24,10 +25,12 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
   @override
   void initState() {
     super.initState();
-    // GoRouter sometimes doesn't pass query params on first web load.
-    // Always read directly from the browser URL as the source of truth.
+    // Resolution chain (GoRouter may rewrite the URL before initState runs):
+    // 1. Token passed via GoRouter route param
+    // 2. Token read from Uri.base at this moment
+    // 3. Token captured in main() BEFORE GoRouter initialised (most reliable)
     final uriToken = Uri.base.queryParameters['qrToken'];
-    _resolvedToken = widget.qrToken ?? uriToken;
+    _resolvedToken = widget.qrToken ?? uriToken ?? initialQrToken;
   }
 
   Future<void> _startOrdering() async {

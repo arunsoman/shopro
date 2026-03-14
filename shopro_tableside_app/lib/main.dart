@@ -3,8 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/router/pos_router.dart';
 import 'core/theme/app_theme.dart';
 
+/// Captured from the browser URL before GoRouter initializes.
+/// GoRouter can rewrite the URL and strip query params before
+/// any widget's initState runs; capturing here is the safest approach.
+String? initialQrToken;
+
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  // Read BEFORE GoRouter rewrites the URL
+  initialQrToken = Uri.base.queryParameters['qrToken'];
   runApp(const ProviderScope(child: ShoproTablesideApp()));
 }
 
