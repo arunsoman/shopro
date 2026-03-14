@@ -79,11 +79,26 @@ class NotificationNotifier extends Notifier<NotificationState> {
 
     _client?.deactivate();
 
+    // Dynamically determine WebSocket URL based on current host/protocol
+    final baseUri = Uri.base;
+    final isSecure = baseUri.scheme == 'https';
+    final protocol = isSecure ? 'wss' : 'ws';
+    final host = baseUri.host;
+    
+    // In production (behind Nginx), we use the /ws-raw path proxied to backend.
+    // In local dev, we fall back to localhost:8080/ws-raw.
+    final wsUrl = (host.isNotEmpty && host != 'localhost')
+        ? '$protocol://$host/ws-raw'
+        : 'ws://localhost:8080/ws-raw';
+
+    debugPrint('[SHOPRO] Connecting to WebSocket: $wsUrl');
+
     _client = ref.read(
       stompClientProvider(
         StompConfig(
-          url: 'ws://localhost:8080/ws',
+          url: wsUrl,
           onConnect: (frame) {
+            debugPrint('[SHOPRO] WebSocket Connected');
             state = state.copyWith(isConnected: true);
 
             // Subscribe to session notifications
