@@ -11,9 +11,23 @@ void main() {
   WidgetsFlutterBinding.ensureInitialized();
   // Read BEFORE GoRouter rewrites the URL
   final base = Uri.base;
-  initialQrToken = base.queryParameters['qrToken'];
+  final params = base.queryParameters;
+  
+  // Robust parsing: handles ?qrToken=uuid AND cases where = is encoded (?qrToken%3Duuid)
+  if (params.containsKey('qrToken')) {
+    initialQrToken = params['qrToken'];
+  } else {
+    // Look for a key that starts with 'qrToken='
+    for (final key in params.keys) {
+      if (key.startsWith('qrToken=')) {
+        initialQrToken = key.split('=')[1];
+        break;
+      }
+    }
+  }
+
   debugPrint('[SHOPRO] Uri.base = $base');
-  debugPrint('[SHOPRO] Uri.base.queryParameters = ${base.queryParameters}');
+  debugPrint('[SHOPRO] Uri.base.queryParameters = $params');
   debugPrint('[SHOPRO] initialQrToken = $initialQrToken');
   runApp(const ProviderScope(child: ShoproTablesideApp()));
 }
