@@ -11,6 +11,7 @@ import mls.sho.dms.repository.staff.StaffRepository;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 import java.security.Principal;
 import java.util.Optional;
@@ -18,6 +19,7 @@ import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class StaffAuthenticationFilter extends OncePerRequestFilter {
 
     private final StaffRepository staffRepository;
@@ -27,6 +29,7 @@ public class StaffAuthenticationFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         
         String staffIdHeader = request.getHeader("X-Staff-Id");
+        log.debug("StaffAuthenticationFilter: X-Staff-Id header = {}", staffIdHeader);
         HttpServletRequest requestToUse = request;
 
         if (staffIdHeader != null) {
@@ -36,6 +39,7 @@ public class StaffAuthenticationFilter extends OncePerRequestFilter {
                 
                 if (staffOpt.isPresent()) {
                     StaffMemberPrincipal principal = new StaffMemberPrincipal(staffOpt.get());
+                    log.debug("StaffAuthenticationFilter: Authenticated staff = {}, role = {}", principal.getName(), principal.getRole());
                     request.setAttribute("staff_principal", principal);
                     
                     // Wrap the request to override getUserPrincipal()

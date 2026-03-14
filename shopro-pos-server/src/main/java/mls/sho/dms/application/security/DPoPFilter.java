@@ -37,10 +37,9 @@ public class DPoPFilter extends OncePerRequestFilter {
         
         boolean isStrictPath = isSensitivePath(path);
         
-        // Enforce DPoP for sensitive operations or if the header is present
-        boolean shouldEnforce = (isStrictPath && !"GET".equalsIgnoreCase(method)) || 
-                                dpopHeader != null ||
-                                (isStrictPath && isHighValueOperation(path));
+        // Enforce DPoP strictly for sensitive operations.
+        // For non-sensitive paths (like login), we ignore the header to allow broad client interceptors.
+        boolean shouldEnforce = isStrictPath && !"GET".equalsIgnoreCase(method);
 
         if (shouldEnforce) {
             String expectedThumbprint = null;
@@ -84,6 +83,7 @@ public class DPoPFilter extends OncePerRequestFilter {
         return path.startsWith("/api/v1/payments") || 
                path.startsWith("/api/v1/admin") || 
                path.startsWith("/api/v1/staff") ||
+               path.startsWith("/api/v1/taxes") ||
                path.startsWith("/api/v1/floor-plan/tables"); // Table status changes are sensitive
     }
 }

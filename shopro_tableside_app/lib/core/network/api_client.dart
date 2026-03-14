@@ -22,7 +22,9 @@ final dioProvider = Provider<Dio>((ref) {
   dio.interceptors.add(InterceptorsWrapper(
     onRequest: (options, handler) async {
       try {
-        final url = '${options.baseUrl}${options.path}';
+        final url = options.baseUrl.startsWith('http') 
+            ? '${options.baseUrl}${options.path}'
+            : '${Uri.base.scheme}://${Uri.base.host}${Uri.base.hasPort ? ":${Uri.base.port}" : ""}${options.baseUrl}${options.path}';
         final proof = DPoPService.generateProof(options.method, url);
         options.headers['DPoP'] = proof;
       } catch (e) {

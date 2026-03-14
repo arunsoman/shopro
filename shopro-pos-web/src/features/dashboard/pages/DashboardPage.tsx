@@ -95,6 +95,15 @@ const NAV_CARDS: NavCard[] = [
         roles: ['OWNER'],
     },
     {
+        title: 'Taxes & Compliance',
+        description: 'Manage jurisdiction, tax rules, VAT inclusive pricing, and regional compliance.',
+        href: '/taxes',
+        icon: <Package className="h-7 w-7" />,
+        gradient: 'from-amber-500 to-orange-600',
+        iconColor: 'text-amber-500',
+        roles: ['OWNER', 'MANAGER', 'GENERAL_MANAGER'],
+    },
+    {
         title: 'Settings',
         description: 'Configure floor layout, tableside ordering, payments, and notifications.',
         href: '/settings',

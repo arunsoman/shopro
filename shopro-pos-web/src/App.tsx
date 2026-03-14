@@ -61,6 +61,7 @@ const SupplierInventoryView = lazy(() => import('./features/inventory/pages/Supp
 const SupplierPOFulfillmentPage = lazy(() => import('./features/inventory/pages/SupplierPOFulfillmentPage').then(m => ({ default: m.SupplierPOFulfillmentPage })));
 const SupplierPOListPage = lazy(() => import('./features/inventory/pages/SupplierPOListPage').then(m => ({ default: m.SupplierPOListPage })));
 const SupplierProposalsList = lazy(() => import('./features/inventory/components/SupplierProposalsList').then(m => ({ default: m.SupplierProposalsList })));
+const TaxesDashboardPage = lazy(() => import('./features/taxes/pages/TaxesDashboardPage').then(m => ({ default: m.TaxesDashboardPage })));
 
 const PageLoader = () => (
     <div className="flex h-dvh w-full items-center justify-center">
@@ -244,6 +245,15 @@ function AppContent() {
               element={<div className="p-8 text-foreground">Security &amp; Audit Logs — coming soon</div>}
             />
           </Route>
+
+          <Route
+            path="/taxes"
+            element={
+              <ProtectedRoute allowedRoles={ADMIN_ROLES}>
+                <TaxesDashboardPage />
+              </ProtectedRoute>
+            }
+          />
         </Route>
 
         {/* Admin Notifications — admin only */}

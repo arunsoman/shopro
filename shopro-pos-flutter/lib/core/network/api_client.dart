@@ -27,7 +27,9 @@ class ApiClient {
     dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) {
         final htm = options.method;
-        final htu = '${dio.options.baseUrl}${options.path}';
+        final htu = options.baseUrl.startsWith('http') 
+            ? '${options.baseUrl}${options.path}'
+            : '${Uri.base.scheme}://${Uri.base.host}${Uri.base.hasPort ? ":${Uri.base.port}" : ""}${options.baseUrl}${options.path}';
         
         // Generate DPoP hint/proof
         final proof = DPoPService.generateProof(htm, htu);

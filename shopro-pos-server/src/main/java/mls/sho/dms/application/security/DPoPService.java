@@ -85,12 +85,30 @@ public class DPoPService {
             }
             
             String requestUrl = request.getRequestURL().toString();
-            // strip query params for comparison as per FAPI recs
-            if (requestUrl.contains("?")) {
-                requestUrl = requestUrl.substring(0, requestUrl.indexOf("?"));
+            String requestPath = request.getRequestURI();
+            
+            boolean urlMatch = false;
+            if (url != null) {
+                if (url.equals(requestUrl) || url.equals(requestPath)) {
+                    urlMatch = true;
+                } else if (url.startsWith("http")) {
+                    // Extract path from htu for comparison to handle port mismatches
+                    try {
+                        java.net.URI uri = new java.net.URI(url);
+                        String htuPath = uri.getPath();
+                        if (htuPath != null && htuPath.equals(requestPath)) {
+                            urlMatch = true;
+                        }
+                    } catch (java.net.URISyntaxException e) {
+                        log.debug("Invalid htu URL format: {}", url);
+                    }
+                } else if (url.startsWith("/") && requestPath.equals(url)) {
+                    urlMatch = true;
+                }
             }
-            if (url == null || !requestUrl.startsWith(url)) {
-                log.debug("DPoP htu mismatch: requestUrl={}, htu={}", requestUrl, url);
+            
+            if (!urlMatch) {
+                log.debug("DPoP htu mismatch: requestUrl={}, requestPath={}, htu={}", requestUrl, requestPath, url);
                 return null;
             }
 
