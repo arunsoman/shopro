@@ -4,8 +4,9 @@ import mls.sho.dms.dto.menu.MenuCategoryDto;
 import mls.sho.dms.dto.menu.MenuItemDto;
 import mls.sho.dms.dto.tableside.AddCartItemRequest;
 import mls.sho.dms.dto.tableside.GuestCartItemDto;
-import mls.sho.dms.dto.tableside.TablesideSessionDto;
 import mls.sho.dms.dto.tableside.TableQrResponse;
+import mls.sho.dms.dto.tableside.MenuItemFeedbackRequest;
+import mls.sho.dms.dto.tableside.TablesideSessionDto;
 
 import java.util.List;
 import java.util.UUID;
@@ -33,6 +34,8 @@ public interface TablesideService {
 
     List<MenuCategoryDto> getCategories();
     List<MenuItemDto> getMenuItemsByCategory(UUID categoryId);
+    
+    void submitItemFeedback(MenuItemFeedbackRequest request);
     
     /** Invalidates all sessions for a specific table. */
     void invalidateSessionsForTable(UUID tableId);

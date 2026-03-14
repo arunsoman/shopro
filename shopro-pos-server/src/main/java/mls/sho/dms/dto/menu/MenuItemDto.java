@@ -12,5 +12,6 @@ public record MenuItemDto(
     String photoUrl,
     String status,
     UUID categoryId,
+    int preparationTimeMinutes,
     List<Object> modifierGroups // Simplified for now
 ) {}

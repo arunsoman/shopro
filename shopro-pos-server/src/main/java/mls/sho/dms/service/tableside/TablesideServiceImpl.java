@@ -25,8 +25,12 @@ import mls.sho.dms.entity.order.OrderType;
 import mls.sho.dms.entity.order.TicketStatus;
 import mls.sho.dms.entity.staff.StaffMember;
 import mls.sho.dms.application.service.inventory.RecipeService;
+import mls.sho.dms.application.service.core.NotificationEngine;
 import mls.sho.dms.service.qr.QrCodeService;
 import mls.sho.dms.dto.tableside.TableQrResponse;
+import mls.sho.dms.dto.tableside.MenuItemFeedbackRequest;
+import mls.sho.dms.repository.menu.MenuItemRatingRepository;
+import mls.sho.dms.entity.menu.MenuItemRating;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,6 +39,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -51,6 +56,8 @@ public class TablesideServiceImpl implements TablesideService {
     private final RecipeService recipeService;
     private final SimpMessagingTemplate messagingTemplate;
     private final QrCodeService qrCodeService;
+    private final MenuItemRatingRepository ratingRepo;
+    private final NotificationEngine notificationEngine;
 
     public TablesideServiceImpl(
             TablesideSessionRepository sessionRepo,
@@ -62,7 +69,9 @@ public class TablesideServiceImpl implements TablesideService {
             mls.sho.dms.repository.staff.StaffRepository staffRepo,
             RecipeService recipeService,
             SimpMessagingTemplate messagingTemplate,
-            QrCodeService qrCodeService) {
+            QrCodeService qrCodeService,
+            MenuItemRatingRepository ratingRepo,
+            NotificationEngine notificationEngine) {
         this.sessionRepo = sessionRepo;
         this.cartItemRepo = cartItemRepo;
         this.tableRepo = tableRepo;
@@ -73,6 +82,8 @@ public class TablesideServiceImpl implements TablesideService {
         this.recipeService = recipeService;
         this.messagingTemplate = messagingTemplate;
         this.qrCodeService = qrCodeService;
+        this.ratingRepo = ratingRepo;
+        this.notificationEngine = notificationEngine;
     }
 
     @Override
@@ -81,8 +92,24 @@ public class TablesideServiceImpl implements TablesideService {
         TablesideSession session = sessionRepo.findByQrToken(qrToken)
             .orElseThrow(() -> new IllegalArgumentException("Invalid or expired QR code"));
         
-        if (session.getStatus() != TablesideSessionStatus.ACTIVE) {
+        if (session.getStatus() != TablesideSessionStatus.ACTIVE && session.getStatus() != TablesideSessionStatus.PENDING_APPROVAL) {
             throw new IllegalStateException("This table session is no longer active");
+        }
+        
+        // Mark table as OCCUPIED immediately upon successful scan/session access
+        if (session.getTable().getStatus() == TableStatus.AVAILABLE) {
+            session.getTable().setStatus(TableStatus.OCCUPIED);
+            tableRepo.save(session.getTable());
+            broadcastTableUpdate(session.getTable());
+            
+            // NEW: Send notification to staff
+            notificationEngine.sendNotification(
+                "TABLE_OCCUPIED",
+                "Tableside Active",
+                "A guest has started a tableside session at Table " + session.getTable().getName(),
+                Map.of("tableId", session.getTable().getId(), "sessionId", session.getId()),
+                session.getId().toString()
+            );
         }
         
         return toDto(session);
@@ -311,6 +338,22 @@ public class TablesideServiceImpl implements TablesideService {
         return ticket.getId();
     }
 
+    @Override
+    @Transactional
+    public void submitItemFeedback(MenuItemFeedbackRequest request) {
+        MenuItem item = menuItemRepo.findById(request.menuItemId())
+            .orElseThrow(() -> new IllegalArgumentException("Item not found"));
+            
+        MenuItemRating rating = MenuItemRating.builder()
+            .menuItem(item)
+            .orderId(request.orderId())
+            .rating(request.rating())
+            .comment(request.comment())
+            .build();
+            
+        ratingRepo.save(rating);
+    }
+
     private void broadcastTableUpdate(TableShape table) {
         if (table == null) return;
         
@@ -390,7 +433,8 @@ public class TablesideServiceImpl implements TablesideService {
             item.getPhotoUrl(),
             item.getStatus().name(),
             item.getCategory().getId(),
-            new ArrayList<>() // Modifier groups omitted for brevity/speed in tableside MVP
+            item.getPreparationTimeMinutes(),
+            new ArrayList<>() // Modifier groups mapping remains simplified
         );
     }
 }

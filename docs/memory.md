@@ -72,3 +72,31 @@ stateDiagram-v2
 - **Bussers:** `TABLE_DIRTY`
 - **Kitchen:** `KDS_ORDER_SENT`, `COURSE_FIRED`
 - **Food Runners:** `TICKET_READY`
+
+---
+
+## Tableside Ordering & Feedback System
+
+### Secure Session Management
+Tableside ordering is secured via dynamic QR tokens tied to individual tables.
+- **QR Base URL:** `https://tableasist.afriqpay.com/scan/{token}`
+- **Staff Approval:** All new sessions start in `PENDING_APPROVAL`; staff must approve via "Tableside Requests" in the Floor Plan sidebar.
+- **Instant Occupancy:** A QR scan triggers an immediate `OCCUPIED` transition on the table AND sends a `TABLE_OCCUPIED` notification to all staff.
+- **Auto-Invalidation:** Sessions are set to `EXPIRED` automatically when a table is marked `CLEAN`, preventing QR reuse.
+
+### Notification Events (Tableside)
+| Event | Code | Recipients |
+| :--- | :--- | :--- |
+| Guest scans QR | `TABLE_OCCUPIED` | Servers, Hosts |
+
+### Item Feedback Tracking
+Guests can rate specific dishes from the app.
+- **Entity:** `MenuItemRating` — stores `menuItemId`, `orderId`, rating (1–5), comment.
+- **Endpoint:** `POST /api/v1/tableside/menu/items/feedback`
+- **Usage:** Back-office reporting on dish performance.
+
+### Premium UX Architecture (Guest App)
+The Tableside Flutter app uses a "Hero & Sheet" interaction model:
+- **Hero Transitions:** Smooth animation from menu grid → Item Detail Sheet.
+- **Preparation Time:** Shown on menu grid cards AND in the detail sheet.
+- **Clutter-Free:** All cart actions are localized to the Detail Sheet (nothing on the grid card itself).

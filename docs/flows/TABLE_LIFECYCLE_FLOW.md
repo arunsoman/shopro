@@ -9,8 +9,14 @@ The lifecycle follows an iterative flow within the core service states to accomm
 stateDiagram-v2
     [*] --> AVAILABLE : Clean and Ready (Green)
     AVAILABLE --> HELD : 15m Reservation Hold (Yellow)
-    AVAILABLE --> OCCUPIED : Guest Seated, Draft Created (Blue)
+    AVAILABLE --> OCCUPIED : Guest Seated / QR Scanned (Blue)
     HELD --> OCCUPIED : Reservation Checked-in
+    
+    state "Tableside Entry Gate" as EntryGate {
+        AVAILABLE --> PENDING_APPROVAL : Guest Scans QR [Secure Flow]
+        PENDING_APPROVAL --> OCCUPIED : Staff Approves Session
+        PENDING_APPROVAL --> AVAILABLE : Staff Rejects Session
+    }
     
     state "The Service Loop" as ServiceLoop {
         OCCUPIED --> ORDERED : Items fired to KDS (Purple)
@@ -41,6 +47,7 @@ stateDiagram-v2
     - *Definition:* Locked 15 minutes prior to a reservation. Prevents walk-in seating.
 - **State: OCCUPIED (Blue)**
     - *Definition:* Guests are seated. A `DRAFT` order exists. No items have been sent to the kitchen yet.
+    - *Tableside Trigger:* Scanning a Secure QR code immediately transitions the table to **OCCUPIED** (if available) and alerts staff via **TABLE_OCCUPIED** notification.
 
 ## 2. The Iterative Service Loop (Engagement)
 - **State: ORDERED (Purple)**
@@ -78,7 +85,7 @@ stateDiagram-v2
 | :--- | :--- | :--- | :--- |
 | **AVAILABLE** | 🟢 | **Busser** | Manual reset after cleaning. |
 | **HELD** | 🟡 | **System** | Automatic 15m pre-reservation buffer. |
-| **OCCUPIED** | 🔵 | **Host / Server** | Seating a guest or checking in a reservation. |
+| **OCCUPIED** | 🔵 | **Host / Server / Guest** | Seating guest or **Guest QR Scan** (triggers instant occupancy). |
 | **ORDERED** | 🟣 | **Server** | Firing a new or subsequent course to the KDS. |
 | **FOOD_DELIVERED**| 🟠 | **Runner / Expo** | Bumping items from KDS or delivery confirmation. |
 | **DESSERT_COURSE**| 🩷 | **Server** | Serving dessert/coffee items. |
@@ -97,7 +104,9 @@ The Shopro POS balances staff efficiency with business logic guards through a mi
 ### 🤖 System-Driven (Automated)
 - **HELD (Yellow):** Triggered automatically 15 minutes before a scheduled reservation to ensure the table is clear.
 - **PAYING (Gray):** Triggered when a guest initiates payment via the terminal or QR code.
+- **OCCUPIED (Blue):** Automatically triggered on **Valid QR Scan** (for secure tableside sessions).
 - **DIRTY (Red):** Triggered the instant the final transaction for the session is authorized (`PAID`).
+- **SESSION_EXPIRED:** Automatically triggered when table status moves to **CLEANING** or **AVAILABLE**.
 
 ### 👤 Staff-Driven (Manual)
 - **AVAILABLE (Green):** Marked by the **Busser** after confirming the table is physically reset and sanitized.

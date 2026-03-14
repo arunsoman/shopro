@@ -5,10 +5,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shopro_tableside_app/core/theme/app_colors.dart';
 import 'package:shopro_tableside_app/core/theme/app_spacing.dart';
-import '../../domain/models/menu_models.dart';
-import '../providers/menu_providers.dart';
+import 'package:shopro_tableside_app/features/menu/presentation/providers/menu_providers.dart';
 import 'package:shopro_tableside_app/features/notifications/presentation/providers/notification_provider.dart';
 import 'package:shopro_tableside_app/features/notifications/presentation/widgets/notification_center_sheet.dart';
+import 'package:shopro_tableside_app/features/menu/presentation/widgets/item_details_sheet.dart';
+import 'package:shopro_tableside_app/features/menu/domain/models/menu_models.dart';
 
 /// Routes image URLs through our Node proxy for transcoding + caching.
 /// External URLs (Unsplash etc.) are proxied via /img?url=
@@ -438,72 +439,37 @@ class MenuGridItem extends ConsumerWidget {
   final MenuItem item;
 
   const MenuGridItem({super.key, required this.item});
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Card(
       clipBehavior: Clip.antiAlias,
-      elevation: 2,
+      elevation: 0, // Flat design for modern look
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: Colors.grey.withOpacity(0.1)),
+      ),
       child: InkWell(
-        onTap: () {
-          ref.read(cartProvider.notifier).addItem(item);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Added ${item.name} to cart'),
-              duration: 1.seconds,
-              behavior: SnackBarBehavior.floating,
-              width: 200,
-            ),
-          );
-        },
+        onTap: () => MenuItemDetailSheet.show(context, item),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  if (item.photoUrl != null && item.photoUrl!.isNotEmpty)
-                    Image.network(
-                      proxyImageUrl(item.photoUrl),
-                      fit: BoxFit.cover,
-                      // Show skeleton while loading
-                      frameBuilder: (ctx, child, frame, _) => frame == null
-                          ? Container(
-                              color: Colors.black.withValues(alpha: 0.05),
-                            )
-                          : child,
-                      errorBuilder: (_, _, _) => Container(
-                        color: Colors.grey[200],
-                        child: const Icon(
-                          LucideIcons.image,
-                          color: Colors.grey,
-                        ),
+              child: Hero(
+                tag: 'item-${item.id}',
+                child: item.photoUrl != null && item.photoUrl!.isNotEmpty
+                    ? Image.network(
+                        proxyImageUrl(item.photoUrl),
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                      )
+                    : Container(
+                        color: Colors.grey[100],
+                        child: const Icon(LucideIcons.image, color: Colors.grey),
                       ),
-                    )
-                  else
-                    Container(
-                      color: Colors.grey[200],
-                      child: const Icon(LucideIcons.image, color: Colors.grey),
-                    ),
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: IconButton(
-                      icon: const Icon(
-                        LucideIcons.plusCircle,
-                        color: AppColors.primary,
-                      ),
-                      onPressed: () {
-                        ref.read(cartProvider.notifier).addItem(item);
-                      },
-                    ),
-                  ),
-                ],
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(AppSpacing.s),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -511,19 +477,34 @@ class MenuGridItem extends ConsumerWidget {
                     item.name,
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
-                      fontSize: 16,
+                      fontSize: 15,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    '\$${item.basePrice.toStringAsFixed(2)}',
-                    style: const TextStyle(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '\$${item.basePrice.toStringAsFixed(2)}',
+                        style: const TextStyle(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                      Row(
+                        children: [
+                          const Icon(LucideIcons.clock, size: 12, color: Colors.grey),
+                          const SizedBox(width: 2),
+                          Text(
+                            '${item.preparationTimeMinutes}m',
+                            style: const TextStyle(fontSize: 11, color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ],
               ),

@@ -4,6 +4,7 @@ import mls.sho.dms.dto.menu.MenuCategoryDto;
 import mls.sho.dms.dto.menu.MenuItemDto;
 import mls.sho.dms.dto.tableside.AddCartItemRequest;
 import mls.sho.dms.dto.tableside.GuestCartItemDto;
+import mls.sho.dms.dto.tableside.MenuItemFeedbackRequest;
 import mls.sho.dms.dto.tableside.TablesideSessionDto;
 import mls.sho.dms.dto.tableside.TableQrResponse;
 import mls.sho.dms.service.tableside.TablesideService;
@@ -74,6 +75,12 @@ public class TablesideController {
     @GetMapping("/menu/items")
     public ResponseEntity<List<MenuItemDto>> getItemsByCategory(@RequestParam UUID categoryId) {
         return ResponseEntity.ok(tablesideService.getMenuItemsByCategory(categoryId));
+    }
+
+    @PostMapping("/menu/items/feedback")
+    public ResponseEntity<Void> submitFeedback(@RequestBody MenuItemFeedbackRequest request) {
+        tablesideService.submitItemFeedback(request);
+        return ResponseEntity.ok().build();
     }
 
     // QR Code Management (for Admin)

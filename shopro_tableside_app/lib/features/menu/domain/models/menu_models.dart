@@ -35,6 +35,7 @@ class MenuItem {
   final MenuItemStatus status;
   final String categoryId;
   final List<ModifierGroup> modifierGroups;
+  final int preparationTimeMinutes;
 
   MenuItem({
     required this.id,
@@ -45,6 +46,7 @@ class MenuItem {
     required this.status,
     required this.categoryId,
     this.modifierGroups = const [],
+    this.preparationTimeMinutes = 10,
   });
 
   factory MenuItem.fromJson(Map<String, dynamic> json) {
@@ -61,9 +63,10 @@ class MenuItem {
       categoryId: json['categoryId'],
       modifierGroups:
           (json['modifierGroups'] as List?)
-              ?.map((m) => ModifierGroup.fromJson(m))
-              .toList() ??
-          const [],
+               ?.map((m) => ModifierGroup.fromJson(m))
+               .toList() ??
+           const [],
+      preparationTimeMinutes: json['preparationTimeMinutes'] ?? 10,
     );
   }
 }
