@@ -52,8 +52,12 @@ class MenuItemDetailSheet extends ConsumerWidget {
                               tag: 'item-${item.id}',
                               child: item.photoUrl != null && item.photoUrl!.isNotEmpty
                                   ? Image.network(
-                                      item.photoUrl!, // Assuming the proxy is handled globally or via baseUrl
+                                      item.photoUrl!,
                                       fit: BoxFit.cover,
+                                      errorBuilder: (context, error, stackTrace) => Container(
+                                        color: Colors.grey[100],
+                                        child: const Icon(LucideIcons.imageOff, color: Colors.grey),
+                                      ),
                                     )
                                   : Container(
                                       color: Colors.grey[200],

@@ -14,15 +14,6 @@ import 'package:shopro_tableside_app/features/menu/domain/models/menu_models.dar
 /// Routes image URLs through our Node proxy for transcoding + caching.
 /// External URLs (Unsplash etc.) are proxied via /img?url=
 /// Internal URLs (already /api/v1/media/...) are appended to the proxy host.
-String proxyImageUrl(String? raw) {
-  if (raw == null || raw.isEmpty) return '';
-  if (raw.startsWith('/')) {
-    // Internal backend asset
-    return '/img?url=${Uri.encodeComponent(raw)}';
-  }
-  // External URL — transcode via proxy
-  return '/img?url=${Uri.encodeComponent(raw)}';
-}
 
 class GuestMenuScreen extends ConsumerStatefulWidget {
   const GuestMenuScreen({super.key});
@@ -458,9 +449,13 @@ class MenuGridItem extends ConsumerWidget {
                 tag: 'item-${item.id}',
                 child: item.photoUrl != null && item.photoUrl!.isNotEmpty
                     ? Image.network(
-                        proxyImageUrl(item.photoUrl),
+                        item.photoUrl!,
                         fit: BoxFit.cover,
                         width: double.infinity,
+                        errorBuilder: (context, error, stackTrace) => Container(
+                          color: Colors.grey[100],
+                          child: const Icon(LucideIcons.imageOff, color: Colors.grey),
+                        ),
                       )
                     : Container(
                         color: Colors.grey[100],

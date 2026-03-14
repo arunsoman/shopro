@@ -38,6 +38,8 @@ services:
       timeout: 5s
       retries: 10
       start_period: 30s
+    volumes:
+      - ./uploads:/app/uploads
     restart: always
 
   web-pos:
