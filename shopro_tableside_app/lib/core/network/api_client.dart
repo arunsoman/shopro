@@ -3,35 +3,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shopro_tableside_app/core/security/dpop_service.dart';
 
 final dioProvider = Provider<Dio>((ref) {
-  // Prefer a fully-qualified URL injected at build time.
-  // Falls back to constructing one from separate host/port args.
-  const apiBaseUrl = String.fromEnvironment(
+  // The tableside nginx proxy forwards /api/ to the backend server container.
+  // Using a relative base URL ensures this works in all environments without
+  // needing to hardcode an absolute host (which breaks on guests' devices).
+  const apiBase = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: '',
+    defaultValue: '/api/v1',
   );
-  const apiHost = String.fromEnvironment(
-    'API_HOST',
-    defaultValue: 'web.afriqpay.com',
-  );
-  const apiPort = String.fromEnvironment(
-    'API_PORT',
-    defaultValue: '',
-  );
-
-  final String computedBase;
-  if (apiBaseUrl.isNotEmpty) {
-    computedBase = apiBaseUrl;
-  } else if (apiPort.isNotEmpty && apiPort != '443' && apiPort != '80') {
-    // Non-standard port: include it explicitly
-    computedBase = 'https://$apiHost:$apiPort/api/v1';
-  } else {
-    // Standard HTTPS port — no port suffix needed
-    computedBase = 'https://$apiHost/api/v1';
-  }
 
   final dio = Dio(
     BaseOptions(
-      baseUrl: computedBase,
+      baseUrl: apiBase,
       connectTimeout: const Duration(seconds: 8),
       receiveTimeout: const Duration(seconds: 8),
     ),
