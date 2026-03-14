@@ -23,8 +23,22 @@ export interface ApiError {
 apiClient.interceptors.request.use(
     async (config: InternalAxiosRequestConfig) => {
         try {
-            const url = config.url ? `${config.baseURL}${config.url}` : config.baseURL || "";
-            const proof = await DPoPWebService.generateProof(config.method || "GET", url);
+            // Construct absolute URL for the htu claim (RFC 9449 Section 4.2)
+            const targetUrl = config.url || "";
+            let absoluteUrl: string;
+
+            if (targetUrl.startsWith('http')) {
+                absoluteUrl = targetUrl;
+            } else {
+                // Determine absolute base
+                const base = config.baseURL?.startsWith('http') 
+                    ? config.baseURL 
+                    : `${window.location.origin}${config.baseURL || ''}`;
+                
+                absoluteUrl = new URL(targetUrl, base).href;
+            }
+
+            const proof = await DPoPWebService.generateProof(config.method || "GET", absoluteUrl);
             config.headers.set("DPoP", proof);
         } catch (error) {
             console.error("Failed to generate DPoP proof", error);

@@ -33,4 +33,8 @@ export const tablesideApi = {
     rejectSession: async (sessionId: string): Promise<void> => {
         await apiClient.post(`/tableside/session/${sessionId}/reject`);
     },
+    getTables: async (): Promise<any[]> => {
+        const res = await apiClient.get("/floor-plan/tables");
+        return res.data;
+    },
 };

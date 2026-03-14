@@ -11,20 +11,60 @@ export function TablesideSettingsPage() {
     const [isEnabled, setIsEnabled] = useState(false);
     const [requireServer, setRequireServer] = useState(true);
     const [qrCodes, setQrCodes] = useState<TableQrResponse[]>([]);
+    const [allTables, setAllTables] = useState<any[]>([]);
+    const [selectedTableIds, setSelectedTableIds] = useState<Set<string>>(new Set());
     const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
-        // Mock load or initial fetch could go here
-        // Initial state is hardcoded in the component for now
+        loadData();
     }, []);
 
-    const fetchQrCodes = async () => {
+    const loadData = async () => {
         setIsLoading(true);
         try {
-            const data = await tablesideApi.getAllQrCodes();
-            setQrCodes(data);
+            const [tables, qrs] = await Promise.all([
+                tablesideApi.getTables(),
+                tablesideApi.getAllQrCodes()
+            ]);
+            setAllTables(tables);
+            setQrCodes(qrs);
         } catch (error) {
-            console.error("Failed to fetch QR codes", error);
+            console.error("Failed to load tableside data", error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const toggleTableSelection = (id: string) => {
+        const newSelection = new Set(selectedTableIds);
+        if (newSelection.has(id)) {
+            newSelection.delete(id);
+        } else {
+            newSelection.add(id);
+        }
+        setSelectedTableIds(newSelection);
+    };
+
+    const toggleSelectAll = () => {
+        if (selectedTableIds.size === allTables.length) {
+            setSelectedTableIds(new Set());
+        } else {
+            setSelectedTableIds(new Set(allTables.map(t => t.id)));
+        }
+    };
+
+    const handleGenerateSelected = async () => {
+        setIsLoading(true);
+        try {
+            // Sequential generation for now as backend doesn't have bulk POST yet
+            // But we'll handle it gracefully in the UI
+            for (const tableId of selectedTableIds) {
+                await tablesideApi.getQrCode(tableId);
+            }
+            await loadData(); // Refresh to show new QRs
+            setSelectedTableIds(new Set());
+        } catch (error) {
+            console.error("Failed to generate QR codes", error);
         } finally {
             setIsLoading(false);
         }
@@ -88,6 +128,8 @@ export function TablesideSettingsPage() {
         printWindow.document.close();
     };
 
+    const getQrForTable = (tableId: string) => qrCodes.find(q => q.tableId === tableId);
+
     return (
         <div className="p-8 max-w-5xl space-y-6">
             <div className="flex justify-between items-center">
@@ -96,7 +138,7 @@ export function TablesideSettingsPage() {
                     <p className="text-muted-foreground">Manage QR code and self-serve ordering configurations for your tables.</p>
                 </div>
                 <div className="flex gap-2">
-                    <Button onClick={fetchQrCodes} disabled={isLoading} variant="outline" size="sm">
+                    <Button onClick={loadData} disabled={isLoading} variant="outline" size="sm">
                         {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <RefreshCcw className="h-4 w-4 mr-2" />}
                         Refresh List
                     </Button>
@@ -131,22 +173,26 @@ export function TablesideSettingsPage() {
                 <Card>
                     <CardHeader>
                         <CardTitle>Bulk Actions</CardTitle>
-                        <CardDescription>Actions for the entire floor.</CardDescription>
+                        <CardDescription>Actions for selected tables ({selectedTableIds.size}).</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="grid grid-cols-1 gap-2">
                             <Button 
-                                disabled={!isEnabled || qrCodes.length === 0} 
+                                disabled={selectedTableIds.size === 0 || isLoading} 
+                                className="w-full justify-start"
+                                onClick={handleGenerateSelected}
+                            >
+                                <QrCode className="h-4 w-4 mr-2" />
+                                Generate QR Codes for Selected
+                            </Button>
+                            <Button 
+                                disabled={qrCodes.length === 0} 
                                 variant="outline" 
                                 className="w-full justify-start text-primary border-primary"
                                 onClick={handlePrintAll}
                             >
                                 <Printer className="h-4 w-4 mr-2" />
                                 Print All Generated QR Codes
-                            </Button>
-                            <Button disabled={!isEnabled} variant="outline" className="w-full justify-start text-destructive border-destructive border-opacity-50 hover:bg-destructive hover:text-white">
-                                <RefreshCcw className="h-4 w-4 mr-2" />
-                                Invalidate All Active Sessions
                             </Button>
                         </div>
                     </CardContent>
@@ -155,42 +201,79 @@ export function TablesideSettingsPage() {
 
             <Card>
                 <CardHeader>
-                    <CardTitle>QR Code Table Management</CardTitle>
-                    <CardDescription>View and print tokens for specific tables.</CardDescription>
+                    <CardTitle>Floor Plan Tables</CardTitle>
+                    <CardDescription>Select tables to generate or print QR tokens.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    {qrCodes.length === 0 && !isLoading ? (
-                        <div className="flex flex-col items-center justify-center py-10 text-center">
-                            <QrCode className="h-12 w-12 text-muted-foreground mb-4 opacity-20" />
-                            <p className="text-muted-foreground mb-4">No QR codes generated yet.</p>
-                            <Button onClick={fetchQrCodes} variant="secondary">Generate Codes</Button>
-                        </div>
-                    ) : (
-                        <div className="rounded-md border">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Table Name</TableHead>
-                                        <TableHead>Target URL</TableHead>
-                                        <TableHead className="w-[100px] text-right">Actions</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {qrCodes.map((qr) => (
-                                        <TableRow key={qr.tableId}>
-                                            <TableCell className="font-medium">{qr.tableName}</TableCell>
-                                            <TableCell className="text-muted-foreground font-mono text-xs">{qr.targetUrl}</TableCell>
+                    <div className="rounded-md border">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead className="w-[50px]">
+                                        <input 
+                                            type="checkbox" 
+                                            onChange={toggleSelectAll}
+                                            checked={allTables.length > 0 && selectedTableIds.size === allTables.length}
+                                        />
+                                    </TableHead>
+                                    <TableHead>Table Name</TableHead>
+                                    <TableHead>Section</TableHead>
+                                    <TableHead>Status</TableHead>
+                                    <TableHead className="w-[100px] text-right">Actions</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {allTables.map((table) => {
+                                    const qr = getQrForTable(table.id);
+                                    return (
+                                        <TableRow key={table.id}>
+                                            <TableCell>
+                                                <input 
+                                                    type="checkbox" 
+                                                    checked={selectedTableIds.has(table.id)}
+                                                    onChange={() => toggleTableSelection(table.id)}
+                                                />
+                                            </TableCell>
+                                            <TableCell className="font-medium">{table.name}</TableCell>
+                                            <TableCell>{table.sectionName}</TableCell>
+                                            <TableCell>
+                                                {qr ? (
+                                                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                        Generated
+                                                    </span>
+                                                ) : (
+                                                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
+                                                        Not Generated
+                                                    </span>
+                                                )}
+                                            </TableCell>
                                             <TableCell className="text-right">
-                                                <Button size="icon" variant="ghost" onClick={() => handlePrintSingle(qr)}>
-                                                    <Printer className="h-4 w-4" />
-                                                </Button>
+                                                {qr ? (
+                                                    <Button size="icon" variant="ghost" onClick={() => handlePrintSingle(qr)}>
+                                                        <Printer className="h-4 w-4" />
+                                                    </Button>
+                                                ) : (
+                                                    <Button size="icon" variant="ghost" onClick={() => {
+                                                        setSelectedTableIds(new Set([table.id]));
+                                                        handleGenerateSelected();
+                                                    }}>
+                                                        <RefreshCcw className="h-4 w-4" />
+                                                    </Button>
+                                                )}
                                             </TableCell>
                                         </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </div>
-                    )}
+                                    );
+                                })}
+                                {allTables.length === 0 && !isLoading && (
+                                    <TableRow>
+                                        <TableCell colSpan={5} className="text-center py-10 text-muted-foreground">
+                                            No tables found in floor plan.
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                    </div>
                 </CardContent>
             </Card>
 
