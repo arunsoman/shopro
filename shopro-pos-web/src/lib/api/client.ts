@@ -24,18 +24,26 @@ apiClient.interceptors.request.use(
     async (config: InternalAxiosRequestConfig) => {
         try {
             // Construct absolute URL for the htu claim (RFC 9449 Section 4.2)
+            // We must match exactly what Axios will send as the request URI.
             const targetUrl = config.url || "";
             let absoluteUrl: string;
 
             if (targetUrl.startsWith('http')) {
                 absoluteUrl = targetUrl;
             } else {
-                // Determine absolute base
-                const base = config.baseURL?.startsWith('http') 
-                    ? config.baseURL 
-                    : `${window.location.origin}${config.baseURL || ''}`;
+                const baseURL = config.baseURL || "";
+                // Join baseURL and targetUrl correctly (stripping extra slashes)
+                const combinedPath = targetUrl 
+                    ? baseURL.replace(/\/+$/, '') + '/' + targetUrl.replace(/^\/+/, '')
+                    : baseURL;
                 
-                absoluteUrl = new URL(targetUrl, base).href;
+                if (combinedPath.startsWith('http')) {
+                    absoluteUrl = combinedPath;
+                } else {
+                    // Prepend origin if we only have a partial path
+                    const origin = window.location.origin;
+                    absoluteUrl = `${origin}${combinedPath.startsWith('/') ? '' : '/'}${combinedPath}`;
+                }
             }
 
             const proof = await DPoPWebService.generateProof(config.method || "GET", absoluteUrl);
