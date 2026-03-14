@@ -1,62 +1,72 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { lazy, Suspense } from 'react';
 import { AuthProvider } from '@/lib/auth/AuthContext';
 import { ThemeProvider, useTheme } from '@/lib/theme/ThemeContext';
 import { ProtectedRoute } from '@/lib/auth/ProtectedRoute';
-import { AppShell } from '@/components/layout/AppShell';
 import { Toaster } from 'sonner';
-import { LoginPage } from './features/auth/pages/LoginPage';
-import { AccessDeniedPage } from './features/auth/pages/AccessDeniedPage';
-import { MenuDashboard } from './features/menu/pages/MenuDashboard';
-import { CategoriesPage } from './features/menu/pages/CategoriesPage';
-import { MenuItemsPage } from './features/menu/pages/MenuItemsPage';
-import { ModifiersPage } from './features/menu/pages/ModifiersPage';
-import { FloorPlanPage } from './features/floor/pages/FloorPlanPage';
-import { LayoutEditorPage } from './features/floor/pages/LayoutEditorPage';
-import { SettingsLayout } from './features/settings/layouts/SettingsLayout';
-import { TablesideSettingsPage } from './features/settings/pages/TablesideSettingsPage';
-import KdsSettings from './features/settings/components/kds/KdsSettings';
-import { CrmLayout } from './features/crm/layouts/CrmLayout';
-import { CustomerListPage } from './features/crm/pages/CustomerListPage';
-import { CustomerDetailPage } from './features/crm/pages/CustomerDetailPage';
-import { LoyaltyConfigPage } from './features/crm/pages/LoyaltyConfigPage';
-import SegmentsPage from './features/crm/pages/SegmentsPage';
-import PromoCodesPage from './features/crm/pages/PromoCodesPage';
-import { CampaignsPage } from './features/crm/pages/CampaignsPage';
-import FeedbackDashboardPage from './features/crm/pages/FeedbackDashboardPage';
-import { CrmAnalyticsPage } from './features/crm/pages/CrmAnalyticsPage';
-import { CrmSettingsPage } from './features/crm/pages/CrmSettingsPage';
-import { DashboardPage } from './features/dashboard/pages/DashboardPage';
-import { StaffListPage } from './features/staff/pages/StaffListPage';
-import { RoleManagementPage } from './features/staff/pages/RoleManagementPage';
-import { VendorRFQPage } from './features/inventory/pages/VendorRFQPage';
-import { InventoryLayout } from './features/inventory/layouts/InventoryLayout';
-import { InventoryDashboard } from './features/inventory/pages/InventoryDashboard';
-import { RecipesPage } from './features/inventory/pages/RecipesPage';
-import { SupplierManagementPage } from './features/inventory/pages/SupplierManagementPage';
-import { RFQManagementPage } from './features/inventory/pages/RFQManagementPage';
-import { NotificationAdminLayout } from './features/notifications/layouts/NotificationAdminLayout';
-import { NotificationDashboardPage } from './features/notifications/pages/NotificationDashboardPage';
-import { NotificationTypesPage } from './features/notifications/pages/NotificationTypesPage';
-import { NotificationChannelsPage } from './features/notifications/pages/NotificationChannelsPage';
-import { NotificationRoutingPage } from './features/notifications/pages/NotificationRoutingPage';
-import { NotificationLogsPage } from './features/notifications/pages/NotificationLogsPage';
-import { NotificationSendPage } from './features/notifications/pages/NotificationSendPage';
-import { SupplierAuthProvider } from './features/auth/SupplierAuthContext';
+import { Loader2 } from 'lucide-react';
 import { SupplierProtectedRoute } from './features/auth/SupplierProtectedRoute';
-import { SupplierLoginPage } from './features/auth/pages/SupplierLoginPage';
-import { SupplierPortalLayout } from './features/inventory/layouts/SupplierPortalLayout';
-import { SupplierDashboard } from './features/inventory/pages/SupplierDashboard';
-import { SupplierRfqList } from './features/inventory/pages/SupplierRfqList';
-import { SupplierInventoryView } from './features/inventory/pages/SupplierInventoryView';
-import { SupplierPOFulfillmentPage } from './features/inventory/pages/SupplierPOFulfillmentPage';
-import { SupplierPOListPage } from './features/inventory/pages/SupplierPOListPage';
-import { SupplierProposalsList } from './features/inventory/components/SupplierProposalsList';
-import { POManagementPage } from './features/inventory/pages/POManagementPage';
-import { GoodsReceivingPage } from './features/inventory/pages/GoodsReceivingPage';
-import { ThreeWayMatchPanel } from './features/inventory/pages/ThreeWayMatchPanel';
-import { NotificationProvider } from './features/notifications/contexts/NotificationContext';
 import type { StaffRole } from '@/lib/auth/AuthContext';
+
+// --- Lazy loaded Layouts ---
+const AuthenticatedLayout = lazy(() => import('./components/layout/AuthenticatedLayout'));
+const SupplierPortalAuthenticatedLayout = lazy(() => import('./features/inventory/layouts/SupplierPortalAuthenticatedLayout'));
+
+// --- Lazy loaded features ---
+const LoginPage = lazy(() => import('./features/auth/pages/LoginPage').then(m => ({ default: m.LoginPage })));
+const AccessDeniedPage = lazy(() => import('./features/auth/pages/AccessDeniedPage').then(m => ({ default: m.AccessDeniedPage })));
+const SupplierLoginPage = lazy(() => import('./features/auth/pages/SupplierLoginPage').then(m => ({ default: m.SupplierLoginPage })));
+const DashboardPage = lazy(() => import('./features/dashboard/pages/DashboardPage').then(m => ({ default: m.DashboardPage })));
+const FloorPlanPage = lazy(() => import('./features/floor/pages/FloorPlanPage').then(m => ({ default: m.FloorPlanPage })));
+const LayoutEditorPage = lazy(() => import('./features/floor/pages/LayoutEditorPage').then(m => ({ default: m.LayoutEditorPage })));
+const MenuDashboard = lazy(() => import('./features/menu/pages/MenuDashboard').then(m => ({ default: m.MenuDashboard })));
+const CategoriesPage = lazy(() => import('./features/menu/pages/CategoriesPage').then(m => ({ default: m.CategoriesPage })));
+const MenuItemsPage = lazy(() => import('./features/menu/pages/MenuItemsPage').then(m => ({ default: m.MenuItemsPage })));
+const ModifiersPage = lazy(() => import('./features/menu/pages/ModifiersPage').then(m => ({ default: m.ModifiersPage })));
+const InventoryLayout = lazy(() => import('./features/inventory/layouts/InventoryLayout').then(m => ({ default: m.InventoryLayout })));
+const InventoryDashboard = lazy(() => import('./features/inventory/pages/InventoryDashboard').then(m => ({ default: m.InventoryDashboard })));
+const RecipesPage = lazy(() => import('./features/inventory/pages/RecipesPage').then(m => ({ default: m.RecipesPage })));
+const SupplierManagementPage = lazy(() => import('./features/inventory/pages/SupplierManagementPage').then(m => ({ default: m.SupplierManagementPage })));
+const RFQManagementPage = lazy(() => import('./features/inventory/pages/RFQManagementPage').then(m => ({ default: m.RFQManagementPage })));
+const POManagementPage = lazy(() => import('./features/inventory/pages/POManagementPage').then(m => ({ default: m.POManagementPage })));
+const GoodsReceivingPage = lazy(() => import('./features/inventory/pages/GoodsReceivingPage').then(m => ({ default: m.GoodsReceivingPage })));
+const ThreeWayMatchPanel = lazy(() => import('./features/inventory/pages/ThreeWayMatchPanel').then(m => ({ default: m.ThreeWayMatchPanel })));
+const VendorRFQPage = lazy(() => import('./features/inventory/pages/VendorRFQPage').then(m => ({ default: m.VendorRFQPage })));
+const CrmLayout = lazy(() => import('./features/crm/layouts/CrmLayout').then(m => ({ default: m.CrmLayout })));
+const CustomerListPage = lazy(() => import('./features/crm/pages/CustomerListPage').then(m => ({ default: m.CustomerListPage })));
+const CustomerDetailPage = lazy(() => import('./features/crm/pages/CustomerDetailPage').then(m => ({ default: m.CustomerDetailPage })));
+const LoyaltyConfigPage = lazy(() => import('./features/crm/pages/LoyaltyConfigPage').then(m => ({ default: m.LoyaltyConfigPage })));
+const SegmentsPage = lazy(() => import('./features/crm/pages/SegmentsPage'));
+const PromoCodesPage = lazy(() => import('./features/crm/pages/PromoCodesPage'));
+const CampaignsPage = lazy(() => import('./features/crm/pages/CampaignsPage').then(m => ({ default: m.CampaignsPage })));
+const FeedbackDashboardPage = lazy(() => import('./features/crm/pages/FeedbackDashboardPage'));
+const CrmAnalyticsPage = lazy(() => import('./features/crm/pages/CrmAnalyticsPage').then(m => ({ default: m.CrmAnalyticsPage })));
+const CrmSettingsPage = lazy(() => import('./features/crm/pages/CrmSettingsPage').then(m => ({ default: m.CrmSettingsPage })));
+const StaffListPage = lazy(() => import('./features/staff/pages/StaffListPage').then(m => ({ default: m.StaffListPage })));
+const RoleManagementPage = lazy(() => import('./features/staff/pages/RoleManagementPage').then(m => ({ default: m.RoleManagementPage })));
+const SettingsLayout = lazy(() => import('./features/settings/layouts/SettingsLayout').then(m => ({ default: m.SettingsLayout })));
+const TablesideSettingsPage = lazy(() => import('./features/settings/pages/TablesideSettingsPage').then(m => ({ default: m.TablesideSettingsPage })));
+const KdsSettings = lazy(() => import('./features/settings/components/kds/KdsSettings'));
+const NotificationAdminLayout = lazy(() => import('./features/notifications/layouts/NotificationAdminLayout').then(m => ({ default: m.NotificationAdminLayout })));
+const NotificationDashboardPage = lazy(() => import('./features/notifications/pages/NotificationDashboardPage').then(m => ({ default: m.NotificationDashboardPage })));
+const NotificationTypesPage = lazy(() => import('./features/notifications/pages/NotificationTypesPage').then(m => ({ default: m.NotificationTypesPage })));
+const NotificationChannelsPage = lazy(() => import('./features/notifications/pages/NotificationChannelsPage').then(m => ({ default: m.NotificationChannelsPage })));
+const NotificationRoutingPage = lazy(() => import('./features/notifications/pages/NotificationRoutingPage').then(m => ({ default: m.NotificationRoutingPage })));
+const NotificationLogsPage = lazy(() => import('./features/notifications/pages/NotificationLogsPage').then(m => ({ default: m.NotificationLogsPage })));
+const NotificationSendPage = lazy(() => import('./features/notifications/pages/NotificationSendPage').then(m => ({ default: m.NotificationSendPage })));
+const SupplierDashboard = lazy(() => import('./features/inventory/pages/SupplierDashboard').then(m => ({ default: m.SupplierDashboard })));
+const SupplierRfqList = lazy(() => import('./features/inventory/pages/SupplierRfqList').then(m => ({ default: m.SupplierRfqList })));
+const SupplierInventoryView = lazy(() => import('./features/inventory/pages/SupplierInventoryView').then(m => ({ default: m.SupplierInventoryView })));
+const SupplierPOFulfillmentPage = lazy(() => import('./features/inventory/pages/SupplierPOFulfillmentPage').then(m => ({ default: m.SupplierPOFulfillmentPage })));
+const SupplierPOListPage = lazy(() => import('./features/inventory/pages/SupplierPOListPage').then(m => ({ default: m.SupplierPOListPage })));
+const SupplierProposalsList = lazy(() => import('./features/inventory/components/SupplierProposalsList').then(m => ({ default: m.SupplierProposalsList })));
+
+const PageLoader = () => (
+    <div className="flex h-dvh w-full items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+    </div>
+);
 
 // Shopro design system
 import './App.css';
@@ -94,24 +104,22 @@ function AppContent() {
         }}
       />
 
-      <Routes>
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
         {/* ── Public ─────────────────────────────────────────────── */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/denied" element={<AccessDeniedPage />} />
         <Route path="/vendor/rfq/:rfqId" element={<VendorRFQPage />} />
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
-        {/* ── Protected shell — header + sidebar live inside AppShell ── */}
-        <Route
-          element={
-            <ProtectedRoute allowedRoles={ALL_STAFF}>
-              {/* pt-[3px] clears the brand-bar height */}
-              <div className="pt-[3px] flex flex-col min-h-dvh">
-                <AppShell />
-              </div>
-            </ProtectedRoute>
-          }
-        >
+          {/* ── Protected shell — header + sidebar live inside AppContent wrapper ── */}
+          <Route
+            element={
+              <ProtectedRoute allowedRoles={ALL_STAFF}>
+                <AuthenticatedLayout />
+              </ProtectedRoute>
+            }
+          >
           {/* Dashboard */}
           <Route path="/dashboard" element={<DashboardPage />} />
 
@@ -243,9 +251,7 @@ function AppContent() {
           path="/admin/notifications"
           element={
             <ProtectedRoute allowedRoles={ADMIN_ROLES}>
-              <div className="pt-[3px] flex flex-col min-h-dvh">
-                <AppShell />
-              </div>
+              <AuthenticatedLayout />
             </ProtectedRoute>
           }
         >
@@ -264,15 +270,13 @@ function AppContent() {
 
         {/* ── Supplier Portal ──────────────────────────────────────── */}
         <Route path="/supplier/login" element={<SupplierLoginPage />} />
-        <Route
-          element={
-            <SupplierProtectedRoute>
-              <div className="pt-[3px] flex flex-col min-h-dvh font-body">
-                <SupplierPortalLayout />
-              </div>
-            </SupplierProtectedRoute>
-          }
-        >
+          <Route
+            element={
+              <SupplierProtectedRoute>
+                <SupplierPortalAuthenticatedLayout />
+              </SupplierProtectedRoute>
+            }
+          >
           <Route path="/supplier/dashboard" element={<SupplierDashboard />} />
           <Route path="/supplier/rfqs" element={<SupplierRfqList />} />
           <Route path="/supplier/pos" element={<SupplierPOListPage />} />
@@ -284,7 +288,8 @@ function AppContent() {
         {/* Catch-all */}
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes >
-    </BrowserRouter >
+    </Suspense>
+  </BrowserRouter >
   );
 }
 
@@ -293,11 +298,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <AuthProvider>
-          <SupplierAuthProvider>
-            <NotificationProvider>
-              <AppContent />
-            </NotificationProvider>
-          </SupplierAuthProvider>
+          <AppContent />
         </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>
