@@ -77,14 +77,16 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     
     String displayName;
-    if (_tableName != null) {
+    if (_tableName != null && _tableName!.isNotEmpty) {
       displayName = _tableName!;
     } else if (_isLoading) {
       displayName = 'Identifying...';
-    } else if (_resolvedToken != null) {
-      displayName = 'Table Found';
-    } else {
+    } else if (_error != null) {
       displayName = 'Unknown';
+    } else if (_resolvedToken != null) {
+      displayName = 'Table Ready'; // Valid token, just waiting for resolution or click
+    } else {
+      displayName = 'Welcome';
     }
 
     return Scaffold(
