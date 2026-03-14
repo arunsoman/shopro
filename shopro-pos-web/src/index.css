@@ -448,3 +448,28 @@ video,
 [data-no-transition] {
   transition: none !important;
 }
+/* ── 8. Login Page Specific Utilities ──────────────────────── */
+.pin-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 9999px;
+    background-color: var(--border);
+    transition: all 0.2s ease;
+}
+
+.pin-dot.filled {
+    background-color: var(--primary);
+    transform: scale(1.15);
+    box-shadow: 0 0 12px color-mix(in srgb, var(--primary) 35%, transparent);
+}
+
+.glass-panel {
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.dark .glass-panel {
+    background: rgba(24, 11, 51, 0.4);
+    border-color: rgba(255, 255, 255, 0.1);
+}

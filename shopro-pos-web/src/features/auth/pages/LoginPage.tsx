@@ -1,9 +1,10 @@
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth/AuthContext";
-import { Lock, Delete } from "lucide-react";
+import { Settings, LogOut, Delete, LogIn, Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-const PIN_DIGITS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"];
+const PIN_DIGITS = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
 
 const ROLE_HOME: Record<string, string> = {
     OWNER: "/dashboard",
@@ -18,14 +19,37 @@ const ROLE_HOME: Record<string, string> = {
     EXPEDITOR: "/dashboard",
 };
 
-// Role hint cards shown below the PIN pad
 const ROLE_HINTS = [
-    { role: "Owner", pin: "1111", color: "from-amber-500 to-orange-600" },
-    { role: "Manager", pin: "2222", color: "from-violet-500 to-purple-700" },
-    { role: "Host", pin: "3333", color: "from-cyan-500 to-blue-600" },
-    { role: "Server", pin: "4444", color: "from-emerald-500 to-green-700" },
-    { role: "Cashier", pin: "5555", color: "from-rose-500 to-pink-700" },
-    { role: "Busser", pin: "6666", color: "from-slate-500 to-zinc-700" },
+    { 
+        role: "Owner", 
+        pin: "1111", 
+        avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuCDvNTmVVpS0ApbgfhpUMeQUvUhDQNfH384c5ftGUl7Kx-CdpxJSHN5FEN73F3U2jebmxL0y5iUpBpKG1dgWagoMtz4a8a7P9bhfdUoRB1cmUExVQcr73oZIVY5ga6vgPIBiw40fbduFyrUvAvgNb_kPBuDrb56SI51-uLwDl-wmiNkf9C8rEteOSL8SIvwJEh5uSnG3drZJgpTGjijx8bH1aUUOvQolajkeSbJ3dqkZyE8DiwKtL5yuogLDpFA7sI2c6NQ5q1jlA" 
+    },
+    { 
+        role: "Manager", 
+        pin: "2222", 
+        avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuAaIQziBtV4nqKyZ3vYtejwNgKdENwOj5y_Gi2426b4YKjdAFoZ6fxisXB0vbOaPAjStmjPVduFjgdyNPn30iBrxsWuB5YAco7bvSw2ZA-SHUjg9Z7XQnzOToAPbpSrM7UsEGNr6c7NJQmDUL5sgeRl-CF8Ime6A4dfPJF6brlK-aeq5x3VTljee4_bq8SHHTtXqCZT2L8Qva3aUzxOg89nqXsN2xbe9dApj3iOYUEuTnijEGKgaMESu02S7QrBmp-m3rbuTMAyFg" 
+    },
+    { 
+        role: "Host", 
+        pin: "3333", 
+        avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuAql8Q7876VHsZ54gCCXnZWJeesJcqMVRPq-8UGcGwz6qXUk2WFRozq-My39owpaCLx3DPDxKPkKoMPisSPpBdJ86kMWQMW7gGZxoDk5heE8UDkU_xWGZwY48SOy1bBe1h-LhXA9PmWG8enf03zqXnZZ9dZftgVSjWT9NVI7gPk7errYatmSVbOOnV0PSxE2u6RoSTyl_EZnrn2dmCyuLCk5TrfiYwOMxsiPlKbVN3nJBm7Z8mUvjNpMuDlhyK1V1aYKqLkCica5w" 
+    },
+    { 
+        role: "Server", 
+        pin: "4444", 
+        avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuBCznj3xDO_jAzfpWKOk0Wht6WBDM-9zlZsMa0G4PWkJ8-Lc1cH4t6Ryv3G3cTMYYASOE6Twe0CwDKWWE4iE8jYdy0XRAIh8SUWL6YaoHmqkVWrqds5NXG6m0FsVj6LCY3WM3g4dTTs7ogJrz-yFo0ulLD6BRPJB4P6Bp6SupOnHiRHALwfeF-5H9TKe89VHzL2RryVYx8OM1C6JW2ZXmZVJk44o_eVmxTTCrZU0f9DfeXUgwp62OqrLodLtPISnNA3hld3NSbqSw" 
+    },
+    { 
+        role: "Busser", 
+        pin: "6666", 
+        avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuBkqHTQkz4haSnSIbMcRL8y8Cu9bHIHdfY0AT_FRjFG8g446i7a2uAc5wHxh0LiR6_6huAS7-qG4UICGyV6R9xhQIGzkWujAkpRc4gpi78tD7kgVhgT9W9rGTeJF96tfEjdMNom6p-nyISJBKmFqTaZMOExOp5LaSsRDiw2Rumt-QuJgpuzRMWxX8wb6eyqHp9tziTaLhgP_-smRMMLHpq07BfuOLkHxzLuQeoe2q0JG98UVO2cq5QyGBZqIgdcDum86n9_Bg3m-w" 
+    },
+    { 
+        role: "Cashier", 
+        pin: "5555", 
+        avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuBh8BB1Xgfar9-N7KYchbXwTHrc3XH6Ze0pNL8qMp_hKH5wskBVJHlJpW0wl-SzAigwr3Xee-eDJcQ-W_eav4nPGeabtXygh0vERjelACqKVpHBi-66B3P_-oVhdDz66h8Hzi8VrD3aQVEm1x_x3Mxr9S7DLUdYkGS7vIJO-wZdG3ndvbr1vLXKRaXVV3gx7SRmXcdzwOocob_XzOKwnQhMUV3myD9jdPXh1gDrKFh1a9XSS2n44JHFdqLLyZ-WezQRmMue7o5mAQ" 
+    },
 ];
 
 export function LoginPage() {
@@ -35,29 +59,8 @@ export function LoginPage() {
     const [pin, setPin] = useState("");
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
-    const [_attempts, setAttempts] = useState(0);
 
-    const handleDigit = useCallback(
-        (d: string) => {
-            if (pin.length >= 4) return;
-            const next = pin + d;
-            setPin(next);
-            setError(null);
-
-            // Auto-submit when 4 digits are entered
-            if (next.length === 4) {
-                handleSubmit(next);
-            }
-        },
-        [pin]
-    );
-
-    const handleBackspace = () => {
-        setPin((p) => p.slice(0, -1));
-        setError(null);
-    };
-
-    const handleSubmit = async (submittedPin: string) => {
+    const handleSubmit = useCallback(async (submittedPin: string) => {
         setIsLoading(true);
         setError(null);
         try {
@@ -67,148 +70,174 @@ export function LoginPage() {
         } catch (err: any) {
             const msg = err?.message ?? "Incorrect PIN. Please try again.";
             setError(msg);
-            setAttempts((a) => a + 1);
             setPin("");
         } finally {
             setIsLoading(false);
         }
+    }, [login, navigate]);
+
+    const handleDigit = useCallback(
+        (d: string) => {
+            if (pin.length >= 4) return;
+            const next = pin + d;
+            setPin(next);
+            setError(null);
+
+            if (next.length === 4) {
+                handleSubmit(next);
+            }
+        },
+        [pin, handleSubmit]
+    );
+
+    const handleBackspace = () => {
+        setPin((p) => p.slice(0, -1));
+        setError(null);
     };
 
-    const isLocked = error?.includes("locked");
-
     return (
-        <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center p-6 relative overflow-hidden">
-            {/* Ambient background glow */}
-            <div className="absolute inset-0 pointer-events-none">
-                <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-900/20 rounded-full blur-3xl" />
-            </div>
-
-            <div className="relative z-10 w-full max-w-sm">
-                {/* Logo / Title */}
-                <div className="text-center mb-8">
-                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-indigo-600/20 border border-indigo-500/30 mb-4">
-                        <Lock className="h-7 w-7 text-indigo-400" />
-                    </div>
-                    <h1 className="text-2xl font-bold text-white tracking-tight">Shopro POS</h1>
-                    <p className="text-zinc-400 text-sm mt-1">Enter your PIN to sign in</p>
+        <div className="min-h-screen bg-[#f8f5ff] dark:bg-[#180B33] font-['Manrope'] text-slate-900 dark:text-slate-100 flex flex-col overflow-x-hidden">
+            {/* Top Navigation Bar */}
+            <nav className="flex items-center justify-between px-6 md:px-10 py-6">
+                <div className="flex items-center gap-3">
+                    <img 
+                        alt="Shopro Logo" 
+                        className="h-9 w-auto" 
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuBt9sR8-LjBSGdtj7xh_nfysKtc09aAKqzDcvS1PKltd6JZXyDg_H0wwgDPCeCc0KjKRmpQy6tbWpfaWnn8vSh89QM2SChdxGHxST-XAahZxfnBk09Bap1wjqn-MgqulGGq8VWfOK-igSzT9tcIoT5dE_vg1jAWoDfc2sQVHt1DhKLgFzQ5IItPMkgpmRP-oTrHa2fqzvt4isN1umlwlu0ibsx0ksao5cRJ9-bDQegqGh4drUODQxMrp67k007rsTKiX8vo6SMIYw" 
+                    />
+                    <span className="font-extrabold text-2xl tracking-tight text-slate-800 dark:text-slate-100">Shopro</span>
                 </div>
-
-                {/* PIN dots */}
-                <div className="flex justify-center gap-4 mb-6">
-                    {[0, 1, 2, 3].map((i) => (
-                        <div
-                            key={i}
-                            className={[
-                                "w-5 h-5 rounded-full border-2 transition-all duration-150",
-                                i < pin.length
-                                    ? "bg-indigo-500 border-indigo-400 scale-110"
-                                    : "bg-transparent border-zinc-600",
-                            ].join(" ")}
-                        />
-                    ))}
-                </div>
-
-                {/* Error / status message */}
-                {error && (
-                    <div
-                        className={[
-                            "mb-4 px-4 py-2.5 rounded-lg text-sm text-center font-medium",
-                            isLocked
-                                ? "bg-red-900/40 border border-red-700/50 text-red-300"
-                                : "bg-red-900/30 border border-red-800/30 text-red-400",
-                        ].join(" ")}
-                    >
-                        {error}
+                <div className="flex items-center gap-6">
+                    <div className="hidden sm:flex gap-6">
+                        <button className="text-slate-500 dark:text-slate-400 font-semibold hover:text-primary transition-colors">Help</button>
+                        <button className="text-slate-500 dark:text-slate-400 font-semibold hover:text-primary transition-colors">Support</button>
                     </div>
-                )}
+                    <div className="flex items-center gap-3">
+                        <button className="p-2 text-slate-400 hover:text-primary hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-all">
+                            <Settings className="w-5 h-5" />
+                        </button>
+                        <button className="p-2 text-slate-400 hover:text-error hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-all">
+                            <LogOut className="w-5 h-5" />
+                        </button>
+                    </div>
+                </div>
+            </nav>
 
-                {/* PIN Pad */}
-                <div className="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-5 shadow-2xl backdrop-blur-sm">
-                    <div className="grid grid-cols-3 gap-3">
-                        {PIN_DIGITS.slice(0, 9).map((d) => (
+            {/* Main Content Area */}
+            <main className="flex-grow flex flex-col items-center justify-center px-4 py-8">
+                <div className="w-full max-w-lg flex flex-col items-center">
+                    {/* Login Header */}
+                    <div className="text-center mb-8 animate-fade-up">
+                        <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-2">Welcome Back</h1>
+                        <p className="text-slate-500 dark:text-slate-400 text-lg">Enter your terminal PIN to start your shift</p>
+                    </div>
+
+                    {/* PIN Display */}
+                    <div className="flex gap-5 mb-10 bg-slate-100/50 dark:bg-slate-800/50 p-6 rounded-2xl animate-scale-in">
+                        {[0, 1, 2, 3].map((i) => (
+                            <div
+                                key={i}
+                                className={cn(
+                                    "pin-dot",
+                                    i < pin.length && "filled"
+                                )}
+                            />
+                        ))}
+                    </div>
+
+                    {/* Error Message */}
+                    {error && (
+                        <div className="mb-6 px-4 py-2 bg-error-container/20 text-error text-sm font-bold rounded-lg animate-fade-in">
+                            {error}
+                        </div>
+                    )}
+
+                    {/* Keypad Bento Grid */}
+                    <div className="grid grid-cols-3 gap-5 mb-12 animate-fade-up" style={{ animationDelay: '0.1s' }}>
+                        {PIN_DIGITS.map((d) => (
                             <button
                                 key={d}
                                 onClick={() => handleDigit(d)}
-                                disabled={isLoading || isLocked || pin.length >= 4}
-                                className={[
-                                    "h-16 rounded-xl text-2xl font-semibold transition-all duration-100",
-                                    "bg-zinc-800 text-white active:scale-95",
-                                    "hover:bg-zinc-700 hover:text-white",
-                                    "disabled:opacity-40 disabled:cursor-not-allowed",
-                                    "border border-zinc-700/50",
-                                    "shadow-sm shadow-black/30",
-                                ].join(" ")}
+                                disabled={isLoading || pin.length >= 4}
+                                className="w-20 h-20 rounded-full bg-white dark:bg-slate-800 shadow-sm border border-slate-100 dark:border-slate-700 text-slate-800 dark:text-white text-2xl font-bold flex items-center justify-center hover:bg-primary hover:text-white dark:hover:bg-primary transition-all duration-200 active:scale-90"
                             >
                                 {d}
                             </button>
                         ))}
-
-                        {/* 0 row  */}
-                        <button
+                        <button 
                             onClick={handleBackspace}
-                            disabled={isLoading || pin.length === 0}
-                            className="h-16 rounded-xl text-zinc-400 transition-all active:scale-95 hover:bg-zinc-800/60 disabled:opacity-30"
+                            className="w-20 h-20 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-400 flex items-center justify-center hover:bg-error/10 hover:text-error transition-all active:scale-90"
                         >
-                            <Delete className="h-5 w-5 mx-auto" />
+                            <Delete className="w-6 h-6" />
                         </button>
-                        <button
+                        <button 
                             onClick={() => handleDigit("0")}
-                            disabled={isLoading || isLocked || pin.length >= 4}
-                            className={[
-                                "h-16 rounded-xl text-2xl font-semibold transition-all duration-100",
-                                "bg-zinc-800 text-white active:scale-95",
-                                "hover:bg-zinc-700",
-                                "disabled:opacity-40 disabled:cursor-not-allowed",
-                                "border border-zinc-700/50",
-                                "shadow-sm shadow-black/30",
-                            ].join(" ")}
+                            disabled={isLoading || pin.length >= 4}
+                            className="w-20 h-20 rounded-full bg-white dark:bg-slate-800 shadow-sm border border-slate-100 dark:border-slate-700 text-slate-800 dark:text-white text-2xl font-bold flex items-center justify-center hover:bg-primary hover:text-white transition-all duration-200 active:scale-90"
                         >
                             0
                         </button>
-                        <button
+                        <button 
                             onClick={() => pin.length === 4 && handleSubmit(pin)}
                             disabled={isLoading || pin.length < 4}
-                            className="h-16 rounded-xl bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white font-semibold text-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-indigo-900/50"
+                            className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-[#8800de] text-white flex items-center justify-center hover:shadow-lg hover:shadow-primary/30 transition-all duration-300 active:scale-95 disabled:opacity-40"
                         >
-                            {isLoading ? "…" : "Enter"}
+                            {isLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : <LogIn className="w-6 h-6" />}
                         </button>
                     </div>
-                </div>
 
-                {/* Role hint cards — for testing only */}
-                <div className="mt-8">
-                    <p className="text-center text-xs text-zinc-600 mb-3 uppercase tracking-widest font-medium">
-                        Test Accounts
-                    </p>
-                    <div className="grid grid-cols-3 gap-2">
-                        {ROLE_HINTS.map(({ role, pin: hintPin, color }) => (
-                            <button
-                                key={role}
-                                onClick={() => {
-                                    setPin("");
-                                    setError(null);
-                                    // Fill PIN automatically for convenience
-                                    hintPin.split("").forEach((d, i) =>
-                                        setTimeout(() => {
-                                            setPin((p) => (p.length < 4 ? p + d : p));
-                                            if (i === 3) setTimeout(() => handleSubmit(hintPin), 50);
-                                        }, i * 80)
-                                    );
-                                }}
-                                className={[
-                                    "p-2 rounded-lg text-white text-xs font-medium",
-                                    `bg-gradient-to-br ${color}`,
-                                    "opacity-80 hover:opacity-100 transition-opacity",
-                                    "flex flex-col items-center gap-0.5",
-                                ].join(" ")}
-                            >
-                                <span className="font-bold">{role}</span>
-                                <span className="font-mono opacity-70">{hintPin}</span>
-                            </button>
-                        ))}
+                    {/* Quick Staff Login Section */}
+                    <div className="w-full bg-slate-100/50 dark:bg-slate-800/40 p-8 rounded-[2.5rem] relative overflow-hidden animate-fade-up" style={{ animationDelay: '0.2s' }}>
+                        <div className="relative z-10">
+                            <div className="flex items-center justify-between mb-8">
+                                <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">Quick Staff Login</h2>
+                                <span className="bg-[#a13920] text-white px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest">New Shift</span>
+                            </div>
+                            <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-8">
+                                {ROLE_HINTS.map((staff) => (
+                                    <button 
+                                        key={staff.role}
+                                        onClick={() => {
+                                            if (isLoading) return;
+                                            setPin("");
+                                            staff.pin.split("").forEach((d, i) => {
+                                                setTimeout(() => {
+                                                    setPin(p => p.length < 4 ? p + d : p);
+                                                    if (i === 3) handleSubmit(staff.pin);
+                                                }, i * 60);
+                                            });
+                                        }}
+                                        className="flex flex-col items-center gap-3 group"
+                                    >
+                                        <div className="w-16 h-16 rounded-full p-[3px] bg-slate-200 dark:bg-slate-700 group-hover:bg-primary transition-all duration-300 transform group-hover:scale-110">
+                                            <div className="w-full h-full rounded-full overflow-hidden border-2 border-white dark:border-slate-800">
+                                                <img 
+                                                    alt={staff.role} 
+                                                    className="w-full h-full object-cover" 
+                                                    src={staff.avatar} 
+                                                />
+                                            </div>
+                                        </div>
+                                        <span className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-[0.15em] transition-colors group-hover:text-primary">
+                                            {staff.role}
+                                        </span>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </main>
+
+            {/* Footer */}
+            <footer className="px-10 py-8 flex flex-col md:flex-row items-center justify-between border-t border-slate-200 dark:border-slate-800/50">
+                <p className="text-slate-400 text-xs mb-4 md:mb-0">© 2026 Shopro POS Systems. All rights reserved.</p>
+                <div className="flex gap-8">
+                    <button className="text-slate-400 text-xs font-semibold hover:text-primary transition-colors">Privacy Policy</button>
+                    <button className="text-slate-400 text-xs font-semibold hover:text-primary transition-colors">Terms of Service</button>
+                    <button className="text-slate-400 text-xs font-semibold hover:text-primary transition-colors">Contact</button>
+                </div>
+            </footer>
         </div>
     );
 }
