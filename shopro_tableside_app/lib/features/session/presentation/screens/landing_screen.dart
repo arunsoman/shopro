@@ -26,45 +26,66 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
   void initState() {
     super.initState();
     final uriToken = Uri.base.queryParameters['qrToken'];
-    debugPrint('[SHOPRO] initState: widget.qrToken = ${widget.qrToken}');
-    debugPrint('[SHOPRO] initState: Uri.base = ${Uri.base}');
-    debugPrint('[SHOPRO] initState: uriToken = $uriToken');
-    debugPrint('[SHOPRO] initState: initialQrToken (from main) = $initialQrToken');
     _resolvedToken = widget.qrToken ?? uriToken ?? initialQrToken;
-    debugPrint('[SHOPRO] initState: _resolvedToken = $_resolvedToken');
+    
+    // Auto-resolve table details on mount if we have a token
+    if (_resolvedToken != null && _resolvedToken!.isNotEmpty) {
+      _resolveTable(_resolvedToken!);
+    }
   }
 
-  Future<void> _startOrdering() async {
-    final token = _resolvedToken;
-    if (token == null || token.isEmpty) {
-      setState(() => _error = 'Invalid QR code. Please scan again.');
-      return;
-    }
+  Future<void> _resolveTable(String token) async {
     setState(() {
       _isLoading = true;
       _error = null;
     });
 
     try {
+      // Just initialize the session to get the table name, don't navigate yet
       final name = await ref.read(sessionProvider.notifier).initSession(token);
       if (mounted) {
-        setState(() => _tableName = name);
-        context.go('/menu');
+        setState(() {
+          _tableName = name;
+          _isLoading = false;
+        });
       }
     } catch (e) {
       if (mounted) {
         setState(() {
           _isLoading = false;
-          _error = 'Could not connect to the server. Please try again.';
+          _error = 'Could not recognize table. Please try scanning again.';
         });
       }
+    }
+  }
+
+  void _startOrdering() {
+    if (_tableName != null) {
+      context.go('/menu');
+    } else if (_resolvedToken != null) {
+      // If user clicks before auto-resolve finishes, or after an error
+      _resolveTable(_resolvedToken!).then((_) {
+        if (mounted && _tableName != null) {
+          context.go('/menu');
+        }
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final displayName = _tableName ?? (_resolvedToken != null ? 'Table Ready' : 'Unknown');
+    
+    String displayName;
+    if (_tableName != null) {
+      displayName = _tableName!;
+    } else if (_isLoading) {
+      displayName = 'Identifying...';
+    } else if (_resolvedToken != null) {
+      displayName = 'Table Found';
+    } else {
+      displayName = 'Unknown';
+    }
 
     return Scaffold(
       body: Stack(

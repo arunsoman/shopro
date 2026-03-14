@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/router/pos_router.dart';
@@ -26,9 +25,6 @@ void main() {
     }
   }
 
-  debugPrint('[SHOPRO] Uri.base = $base');
-  debugPrint('[SHOPRO] Uri.base.queryParameters = $params');
-  debugPrint('[SHOPRO] initialQrToken = $initialQrToken');
   runApp(const ProviderScope(child: ShoproTablesideApp()));
 }
 
