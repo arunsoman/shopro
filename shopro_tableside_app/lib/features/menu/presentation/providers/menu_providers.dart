@@ -114,6 +114,7 @@ class CartNotifier extends Notifier<List<CartItem>> {
           'menuItemId': item.menuItem.id,
           'quantity': item.quantity,
           'customNote': item.note,
+          'deviceFingerprint': 'guest-device-1',
           'modifiers': item.selectedModifiers
               .map((m) => {'id': m.id, 'label': m.label})
               .toList(),
