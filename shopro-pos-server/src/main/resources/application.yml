@@ -18,6 +18,7 @@ spring:
     validate-on-migrate: false
 server:
   port: ${PORT:8080}
+  forward-headers-strategy: native
 
 logging:
   level:

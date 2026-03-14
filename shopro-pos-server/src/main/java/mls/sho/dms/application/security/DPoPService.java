@@ -7,6 +7,8 @@ import mls.sho.dms.entity.staff.DeviceBinding;
 import mls.sho.dms.entity.staff.StaffMember;
 import mls.sho.dms.repository.staff.DeviceBindingRepository;
 import mls.sho.dms.repository.staff.StaffRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -27,6 +29,8 @@ import java.nio.charset.StandardCharsets;
  */
 @Service
 public class DPoPService {
+
+    private static final Logger log = LoggerFactory.getLogger(DPoPService.class);
 
     @Autowired
     private DeviceBindingRepository deviceBindingRepository;
@@ -75,14 +79,20 @@ public class DPoPService {
             String method = (String) claims.get("htm");
             String url = (String) claims.get("htu");
             
-            if (method == null || !method.equalsIgnoreCase(request.getMethod())) return null;
+            if (method == null || !method.equalsIgnoreCase(request.getMethod())) {
+                log.debug("DPoP method mismatch: expected {}, got {}", request.getMethod(), method);
+                return null;
+            }
             
             String requestUrl = request.getRequestURL().toString();
             // strip query params for comparison as per FAPI recs
             if (requestUrl.contains("?")) {
                 requestUrl = requestUrl.substring(0, requestUrl.indexOf("?"));
             }
-            if (url == null || !requestUrl.startsWith(url)) return null;
+            if (url == null || !requestUrl.startsWith(url)) {
+                log.debug("DPoP htu mismatch: requestUrl={}, htu={}", requestUrl, url);
+                return null;
+            }
 
             // 5. Freshness check (iat) - max 2 minutes skew
             Object iatObj = claims.get("iat");
