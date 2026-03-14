@@ -446,7 +446,7 @@ class MenuGridItem extends ConsumerWidget {
       elevation: 0, // Flat design for modern look
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.grey.withOpacity(0.1)),
+        side: BorderSide(color: Colors.grey.withValues(alpha: 0.1)),
       ),
       child: InkWell(
         onTap: () => MenuItemDetailSheet.show(context, item),

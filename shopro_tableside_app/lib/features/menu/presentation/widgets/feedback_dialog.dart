@@ -70,7 +70,7 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
               hintText: 'Any specific feedback?',
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               filled: true,
-              fillColor: Colors.black.withOpacity(0.02),
+              fillColor: Colors.black.withValues(alpha: 0.02),
             ),
           ),
         ],
