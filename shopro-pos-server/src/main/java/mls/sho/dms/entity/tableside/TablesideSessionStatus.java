@@ -1,5 +1,5 @@
 package mls.sho.dms.entity.tableside;
 
 public enum TablesideSessionStatus {
-    ACTIVE, EXPIRED, DISABLED
+    PENDING_APPROVAL, ACTIVE, EXPIRED, DISABLED, REJECTED
 }

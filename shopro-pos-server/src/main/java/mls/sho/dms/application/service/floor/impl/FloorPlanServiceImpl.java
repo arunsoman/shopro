@@ -10,6 +10,7 @@ import mls.sho.dms.repository.floor.ReservationRepository;
 import mls.sho.dms.repository.floor.SectionRepository;
 import mls.sho.dms.repository.floor.TableShapeRepository;
 import mls.sho.dms.repository.floor.WaitlistEntryRepository;
+import mls.sho.dms.service.tableside.TablesideService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +32,7 @@ public class FloorPlanServiceImpl implements FloorPlanService {
     private final ReservationRepository reservationRepository;
     private final mls.sho.dms.application.service.core.NotificationEngine notificationEngine;
     private final org.springframework.messaging.simp.SimpMessagingTemplate messagingTemplate;
+    private final TablesideService tablesideService;
 
     private static final int RESERVATION_HOLD_WINDOW_MINS = 15;
 
@@ -194,6 +196,9 @@ public class FloorPlanServiceImpl implements FloorPlanService {
         table.setStatus(TableStatus.AVAILABLE);
         TableShape saved = tableShapeRepository.save(table);
         TableShapeResponse tableResponse = mapToTableShapeResponse(saved);
+
+        // Invalidate any active tableside sessions for this table
+        tablesideService.invalidateSessionsForTable(tableId);
 
         // Broadcast table update
         messagingTemplate.convertAndSend("/topic/tables", tableResponse);

@@ -5,6 +5,7 @@ import mls.sho.dms.dto.menu.MenuItemDto;
 import mls.sho.dms.dto.tableside.AddCartItemRequest;
 import mls.sho.dms.dto.tableside.GuestCartItemDto;
 import mls.sho.dms.dto.tableside.TablesideSessionDto;
+import mls.sho.dms.dto.tableside.TableQrResponse;
 import mls.sho.dms.service.tableside.TablesideService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -73,5 +74,34 @@ public class TablesideController {
     @GetMapping("/menu/items")
     public ResponseEntity<List<MenuItemDto>> getItemsByCategory(@RequestParam UUID categoryId) {
         return ResponseEntity.ok(tablesideService.getMenuItemsByCategory(categoryId));
+    }
+
+    // QR Code Management (for Admin)
+    @GetMapping("/qr/table/{tableId}")
+    public ResponseEntity<TableQrResponse> getTableQrCode(@PathVariable UUID tableId) {
+        return ResponseEntity.ok(tablesideService.getTableQrCode(tableId));
+    }
+
+    @GetMapping("/qr/all")
+    public ResponseEntity<List<TableQrResponse>> getAllTableQrCodes() {
+        return ResponseEntity.ok(tablesideService.getAllTableQrCodes());
+    }
+
+    // Session Management (for POS/Staff)
+    @GetMapping("/sessions/pending")
+    public ResponseEntity<List<TablesideSessionDto>> getPendingSessions() {
+        return ResponseEntity.ok(tablesideService.getPendingSessions());
+    }
+
+    @PostMapping("/session/{sessionId}/approve")
+    public ResponseEntity<Void> approveSession(@PathVariable UUID sessionId) {
+        tablesideService.approveSession(sessionId);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/session/{sessionId}/reject")
+    public ResponseEntity<Void> rejectSession(@PathVariable UUID sessionId) {
+        tablesideService.rejectSession(sessionId);
+        return ResponseEntity.ok().build();
     }
 }

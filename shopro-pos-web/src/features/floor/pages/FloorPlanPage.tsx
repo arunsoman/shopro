@@ -6,6 +6,7 @@ import { TableShapeBadge } from "../components/TableShapeBadge";
 import { TABLE_STATUS_CONFIG } from "../components/TableShapeBadge";
 import { WaitlistSidebar } from "../components/WaitlistSidebar";
 import { TableActionModal } from "../components/TableActionModal";
+import { TablesideSessionManagement } from "../components/TablesideSessionManagement";
 import type { TableShapeResponse, WaitlistEntryResponse } from "../schema/floorSchema";
 
 export function FloorPlanPage() {
@@ -147,6 +148,13 @@ export function FloorPlanPage() {
                     ))}
                 </div>
             </div>
+
+            {/* ── Tableside Requests sidebar ── */}
+            <aside className="w-16 lg:w-72 flex-shrink-0 flex flex-col bg-surface border-l border-border h-full overflow-hidden transition-all duration-300">
+                <div className="p-4 flex-1 overflow-y-auto">
+                    <TablesideSessionManagement />
+                </div>
+            </aside>
 
             {/* ── Table action modal ── */}
             {selectedTable && (
