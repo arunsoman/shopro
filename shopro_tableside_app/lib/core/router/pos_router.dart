@@ -12,8 +12,16 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/',
         builder: (context, state) {
-          final tableId = state.uri.queryParameters['tableId'] ?? 'W-1';
-          return LandingScreen(tableId: tableId);
+          final qrToken = state.uri.queryParameters['qrToken'];
+          return LandingScreen(qrToken: qrToken);
+        },
+      ),
+      // QR code URLs: https://tableasist.afriqpay.com/scan/{uuid}
+      GoRoute(
+        path: '/scan/:qrToken',
+        builder: (context, state) {
+          final qrToken = state.pathParameters['qrToken']!;
+          return LandingScreen(qrToken: qrToken);
         },
       ),
       GoRoute(

@@ -8,8 +8,8 @@ import 'package:shopro_tableside_app/core/theme/app_spacing.dart';
 import '../providers/session_providers.dart';
 
 class LandingScreen extends ConsumerStatefulWidget {
-  final String? tableId;
-  const LandingScreen({super.key, this.tableId});
+  final String? qrToken;
+  const LandingScreen({super.key, this.qrToken});
 
   @override
   ConsumerState<LandingScreen> createState() => _LandingScreenState();
@@ -18,17 +18,25 @@ class LandingScreen extends ConsumerStatefulWidget {
 class _LandingScreenState extends ConsumerState<LandingScreen> {
   bool _isLoading = false;
   String? _error;
+  String? _tableName; // resolved from backend after session init
 
   Future<void> _startOrdering() async {
-    final tableName = widget.tableId ?? 'W-1';
+    final token = widget.qrToken;
+    if (token == null || token.isEmpty) {
+      setState(() => _error = 'Invalid QR code. Please scan again.');
+      return;
+    }
     setState(() {
       _isLoading = true;
       _error = null;
     });
 
     try {
-      await ref.read(sessionProvider.notifier).initSession(tableName);
-      if (mounted) context.go('/menu');
+      final name = await ref.read(sessionProvider.notifier).initSession(token);
+      if (mounted) {
+        setState(() => _tableName = name);
+        context.go('/menu');
+      }
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -42,7 +50,7 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final tableName = widget.tableId ?? 'W-1';
+    final displayName = _tableName ?? (widget.qrToken != null ? 'Scanning...' : 'Unknown');
 
     return Scaffold(
       body: Stack(
@@ -130,7 +138,7 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
                             ),
                             const SizedBox(height: AppSpacing.s),
                             Text(
-                              tableName,
+                              displayName,
                               style: Theme.of(context).textTheme.displayMedium
                                   ?.copyWith(
                                     fontWeight: FontWeight.bold,

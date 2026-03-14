@@ -396,6 +396,7 @@ public class TablesideServiceImpl implements TablesideService {
         return new TablesideSessionDto(
             session.getId(),
             session.getTable().getId(),
+            session.getTable().getName(),
             session.getQrToken(),
             session.getStatus().name()
         );

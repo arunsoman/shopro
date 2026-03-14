@@ -23,22 +23,28 @@ class SessionState {
 
 class SessionNotifier extends Notifier<SessionState> {
   @override
-  SessionState build() => const SessionState(tableId: 'W-1');
+  SessionState build() => const SessionState(tableId: 'Unknown');
 
-  /// Creates (or reuses) a backend session for the given table name.
-  /// Returns the real sessionId UUID on success.
-  Future<String> initSession(String tableName) async {
-    state = state.copyWith(tableId: tableName);
-
+  /// Looks up the tableside session by QR token UUID.
+  /// Returns the human-readable table name on success.
+  Future<String> initSession(String qrToken) async {
     final dio = ref.read(dioProvider);
 
-    debugPrint('[Session] Creating session for table: $tableName');
-    final response = await dio.post('/tableside/session/by-name/$tableName');
-    final sessionId = response.data['id'] as String;
-    debugPrint('[Session] Got sessionId: $sessionId');
+    debugPrint('[Session] Scanning QR token: $qrToken');
+    // Use the scan endpoint — it resolves the QR token to a session + table
+    final response = await dio.get('/tableside/scan/$qrToken');
+    final data = response.data as Map<String, dynamic>;
+    final sessionId = data['id'] as String;
+    final tableName = data['tableName'] as String? ?? qrToken;
 
-    state = state.copyWith(tableId: tableName, sessionId: sessionId);
-    return sessionId;
+    debugPrint('[Session] Got session: $sessionId for table: $tableName');
+
+    state = state.copyWith(
+      tableId: tableName,
+      sessionId: sessionId,
+      qrToken: qrToken,
+    );
+    return tableName;
   }
 }
 
