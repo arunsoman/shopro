@@ -121,3 +121,7 @@ UPDATE staff_member SET role_id = '00000000-0000-0000-0000-000000000106', role =
 UPDATE staff_member SET role_id = '00000000-0000-0000-0000-000000000107', role = 'BUSSER' WHERE full_name = 'Brie Busser';
 UPDATE staff_member SET role_id = '00000000-0000-0000-0000-000000000004', role = 'GENERAL_MANAGER' WHERE full_name = 'Maria Manager';
 UPDATE staff_member SET role_id = '00000000-0000-0000-0000-000000000001', role = 'OWNER' WHERE full_name = 'Alex Owner';
+
+-- 5. Audit Log Enhancements (from duplicate V21)
+ALTER TABLE order_audit_log ADD COLUMN device_jkt VARCHAR(512);
+CREATE INDEX idx_order_audit_jkt ON order_audit_log(device_jkt);
