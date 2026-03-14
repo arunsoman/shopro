@@ -19,9 +19,19 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
   bool _isLoading = false;
   String? _error;
   String? _tableName; // resolved from backend after session init
+  String? _resolvedToken; // may come from widget OR Uri.base
+
+  @override
+  void initState() {
+    super.initState();
+    // GoRouter sometimes doesn't pass query params on first web load.
+    // Always read directly from the browser URL as the source of truth.
+    final uriToken = Uri.base.queryParameters['qrToken'];
+    _resolvedToken = widget.qrToken ?? uriToken;
+  }
 
   Future<void> _startOrdering() async {
-    final token = widget.qrToken;
+    final token = _resolvedToken;
     if (token == null || token.isEmpty) {
       setState(() => _error = 'Invalid QR code. Please scan again.');
       return;
@@ -50,7 +60,7 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final displayName = _tableName ?? (widget.qrToken != null ? 'Scanning...' : 'Unknown');
+    final displayName = _tableName ?? (_resolvedToken != null ? 'Table Ready' : 'Unknown');
 
     return Scaffold(
       body: Stack(
