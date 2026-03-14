@@ -171,7 +171,7 @@ public class TablesideServiceImpl implements TablesideService {
                 return sessionRepo.save(newSession);
             });
 
-        String targetUrl = "https://tableasist.afriqpay.com/scan/" + session.getQrToken();
+        String targetUrl = "https://tableasist.afriqpay.com/?qrToken=" + session.getQrToken();
         String qrBase64 = qrCodeService.generateQrCodeBase64(targetUrl, 300, 300);
         
         return new TableQrResponse(table.getId(), table.getName(), qrBase64, targetUrl);
