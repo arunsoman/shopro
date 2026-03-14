@@ -44,6 +44,7 @@ dependencies:
   shimmer: ^3.0.0
   stomp_dart_client: ^2.0.1
   dart_jsonwebtoken: ^3.3.2
+  shared_preferences: ^2.5.2
 
 dev_dependencies:
   flutter_test:

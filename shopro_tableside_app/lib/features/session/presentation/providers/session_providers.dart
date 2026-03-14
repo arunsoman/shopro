@@ -2,6 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shopro_tableside_app/core/network/api_client.dart';
 
+import 'package:shopro_tableside_app/core/persistence/persistence_provider.dart';
+
 /// Holds the active tableside session for this guest.
 class SessionState {
   final String tableId; // Human-readable label from QR, e.g. "W-1"
@@ -23,12 +25,28 @@ class SessionState {
 
 class SessionNotifier extends Notifier<SessionState> {
   @override
-  SessionState build() => const SessionState(tableId: 'Unknown');
+  SessionState build() {
+    final prefs = ref.watch(sharedPreferencesProvider);
+    final savedSessionId = prefs.getString('sessionId');
+    final savedTableId = prefs.getString('tableId') ?? 'Unknown';
+    final savedQrToken = prefs.getString('qrToken');
+
+    if (savedSessionId != null) {
+      debugPrint('[Session] Recovered session $savedSessionId for table $savedTableId');
+    }
+
+    return SessionState(
+      tableId: savedTableId,
+      sessionId: savedSessionId,
+      qrToken: savedQrToken,
+    );
+  }
 
   /// Looks up the tableside session by QR token UUID.
   /// Returns the human-readable table name on success.
   Future<String> initSession(String qrToken) async {
     final dio = ref.read(dioProvider);
+    final prefs = ref.read(sharedPreferencesProvider);
 
     debugPrint('[Session] Scanning QR token: $qrToken');
     // Use the scan endpoint — it resolves the QR token to a session + table
@@ -39,12 +57,25 @@ class SessionNotifier extends Notifier<SessionState> {
 
     debugPrint('[Session] Got session: $sessionId for table: $tableName');
 
+    // Persist session
+    await prefs.setString('sessionId', sessionId);
+    await prefs.setString('tableId', tableName);
+    await prefs.setString('qrToken', qrToken);
+
     state = state.copyWith(
       tableId: tableName,
       sessionId: sessionId,
       qrToken: qrToken,
     );
     return tableName;
+  }
+
+  Future<void> clearSession() async {
+    final prefs = ref.read(sharedPreferencesProvider);
+    await prefs.remove('sessionId');
+    await prefs.remove('tableId');
+    await prefs.remove('qrToken');
+    state = const SessionState(tableId: 'Unknown');
   }
 }
 

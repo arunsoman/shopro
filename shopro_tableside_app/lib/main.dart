@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'core/router/pos_router.dart';
 import 'core/theme/app_theme.dart';
+import 'core/persistence/persistence_provider.dart';
 
 /// Captured from the browser URL before GoRouter initializes.
 String? initialQrToken;
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  final prefs = await SharedPreferences.getInstance();
+
   // Read BEFORE GoRouter rewrites the URL
   final base = Uri.base;
   final params = base.queryParameters;
@@ -25,7 +29,14 @@ void main() {
     }
   }
 
-  runApp(const ProviderScope(child: ShoproTablesideApp()));
+  runApp(
+    ProviderScope(
+      overrides: [
+        sharedPreferencesProvider.overrideWithValue(prefs),
+      ],
+      child: const ShoproTablesideApp(),
+    ),
+  );
 }
 
 class ShoproTablesideApp extends ConsumerWidget {
