@@ -83,6 +83,12 @@ apiClient.interceptors.response.use(
             const data = error.response.data as any;
             apiError.message = data.message || apiError.message;
             apiError.details = data.details;
+
+            // Auto-logout on DPoP single-session revocation or key mismatch
+            if (error.response.status === 401 && data.error === "invalid_dpop_proof") {
+                localStorage.removeItem(SESSION_KEY);
+                window.location.href = "/";
+            }
         }
 
         return Promise.reject(apiError);

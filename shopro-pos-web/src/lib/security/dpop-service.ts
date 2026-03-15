@@ -1,10 +1,15 @@
 import { Base64 } from 'js-base64';
 
 export class DPoPWebService {
+  private static cachedKeyPair: CryptoKeyPair | null = null;
+
   /**
    * Generates or retrieves a persistent, non-extractable RSA-PSS key pair.
    */
   static async getOrCreateKeyPair(): Promise<CryptoKeyPair> {
+    if (this.cachedKeyPair) {
+      return this.cachedKeyPair;
+    }
     const keyPair = await window.crypto.subtle.generateKey(
       {
         name: "RSA-PSS",
@@ -15,6 +20,7 @@ export class DPoPWebService {
       false, // non-extractable
       ["sign", "verify"]
     );
+    this.cachedKeyPair = keyPair;
     return keyPair;
   }
 
