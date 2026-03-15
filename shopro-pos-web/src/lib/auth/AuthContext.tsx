@@ -29,8 +29,8 @@ export interface StaffSession {
     role: StaffRole;
 }
 
-/** Roles that can access back-office / admin screens (Menu, Settings, Reports) */
-export const ADMIN_ROLES: StaffRole[] = ["OWNER", "MANAGER"];
+/** Roles that can access back-office / admin screens (Menu, Settings, Reports, Taxes) */
+export const ADMIN_ROLES: StaffRole[] = ["OWNER", "MANAGER", "GENERAL_MANAGER", "ASSISTANT_MANAGER"];
 
 /** Roles that can access operational screens (Floor Plan, Orders) */
 export const OPERATIONAL_ROLES: StaffRole[] = [

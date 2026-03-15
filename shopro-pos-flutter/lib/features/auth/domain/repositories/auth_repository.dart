@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/network/api_client.dart';
 
 abstract class AuthRepository {
@@ -20,4 +21,7 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 }
 
-final authRepository = AuthRepositoryImpl(apiClient);
+final authRepositoryProvider = Provider<AuthRepository>((ref) {
+  final client = ref.watch(apiClientProvider);
+  return AuthRepositoryImpl(client);
+});

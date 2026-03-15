@@ -2,9 +2,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shopro_pos_flutter/features/menu/data/repositories/menu_repository.dart';
 import 'package:shopro_pos_flutter/features/menu/domain/models/menu_models.dart';
 import 'package:shopro_pos_flutter/core/network/api_client.dart';
+import 'package:dio/dio.dart';
 
 final menuRepositoryProvider = Provider<MenuRepository>((ref) {
-  return MenuRepository(apiClient);
+  final client = ref.watch(apiClientProvider);
+  return MenuRepository(client);
 });
 
 class MenuState {
@@ -13,6 +15,7 @@ class MenuState {
   final String? selectedCategoryId;
   final bool isLoading;
   final String? searchQuery;
+  final String? error;
 
   MenuState({
     this.categories = const [],
@@ -20,6 +23,7 @@ class MenuState {
     this.selectedCategoryId,
     this.isLoading = false,
     this.searchQuery,
+    this.error,
   });
 
   MenuState copyWith({
@@ -28,6 +32,8 @@ class MenuState {
     String? selectedCategoryId,
     bool? isLoading,
     String? searchQuery,
+    String? error,
+    bool clearError = false,
   }) {
     return MenuState(
       categories: categories ?? this.categories,
@@ -35,6 +41,7 @@ class MenuState {
       selectedCategoryId: selectedCategoryId ?? this.selectedCategoryId,
       isLoading: isLoading ?? this.isLoading,
       searchQuery: searchQuery ?? this.searchQuery,
+      error: clearError ? null : (error ?? this.error),
     );
   }
 }
@@ -47,7 +54,7 @@ class MenuNotifier extends Notifier<MenuState> {
   }
 
   Future<void> loadMenu() async {
-    state = state.copyWith(isLoading: true);
+    state = state.copyWith(isLoading: true, error: null);
     try {
       final repository = ref.read(menuRepositoryProvider);
       final categories = await repository.getCategories();
@@ -59,9 +66,16 @@ class MenuNotifier extends Notifier<MenuState> {
       if (state.selectedCategoryId != null) {
         await loadItems(state.selectedCategoryId!);
       }
+    } on DioException catch (e) {
+      final msg = e.response?.data['message'] ?? e.message;
+      state = state.copyWith(isLoading: false, error: 'Failed to load menu: $msg');
     } catch (e) {
-      state = state.copyWith(isLoading: false);
+      state = state.copyWith(isLoading: false, error: e.toString());
     }
+  }
+
+  void clearError() {
+    state = state.copyWith(clearError: true);
   }
 
   Future<void> selectCategory(String categoryId) async {
@@ -76,8 +90,11 @@ class MenuNotifier extends Notifier<MenuState> {
       final repository = ref.read(menuRepositoryProvider);
       final items = await repository.getItemsByCategory(categoryId);
       state = state.copyWith(items: items, isLoading: false);
+    } on DioException catch (e) {
+      final msg = e.response?.data['message'] ?? e.message;
+      state = state.copyWith(isLoading: false, error: 'Failed to load items: $msg');
     } catch (e) {
-      state = state.copyWith(isLoading: false);
+      state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
 
@@ -95,8 +112,11 @@ class MenuNotifier extends Notifier<MenuState> {
       final repository = ref.read(menuRepositoryProvider);
       final items = await repository.searchItems(query);
       state = state.copyWith(items: items, isLoading: false);
+    } on DioException catch (e) {
+      final msg = e.response?.data['message'] ?? e.message;
+      state = state.copyWith(isLoading: false, error: 'Search failed: $msg');
     } catch (e) {
-      state = state.copyWith(isLoading: false);
+      state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
 }

@@ -4,7 +4,7 @@ WORKDIR /app
 
 # Copy pubspec and get dependencies using cache mount
 COPY pubspec.* ./
-RUN --mount=type=cache,target=/root/.pub-cache flutter pub get
+RUN flutter pub get
 
 # Copy source and build web
 COPY . .

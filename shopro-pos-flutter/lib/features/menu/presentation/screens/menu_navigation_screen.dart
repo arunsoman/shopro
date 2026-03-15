@@ -32,6 +32,35 @@ class _MenuNavigationScreenState extends ConsumerState<MenuNavigationScreen> {
     final orderState = ref.watch(orderProvider);
     final order = orderState.activeOrder;
 
+    // Listen for Menu errors
+    ref.listen<MenuState>(menuProvider, (previous, next) {
+      if (next.error != null && next.error != previous?.error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(next.error!),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        ref.read(menuProvider.notifier).clearError();
+      }
+    });
+
+    // Listen for Order errors on this screen
+    ref.listen<OrderState>(orderProvider, (previous, next) {
+      if (next.error != null && next.error != previous?.error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(next.error!),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        // OrderProvider doesn't have a clearError method yet, but we'll add it or just consume it here.
+        // Even without clearError, next.error != previous?.error prevents infinite loops.
+      }
+    });
+
     return Scaffold(
       backgroundColor: AppColors.lightBackground,
       body: Row(

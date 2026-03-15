@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stomp_dart_client/stomp_dart_client.dart';
 import '../../domain/models/floor_models.dart';
 import '../../domain/repositories/floor_plan_repository.dart';
+import 'package:dio/dio.dart';
 import '../../../notifications/presentation/providers/notification_provider.dart';
 
 enum FloorViewMode { map, grid }
@@ -17,6 +18,7 @@ class FloorPlanState {
   final FloorViewMode viewMode;
   final bool isLoading;
   final bool isEditMode;
+  final String? error;
 
   FloorPlanState({
     required this.tables,
@@ -27,6 +29,7 @@ class FloorPlanState {
     this.viewMode = FloorViewMode.map,
     this.isLoading = false,
     this.isEditMode = false,
+    this.error,
   });
 
   factory FloorPlanState.initial() => FloorPlanState(tables: [], waitlist: []);
@@ -40,6 +43,8 @@ class FloorPlanState {
     FloorViewMode? viewMode,
     bool? isLoading,
     bool? isEditMode,
+    String? error,
+    bool clearError = false,
   }) {
     return FloorPlanState(
       tables: tables ?? this.tables,
@@ -50,6 +55,7 @@ class FloorPlanState {
       viewMode: viewMode ?? this.viewMode,
       isLoading: isLoading ?? this.isLoading,
       isEditMode: isEditMode ?? this.isEditMode,
+      error: clearError ? null : (error ?? this.error),
     );
   }
 }
@@ -70,7 +76,12 @@ class FloorPlanNotifier extends Notifier<FloorPlanState> {
       showOnlyMyTables: false,
       viewMode: FloorViewMode.map,
       isLoading: true,
+      error: null,
     );
+  }
+
+  void clearError() {
+    state = state.copyWith(clearError: true);
   }
 
   void _setupWebSocketListeners() {
@@ -205,9 +216,10 @@ class FloorPlanNotifier extends Notifier<FloorPlanState> {
   Future<void> refresh() async {
     try {
       state = state.copyWith(isLoading: true);
-      final tables = await floorPlanRepository.getTables();
-      final sections = await floorPlanRepository.getSections();
-      final waitlist = await floorPlanRepository.getWaitlist();
+      final repository = ref.read(floorPlanRepositoryProvider);
+      final tables = await repository.getTables();
+      final sections = await repository.getSections();
+      final waitlist = await repository.getWaitlist();
 
       state = state.copyWith(
         tables: tables,
@@ -215,11 +227,18 @@ class FloorPlanNotifier extends Notifier<FloorPlanState> {
         sections: sections,
         isLoading: false,
       );
+    } on DioException catch (e) {
+      final msg = e.response?.data['message'] ?? e.message;
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Status ${e.response?.statusCode}: $msg',
+      );
     } catch (e, stack) {
       debugPrint('Error refreshing floor plan: $e');
       debugPrint('Stack trace: $stack');
       state = state.copyWith(
         isLoading: false,
+        error: 'Unexpected error: $e',
       );
     }
   }
@@ -257,9 +276,14 @@ class FloorPlanNotifier extends Notifier<FloorPlanState> {
         );
       }
 
-      await floorPlanRepository.seatParty(tableId, waitlistId);
+      await ref.read(floorPlanRepositoryProvider).seatParty(tableId, waitlistId);
+    } on DioException catch (e) {
+      final msg = e.response?.data['message'] ?? e.message;
+      state = state.copyWith(error: 'Failed to seat party: $msg');
+      refresh();
     } catch (e) {
       debugPrint('Error seating party: $e');
+      state = state.copyWith(error: 'Failed to seat party: $e');
       // On error, refresh to consistent state
       refresh();
     }
@@ -289,11 +313,16 @@ class FloorPlanNotifier extends Notifier<FloorPlanState> {
       );
       state = state.copyWith(waitlist: [...state.waitlist, tempEntry]);
 
-      await floorPlanRepository.addToWaitlist(name: name, size: size);
+      await ref.read(floorPlanRepositoryProvider).addToWaitlist(name: name, size: size);
       // Wait for WebSocket update or refresh
+      refresh();
+    } on DioException catch (e) {
+      final msg = e.response?.data['message'] ?? e.message;
+      state = state.copyWith(error: 'Failed to add to waitlist: $msg');
       refresh();
     } catch (e) {
       debugPrint('Error adding to waitlist: $e');
+      state = state.copyWith(error: 'Failed to add to waitlist: $e');
       refresh();
     }
   }
@@ -311,9 +340,14 @@ class FloorPlanNotifier extends Notifier<FloorPlanState> {
         state = state.copyWith(tables: updatedTables);
       }
 
-      await floorPlanRepository.markTableClean(tableId);
+      await ref.read(floorPlanRepositoryProvider).markTableClean(tableId);
+    } on DioException catch (e) {
+      final msg = e.response?.data['message'] ?? e.message;
+      state = state.copyWith(error: 'Failed to mark table clean: $msg');
+      refresh();
     } catch (e) {
       debugPrint('Error marking table clean: $e');
+      state = state.copyWith(error: 'Failed to mark table clean: $e');
       refresh();
     }
   }
@@ -335,9 +369,14 @@ class FloorPlanNotifier extends Notifier<FloorPlanState> {
         state = state.copyWith(tables: updatedTables);
       }
 
-      await floorPlanRepository.updateTablePosition(tableId, dx, dy);
+      await ref.read(floorPlanRepositoryProvider).updateTablePosition(tableId, dx, dy);
+    } on DioException catch (e) {
+      final msg = e.response?.data['message'] ?? e.message;
+      state = state.copyWith(error: 'Failed to update table position: $msg');
+      refresh();
     } catch (e) {
       debugPrint('Error updating table position: $e');
+      state = state.copyWith(error: 'Failed to update table position: $e');
       refresh();
     }
   }

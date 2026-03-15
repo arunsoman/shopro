@@ -60,6 +60,12 @@ public class GlobalExceptionHandler {
         return new ApiErrorResponse(403, ex.getMessage(), FMT.format(Instant.now()));
     }
 
+    @ExceptionHandler(TaxNotConfiguredException.class)
+    @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
+    public ApiErrorResponse handleTaxNotConfigured(TaxNotConfiguredException ex) {
+        return new ApiErrorResponse(422, ex.getMessage(), FMT.format(Instant.now()));
+    }
+
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ApiErrorResponse handleGeneralException(Exception ex) {

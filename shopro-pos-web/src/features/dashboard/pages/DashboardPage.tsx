@@ -101,7 +101,7 @@ const NAV_CARDS: NavCard[] = [
         icon: <Package className="h-7 w-7" />,
         gradient: 'from-amber-500 to-orange-600',
         iconColor: 'text-amber-500',
-        roles: ['OWNER', 'MANAGER', 'GENERAL_MANAGER'],
+        roles: ADMIN_ROLES,
     },
     {
         title: 'Settings',

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:dio/dio.dart';
 import 'package:shopro_pos_flutter/features/order/domain/models/order_models.dart';
 import 'package:shopro_pos_flutter/features/order/domain/repositories/order_repository.dart';
 import 'package:shopro_pos_flutter/features/menu/domain/models/menu_models.dart';
@@ -103,6 +104,13 @@ class OrderNotifier extends Notifier<OrderState> {
       final repository = ref.read(orderRepositoryProvider);
       final order = await repository.getOrder(orderId);
       state = state.copyWith(activeOrder: order, isLoading: false);
+    } on DioException catch (e) {
+      final data = e.response?.data;
+      String errorMessage = e.message ?? e.toString();
+      if (data is Map && data.containsKey('message')) {
+        errorMessage = data['message'];
+      }
+      state = state.copyWith(isLoading: false, error: errorMessage);
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
     }
@@ -119,6 +127,13 @@ class OrderNotifier extends Notifier<OrderState> {
         courseNumber,
       );
       state = state.copyWith(activeOrder: updatedOrder, isLoading: false);
+    } on DioException catch (e) {
+      final data = e.response?.data;
+      String errorMessage = e.message ?? e.toString();
+      if (data is Map && data.containsKey('message')) {
+        errorMessage = data['message'];
+      }
+      state = state.copyWith(isLoading: false, error: errorMessage);
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
     }
@@ -138,6 +153,13 @@ class OrderNotifier extends Notifier<OrderState> {
         orderType: orderType,
       );
       state = state.copyWith(activeOrder: order, isLoading: false);
+    } on DioException catch (e) {
+      final data = e.response?.data;
+      String errorMessage = e.message ?? e.toString();
+      if (data is Map && data.containsKey('message')) {
+        errorMessage = data['message'];
+      }
+      state = state.copyWith(isLoading: false, error: errorMessage);
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
     }
@@ -195,6 +217,15 @@ class OrderNotifier extends Notifier<OrderState> {
       );
       debugPrint('Item added successfully. Updated order: ${updatedOrder.id}');
       state = state.copyWith(activeOrder: updatedOrder, isLoading: false);
+    } on DioException catch (e, stackTrace) {
+      debugPrint('ERROR ADDING ITEM: $e');
+      debugPrint(stackTrace.toString());
+      final data = e.response?.data;
+      String errorMessage = e.message ?? e.toString();
+      if (data is Map && data.containsKey('message')) {
+        errorMessage = data['message'];
+      }
+      state = state.copyWith(isLoading: false, error: errorMessage);
     } catch (e, stackTrace) {
       debugPrint('ERROR ADDING ITEM: $e');
       debugPrint(stackTrace.toString());
@@ -227,6 +258,13 @@ class OrderNotifier extends Notifier<OrderState> {
         {'quantity': newQuantity},
       );
       state = state.copyWith(activeOrder: updatedOrder, isLoading: false);
+    } on DioException catch (e) {
+      final data = e.response?.data;
+      String errorMessage = e.message ?? e.toString();
+      if (data is Map && data.containsKey('message')) {
+        errorMessage = data['message'];
+      }
+      state = state.copyWith(isLoading: false, error: errorMessage);
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
     }
@@ -249,6 +287,13 @@ class OrderNotifier extends Notifier<OrderState> {
       if (state.activeOrder?.tableId != null) {
         ref.read(floorPlanProvider.notifier).refresh(); // Real sync
       }
+    } on DioException catch (e) {
+      final data = e.response?.data;
+      String errorMessage = e.message ?? e.toString();
+      if (data is Map && data.containsKey('message')) {
+        errorMessage = data['message'];
+      }
+      state = state.copyWith(isLoading: false, error: errorMessage);
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
     }
@@ -261,6 +306,13 @@ class OrderNotifier extends Notifier<OrderState> {
       await repository.cancelOrder(orderId);
       state = state.copyWith(activeOrder: null, isLoading: false);
       ref.read(floorPlanProvider.notifier).refresh();
+    } on DioException catch (e) {
+      final data = e.response?.data;
+      String errorMessage = e.message ?? e.toString();
+      if (data is Map && data.containsKey('message')) {
+        errorMessage = data['message'];
+      }
+      state = state.copyWith(isLoading: false, error: errorMessage);
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
     }
@@ -277,6 +329,13 @@ class OrderNotifier extends Notifier<OrderState> {
         reason,
       );
       state = state.copyWith(activeOrder: updatedOrder, isLoading: false);
+    } on DioException catch (e) {
+      final data = e.response?.data;
+      String errorMessage = e.message ?? e.toString();
+      if (data is Map && data.containsKey('message')) {
+        errorMessage = data['message'];
+      }
+      state = state.copyWith(isLoading: false, error: errorMessage);
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
     }
@@ -288,6 +347,13 @@ class OrderNotifier extends Notifier<OrderState> {
       final repository = ref.read(orderRepositoryProvider);
       final orders = await repository.getActiveOrders();
       state = state.copyWith(allOrders: orders, isLoading: false);
+    } on DioException catch (e) {
+      final data = e.response?.data;
+      String errorMessage = e.message ?? e.toString();
+      if (data is Map && data.containsKey('message')) {
+        errorMessage = data['message'];
+      }
+      state = state.copyWith(isLoading: false, error: errorMessage);
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
     }
@@ -299,6 +365,13 @@ class OrderNotifier extends Notifier<OrderState> {
       final repository = ref.read(orderRepositoryProvider);
       await repository.markAsServed(orderId);
       await fetchActiveOrders(); // Refresh the list
+    } on DioException catch (e) {
+      final data = e.response?.data;
+      String errorMessage = e.message ?? e.toString();
+      if (data is Map && data.containsKey('message')) {
+        errorMessage = data['message'];
+      }
+      state = state.copyWith(isLoading: false, error: errorMessage);
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
     }

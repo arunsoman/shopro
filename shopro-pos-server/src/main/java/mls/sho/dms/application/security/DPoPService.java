@@ -11,6 +11,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import java.security.KeyFactory;
+import java.security.spec.RSAPublicKeySpec;
+import java.util.Set;
 
 import java.security.Key;
 import java.security.MessageDigest;
@@ -38,52 +41,62 @@ public class DPoPService {
     @Autowired
     private StaffRepository staffRepository;
 
-    /**
-     * Validates a DPoP proof against the current request and bound device key.
-     * 
-     * @param dpopHeader The raw DPoP header (JWT)
-     * @param request The current HTTP request (to verify htu and htm)
-     * @param expectedThumbprint The thumbprint of the public key bound to the user session
-     * @return The thumbprint of the verified public key if valid, null otherwise.
-     */
     public String validateProof(String dpopHeader, HttpServletRequest request, String expectedThumbprint) {
-        if (dpopHeader == null || dpopHeader.isEmpty()) return null;
+        if (dpopHeader == null || dpopHeader.isEmpty()) {
+            log.warn("DPoP validation failed: Missing header");
+            return null;
+        }
 
         try {
-            // 1. Manual parse to extract JWK and claims
-            String[] parts = dpopHeader.split("\\.");
-            if (parts.length != 3) return null;
-            
-            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
-            
-            // Header
-            String headerJson = new String(Base64.getUrlDecoder().decode(parts[0]), StandardCharsets.UTF_8);
-            Map<String, Object> header = mapper.readValue(headerJson, Map.class);
-            
-            if (!"dpop+jwt".equals(header.get("typ"))) return null;
-            
+            // 1. Parse and validate signature using JJWT 0.12.x
+            // We use a custom Locator to find the public key from the header's JWK
+            Jws<Claims> jws = Jwts.parser()
+                    .keyLocator(header -> {
+                        Map<String, Object> jwk = (Map<String, Object>) header.get("jwk");
+                        if (jwk == null) return null;
+                        try {
+                            return parseJwkToPublicKey(jwk);
+                        } catch (Exception e) {
+                            log.error("Failed to parse JWK to PublicKey", e);
+                            return null;
+                        }
+                    })
+                    .build()
+                    .parseSignedClaims(dpopHeader);
+
+            Claims claims = jws.getPayload();
+            JwsHeader header = jws.getHeader();
+
+            // Validate Algorithm (Manual check for maximum compatibility with JJWT versions)
+            String alg = header.getAlgorithm();
+            if (alg == null || !Set.of("EdDSA", "PS256", "RS256").contains(alg)) {
+                log.warn("DPoP invalid alg: {}", alg);
+                return null;
+            }
+
+            if (!"dpop+jwt".equals(header.getType())) {
+                log.warn("DPoP invalid typ: {}", header.getType());
+                return null;
+            }
+
             Map<String, Object> jwk = (Map<String, Object>) header.get("jwk");
-            if (jwk == null) return null;
-
-            // 2. Validate thumbprint matches expected device binding
             String actualThumbprint = calculateJkt(jwk);
+
+            // 2. Validate thumbprint matches expected device binding (if provided)
             if (expectedThumbprint != null && !expectedThumbprint.equals(actualThumbprint)) {
+                log.warn("DPoP jkt mismatch: expected {}, got {}", expectedThumbprint, actualThumbprint);
                 return null;
             }
 
-            // 3. Payload (Claims)
-            String payloadJson = new String(Base64.getUrlDecoder().decode(parts[1]), StandardCharsets.UTF_8);
-            Map<String, Object> claims = mapper.readValue(payloadJson, Map.class);
-            
-            // 4. Validate 'htm' (method) and 'htu' (url)
-            String method = (String) claims.get("htm");
-            String url = (String) claims.get("htu");
-            
+            // 3. Validate 'htm' (method) and 'htu' (url)
+            String method = claims.get("htm", String.class);
+            String url = claims.get("htu", String.class);
+
             if (method == null || !method.equalsIgnoreCase(request.getMethod())) {
-                log.debug("DPoP method mismatch: expected {}, got {}", request.getMethod(), method);
+                log.warn("DPoP htm mismatch: expected {}, got {}", request.getMethod(), method);
                 return null;
             }
-            
+
             String requestUrl = request.getRequestURL().toString();
             String requestPath = request.getRequestURI();
             
@@ -92,15 +105,14 @@ public class DPoPService {
                 if (url.equals(requestUrl) || url.equals(requestPath)) {
                     urlMatch = true;
                 } else if (url.startsWith("http")) {
-                    // Extract path from htu for comparison to handle port mismatches
                     try {
-                        java.net.URI uri = new java.net.URI(url);
-                        String htuPath = uri.getPath();
+                        java.net.URI htuUri = new java.net.URI(url);
+                        String htuPath = htuUri.getPath();
                         if (htuPath != null && htuPath.equals(requestPath)) {
                             urlMatch = true;
                         }
                     } catch (java.net.URISyntaxException e) {
-                        log.debug("Invalid htu URL format: {}", url);
+                        log.warn("Invalid htu URL format: {}", url);
                     }
                 } else if (url.startsWith("/") && requestPath.equals(url)) {
                     urlMatch = true;
@@ -108,20 +120,48 @@ public class DPoPService {
             }
             
             if (!urlMatch) {
-                log.debug("DPoP htu mismatch: requestUrl={}, requestPath={}, htu={}", requestUrl, requestPath, url);
+                log.warn("DPoP htu mismatch: requestUrl={}, requestPath={}, htu={}", requestUrl, requestPath, url);
                 return null;
             }
 
-            // 5. Freshness check (iat) - max 2 minutes skew
-            Object iatObj = claims.get("iat");
-            if (iatObj == null) return null;
-            long iatSeconds = ((Number) iatObj).longValue();
-            if (Math.abs(System.currentTimeMillis() / 1000 - iatSeconds) > 120) return null;
+            // 4. Freshness check (iat) is handled by JJWT (exp check is also automatic if set, but we use iat check manually too)
+            long iatSeconds = claims.getIssuedAt().getTime() / 1000;
+            if (Math.abs(System.currentTimeMillis() / 1000 - iatSeconds) > 120) {
+                log.warn("DPoP iat skew too high: skew={}s", Math.abs(System.currentTimeMillis() / 1000 - iatSeconds));
+                return null;
+            }
 
             return actualThumbprint;
         } catch (Exception e) {
+            log.warn("DPoP validation exception: {}", e.getMessage());
             return null;
         }
+    }
+
+    private PublicKey parseJwkToPublicKey(Map<String, Object> jwk) throws Exception {
+        String kty = (String) jwk.get("kty");
+        if ("OKP".equals(kty)) {
+            // Ed25519 (RFC 8037)
+            byte[] xBytes = Base64.getUrlDecoder().decode((String) jwk.get("x"));
+            java.security.spec.EdECPublicKeySpec spec = new java.security.spec.EdECPublicKeySpec(
+                    new java.security.spec.NamedParameterSpec("Ed25519"),
+                    new java.security.spec.EdECPoint(false, new java.math.BigInteger(1, swap(xBytes)))
+            );
+            return java.security.KeyFactory.getInstance("Ed25519").generatePublic(spec);
+        } else if ("RSA".equals(kty)) {
+            java.math.BigInteger n = new java.math.BigInteger(1, Base64.getUrlDecoder().decode((String) jwk.get("n")));
+            java.math.BigInteger e = new java.math.BigInteger(1, Base64.getUrlDecoder().decode((String) jwk.get("e")));
+            return java.security.KeyFactory.getInstance("RSA").generatePublic(new java.security.spec.RSAPublicKeySpec(n, e));
+        }
+        throw new UnsupportedOperationException("Unsupported JWK kty: " + kty);
+    }
+
+    private byte[] swap(byte[] x) {
+        byte[] res = new byte[x.length];
+        for (int i = 0; i < x.length; i++) {
+            res[i] = x[x.length - 1 - i];
+        }
+        return res;
     }
 
     /**

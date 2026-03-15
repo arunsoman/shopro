@@ -5,6 +5,7 @@ import 'package:stomp_dart_client/stomp_dart_client.dart';
 import '../../domain/models/kds_models.dart';
 import '../../domain/repositories/kds_repository.dart';
 import '../../../../core/network/api_client.dart';
+import 'package:dio/dio.dart';
 import '../../../floor_plan/presentation/providers/floor_plan_provider.dart';
 import '../../../floor_plan/domain/models/floor_models.dart';
 import '../../../../core/network/network_config.dart';
@@ -85,6 +86,9 @@ class KDSNotifier extends StateNotifier<KDSState> {
     try {
       final stations = await _repository.getAllStations();
       state = state.copyWith(stations: stations, isLoading: false);
+    } on DioException catch (e) {
+      final msg = e.response?.data['message'] ?? e.message;
+      state = state.copyWith(isLoading: false, error: msg);
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
     }
@@ -105,6 +109,9 @@ class KDSNotifier extends StateNotifier<KDSState> {
       state = state.copyWith(tickets: tickets, isLoading: false);
       _connectWebSocket(stationId);
       _updateAggregates();
+    } on DioException catch (e) {
+      final msg = e.response?.data['message'] ?? e.message;
+      state = state.copyWith(isLoading: false, error: msg);
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
     }
@@ -288,9 +295,12 @@ class KDSNotifier extends StateNotifier<KDSState> {
       );
 
       await _repository.bumpTicket(ticketId);
+    } on DioException catch (e) {
+      final msg = e.response?.data['message'] ?? e.message;
+      state = state.copyWith(error: 'Failed to bump ticket: $msg');
     } catch (e) {
       // Revert optimism if failed? Or just error
-      state = state.copyWith(error: 'Failed to bump ticket');
+      state = state.copyWith(error: 'Failed to bump ticket: $e');
     }
   }
 
@@ -299,8 +309,11 @@ class KDSNotifier extends StateNotifier<KDSState> {
       await _repository.bumpItem(itemId);
       // Update local state immediately for responsiveness
       _updateItemStatusLocal(itemId, KDSItemStatus.ready);
+    } on DioException catch (e) {
+      final msg = e.response?.data['message'] ?? e.message;
+      state = state.copyWith(error: 'Failed to bump item: $msg');
     } catch (e) {
-      state = state.copyWith(error: 'Failed to bump item');
+      state = state.copyWith(error: 'Failed to bump item: $e');
     }
   }
 
@@ -334,8 +347,11 @@ class KDSNotifier extends StateNotifier<KDSState> {
       _updateItemStatusLocal(item.id, newStatus);
       
       await _repository.toggleItemStatus(item.id);
+    } on DioException catch (e) {
+      final msg = e.response?.data['message'] ?? e.message;
+      state = state.copyWith(error: 'Failed to toggle cooking state: $msg');
     } catch (e) {
-      state = state.copyWith(error: 'Failed to toggle cooking state');
+      state = state.copyWith(error: 'Failed to toggle cooking state: $e');
       // Ideally revert status, but WS will fix it
     }
   }
@@ -346,8 +362,11 @@ class KDSNotifier extends StateNotifier<KDSState> {
       _updateItemStatusLocal(item.id, KDSItemStatus.ready);
       
       await _repository.markItemReady(item.id);
+    } on DioException catch (e) {
+      final msg = e.response?.data['message'] ?? e.message;
+      state = state.copyWith(error: 'Failed to mark item done: $msg');
     } catch (e) {
-      state = state.copyWith(error: 'Failed to mark item done');
+      state = state.copyWith(error: 'Failed to mark item done: $e');
     }
   }
 
@@ -357,8 +376,11 @@ class KDSNotifier extends StateNotifier<KDSState> {
       _updateItemStatusLocal(item.id, KDSItemStatus.served);
       
       await _repository.serveItem(item.id);
+    } on DioException catch (e) {
+      final msg = e.response?.data['message'] ?? e.message;
+      state = state.copyWith(error: 'Failed to serve item: $msg');
     } catch (e) {
-      state = state.copyWith(error: 'Failed to serve item');
+      state = state.copyWith(error: 'Failed to serve item: $e');
     }
   }
 
@@ -390,8 +412,11 @@ class KDSNotifier extends StateNotifier<KDSState> {
 
       // Backend sync
       await _repository.updateItemPriority(itemId, newPriority);
+    } on DioException catch (e) {
+      final msg = e.response?.data['message'] ?? e.message;
+      state = state.copyWith(error: 'Failed to update priority: $msg');
     } catch (e) {
-      state = state.copyWith(error: 'Failed to update priority');
+      state = state.copyWith(error: 'Failed to update priority: $e');
     }
   }
 
@@ -415,8 +440,11 @@ class KDSNotifier extends StateNotifier<KDSState> {
       _updateExpoGroups();
       
       await _repository.serveReadyItems(ticketIds);
+    } on DioException catch (e) {
+      final msg = e.response?.data['message'] ?? e.message;
+      state = state.copyWith(error: 'Failed to bump table: $msg');
     } catch (e) {
-      state = state.copyWith(error: 'Failed to bump table');
+      state = state.copyWith(error: 'Failed to bump table: $e');
     }
   }
 
@@ -429,8 +457,8 @@ class KDSNotifier extends StateNotifier<KDSState> {
 
 // Need to satisfy dependencies
 final kdsRepositoryProvider = Provider((ref) {
-  // Use the global apiClient
-  return KDSRepository(apiClient);
+  final client = ref.watch(apiClientProvider);
+  return KDSRepository(client);
 });
 
 final kdsProvider = StateNotifierProvider<KDSNotifier, KDSState>((ref) {

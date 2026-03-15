@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/network/api_client.dart';
 import '../models/floor_models.dart';
 
@@ -196,4 +197,7 @@ class FloorPlanRepositoryImpl implements FloorPlanRepository {
   }
 }
 
-final floorPlanRepository = FloorPlanRepositoryImpl(apiClient);
+final floorPlanRepositoryProvider = Provider<FloorPlanRepository>((ref) {
+  final client = ref.watch(apiClientProvider);
+  return FloorPlanRepositoryImpl(client);
+});

@@ -1,14 +1,14 @@
 import 'package:dio/dio.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'network_config.dart';
 import '../security/dpop_service.dart';
+import '../../features/auth/presentation/providers/auth_provider.dart';
 
 class ApiClient {
   late final Dio dio;
+  final Ref _ref;
 
-  ApiClient({String? baseUrl}) {
-    // Dual-Mode Base URL for seamless local dev vs docker/prod
-    // In local web dev, we point directly to the backend to bypass the missing proxy.
-    // In Docker/Release, we use relative paths to leverage Nginx/Proxy.
+  ApiClient(this._ref, {String? baseUrl}) {
     final String defaultBaseUrl = NetworkConfig.baseUrl;
 
     dio = Dio(
@@ -20,27 +20,43 @@ class ApiClient {
       ),
     );
 
-    // Add logging interceptor for easier debugging
     dio.interceptors.add(LogInterceptor(requestBody: true, responseBody: true));
 
-    // Add DPoP Interceptor for FAPI 2.0 Compliance
+    // Add DPoP and Authentication Interceptor
     dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {
         try {
+          // 1. Inject Staff ID if authenticated
+          final authState = _ref.read(authProvider);
+          if (authState.isAuthenticated && authState.staffId != null) {
+            options.headers['X-Staff-Id'] = authState.staffId;
+          }
+
+          // 2. Generate DPoP proof
           final htm = options.method;
-          final htu = options.baseUrl.startsWith('http') 
-              ? '${options.baseUrl}${options.path}'
-              : '${Uri.base.scheme}://${Uri.base.host}${Uri.base.hasPort ? ":${Uri.base.port}" : ""}${options.baseUrl}${options.path}';
+          // Calculate HTU robustly using Dio's resolved URI
+          // This ensures no double-slashes or missing slashes
+          String htu = options.uri.toString();
           
-          // Generate DPoP hint/proof
           final proof = await DPoPService.generateProof(htm, htu);
           options.headers['DPoP'] = proof;
         } catch (e) {
-          // Log and continue - server might skip validation if proof is missing on non-sensitive paths
-          print('DPoP Generation Error: $e');
+          print('DPoP/Auth Interceptor Error: $e');
         }
         
         return handler.next(options);
+      },
+      onError: (DioException e, handler) {
+        if (e.response?.statusCode == 401) {
+          final data = e.response?.data;
+          if (data is Map && data['error'] == 'invalid_dpop_proof') {
+            // Target the revocation specifically
+            _ref.read(authProvider.notifier).logout(
+              reason: 'Your session was revoked because you logged in from another device. Please log in again.'
+            );
+          }
+        }
+        return handler.next(e);
       },
     ));
   }
@@ -76,4 +92,6 @@ class ApiClient {
   }
 }
 
-final apiClient = ApiClient();
+final apiClientProvider = Provider<ApiClient>((ref) {
+  return ApiClient(ref);
+});

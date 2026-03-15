@@ -33,12 +33,13 @@ public class FloorPlanPermissionInterceptor implements HandlerInterceptor {
         String role = principal.getRole();
 
         // 1. Layout Management (Sections/Tables creation/editing/moving)
-        if (path.contains("/sections") || 
-            (path.contains("/tables") && ("POST".equalsIgnoreCase(method) || "PUT".equalsIgnoreCase(method) || "DELETE".equalsIgnoreCase(method))) ||
-            path.endsWith("/position")) {
-            
-            if (!"OWNER".equals(role) && !"MANAGER".equals(role)) {
-                throw new AccessDeniedException("Only Managers/Owners can modify the floor layout.");
+        boolean isModification = "POST".equalsIgnoreCase(method) || "PUT".equalsIgnoreCase(method) || "DELETE".equalsIgnoreCase(method) || "PATCH".equalsIgnoreCase(method);
+        
+        if (isModification) {
+            if (path.contains("/sections") || path.contains("/tables") || path.endsWith("/position")) {
+                if (!"OWNER".equals(role) && !"MANAGER".equals(role)) {
+                    throw new AccessDeniedException("Only Managers/Owners can modify the floor layout.");
+                }
             }
         }
 

@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:math';
-import 'package:dart_jsonwebtoken/dart_jsonwebtoken.dart';
 import 'package:cryptography/cryptography.dart';
 
 class DPoPService {
@@ -40,30 +39,35 @@ class DPoPService {
     
     final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
     
-    // We use the dart_jsonwebtoken to create the structure, but we'll sign it manually 
-    // if it doesn't support Ed25519 directly, or use its built-in support if available.
-    // Actually, dart_jsonwebtoken supports EdDSA/Ed25519 via the EdDSASigner.
+    // Construct Header and Payload manually for precise control
+    final header = {
+      'typ': 'dpop+jwt',
+      'alg': 'EdDSA',
+      'jwk': _jwk,
+    };
     
-    final jwt = JWT(
-      {
-        'jti': _generateRandomString(16),
-        'htm': htm.toUpperCase(),
-        'htu': htu.split('?')[0], // strip query params per RFC 9449
-        'iat': now,
-        'exp': now + 120,
-      },
-      header: {
-        'typ': 'dpop+jwt',
-        'alg': 'EdDSA',
-        'jwk': _jwk,
-      },
-    );
+    final payload = {
+      'jti': _generateRandomString(16),
+      'htm': htm.toUpperCase(),
+      'htu': htu.split('?')[0], // strip query params per RFC 9449
+      'iat': now,
+      'exp': now + 120,
+    };
 
-    // To sign EdDSA with dart_jsonwebtoken, we need the private key bytes.
-    final privateKey = await _keyPair!.extract();
-    final privateKeyBytes = (privateKey as SimpleKeyPairData).bytes;
+    final encodedHeader = base64Url.encode(utf8.encode(jsonEncode(header))).replaceAll('=', '');
+    final encodedPayload = base64Url.encode(utf8.encode(jsonEncode(payload))).replaceAll('=', '');
     
-    // Use EdDSA algorithm
-    return jwt.sign(EdDSAPrivateKey(privateKeyBytes));
+    final messageToSign = '$encodedHeader.$encodedPayload';
+    
+    // Sign using pure cryptography package to avoid dart_jsonwebtoken compatibility issues with Java JJWT
+    final algorithm = Ed25519();
+    final signature = await algorithm.sign(
+      utf8.encode(messageToSign),
+      keyPair: _keyPair!,
+    );
+    
+    final encodedSignature = base64Url.encode(signature.bytes).replaceAll('=', '');
+    
+    return '$messageToSign.$encodedSignature';
   }
 }

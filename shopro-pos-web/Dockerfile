@@ -4,7 +4,7 @@ WORKDIR /app
 
 # Install dependencies using cache mount
 COPY package*.json ./
-RUN --mount=type=cache,target=/root/.npm npm install
+RUN npm install
 
 # Copy source and build
 COPY . .

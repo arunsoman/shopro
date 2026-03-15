@@ -7,6 +7,7 @@ class AuthState {
   final String? role;
   final String? staffId;
   final Set<String> permissions;
+  final String? error;
 
   AuthState({
     required this.isAuthenticated,
@@ -14,9 +15,10 @@ class AuthState {
     this.role,
     this.staffId,
     this.permissions = const {},
+    this.error,
   });
 
-  factory AuthState.initial() => AuthState(isAuthenticated: false);
+  factory AuthState.initial({String? error}) => AuthState(isAuthenticated: false, error: error);
 
   AuthState copyWith({
     bool? isAuthenticated,
@@ -24,6 +26,7 @@ class AuthState {
     String? role,
     String? staffId,
     Set<String>? permissions,
+    String? error,
   }) {
     return AuthState(
       isAuthenticated: isAuthenticated ?? this.isAuthenticated,
@@ -31,6 +34,7 @@ class AuthState {
       role: role ?? this.role,
       staffId: staffId ?? this.staffId,
       permissions: permissions ?? this.permissions,
+      error: error ?? this.error,
     );
   }
 }
@@ -41,7 +45,8 @@ class AuthNotifier extends Notifier<AuthState> {
 
   Future<bool> login(String pin) async {
     try {
-      final result = await authRepository.login(pin);
+      final repository = ref.read(authRepositoryProvider);
+      final result = await repository.login(pin);
       state = state.copyWith(
         isAuthenticated: true,
         staffName: result['fullName'],
@@ -59,8 +64,12 @@ class AuthNotifier extends Notifier<AuthState> {
     }
   }
 
-  void logout() {
-    state = AuthState.initial();
+  void logout({String? reason}) {
+    state = AuthState.initial(error: reason);
+  }
+
+  void clearError() {
+    state = state.copyWith(error: null);
   }
 
   /// Returns the landing page route based on user permissions.

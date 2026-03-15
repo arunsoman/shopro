@@ -40,6 +40,7 @@ import java.util.stream.Collectors;
 public class OrderServiceImpl implements OrderService {
 
     private static final BigDecimal VAT_RATE = new BigDecimal("0.05");
+    private static final UUID DEFAULT_VENUE_ID = UUID.fromString("00000000-0000-0000-0000-000000000000");
 
     private final OrderTicketRepository orderTicketRepository;
     private final OrderItemRepository orderItemRepository;
@@ -408,16 +409,21 @@ public class OrderServiceImpl implements OrderService {
 
         ticket.setSubtotal(subtotal);
         
-        // Inline Tax Logic (PRD Section 7)
+        // Explicit Tax Validation (PRD Section 7)
         try {
             // 1. Resolve active jurisdiction
-            UUID venueId = UUID.fromString("00000000-0000-0000-0000-000000000000");
+            UUID venueId = DEFAULT_VENUE_ID; 
             mls.sho.dms.tax.entity.Country country = venueCountryAssignmentRepository.findByVenueIdAndActiveTrue(venueId)
-                .orElseThrow(() -> new RuntimeException("Venue has no assigned tax country"))
+                .orElseThrow(() -> new mls.sho.dms.application.exception.TaxNotConfiguredException(
+                    "Taxation not configured for this venue. Please assign a country in Taxes & Compliance."))
                 .getCountry();
 
             // 2. Fetch all active rules with overrides
             List<Object[]> ruleData = taxRuleRepository.findActiveRulesWithOverridesForVenue(venueId);
+            if (ruleData.isEmpty()) {
+                throw new mls.sho.dms.application.exception.TaxNotConfiguredException(
+                    "No active tax rules found for this jurisdiction (" + country.getName() + "). Please configure tax rules.");
+            }
             
             // 3. Clear previous results
             taxCalculationResultRepository.deleteByTicketId(ticket.getId());
@@ -431,14 +437,13 @@ public class OrderServiceImpl implements OrderService {
                 TaxParameters params = deduceTaxParameters(item.getMenuItem());
                 
                 // 4. Resolve applicable rules for this item
-                List<mls.sho.dms.tax.entity.TaxRule> applicableRules = new ArrayList<>();
+                boolean itemTaxed = false;
                 for (Object[] row : ruleData) {
                     mls.sho.dms.tax.entity.TaxRule rule = (mls.sho.dms.tax.entity.TaxRule) row[0];
                     mls.sho.dms.tax.entity.VenueTaxConfig override = (mls.sho.dms.tax.entity.VenueTaxConfig) row[1];
                     
                     if (isRuleApplicable(rule, item, ticket.getOrderType().name(), params)) {
-                        applicableRules.add(rule);
-                        
+                        itemTaxed = true;
                         BigDecimal rate = (override != null) ? override.getOverrideRate() : rule.getDefaultRate();
                         BigDecimal tax;
                         
@@ -465,37 +470,27 @@ public class OrderServiceImpl implements OrderService {
                         totalTax = totalTax.add(tax);
                     }
                 }
+
+                // If a non-exempt item has no applicable tax, we throw to prevent silent non-taxation
+                // Note: In real world, some items might be truly tax-free, but per USER request we enforce configuration.
+                if (!itemTaxed) {
+                    log.warn("Item {} has no applicable tax rules in {}", item.getMenuItem().getName(), country.getName());
+                    // For now, only warn or throw if user wants absolute strictness.
+                    // Given the user's prompt "why should the system run without taxation not enabled", we'll be strict.
+                    throw new mls.sho.dms.application.exception.TaxNotConfiguredException(
+                        "No applicable tax rule found for item: " + item.getMenuItem().getName());
+                }
             }
 
             ticket.setTaxAmount(totalTax);
             ticket.setTotalAmount(subtotal.subtract(ticket.getDiscountAmount()).add(totalTax).add(ticket.getTipAmount()));
             
+        } catch (mls.sho.dms.application.exception.TaxNotConfiguredException e) {
+            // Re-throw our specific configuration exception to be handled by GlobalExceptionHandler
+            throw e;
         } catch (Exception e) {
-            log.error("Advanced Tax Calculation failed, falling back to basic 5%: {}", e.getMessage(), e);
-            BigDecimal netAmount = subtotal.subtract(ticket.getDiscountAmount()).max(BigDecimal.ZERO);
-            BigDecimal tax = netAmount.multiply(VAT_RATE).setScale(2, RoundingMode.HALF_UP);
-            
-            ticket.setTaxAmount(tax);
-            ticket.setTotalAmount(netAmount.add(tax).add(ticket.getTipAmount()));
-
-            // Persist a basic tax entry so UI has something to show
-            taxCalculationResultRepository.deleteByTicketId(ticket.getId());
-            for (OrderItem item : items) {
-                BigDecimal itemBase = (item.getUnitPrice().add(item.getModifierUpchargeTotal()))
-                    .multiply(new BigDecimal(item.getQuantity()));
-                BigDecimal itemTax = itemBase.multiply(VAT_RATE).setScale(2, RoundingMode.HALF_UP);
-
-                mls.sho.dms.tax.entity.TaxCalculationResult fallbackResult = new mls.sho.dms.tax.entity.TaxCalculationResult();
-                fallbackResult.setTicketId(ticket.getId());
-                fallbackResult.setTicketItemId(item.getId());
-                fallbackResult.setRuleCode("VAT_BASIC");
-                fallbackResult.setBaseAmount(itemBase);
-                fallbackResult.setTaxRate(VAT_RATE);
-                fallbackResult.setTaxAmount(itemTax);
-                fallbackResult.setOrderType(ticket.getOrderType().name());
-                
-                taxCalculationResultRepository.save(fallbackResult);
-            }
+            log.error("Advanced Tax Calculation failed: {}", e.getMessage(), e);
+            throw new RuntimeException("Tax calculation error: " + e.getMessage(), e);
         }
         
         orderTicketRepository.save(ticket);

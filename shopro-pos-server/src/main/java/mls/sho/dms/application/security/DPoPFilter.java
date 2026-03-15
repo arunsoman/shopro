@@ -22,6 +22,7 @@ import java.util.UUID;
 @Component
 public class DPoPFilter extends OncePerRequestFilter {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(DPoPFilter.class);
 
     @Autowired
     private DPoPService dpopService;
@@ -64,6 +65,7 @@ public class DPoPFilter extends OncePerRequestFilter {
                 request.setAttribute("dpop_verified", true);
                 request.setAttribute("bound_dpop_jkt", verifiedJkt);
             } else if (shouldEnforce) {
+                log.warn("DPoPFilter rejecting request: DPoP Service validation failed for path={}, method={}", path, method);
                 // Only block if it's a sensitive path AND validation failed
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.setContentType("application/json");
@@ -71,6 +73,7 @@ public class DPoPFilter extends OncePerRequestFilter {
                 return;
             }
         } else if (shouldEnforce) {
+            log.warn("DPoPFilter rejecting request: Missing DPoP header for path={}, method={}", path, method);
             // Missing header on sensitive path
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json");

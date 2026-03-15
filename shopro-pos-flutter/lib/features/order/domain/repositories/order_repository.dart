@@ -187,5 +187,6 @@ class OrderRepositoryImpl implements OrderRepository {
 }
 
 final orderRepositoryProvider = Provider<OrderRepository>((ref) {
-  return OrderRepositoryImpl(apiClient);
+  final client = ref.watch(apiClientProvider);
+  return OrderRepositoryImpl(client);
 });

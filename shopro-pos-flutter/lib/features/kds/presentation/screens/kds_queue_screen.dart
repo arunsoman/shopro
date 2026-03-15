@@ -39,6 +39,18 @@ class _KDSQueueScreenState extends ConsumerState<KDSQueueScreen> with SingleTick
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<KDSState>(kdsProvider, (previous, next) {
+      if (next.error != null && next.error != previous?.error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(next.error!),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    });
+
     final kds = ref.watch(kdsProvider);
     final currentStation = kds.stations.firstWhere(
       (s) => s.id == widget.stationId,

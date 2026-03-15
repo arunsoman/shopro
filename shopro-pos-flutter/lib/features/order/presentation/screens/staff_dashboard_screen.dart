@@ -28,6 +28,19 @@ class _StaffDashboardScreenState extends ConsumerState<StaffDashboardScreen> {
     // In a real app, we'd filter by the current server's ID.
     // For this POC, we'll show all active/ordered tickets.
     final state = ref.watch(orderProvider);
+
+    ref.listen<OrderState>(orderProvider, (previous, next) {
+      if (next.error != null && next.error != previous?.error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(next.error!),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    });
+
     final orders = state.allOrders
         .where(
           (o) =>
