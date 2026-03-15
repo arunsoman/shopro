@@ -9,4 +9,6 @@ import java.util.UUID;
 @Repository
 public interface TaxCalculationResultRepository extends JpaRepository<TaxCalculationResult, java.util.UUID> {
     List<TaxCalculationResult> findByTicketId(UUID ticketId);
+    List<TaxCalculationResult> findByTicketItemId(UUID ticketItemId);
+    void deleteByTicketId(UUID ticketId);
 }

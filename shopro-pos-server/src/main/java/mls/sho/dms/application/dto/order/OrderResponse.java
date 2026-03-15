@@ -31,6 +31,7 @@ public record OrderResponse(
     String vehiclePlate,
     List<OrderItemResponse> items,
     List<OrderAuditResponse> auditTimeline,
-    Instant createdAt,
-    Instant paidAt
+    java.time.Instant createdAt,
+    java.time.Instant paidAt,
+    java.util.Map<String, java.math.BigDecimal> taxSummary
 ) {}

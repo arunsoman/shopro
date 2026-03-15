@@ -23,4 +23,6 @@ public interface TaxRuleRepository extends JpaRepository<TaxRule, java.util.UUID
         ORDER BY r.sortOrder ASC
         """)
     List<Object[]> findActiveRulesWithOverridesForVenue(@Param("venueId") UUID venueId);
+
+    java.util.Optional<TaxRule> findByRuleCode(String ruleCode);
 }

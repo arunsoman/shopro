@@ -21,5 +21,6 @@ public record OrderItemResponse(
     boolean isSubtraction,
     int courseNumber,
     Instant firedAt,
-    List<OrderItemModifierResponse> modifiers
+    List<OrderItemModifierResponse> modifiers,
+    List<mls.sho.dms.tax.dto.response.TaxBreakdownEntry> taxBreakdowns
 ) {}

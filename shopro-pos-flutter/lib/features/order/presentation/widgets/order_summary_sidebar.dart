@@ -118,169 +118,175 @@ class OrderSummarySidebar extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.sm,
+            vertical: 4,
+          ),
+          decoration: BoxDecoration(
+            color: AppColors.lightBackground,
+            borderRadius: BorderRadius.circular(4),
+          ),
           child: Text(
             'COURSE $courseNum',
             style: const TextStyle(
               fontWeight: FontWeight.bold,
-              fontSize: 12,
+              fontSize: 11,
               color: AppColors.lightMuted,
-              letterSpacing: 1,
+              letterSpacing: 1.2,
             ),
           ),
         ),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.only(bottom: AppSpacing.md),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: items.map((item) {
-              return _buildHorizontalItemCard(context, ref, item);
-            }).toList(),
-          ),
-        ),
         const SizedBox(height: AppSpacing.sm),
+        ...items.map((item) => _buildVerticalItemRow(context, ref, item)),
+        const SizedBox(height: AppSpacing.lg),
       ],
     );
   }
 
-  Widget _buildHorizontalItemCard(
+  Widget _buildVerticalItemRow(
     BuildContext context,
     WidgetRef ref,
     OrderItem item,
   ) {
     final isSent = item.status != OrderItemStatus.pending;
 
-    return Container(
-      width: 200,
-      height:
-          150, // Fixed height to prevent Spacer/Expanded from crashing in vertical ListView
-      margin: const EdgeInsets.only(right: AppSpacing.md),
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: isSent
-            ? AppColors.lightBackground
-            : AppColors.primary.withValues(alpha: 0.05),
-        border: Border.all(
-          color: isSent ? AppColors.lightBorder : AppColors.primary,
-        ),
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment:
-            MainAxisAlignment.spaceBetween, // Use alignment instead of Spacer
-        children: [
-          Row(
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+          child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 '${item.quantity}x',
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
-                  fontSize: 12,
+                  fontSize: 14,
+                  color: AppColors.primary,
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpacing.md),
               Expanded(
-                child: Text(
-                  item.name,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item.name,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color: Color(0xFF1E293B),
+                      ),
+                    ),
+                    if (item.modifiers.isNotEmpty)
+                      ...item.modifiers.map(
+                        (m) => Padding(
+                          padding: const EdgeInsets.only(top: 2),
+                          child: Text(
+                            '+ ${m.label}',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: AppColors.lightMuted,
+                            ),
+                          ),
+                        ),
+                      ),
+                    // Nested Tax Breakdowns
+                    if (item.taxBreakdowns.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 6, left: 4),
+                        child: Column(
+                          children:
+                              item.taxBreakdowns.map((tax) {
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 1,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.subdirectory_arrow_right,
+                                        size: 10,
+                                        color: AppColors.lightMuted,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        '${tax.ruleName} (${(tax.rate * 100).toStringAsFixed(0)}%)',
+                                        style: const TextStyle(
+                                          fontSize: 10,
+                                          color: AppColors.lightMuted,
+                                          fontStyle: FontStyle.italic,
+                                        ),
+                                      ),
+                                      const Spacer(),
+                                      Text(
+                                        '\$${tax.amount.toStringAsFixed(2)}',
+                                        style: const TextStyle(
+                                          fontSize: 10,
+                                          color: AppColors.lightMuted,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }).toList(),
+                        ),
+                      ),
+                  ],
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          if (item.modifiers.isNotEmpty)
-            ...item.modifiers
-                .take(2)
-                .map(
-                  (m) => Text(
-                    '+ ${m.label}',
+              const SizedBox(width: AppSpacing.md),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    '\$${item.calculatedTotal.toStringAsFixed(2)}',
                     style: const TextStyle(
-                      fontSize: 10,
-                      color: AppColors.lightMuted,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
                     ),
                   ),
-                ),
-          if (item.modifiers.length > 2)
-            const Text(
-              '...',
-              style: TextStyle(fontSize: 10, color: AppColors.lightMuted),
-            ),
-          const SizedBox(height: 4),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: _getStatusColor(item.status).withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(
-                  item.status.name.toUpperCase(),
-                  style: TextStyle(
-                    fontSize: 9,
-                    fontWeight: FontWeight.bold,
-                    color: _getStatusColor(item.status),
-                  ),
-                ),
-              ),
-              Text(
-                '\$${item.calculatedTotal.toStringAsFixed(2)}',
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                ),
+                  if (!isSent)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Row(
+                        children: [
+                          _QuantityButton(
+                            icon: Icons.remove,
+                            onTap:
+                                () => ref
+                                    .read(orderProvider.notifier)
+                                    .updateItemQuantity(
+                                      item.id,
+                                      item.quantity - 1,
+                                    ),
+                          ),
+                          const SizedBox(width: 8),
+                          _QuantityButton(
+                            icon: Icons.add,
+                            onTap:
+                                () => ref
+                                    .read(orderProvider.notifier)
+                                    .updateItemQuantity(
+                                      item.id,
+                                      item.quantity + 1,
+                                    ),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
               ),
             ],
           ),
-          if (!isSent) ...[
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _QuantityButton(
-                  icon: Icons.remove,
-                  onTap: () => ref
-                      .read(orderProvider.notifier)
-                      .updateItemQuantity(item.id, item.quantity - 1),
-                ),
-                const SizedBox(width: 16),
-                _QuantityButton(
-                  icon: Icons.add,
-                  onTap: () => ref
-                      .read(orderProvider.notifier)
-                      .updateItemQuantity(item.id, item.quantity + 1),
-                ),
-              ],
-            ),
-          ],
-        ],
-      ),
+        ),
+        const Divider(height: 1, color: AppColors.lightBorder),
+      ],
     );
   }
 
-  Color _getStatusColor(OrderItemStatus status) {
-    switch (status) {
-      case OrderItemStatus.sent:
-        return AppColors.tagSentText;
-      case OrderItemStatus.held:
-        return AppColors.tagHoldingText;
-      case OrderItemStatus.ready:
-        return AppColors.success;
-      case OrderItemStatus.delivered:
-        return Colors.blue;
-      case OrderItemStatus.voided:
-        return Colors.red;
-      default:
-        return AppColors.lightMuted;
-    }
-  }
 
   Widget _buildFooter(BuildContext context, WidgetRef ref) {
     final hasDraftItems = order!.items.any(
@@ -307,7 +313,9 @@ class OrderSummarySidebar extends ConsumerWidget {
       child: Column(
         children: [
           _buildTotalRow('Subtotal', order!.subtotal),
-          _buildTotalRow('Tax (5%)', order!.taxAmount),
+          ...order!.taxSummary.entries.map((e) {
+            return _buildTotalRow(e.key, e.value);
+          }),
           if (order!.discountAmount > 0)
             _buildTotalRow('Discount', -order!.discountAmount),
           const SizedBox(height: AppSpacing.md),
@@ -323,57 +331,59 @@ class OrderSummarySidebar extends ConsumerWidget {
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 20,
-                  color: Color(0xFF1A1A1A),
+                  color: Color(0xFF1E293B),
                 ),
               ),
             ],
           ),
           const SizedBox(height: AppSpacing.lg),
-
-          // Primary Action: Send to Kitchen or Pay (US-4.1)
           SizedBox(
             width: double.infinity,
-            height: 56,
+            height: 54,
             child: ElevatedButton(
-              onPressed: hasDraftItems
-                  ? () => ref.read(orderProvider.notifier).submitOrder()
-                  : (canPay ? () => context.push('/checkout') : null),
+              onPressed:
+                  hasDraftItems
+                      ? () => ref.read(orderProvider.notifier).submitOrder()
+                      : (canPay ? () => context.push('/checkout') : null),
               style: ElevatedButton.styleFrom(
-                backgroundColor: hasDraftItems
-                    ? AppColors.primary
-                    : (canPay ? const Color(0xFF1A2233) : AppColors.lightMuted),
+                backgroundColor:
+                    hasDraftItems
+                        ? AppColors.primary
+                        : (canPay
+                            ? const Color(0xFF1E293B)
+                            : AppColors.lightMuted),
                 foregroundColor: Colors.white,
+                elevation: 0,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                 ),
-                disabledBackgroundColor: AppColors.lightMuted.withValues(alpha: 0.5),
               ),
               child: Text(
                 buttonText,
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
-                  fontSize: 16,
+                  fontSize: 15,
                 ),
               ),
             ),
           ),
-
           const SizedBox(height: AppSpacing.md),
-
           Row(
             children: [
               Expanded(
                 child: OutlinedButton(
-                  onPressed: () => showDialog(
-                    context: context,
-                    builder: (context) => SplitDialog(
-                      totalAmount: order!.totalAmount,
-                      guestCount: order!.coverCount,
-                    ),
-                  ),
+                  onPressed:
+                      () => showDialog(
+                        context: context,
+                        builder:
+                            (context) => SplitDialog(
+                              totalAmount: order!.totalAmount,
+                              guestCount: order!.coverCount,
+                            ),
+                      ),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
-                      vertical: AppSpacing.lg,
+                      vertical: AppSpacing.md,
                     ),
                     side: const BorderSide(color: AppColors.lightBorder),
                     shape: RoundedRectangleBorder(
@@ -386,14 +396,17 @@ class OrderSummarySidebar extends ConsumerWidget {
               const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: OutlinedButton(
-                  onPressed: () => showDialog(
-                    context: context,
-                    builder: (context) =>
-                        DiscountDialog(currentTotal: order!.totalAmount),
-                  ),
+                  onPressed:
+                      () => showDialog(
+                        context: context,
+                        builder:
+                            (context) => DiscountDialog(
+                              currentTotal: order!.totalAmount,
+                            ),
+                      ),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
-                      vertical: AppSpacing.lg,
+                      vertical: AppSpacing.md,
                     ),
                     side: const BorderSide(color: AppColors.lightBorder),
                     shape: RoundedRectangleBorder(
@@ -412,12 +425,18 @@ class OrderSummarySidebar extends ConsumerWidget {
 
   Widget _buildTotalRow(String label, double amount) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
+      padding: const EdgeInsets.symmetric(vertical: 3),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(color: AppColors.lightMuted)),
-          Text('\$${amount.toStringAsFixed(2)}'),
+          Text(
+            label,
+            style: const TextStyle(color: AppColors.lightMuted, fontSize: 13),
+          ),
+          Text(
+            '\$${amount.toStringAsFixed(2)}',
+            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+          ),
         ],
       ),
     );

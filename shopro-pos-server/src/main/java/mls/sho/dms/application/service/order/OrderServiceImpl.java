@@ -56,6 +56,11 @@ public class OrderServiceImpl implements OrderService {
     private final mls.sho.dms.application.service.core.NotificationEngine notificationEngine;
     private final SimpMessagingTemplate messagingTemplate;
 
+    // Advanced Tax Integration (Legacy dependency removed as per user module request)
+    private final mls.sho.dms.tax.repository.VenueCountryAssignmentRepository venueCountryAssignmentRepository;
+    private final mls.sho.dms.tax.repository.TaxCalculationResultRepository taxCalculationResultRepository;
+    private final mls.sho.dms.tax.repository.TaxRuleRepository taxRuleRepository;
+
     @Override
     public OrderResponse createOrder(CreateOrderRequest request, String performedBy) {
         StaffMember server = staffMemberRepository.findByFullName(performedBy)
@@ -403,15 +408,141 @@ public class OrderServiceImpl implements OrderService {
 
         ticket.setSubtotal(subtotal);
         
-        // VAT calculation: 5% of subtotal after discounts (or before? usually before or on net)
-        // Let's assume VAT is calculated on (Subtotal - Discount)
-        BigDecimal netAmount = subtotal.subtract(ticket.getDiscountAmount()).max(BigDecimal.ZERO);
-        BigDecimal tax = netAmount.multiply(VAT_RATE).setScale(2, RoundingMode.HALF_UP);
-        
-        ticket.setTaxAmount(tax);
-        ticket.setTotalAmount(netAmount.add(tax).add(ticket.getTipAmount()));
+        // Inline Tax Logic (PRD Section 7)
+        try {
+            // 1. Resolve active jurisdiction
+            UUID venueId = UUID.fromString("00000000-0000-0000-0000-000000000000");
+            mls.sho.dms.tax.entity.Country country = venueCountryAssignmentRepository.findByVenueIdAndActiveTrue(venueId)
+                .orElseThrow(() -> new RuntimeException("Venue has no assigned tax country"))
+                .getCountry();
+
+            // 2. Fetch all active rules with overrides
+            List<Object[]> ruleData = taxRuleRepository.findActiveRulesWithOverridesForVenue(venueId);
+            
+            // 3. Clear previous results
+            taxCalculationResultRepository.deleteByTicketId(ticket.getId());
+
+            BigDecimal totalTax = BigDecimal.ZERO;
+            
+            for (OrderItem item : items) {
+                BigDecimal itemBaseAmount = (item.getUnitPrice().add(item.getModifierUpchargeTotal()))
+                    .multiply(new BigDecimal(item.getQuantity()));
+                
+                TaxParameters params = deduceTaxParameters(item.getMenuItem());
+                
+                // 4. Resolve applicable rules for this item
+                List<mls.sho.dms.tax.entity.TaxRule> applicableRules = new ArrayList<>();
+                for (Object[] row : ruleData) {
+                    mls.sho.dms.tax.entity.TaxRule rule = (mls.sho.dms.tax.entity.TaxRule) row[0];
+                    mls.sho.dms.tax.entity.VenueTaxConfig override = (mls.sho.dms.tax.entity.VenueTaxConfig) row[1];
+                    
+                    if (isRuleApplicable(rule, item, ticket.getOrderType().name(), params)) {
+                        applicableRules.add(rule);
+                        
+                        BigDecimal rate = (override != null) ? override.getOverrideRate() : rule.getDefaultRate();
+                        BigDecimal tax;
+                        
+                        if (country.isTaxIncluded()) {
+                            // Net = Gross / (1 + rate)
+                            BigDecimal net = itemBaseAmount.divide(BigDecimal.ONE.add(rate), 4, RoundingMode.HALF_UP);
+                            tax = itemBaseAmount.subtract(net).setScale(2, RoundingMode.HALF_UP);
+                        } else {
+                            tax = itemBaseAmount.multiply(rate).setScale(2, RoundingMode.HALF_UP);
+                        }
+
+                        // 5. Persist breakdown
+                        mls.sho.dms.tax.entity.TaxCalculationResult entity = new mls.sho.dms.tax.entity.TaxCalculationResult();
+                        entity.setTicketId(ticket.getId());
+                        entity.setTicketItemId(item.getId());
+                        entity.setTaxRule(rule);
+                        entity.setRuleCode(rule.getRuleCode());
+                        entity.setBaseAmount(itemBaseAmount);
+                        entity.setTaxRate(rate);
+                        entity.setTaxAmount(tax);
+                        entity.setOrderType(ticket.getOrderType().name());
+                        
+                        taxCalculationResultRepository.save(entity);
+                        totalTax = totalTax.add(tax);
+                    }
+                }
+            }
+
+            ticket.setTaxAmount(totalTax);
+            ticket.setTotalAmount(subtotal.subtract(ticket.getDiscountAmount()).add(totalTax).add(ticket.getTipAmount()));
+            
+        } catch (Exception e) {
+            log.error("Advanced Tax Calculation failed, falling back to basic 5%: {}", e.getMessage(), e);
+            BigDecimal netAmount = subtotal.subtract(ticket.getDiscountAmount()).max(BigDecimal.ZERO);
+            BigDecimal tax = netAmount.multiply(VAT_RATE).setScale(2, RoundingMode.HALF_UP);
+            
+            ticket.setTaxAmount(tax);
+            ticket.setTotalAmount(netAmount.add(tax).add(ticket.getTipAmount()));
+
+            // Persist a basic tax entry so UI has something to show
+            taxCalculationResultRepository.deleteByTicketId(ticket.getId());
+            for (OrderItem item : items) {
+                BigDecimal itemBase = (item.getUnitPrice().add(item.getModifierUpchargeTotal()))
+                    .multiply(new BigDecimal(item.getQuantity()));
+                BigDecimal itemTax = itemBase.multiply(VAT_RATE).setScale(2, RoundingMode.HALF_UP);
+
+                mls.sho.dms.tax.entity.TaxCalculationResult fallbackResult = new mls.sho.dms.tax.entity.TaxCalculationResult();
+                fallbackResult.setTicketId(ticket.getId());
+                fallbackResult.setTicketItemId(item.getId());
+                fallbackResult.setRuleCode("VAT_BASIC");
+                fallbackResult.setBaseAmount(itemBase);
+                fallbackResult.setTaxRate(VAT_RATE);
+                fallbackResult.setTaxAmount(itemTax);
+                fallbackResult.setOrderType(ticket.getOrderType().name());
+                
+                taxCalculationResultRepository.save(fallbackResult);
+            }
+        }
         
         orderTicketRepository.save(ticket);
+    }
+
+    private record TaxParameters(String category, String temperature) {}
+
+    private boolean isRuleApplicable(mls.sho.dms.tax.entity.TaxRule rule, OrderItem item, String orderType, TaxParameters params) {
+        // Order Type
+        if ("DINE_IN".equals(orderType) && !rule.isAppliesToDineIn()) return false;
+        if ("TAKEAWAY".equals(orderType) && !rule.isAppliesToTakeaway()) return false;
+        
+        // Temperature
+        if (Boolean.TRUE.equals(rule.getAppliesToHot()) && !"HOT".equals(params.temperature())) return false;
+        if (Boolean.TRUE.equals(rule.getAppliesToCold()) && !"COLD".equals(params.temperature())) return false;
+        if (Boolean.FALSE.equals(rule.getAppliesToHot()) && "HOT".equals(params.temperature())) return false;
+        if (Boolean.FALSE.equals(rule.getAppliesToCold()) && "COLD".equals(params.temperature())) return false;
+
+        // Category
+        if (rule.getItemCategory() != null && !rule.getItemCategory().equals(params.category())) return false;
+        if (rule.isAppliesToAlcohol() && !"ALCOHOL".equals(params.category())) return false;
+
+        // Price Thresholds
+        BigDecimal unitPrice = item.getUnitPrice();
+        if (rule.getPriceThresholdMin() != null && unitPrice.compareTo(rule.getPriceThresholdMin()) < 0) return false;
+        if (rule.getPriceThresholdMax() != null && unitPrice.compareTo(rule.getPriceThresholdMax()) >= 0) return false;
+
+        return true;
+    }
+
+    private TaxParameters deduceTaxParameters(MenuItem item) {
+        String categoryName = item.getCategory() != null ? item.getCategory().getName().toUpperCase() : "UNKNOWN";
+        String itemName = item.getName() != null ? item.getName().toUpperCase() : "UNKNOWN";
+        
+        String itemCategory = "FOOD";
+        if (categoryName.contains("DRINK") || categoryName.contains("BEVERAGE") || itemName.contains("JUICE") || itemName.contains("SODA")) {
+            itemCategory = "BEVERAGE";
+        } else if (categoryName.contains("ALCOHOL") || itemName.contains("BEER") || itemName.contains("WINE") || itemName.contains("WHISKY")) {
+            itemCategory = "ALCOHOL";
+        }
+        
+        String temperature = "COLD";
+        if (categoryName.contains("HOT") || itemName.contains("TEA") || itemName.contains("COFFEE") || itemName.contains("SOUP") || itemName.contains("STEAK") || itemName.contains("BURGER")) {
+            temperature = "HOT";
+        }
+        
+        return new TaxParameters(itemCategory, temperature);
     }
 
     private OrderResponse mapToResponse(OrderTicket ticket) {
@@ -430,6 +561,13 @@ public class OrderServiceImpl implements OrderService {
                 log.getCreatedAt()
             ))
             .collect(Collectors.toList());
+
+        List<mls.sho.dms.tax.entity.TaxCalculationResult> taxResults = taxCalculationResultRepository.findByTicketId(ticket.getId());
+        java.util.Map<String, BigDecimal> taxSummary = taxResults.stream()
+            .collect(Collectors.groupingBy(
+                mls.sho.dms.tax.entity.TaxCalculationResult::getRuleCode,
+                Collectors.reducing(BigDecimal.ZERO, mls.sho.dms.tax.entity.TaxCalculationResult::getTaxAmount, BigDecimal::add)
+            ));
 
         return new OrderResponse(
             ticket.getId(),
@@ -455,7 +593,8 @@ public class OrderServiceImpl implements OrderService {
             itemResponses,
             auditResponses,
             ticket.getCreatedAt(),
-            ticket.getPaidAt()
+            ticket.getPaidAt(),
+            taxSummary
         );
     }
 
@@ -497,6 +636,16 @@ public class OrderServiceImpl implements OrderService {
         BigDecimal lineTotal = (item.getUnitPrice().add(item.getModifierUpchargeTotal()))
             .multiply(new BigDecimal(item.getQuantity()));
 
+        List<mls.sho.dms.tax.entity.TaxCalculationResult> itemTaxResults = taxCalculationResultRepository.findByTicketItemId(item.getId());
+        List<mls.sho.dms.tax.dto.response.TaxBreakdownEntry> itemTaxBreakdowns = itemTaxResults.stream()
+            .map(r -> new mls.sho.dms.tax.dto.response.TaxBreakdownEntry(
+                r.getRuleCode(),
+                r.getTaxRule() != null ? r.getTaxRule().getRuleName() : r.getRuleCode(),
+                r.getTaxRate(),
+                r.getTaxAmount()
+            ))
+            .collect(Collectors.toList());
+
         return new OrderItemResponse(
             item.getId(),
             item.getMenuItem().getId(),
@@ -511,7 +660,8 @@ public class OrderServiceImpl implements OrderService {
             item.isSubtraction(),
             item.getCourseNumber(),
             item.getFiredAt(),
-            modifierResponses
+            modifierResponses,
+            itemTaxBreakdowns
         );
     }
 

@@ -11,6 +11,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import mls.sho.dms.entity.staff.DeviceBinding;
 import mls.sho.dms.repository.staff.DeviceBindingRepository;
 
+
 import java.io.IOException;
 import java.util.UUID;
 
@@ -20,6 +21,7 @@ import java.util.UUID;
  */
 @Component
 public class DPoPFilter extends OncePerRequestFilter {
+
 
     @Autowired
     private DPoPService dpopService;
@@ -40,6 +42,7 @@ public class DPoPFilter extends OncePerRequestFilter {
         // Enforce DPoP strictly for sensitive operations.
         // For non-sensitive paths (like login), we ignore the header to allow broad client interceptors.
         boolean shouldEnforce = isStrictPath && !"GET".equalsIgnoreCase(method);
+
 
         if (shouldEnforce) {
             String expectedThumbprint = null;

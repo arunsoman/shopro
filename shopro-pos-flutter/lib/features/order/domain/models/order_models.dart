@@ -1,5 +1,28 @@
 // Order models and status enums
 
+class TaxBreakdownEntry {
+  final String ruleCode;
+  final String ruleName;
+  final double rate;
+  final double amount;
+
+  TaxBreakdownEntry({
+    required this.ruleCode,
+    required this.ruleName,
+    required this.rate,
+    required this.amount,
+  });
+
+  factory TaxBreakdownEntry.fromJson(Map<String, dynamic> json) {
+    return TaxBreakdownEntry(
+      ruleCode: json['ruleCode'] as String,
+      ruleName: json['ruleName'] as String,
+      rate: (json['rate'] as num).toDouble(),
+      amount: (json['amount'] as num).toDouble(),
+    );
+  }
+}
+
 enum PaymentMethod { cash, card, giftCard, applePay, googlePay, mipay }
 
 extension PaymentMethodExt on PaymentMethod {
@@ -112,6 +135,7 @@ class OrderItem {
   final List<String> subtractions;
   final DateTime? firedAt;
   final List<OrderItemModifier> modifiers;
+  final List<TaxBreakdownEntry> taxBreakdowns;
 
   OrderItem({
     required this.id,
@@ -129,6 +153,7 @@ class OrderItem {
     this.subtractions = const [],
     this.firedAt,
     this.modifiers = const [],
+    this.taxBreakdowns = const [],
   });
 
   factory OrderItem.fromJson(Map<String, dynamic> json) {
@@ -156,6 +181,11 @@ class OrderItem {
       modifiers:
           (json['modifiers'] as List?)
               ?.map((m) => OrderItemModifier.fromJson(m))
+              .toList() ??
+          const [],
+      taxBreakdowns:
+          (json['taxBreakdowns'] as List?)
+              ?.map((t) => TaxBreakdownEntry.fromJson(t))
               .toList() ??
           const [],
     );
@@ -232,6 +262,7 @@ class OrderTicket {
   final double totalAmount;
   final List<OrderItem> items;
   final List<OrderAuditEntry> auditTimeline;
+  final Map<String, double> taxSummary;
   final String? ticketSuffix; // e.g., "A", "B" for multi-order tables
   final DateTime createdAt;
   final DateTime? paidAt;
@@ -259,6 +290,7 @@ class OrderTicket {
     this.ticketSuffix,
     required this.createdAt,
     this.paidAt,
+    this.taxSummary = const {},
   });
 
   factory OrderTicket.fromJson(Map<String, dynamic> json) {
@@ -297,6 +329,11 @@ class OrderTicket {
       ticketSuffix: json['ticketSuffix'],
       createdAt: DateTime.parse(json['createdAt']),
       paidAt: json['paidAt'] != null ? DateTime.parse(json['paidAt']) : null,
+      taxSummary:
+          (json['taxSummary'] as Map<String, dynamic>?)?.map(
+            (k, v) => MapEntry(k, (v as num).toDouble()),
+          ) ??
+          const {},
     );
   }
 }
