@@ -82,11 +82,10 @@ public class DPoPFilter extends OncePerRequestFilter {
         return path.startsWith("/api/v1/payments") || path.startsWith("/api/v1/admin/settings");
     }
 
-    private boolean isSensitivePath(String path) {
         return path.startsWith("/api/v1/payments") || 
+               path.startsWith("/api/v1/orders") ||
                path.startsWith("/api/v1/admin") || 
                path.startsWith("/api/v1/staff") ||
                path.startsWith("/api/v1/taxes") ||
                path.startsWith("/api/v1/floor-plan/tables"); // Table status changes are sensitive
-    }
 }

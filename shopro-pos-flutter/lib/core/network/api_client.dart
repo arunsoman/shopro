@@ -25,15 +25,20 @@ class ApiClient {
 
     // Add DPoP Interceptor for FAPI 2.0 Compliance
     dio.interceptors.add(InterceptorsWrapper(
-      onRequest: (options, handler) {
-        final htm = options.method;
-        final htu = options.baseUrl.startsWith('http') 
-            ? '${options.baseUrl}${options.path}'
-            : '${Uri.base.scheme}://${Uri.base.host}${Uri.base.hasPort ? ":${Uri.base.port}" : ""}${options.baseUrl}${options.path}';
-        
-        // Generate DPoP hint/proof
-        final proof = DPoPService.generateProof(htm, htu);
-        options.headers['DPoP'] = proof;
+      onRequest: (options, handler) async {
+        try {
+          final htm = options.method;
+          final htu = options.baseUrl.startsWith('http') 
+              ? '${options.baseUrl}${options.path}'
+              : '${Uri.base.scheme}://${Uri.base.host}${Uri.base.hasPort ? ":${Uri.base.port}" : ""}${options.baseUrl}${options.path}';
+          
+          // Generate DPoP hint/proof
+          final proof = await DPoPService.generateProof(htm, htu);
+          options.headers['DPoP'] = proof;
+        } catch (e) {
+          // Log and continue - server might skip validation if proof is missing on non-sensitive paths
+          print('DPoP Generation Error: $e');
+        }
         
         return handler.next(options);
       },

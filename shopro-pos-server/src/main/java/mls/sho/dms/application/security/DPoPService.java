@@ -140,6 +140,9 @@ public class DPoPService {
             required.put("crv", (String) jwk.get("crv"));
             required.put("x", (String) jwk.get("x"));
             required.put("y", (String) jwk.get("y"));
+        } else if ("OKP".equals(kty)) {
+            required.put("crv", (String) jwk.get("crv"));
+            required.put("x", (String) jwk.get("x"));
         }
 
         StringBuilder sb = new StringBuilder("{");
