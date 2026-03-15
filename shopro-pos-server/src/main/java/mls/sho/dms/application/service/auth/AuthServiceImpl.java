@@ -62,18 +62,27 @@ public class AuthServiceImpl implements AuthService {
 
         // FAPI Device Binding
         if (jkt != null) {
-            boolean alreadyBound = deviceBindingRepository.findByPublicKeyThumbprint(jkt)
-                    .map(b -> b.getStaffMember().getId().equals(staff.getId()))
-                    .orElse(false);
+            // Revoke all OTHER active bindings for this staff member to enforce Single Active Session
+            List<mls.sho.dms.entity.staff.DeviceBinding> existing = deviceBindingRepository.findByStaffMemberId(staff.getId());
+            boolean currentJktActive = false;
             
-            if (!alreadyBound) {
-                // ... dpopService.bindDevice(staff.getId(), jkt, "POS Terminal");
-                // For simplicity and directness in this service:
+            for (mls.sho.dms.entity.staff.DeviceBinding b : existing) {
+                if (b.getPublicKeyThumbprint().equals(jkt) && !b.isRevoked()) {
+                    currentJktActive = true;
+                    b.setLastActiveAt(Instant.now());
+                } else if (!b.isRevoked()) {
+                    b.setRevoked(true);
+                }
+            }
+            deviceBindingRepository.saveAll(existing);
+            
+            if (!currentJktActive) {
                 mls.sho.dms.entity.staff.DeviceBinding binding = new mls.sho.dms.entity.staff.DeviceBinding();
                 binding.setStaffMember(staff);
                 binding.setPublicKeyThumbprint(jkt);
                 binding.setDeviceName("POS Terminal (" + remoteAddr + ")");
                 binding.setLastActiveAt(Instant.now());
+                binding.setRevoked(false);
                 deviceBindingRepository.save(binding);
             }
         }

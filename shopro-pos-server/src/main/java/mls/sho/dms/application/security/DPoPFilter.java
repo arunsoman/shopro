@@ -43,36 +43,39 @@ public class DPoPFilter extends OncePerRequestFilter {
         // For non-sensitive paths (like login), we ignore the header to allow broad client interceptors.
         boolean shouldEnforce = isStrictPath && !"GET".equalsIgnoreCase(method);
 
-
-        if (shouldEnforce) {
+        if (dpopHeader != null) {
             String expectedThumbprint = null;
-            
-            if (staffIdHeader != null) {
+            if (isStrictPath && staffIdHeader != null) {
                 try {
                     UUID staffId = UUID.fromString(staffIdHeader);
-                    // Fetch the most recent active binding for this staff
                     expectedThumbprint = deviceBindingRepository.findByStaffMemberId(staffId).stream()
                             .filter(b -> !b.isRevoked())
                             .map(DeviceBinding::getPublicKeyThumbprint)
                             .findFirst()
                             .orElse(null);
                 } catch (IllegalArgumentException e) {
-                    // Invalid ID
+                    // Ignore invalid IDs
                 }
             }
-            
+
             String verifiedJkt = dpopService.validateProof(dpopHeader, request, expectedThumbprint);
-            
-            if (verifiedJkt == null) {
+
+            if (verifiedJkt != null) {
+                request.setAttribute("dpop_verified", true);
+                request.setAttribute("bound_dpop_jkt", verifiedJkt);
+            } else if (shouldEnforce) {
+                // Only block if it's a sensitive path AND validation failed
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.setContentType("application/json");
                 response.getWriter().write("{\"error\": \"invalid_dpop_proof\", \"message\": \"A valid DPoP proof is required for this operation.\"}");
                 return;
             }
-            
-            // Mark the request as verified with DPoP
-            request.setAttribute("dpop_verified", true);
-            request.setAttribute("bound_dpop_jkt", verifiedJkt);
+        } else if (shouldEnforce) {
+            // Missing header on sensitive path
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.getWriter().write("{\"error\": \"invalid_dpop_proof\", \"message\": \"A valid DPoP proof is required for this operation.\"}");
+            return;
         }
 
         filterChain.doFilter(request, response);
