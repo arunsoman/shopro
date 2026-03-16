@@ -11,6 +11,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
 @Slf4j
@@ -86,7 +89,37 @@ public class POGeneratorServiceImpl implements POGeneratorService {
         proposal.setStatus(VendorPriceProposalStatus.ACCEPTED);
         proposal.setGeneratedPo(po);
         proposalRepository.save(proposal);
+        return poRepository.save(po);
+    }
 
+    @Override
+    @Transactional
+    public PurchaseOrder generateAutoPO(RawIngredient ingredient) {
+        if (ingredient.getSupplier() == null) {
+            log.warn("Cannot generate auto-PO for {}: No primary supplier assigned.", ingredient.getName());
+            return null;
+        }
+
+        BigDecimal qtyNeeded = ingredient.getParLevel().subtract(ingredient.getCurrentStock());
+        if (qtyNeeded.compareTo(BigDecimal.ZERO) <= 0) {
+            return null;
+        }
+
+        PurchaseOrder po = new PurchaseOrder();
+        po.setSupplier(ingredient.getSupplier());
+        po.setStatus(PurchaseOrderStatus.DRAFT); // Start as DRAFT, can be auto-sent by a separate policy
+        po.setExpectedDeliveryDate(LocalDate.now().plusDays(ingredient.getSupplier().getLeadTimeDays()));
+        
+        PurchaseOrderLine line = new PurchaseOrderLine();
+        line.setPurchaseOrder(po);
+        line.setIngredient(ingredient);
+        line.setOrderedQty(qtyNeeded);
+        line.setUnitCost(ingredient.getCostPerUnit());
+        po.getLines().add(line);
+
+        po.setTotalValue(qtyNeeded.multiply(ingredient.getCostPerUnit()));
+
+        log.info("Auto-PO generated for {}: SKU-{} Supplier-{}", ingredient.getName(), ingredient.getId(), ingredient.getSupplier().getCompanyName());
         return poRepository.save(po);
     }
 }

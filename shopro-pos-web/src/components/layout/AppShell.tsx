@@ -1,6 +1,8 @@
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { Home, LogOut, ChevronRight, Sun, Moon } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { LanguageSelector } from './LanguageSelector';
 import { useTheme } from '@/lib/theme/ThemeContext';
 import { NotificationBadge, NotificationTray } from '@/features/notifications/components/NotificationTray';
 import { useState } from 'react';
@@ -9,30 +11,31 @@ import logo from '@/assets/logo.jpeg';
 /** Derives a readable breadcrumb label from the current URL path. */
 function useBreadcrumb() {
     const { pathname } = useLocation();
+    const { t } = useTranslation();
     const segments = pathname.replace(/^\//, '').split('/').filter(Boolean);
     if (segments.length === 0) return null;
 
     const labelMap: Record<string, string> = {
-        dashboard: 'Home',
-        menu: 'Menu',
-        floor: 'Floor Plan',
-        inventory: 'Inventory',
-        crm: 'CRM & Loyalty',
-        settings: 'Settings',
-        staff: 'Staff',
-        stock: 'Stock Dashboard',
-        recipes: 'Recipe Builder',
-        vendors: 'Vendors & Catalogs',
-        procurement: 'Procurement (RFQs)',
-        categories: 'Categories',
+        dashboard: t('common.home', 'Home'),
+        menu: t('menu.title', 'Menu'),
+        floor: t('floor.title', 'Floor Plan'),
+        inventory: t('inventory.title', 'Inventory'),
+        crm: t('crm.title', 'CRM & Loyalty'),
+        settings: t('settings.title', 'Settings'),
+        staff: t('staff.title', 'Staff'),
+        stock: t('inventory.stock', 'Stock Dashboard'),
+        recipes: t('menu.recipes', 'Recipe Builder'),
+        vendors: t('inventory.vendors', 'Vendors & Catalogs'),
+        procurement: t('inventory.procurement', 'Procurement (RFQs)'),
+        categories: t('menu.categories', 'Categories'),
 
-        items: 'Items',
-        modifiers: 'Modifiers',
-        'floor-layout': 'Floor Layout',
-        tableside: 'Tableside',
-        security: 'Permissions',
-        tiers: 'Loyalty Tiers',
-        campaigns: 'Campaigns',
+        items: t('menu.items', 'Items'),
+        modifiers: t('menu.modifiers', 'Modifiers'),
+        'floor-layout': t('floor.layout', 'Floor Layout'),
+        tableside: t('pos.tableside', 'Tableside'),
+        security: t('settings.security', 'Permissions'),
+        tiers: t('crm.tiers', 'Loyalty Tiers'),
+        campaigns: t('crm.campaigns', 'Campaigns'),
     };
 
     return segments
@@ -41,6 +44,7 @@ function useBreadcrumb() {
 }
 
 export function AppShell() {
+    const { t } = useTranslation();
     const { session, logout } = useAuth();
     const navigate = useNavigate();
     const breadcrumbs = useBreadcrumb();
@@ -64,11 +68,11 @@ export function AppShell() {
                     <Link
                         to="/dashboard"
                         className="flex items-center gap-2 shrink-0 group"
-                        title="Go Home"
+                        title={t('common.goHome')}
                     >
                         <img
                             src={logo}
-                            alt="Shopro POS"
+                            alt={t('common.home')}
                             className="h-14 w-auto object-contain group-hover:scale-115 transition-transform"
                         />
                         <Home className="h-3.5 w-3.5 text-white/40 group-hover:text-primary transition-colors hidden sm:block" />
@@ -92,39 +96,45 @@ export function AppShell() {
                     {/* Spacer */}
                     <div className="flex-1" />
 
-                    {/* Theme toggle + User info + logout */}
+                    {/* Theme toggle + Language + User info + logout */}
                     <div className="flex items-center gap-3 shrink-0">
+                        <LanguageSelector />
+
                         <button
                             onClick={toggleTheme}
-                            title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+                             title={t('common.switch_theme', { mode: theme === 'light' ? 'dark' : 'light' })}
                             className="p-2 rounded-md hover:bg-white/10 text-white/60 hover:text-white transition-colors"
                         >
                             {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
                         </button>
 
                         <div className="relative">
-                            <div onClick={() => setIsNotificationTrayOpen(!isNotificationTrayOpen)}>
+                            <button 
+                                onClick={() => setIsNotificationTrayOpen(!isNotificationTrayOpen)}
+                                title={t('notifications.title')}
+                                className="outline-none"
+                            >
                                 <NotificationBadge />
-                            </div>
+                            </button>
                             <NotificationTray
                                 open={isNotificationTrayOpen}
                                 onClose={() => setIsNotificationTrayOpen(false)}
                             />
                         </div>
 
-                        <div className="hidden sm:block text-right leading-none border-l border-white/10 pl-3 h-8 flex flex-col justify-center">
-                            <p className="text-xs font-medium text-white">{session?.fullName}</p>
-                            <p className="text-[11px] text-white/60 mt-0.5">
-                                {session ? getRoleLabel(session.role) : ''}
+                        <div className="hidden sm:block text-right border-l border-white/10 pl-3 h-8 flex flex-col justify-center leading-tight">
+                            <p className="text-xs font-semibold text-white">{session?.fullName}</p>
+                            <p className="text-[10px] text-white/50 uppercase tracking-widest font-bold">
+                                {session ? t(`roles.${session.role}`, getRoleLabel(session.role)) : ''}
                             </p>
                         </div>
                         <button
                             onClick={handleLogout}
-                            title="Logout"
+                            title={t('auth.logout', 'Logout')}
                             className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs text-white/60 hover:text-white hover:bg-white/10 transition-colors border border-transparent hover:border-white/10"
                         >
                             <LogOut className="h-3.5 w-3.5" />
-                            <span className="hidden sm:inline">Logout</span>
+                            <span className="hidden sm:inline">{t('auth.logout', 'Logout')}</span>
                         </button>
                     </div>
                 </div>

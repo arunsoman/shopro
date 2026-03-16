@@ -1,0 +1,25 @@
+{
+  "common": {
+    "cancel": "Ghairi",
+    "save": "Hifadhi",
+    "delete": "Futa",
+    "edit": "Hariri",
+    "total": "Jumla",
+    "processing": "Inachakata..."
+  },
+  "menu": {
+    "itemName": "Jina la Bidhaa",
+    "price": "Bei",
+    "category": "Kategoria",
+    "description": "Maelezo",
+    "required": "Inahitajika",
+    "optional": "Hiari"
+  },
+  "pos": {
+    "order": "Agizo",
+    "table": "Meza",
+    "checkout": "Malipo",
+    "pay": "Lipa",
+    "printReceipt": "Chapa Risiti"
+  }
+}

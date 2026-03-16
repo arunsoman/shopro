@@ -4,6 +4,7 @@ import { useMenuCategories } from "../hooks/useMenuCategories";
 import { MenuItemCard } from "../components/MenuItemCard";
 import { Button } from "@/components/ui/button";
 import { MenuItemForm } from "../components/MenuItemForm";
+import { useTranslation } from "react-i18next";
 import type { MenuItemResponse } from "../schema/menuSchema";
 
 export function MenuItemsPage() {
@@ -11,6 +12,7 @@ export function MenuItemsPage() {
     const { data: published, isLoading: publishedLoading } = usePublishedMenuItems();
     const { data: categories } = useMenuCategories();
     const updateStatus = useUpdateMenuItemStatus();
+    const { t } = useTranslation();
 
     const [activeTab, setActiveTab] = useState<"LIVE" | "DRAFT">("LIVE");
     const [isCreating, setIsCreating] = useState(false);
@@ -35,8 +37,8 @@ export function MenuItemsPage() {
         return (
             <div className="space-y-6">
                 <div className="flex items-center justify-between border-b pb-4">
-                    <h1 className="text-2xl font-bold tracking-tight">Create Menu Item</h1>
-                    <Button variant="ghost" onClick={() => setIsCreating(false)}>Cancel</Button>
+                    <h1 className="text-2xl font-bold tracking-tight">{t('menu.createItemHeader')}</h1>
+                    <Button variant="ghost" onClick={() => setIsCreating(false)}>{t('common.cancel')}</Button>
                 </div>
                 <MenuItemForm categories={categories || []} onComplete={() => setIsCreating(false)} />
             </div>
@@ -47,10 +49,10 @@ export function MenuItemsPage() {
         <div className="space-y-6">
             <div className="flex items-center justify-between border-b pb-4">
                 <div>
-                    <h1 className="text-2xl font-bold tracking-tight">Menu Items</h1>
-                    <p className="text-muted-foreground text-sm">Manage dishes, prices, and status.</p>
+                    <h1 className="text-2xl font-bold tracking-tight">{t('menu.items')}</h1>
+                    <p className="text-muted-foreground text-sm">{t('menu.manageDesc')}</p>
                 </div>
-                <Button onClick={() => setIsCreating(true)}>+ New Item</Button>
+                <Button onClick={() => setIsCreating(true)}>{t('menu.newItem')}</Button>
             </div>
 
             <div className="flex gap-4 border-b">
@@ -58,13 +60,13 @@ export function MenuItemsPage() {
                     onClick={() => setActiveTab("LIVE")}
                     className={`pb-2 text-sm font-medium transition-all ${activeTab === "LIVE" ? "border-b-2 border-primary text-foreground" : "text-muted hover:text-foreground"}`}
                 >
-                    Live Menu ({published?.length || 0})
+                    {t('menu.liveMenu')} ({published?.length || 0})
                 </button>
                 <button
                     onClick={() => setActiveTab("DRAFT")}
                     className={`pb-2 text-sm font-medium transition-all ${activeTab === "DRAFT" ? "border-b-2 border-primary text-foreground" : "text-muted hover:text-foreground"}`}
                 >
-                    Drafts & Archives ({drafts?.length || 0})
+                    {t('menu.draftsArchives')} ({drafts?.length || 0})
                 </button>
             </div>
 
@@ -76,7 +78,7 @@ export function MenuItemsPage() {
                 </div>
             ) : displayItems.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 text-muted">
-                    <p>No {activeTab.toLowerCase()} items found.</p>
+                    <p>{t('menu.noItemsFound')}</p>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">

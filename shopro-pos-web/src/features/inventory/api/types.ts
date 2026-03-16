@@ -1,3 +1,6 @@
+export type RestockingMode = 'MANUAL' | 'AUTO' | 'BID';
+export type StorageType = 'AMBIENT' | 'COLD' | 'FROZEN' | 'DRY';
+
 export interface Ingredient {
     id: string;
     name: string;
@@ -12,12 +15,21 @@ export interface Ingredient {
     criticalLevel?: number;
     maxStockLevel?: number;
     autoReplenish?: boolean;
+    restockingMode: RestockingMode;
+    shelfLifeDays: number;
+    storageType: StorageType;
+    dailyRestockEnrolled: boolean;
+    category?: string;
+    bidSupplierPool?: string[];
     allergens?: string[];
     supplierId?: string;
     supplierName?: string;
     activeOrderId?: string;
     activeOrderType?: 'PO' | 'RFQ';
     activeOrderStatus?: string;
+    temperatureTarget?: number;
+    humidityTarget?: number;
+    storageInstructions?: string;
 }
 
 export interface CreateIngredientRequest {
@@ -27,6 +39,16 @@ export interface CreateIngredientRequest {
     yieldPct: number;
     parLevel: number;
     reorderPoint: number;
+    safetyLevel?: number;
+    criticalLevel?: number;
+    maxStockLevel?: number;
+    autoReplenish?: boolean;
+    restockingMode: RestockingMode;
+    shelfLifeDays: number;
+    storageType: StorageType;
+    dailyRestockEnrolled: boolean;
+    category?: string;
+    bidSupplierPool?: string[];
     supplierId?: string;
 }
 
@@ -41,6 +63,12 @@ export interface UpdateIngredientRequest {
     criticalLevel?: number;
     maxStockLevel?: number;
     autoReplenish?: boolean;
+    restockingMode?: RestockingMode;
+    shelfLifeDays?: number;
+    storageType?: StorageType;
+    dailyRestockEnrolled?: boolean;
+    category?: string;
+    bidSupplierPool?: string[];
     allergens?: string[];
     supplierId?: string;
 }
@@ -109,11 +137,14 @@ export type PurchaseOrderStatus =
     | 'CLOSED'
     | 'CANCELLED';
 
+export type OrderType = 'STANDARD' | 'EMERGENCY' | 'REPLENISHMENT';
+
 export interface PurchaseOrder {
     id: string;
     supplierId: string;
     supplierName: string;
     status: PurchaseOrderStatus;
+    orderType: OrderType;
     totalValue: number;
     expectedDeliveryDate?: string;
     createdAt: string;
@@ -214,6 +245,12 @@ export interface Supplier {
     contactPhone?: string;
     leadTimeDays: number;
     vendorRating: number;
+    leadTimeVariance: number;
+    reliabilityScore: number;
+    minOrderValue: number;
+    bidEligible: boolean;
+    paymentTerms?: string;
+    categories: string[];
 }
 
 export interface CreateSupplierRequest {
@@ -222,6 +259,10 @@ export interface CreateSupplierRequest {
     contactEmail: string;
     contactPhone?: string;
     leadTimeDays: number;
+    minOrderValue: number;
+    bidEligible: boolean;
+    paymentTerms?: string;
+    categories: string[];
 }
 
 export interface SupplierCatalogImportRequest {
@@ -286,6 +327,7 @@ export interface VendorBid {
     paymentTerms?: string;
     notes?: string;
     status: 'SUBMITTED' | 'WON' | 'LOST' | 'REJECTED' | 'OVER_CEILING';
+    score?: number;
     createdAt: string;
 }
 
@@ -354,4 +396,109 @@ export interface MatchInvoiceRequest {
     invoicedPrices: Record<string, number>;
     totalAmount: number;
     taxAmount: number;
+}
+export interface InventoryLocation {
+    id: string;
+    name: string;
+    storageType: StorageType;
+    temperatureTarget?: number;
+    humidityTarget?: number;
+}
+
+export interface InventoryBatch {
+    id: string;
+    ingredientId: string;
+    ingredientName?: string;
+    locationId?: string;
+    locationName?: string;
+    supplierId?: string;
+    batchNumber: string;
+    receivedQuantity: number;
+    currentQuantity: number;
+    costAtReceipt: number;
+    receivedDate: string;
+    expiryDate?: string;
+    status: 'ACTIVE' | 'EXPIRED' | 'DEPLETED' | 'QUARANTINED';
+}
+
+export interface DemandForecast {
+    id: string;
+    ingredientId: string;
+    forecastDate: string;
+    projectedQuantity: number;
+    confidenceScore?: number;
+    modelVersion?: string;
+}
+
+export interface WasteLogResponse {
+    id: string;
+    transactedAt: string;
+    ingredientId: string;
+    ingredientName: string;
+    batchId?: string;
+    quantityDelta: number;
+    unitOfMeasure: string;
+    type: 'WASTE';
+    value: number;
+    supplierName?: string;
+    reason?: string;
+    evidenceUrl?: string;
+    notes?: string;
+}
+
+export interface YieldAnalysisResponse {
+    metrics: IngredientYieldMetric[];
+    summary: SummaryVariance;
+}
+
+export interface IngredientYieldMetric {
+    ingredientId: string;
+    ingredientName: string;
+    theoreticalUsage: number;
+    actualUsage: number;
+    varianceUsage: number;
+    variancePct: number;
+    theoreticalCost: number;
+    actualCost: number;
+    varianceCost: number;
+    currentYieldPct: number;
+    targetYieldPct: number;
+}
+
+export interface SummaryVariance {
+    totalTheoreticalCost: number;
+    totalActualCost: number;
+    totalVarianceCost: number;
+    netVariancePct: number;
+}
+
+export interface ShelfLifeAnalyticsResponse {
+    criticalBatches: ExpiringBatchInfo[];
+    warningBatches: ExpiringBatchInfo[];
+    efficiency: RotationEfficiency;
+    freshnessByTag: FreshnessMetric[];
+}
+
+export interface ExpiringBatchInfo {
+    ingredientId: string;
+    ingredientName: string;
+    batchNumber: string;
+    quantity: number;
+    unit: string;
+    expiryDate: string;
+    daysRemaining: number;
+    storageType: string;
+}
+
+export interface RotationEfficiency {
+    wasteRate: number;
+    averageShelfLifeUtilization: number;
+    activeBatchesCount: number;
+    itemsAtRiskCount: number;
+}
+
+export interface FreshnessMetric {
+    category: string;
+    count: number;
+    averageFreshnessPct: number;
 }

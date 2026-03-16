@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useStaff, useDeactivateStaff, useReactivateStaff } from '../hooks/useStaff';
+import { useTranslation } from 'react-i18next';
 import { CreateStaffModal } from '../components/CreateStaffModal';
 import { EditRoleModal } from '../components/EditRoleModal';
 import {cn} from '@/lib/utils';
@@ -36,6 +37,7 @@ const ROLE_COLORS: Record<string, string> = {
 };
 
 export const StaffListPage: React.FC = () => {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const [roleFilter, setRoleFilter] = useState('');
     const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -53,17 +55,17 @@ export const StaffListPage: React.FC = () => {
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Staff Management</h1>
+                    <h1 className="text-3xl font-bold tracking-tight">{t('staff.title')}</h1>
                     <p className="text-muted-foreground mt-1">
-                        Manage team members, roles, and access PINs.
+                        {t('staff.desc')}
                     </p>
                 </div>
                 <div className="flex gap-2 shrink-0">
                     <Button variant="outline" onClick={() => navigate('/settings/roles')} className="gap-2">
-                        <ShieldCheck className="h-4 w-4" /> Manage Roles
+                        <ShieldCheck className="h-4 w-4" /> {t('staff.manageRoles')}
                     </Button>
                     <Button onClick={() => setIsCreateOpen(true)} className="gap-2">
-                        <UserPlus className="h-4 w-4" /> Add Staff
+                        <UserPlus className="h-4 w-4" /> {t('staff.addStaff')}
                     </Button>
                 </div>
             </div>
@@ -77,7 +79,7 @@ export const StaffListPage: React.FC = () => {
                         : 'border-border text-muted-foreground hover:text-foreground'
                         }`}
                 >
-                    All Roles
+                    {t('staff.allRoles')}
                 </button>
                 {STAFF_ROLES.map(r => (
                     <button
@@ -88,7 +90,7 @@ export const StaffListPage: React.FC = () => {
                             : 'border-border text-muted-foreground hover:text-foreground'
                             }`}
                     >
-                        {r.replace('_', ' ')}
+                        {r}
                     </button>
                 ))}
             </div>
@@ -96,9 +98,18 @@ export const StaffListPage: React.FC = () => {
             {/* Stats strip */}
             {staff && (
                 <div className="flex gap-4 text-sm text-muted-foreground">
-                    <span><strong className="text-foreground">{staff.filter(s => s.active).length}</strong> active</span>
-                    <span><strong className="text-foreground">{staff.filter(s => !s.active).length}</strong> inactive</span>
-                    <span><strong className="text-foreground">{staff.length}</strong> total</span>
+                    <span>
+                        <strong className="text-foreground">{staff.filter(s => s.active).length}</strong>{' '}
+                        {t('staff.stats.active', { count: staff.filter(s => s.active).length })}
+                    </span>
+                    <span>
+                        <strong className="text-foreground">{staff.filter(s => !s.active).length}</strong>{' '}
+                        {t('staff.stats.inactive', { count: staff.filter(s => !s.active).length })}
+                    </span>
+                    <span>
+                        <strong className="text-foreground">{staff.length}</strong>{' '}
+                        {t('staff.stats.total', { count: staff.length })}
+                    </span>
                 </div>
             )}
 
@@ -107,12 +118,12 @@ export const StaffListPage: React.FC = () => {
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>Name</TableHead>
-                            <TableHead>Role</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead>Last Login</TableHead>
-                            <TableHead>Joined</TableHead>
-                            <TableHead className="text-right">Actions</TableHead>
+                            <TableHead>{t('staff.table.name')}</TableHead>
+                            <TableHead>{t('staff.table.role')}</TableHead>
+                            <TableHead>{t('staff.table.status')}</TableHead>
+                            <TableHead>{t('staff.table.lastLogin')}</TableHead>
+                            <TableHead>{t('staff.table.joined')}</TableHead>
+                            <TableHead className="text-right">{t('common.actions')}</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -127,7 +138,7 @@ export const StaffListPage: React.FC = () => {
                         {!isLoading && staff?.length === 0 && (
                             <TableRow>
                                 <TableCell colSpan={6} className="text-center py-12 text-muted-foreground">
-                                    No staff members found.
+                                    {t('staff.table.noStaffFound')}
                                 </TableCell>
                             </TableRow>
                         )}
@@ -147,13 +158,13 @@ export const StaffListPage: React.FC = () => {
                                 </TableCell>
                                 <TableCell>
                                     <Badge variant="outline" className={ROLE_COLORS[member.role] ?? ''}>
-                                        {member.role.replace('_', ' ')}
+                                        {member.role}
                                     </Badge>
                                 </TableCell>
                                 <TableCell>
                                     {member.active
-                                        ? <Badge variant="secondary" className="bg-success/10 text-success dark:text-success border-success/20">Active</Badge>
-                                        : <Badge variant="secondary" className="bg-muted/10 text-muted-foreground dark:text-muted-foreground border-muted/20">Inactive</Badge>
+                                        ? <Badge variant="secondary" className="bg-success/10 text-success dark:text-success border-success/20">{t('staff.status.active')}</Badge>
+                                        : <Badge variant="secondary" className="bg-muted/10 text-muted-foreground dark:text-muted-foreground border-muted/20">{t('staff.status.inactive')}</Badge>
                                     }
                                 </TableCell>
                                 <TableCell className="text-muted-foreground text-sm">
@@ -167,7 +178,7 @@ export const StaffListPage: React.FC = () => {
                                         <Button
                                             variant="ghost"
                                             size="icon"
-                                            title="Change role"
+                                            title={t('staff.actions.changeRole')}
                                             onClick={() => setEditTarget(member)}
                                         >
                                             <Pencil className="h-3.5 w-3.5" />
@@ -176,7 +187,7 @@ export const StaffListPage: React.FC = () => {
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
-                                                title="Deactivate"
+                                                title={t('staff.actions.deactivate')}
                                                 className="text-destructive hover:text-destructive"
                                                 disabled={deactivating}
                                                 onClick={() => deactivate(member.id)}
@@ -187,7 +198,7 @@ export const StaffListPage: React.FC = () => {
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
-                                                title="Reactivate"
+                                                title={t('staff.actions.reactivate')}
                                                 className="text-emerald-500 hover:text-emerald-400"
                                                 disabled={reactivating}
                                                 onClick={() => reactivate(member.id)}

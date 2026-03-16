@@ -43,6 +43,12 @@ public class SupplierServiceImpl implements SupplierService {
         supplier.setContactEmail(request.contactEmail());
         supplier.setContactPhone(request.contactPhone());
         supplier.setLeadTimeDays(request.leadTimeDays());
+        supplier.setMinOrderValue(request.minOrderValue());
+        supplier.setBidEligible(request.bidEligible());
+        supplier.setPaymentTerms(request.paymentTerms());
+        if (request.categories() != null) {
+            supplier.setCategories(request.categories());
+        }
 
         supplier = supplierRepository.save(supplier);
         return mapToResponse(supplier);
@@ -127,7 +133,13 @@ public class SupplierServiceImpl implements SupplierService {
             s.getContactEmail(),
             s.getContactPhone(),
             s.getLeadTimeDays(),
-            s.getVendorRating()
+            s.getVendorRating(),
+            s.getLeadTimeVariance(),
+            s.getReliabilityScore(),
+            s.getMinOrderValue(),
+            s.isBidEligible(),
+            s.getPaymentTerms(),
+            s.getCategories()
         );
     }
 }

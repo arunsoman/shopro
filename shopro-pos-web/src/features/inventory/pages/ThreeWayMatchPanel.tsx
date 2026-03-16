@@ -11,10 +11,13 @@ import { FileText, ArrowLeft, CheckCircle2, AlertCircle, TrendingUp, Download } 
 import { toast } from 'sonner';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { usePurchaseOrders, useMatchInvoice } from '../hooks/usePO';
+import { useTranslation } from 'react-i18next';
+import InventorySkeleton from '../components/InventorySkeletons';
 
 export const ThreeWayMatchPanel: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
+    const { t } = useTranslation();
     const { session } = useAuth();
     
     const { data: pos, isLoading } = usePurchaseOrders();
@@ -41,7 +44,9 @@ export const ThreeWayMatchPanel: React.FC = () => {
         }
     }, [po]);
 
-    if (isLoading) return <div className="p-8"><div className="animate-pulse h-8 w-64 bg-slate-200 rounded"></div></div>;
+    if (isLoading) {
+        return <InventorySkeleton variant="dashboard" />;
+    }
     
     if (!po) return <div className="p-8 text-red-500">Purchase Order not found.</div>;
     
@@ -124,16 +129,16 @@ export const ThreeWayMatchPanel: React.FC = () => {
                     </Button>
                     <div>
                         <h2 className="text-3xl font-bold tracking-tight text-slate-900 group flex items-center gap-3">
-                            3-Way Invoice Match
-                            <Badge className="bg-indigo-500 hover:bg-indigo-600">Reconciliation</Badge>
+                            {t('inventory.matching.title')}
+                            <Badge className="bg-indigo-500 hover:bg-indigo-600">{t('inventory.matching.badge')}</Badge>
                         </h2>
-                        <p className="text-muted-foreground mt-1 text-sm">Match vendor invoice against PO #{po.id.slice(0, 8)} and GRN data</p>
+                        <p className="text-muted-foreground mt-1 text-sm">{t('inventory.matching.desc', { id: po.id.slice(0, 8) })}</p>
                     </div>
                 </div>
                 {po.status === 'RECEIVED' && (
                     <Button variant="outline" className="gap-2">
                         <Download className="h-4 w-4" />
-                        Download Supplier Invoice
+                        {t('inventory.matching.downloadInvoice')}
                     </Button>
                 )}
             </div>
@@ -144,19 +149,19 @@ export const ThreeWayMatchPanel: React.FC = () => {
                         <CardHeader>
                             <CardTitle className="text-lg flex items-center gap-2">
                                 <FileText className="h-5 w-5 text-indigo-500" />
-                                Invoice Data Entry
+                                {t('inventory.matching.entryTitle')}
                             </CardTitle>
-                            <CardDescription>Enter the exact quantities and prices listed on the supplier's invoice to perform the match.</CardDescription>
+                            <CardDescription>{t('inventory.matching.entryDesc')}</CardDescription>
                         </CardHeader>
                         <CardContent className="p-0">
                             <Table>
                                 <TableHeader className="bg-slate-50/80">
                                     <TableRow>
-                                        <TableHead>Ingredient</TableHead>
-                                        <TableHead>PO Cost</TableHead>
-                                        <TableHead className="w-32 text-right">Inv Qty</TableHead>
-                                        <TableHead className="w-32 text-right">Inv Price ($)</TableHead>
-                                        <TableHead className="w-24 text-right pr-6">Ext ($)</TableHead>
+                                        <TableHead>{t('inventory.ingredient')}</TableHead>
+                                        <TableHead>{t('inventory.matching.poCost')}</TableHead>
+                                        <TableHead className="w-32 text-right">{t('inventory.matching.invQty')}</TableHead>
+                                        <TableHead className="w-32 text-right">{t('inventory.matching.invPrice', { symbol: t('common.currencySymbol') })}</TableHead>
+                                        <TableHead className="w-24 text-right pr-6">{t('inventory.matching.extended', { symbol: t('common.currencySymbol') })}</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -170,10 +175,10 @@ export const ThreeWayMatchPanel: React.FC = () => {
                                             <TableRow key={item.id} className={priceChanged ? 'bg-amber-50/20' : ''}>
                                                 <TableCell>
                                                     <div className="font-medium">{item.ingredientName}</div>
-                                                    <div className="text-xs text-slate-500">Ordered: {item.orderedQty} {item.unitOfMeasure}</div>
+                                                    <div className="text-xs text-slate-500">{t('inventory.matching.orderedQty')}: {item.orderedQty} {t(`common.units.${item.unitOfMeasure}`, item.unitOfMeasure)}</div>
                                                 </TableCell>
                                                 <TableCell>
-                                                    <span className="text-slate-500">${item.unitCost.toFixed(2)}</span>
+                                                    <span className="text-slate-500">{t('common.currencySymbol')}{item.unitCost.toFixed(2)}</span>
                                                 </TableCell>
                                                 <TableCell className="text-right">
                                                     <Input 
@@ -196,7 +201,7 @@ export const ThreeWayMatchPanel: React.FC = () => {
                                                     />
                                                 </TableCell>
                                                 <TableCell className="text-right pr-6 font-medium">
-                                                    ${extPrice.toFixed(2)}
+                                                    {t('common.currencySymbol')}{extPrice.toFixed(2)}
                                                 </TableCell>
                                             </TableRow>
                                         );
@@ -210,15 +215,15 @@ export const ThreeWayMatchPanel: React.FC = () => {
                 <div className="space-y-6">
                     <Card>
                         <CardHeader>
-                            <CardTitle className="text-lg">Invoice Summary</CardTitle>
+                            <CardTitle className="text-lg">{t('inventory.matching.summaryTitle')}</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-6">
                             <form id="match-form" onSubmit={handleSubmit} className="space-y-4">
                                 <div className="space-y-2">
-                                    <Label htmlFor="invoiceNumber" className="text-sm font-semibold text-slate-700">Vendor Invoice # *</Label>
+                                    <Label htmlFor="invoiceNumber" className="text-sm font-semibold text-slate-700">{t('inventory.matching.invoiceNumber')}</Label>
                                     <Input 
                                         id="invoiceNumber" 
-                                        placeholder="E.g. INV-99321" 
+                                        placeholder={t('inventory.matching.invoiceNumberPlaceholder')} 
                                         value={invoiceNumber}
                                         onChange={(e) => setInvoiceNumber(e.target.value)}
                                         required
@@ -227,11 +232,11 @@ export const ThreeWayMatchPanel: React.FC = () => {
                                 </div>
                                 <div className="space-y-2 pt-2 border-t mt-4">
                                     <div className="flex justify-between text-sm">
-                                        <span className="text-slate-500">Subtotal</span>
-                                        <span className="font-medium">${subtotal.toFixed(2)}</span>
+                                        <span className="text-slate-500">{t('inventory.matching.subtotal')}</span>
+                                        <span className="font-medium">{t('common.currencySymbol')}{subtotal.toFixed(2)}</span>
                                     </div>
                                     <div className="flex justify-between text-sm items-center">
-                                        <span className="text-slate-500">Tax / Shipping</span>
+                                        <span className="text-slate-500">{t('inventory.matching.taxShipping')}</span>
                                         <div className="w-24">
                                             <Input 
                                                 type="number" 
@@ -246,19 +251,22 @@ export const ThreeWayMatchPanel: React.FC = () => {
                                 </div>
                                 <Separator className="my-4" />
                                 <div className="flex justify-between items-center bg-slate-50 p-4 rounded-lg border border-slate-100">
-                                    <span className="font-bold text-slate-700">Invoice Total</span>
-                                    <span className="text-xl font-black text-slate-900">${totalAmount.toFixed(2)}</span>
+                                    <span className="font-bold text-slate-700">{t('inventory.matching.invoiceTotal')}</span>
+                                    <span className="text-xl font-black text-slate-900">{t('common.currencySymbol')}{totalAmount.toFixed(2)}</span>
                                 </div>
                                 
                                 <div className={`p-4 rounded-lg flex items-start gap-3 ${hasVariance ? 'bg-amber-50 border border-amber-200' : 'bg-emerald-50 border border-emerald-100'}`}>
                                     {hasVariance ? <AlertCircle className="h-5 w-5 text-amber-500 mt-0.5 flex-shrink-0" /> : <CheckCircle2 className="h-5 w-5 text-emerald-500 mt-0.5 flex-shrink-0" />}
                                     <div>
                                         <p className={`text-sm font-bold ${hasVariance ? 'text-amber-800' : 'text-emerald-800'}`}>
-                                            {hasVariance ? 'Tolerance Exceeded' : 'Within Tolerance'}
+                                            {hasVariance ? t('inventory.matching.toleranceExceeded') : t('inventory.matching.withinTolerance')}
                                         </p>
                                         <p className={`text-xs mt-1 leading-relaxed ${hasVariance ? 'text-amber-700/80' : 'text-emerald-700/80'}`}>
-                                            Invoice variance is {variancePercentage > 0 ? '+' : ''}{variancePercentage.toFixed(2)}% vs PO total (${po.totalValue.toFixed(2)}). 
-                                            {hasVariance ? ' Submitting will trigger a Discrepancy Review.' : ' Auto-approval for payment will proceed.'}
+                                            {t('inventory.matching.varianceHint', { 
+                                                pct: variancePercentage.toFixed(2), 
+                                                planned: `${t('common.currencySymbol')}${po.totalValue.toFixed(2)}`,
+                                                consequence: hasVariance ? t('inventory.matching.reviewConsequence') : t('inventory.matching.approvalConsequence')
+                                            })}
                                         </p>
                                     </div>
                                 </div>
@@ -273,10 +281,10 @@ export const ThreeWayMatchPanel: React.FC = () => {
                         className={`w-full h-14 text-base font-bold shadow-lg ${hasVariance ? 'bg-amber-600 hover:bg-amber-700 shadow-amber-500/20 text-white' : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-500/20 text-white'}`}
                         disabled={matchInvoice.isPending}
                     >
-                        {matchInvoice.isPending ? 'Processing...' : (
+                        {matchInvoice.isPending ? t('common.processing') : (
                             <span className="flex items-center gap-2">
                                 {hasVariance ? <TrendingUp className="h-5 w-5" /> : <CheckCircle2 className="h-5 w-5" />}
-                                {hasVariance ? 'Submit for Review' : 'Run 3-Way Match'}
+                                {hasVariance ? t('inventory.matching.submitReview') : t('inventory.matching.runMatch')}
                             </span>
                         )}
                     </Button>

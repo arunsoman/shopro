@@ -8,6 +8,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import { useTranslation } from 'react-i18next';
 
 interface BatchLogDialogProps {
     subRecipeId: string;
@@ -16,6 +17,7 @@ interface BatchLogDialogProps {
 }
 
 export const BatchLogDialog: React.FC<BatchLogDialogProps> = ({ subRecipeId, subRecipeName, unitOfMeasure }) => {
+    const { t } = useTranslation();
     const [quantity, setQuantity] = useState<number>(1);
     const [expiryDate, setExpiryDate] = useState<string>(
         format(new Date(Date.now() + 86400000 * 3), 'yyyy-MM-dd') // Default 3 days
@@ -33,13 +35,13 @@ export const BatchLogDialog: React.FC<BatchLogDialogProps> = ({ subRecipeId, sub
             await axios.post('/api/v1/inventory/batches', payload);
         },
         onSuccess: () => {
-            toast.success(`Logged ${quantity} ${unitOfMeasure} of ${subRecipeName}`);
+            toast.success(t('inventory.batch.success', { qty: quantity, unit: t(`common.units.${unitOfMeasure}`, unitOfMeasure), name: subRecipeName }));
             queryClient.invalidateQueries({ queryKey: ['ingredients'] }); // Stocks change
             queryClient.invalidateQueries({ queryKey: ['sub-recipes'] });
             setOpen(false);
         },
         onError: () => {
-            toast.error('Failed to log batch production');
+            toast.error(t('inventory.batch.error'));
         }
     });
 
@@ -47,20 +49,20 @@ export const BatchLogDialog: React.FC<BatchLogDialogProps> = ({ subRecipeId, sub
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
                 <Button size="sm" variant="outline" className="gap-2">
-                    <Beaker className="h-4 w-4" /> Log Production
+                    <Beaker className="h-4 w-4" /> {t('inventory.batch.logButton')}
                 </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
-                    <DialogTitle>Log Batch Production</DialogTitle>
+                    <DialogTitle>{t('inventory.batch.title')}</DialogTitle>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
                     <div className="space-y-1">
-                        <Label>Sub-Recipe</Label>
+                        <Label>{t('inventory.batch.subRecipe')}</Label>
                         <div className="font-semibold">{subRecipeName}</div>
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="qty" className="text-right">Qty Produced</Label>
+                        <Label htmlFor="qty" className="text-right">{t('inventory.batch.qtyProduced')}</Label>
                         <div className="col-span-3 relative">
                             <Input
                                 id="qty"
@@ -69,11 +71,11 @@ export const BatchLogDialog: React.FC<BatchLogDialogProps> = ({ subRecipeId, sub
                                 onChange={(e) => setQuantity(parseFloat(e.target.value))}
                                 className="pr-12"
                             />
-                            <div className="absolute right-3 top-2 text-xs text-muted-foreground">{unitOfMeasure}</div>
+                            <div className="absolute right-3 top-2 text-xs text-muted-foreground">{t(`common.units.${unitOfMeasure}`, unitOfMeasure)}</div>
                         </div>
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="expiry" className="text-right">Expiry Date</Label>
+                        <Label htmlFor="expiry" className="text-right">{t('inventory.batch.expiryDate')}</Label>
                         <div className="col-span-3 relative">
                             <Input
                                 id="expiry"
@@ -92,7 +94,7 @@ export const BatchLogDialog: React.FC<BatchLogDialogProps> = ({ subRecipeId, sub
                         className="gap-2"
                     >
                         {logBatch.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                        Record Batch
+                        {t('inventory.batch.recordButton')}
                     </Button>
                 </div>
             </DialogContent>

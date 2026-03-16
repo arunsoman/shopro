@@ -1,0 +1,25 @@
+{
+  "common": {
+    "cancel": "لغو",
+    "save": "خوندي کول",
+    "delete": "حذف",
+    "edit": "سمون",
+    "total": "ټولټال",
+    "processing": "په کار بوخت دی..."
+  },
+  "menu": {
+    "itemName": "د توکي نوم",
+    "price": "نرخ",
+    "category": "کټګورۍ",
+    "description": "تشریح",
+    "required": "اړین دی",
+    "optional": "اختیاري"
+  },
+  "pos": {
+    "order": "امر",
+    "table": "مېز",
+    "checkout": "تادیه",
+    "pay": "ورکړه",
+    "printReceipt": "رسید چاپ کړئ"
+  }
+}

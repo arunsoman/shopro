@@ -22,6 +22,8 @@ import mls.sho.dms.entity.inventory.PurchaseOrder;
 import mls.sho.dms.entity.inventory.RFQ;
 import java.util.EnumSet;
 import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -60,6 +62,14 @@ public class IngredientServiceImpl implements IngredientService {
         ingredient.setCriticalLevel(request.criticalLevel());
         ingredient.setMaxStockLevel(request.maxStockLevel());
         ingredient.setAutoReplenish(request.autoReplenish());
+        ingredient.setRestockingMode(request.restockingMode());
+        ingredient.setShelfLifeDays(request.shelfLifeDays());
+        ingredient.setStorageType(request.storageType());
+        ingredient.setDailyRestockEnrolled(request.dailyRestockEnrolled());
+        ingredient.setCategory(request.category());
+        if (request.bidSupplierPool() != null) {
+            ingredient.setBidSupplierPool(request.bidSupplierPool());
+        }
         if (request.allergens() != null) {
             ingredient.setAllergens(request.allergens());
         }
@@ -89,6 +99,12 @@ public class IngredientServiceImpl implements IngredientService {
         if (request.criticalLevel() != null) ingredient.setCriticalLevel(request.criticalLevel());
         if (request.maxStockLevel() != null) ingredient.setMaxStockLevel(request.maxStockLevel());
         if (request.autoReplenish() != null) ingredient.setAutoReplenish(request.autoReplenish());
+        if (request.restockingMode() != null) ingredient.setRestockingMode(request.restockingMode());
+        if (request.shelfLifeDays() != null) ingredient.setShelfLifeDays(request.shelfLifeDays());
+        if (request.storageType() != null) ingredient.setStorageType(request.storageType());
+        if (request.dailyRestockEnrolled() != null) ingredient.setDailyRestockEnrolled(request.dailyRestockEnrolled());
+        if (request.category() != null) ingredient.setCategory(request.category());
+        if (request.bidSupplierPool() != null) ingredient.setBidSupplierPool(request.bidSupplierPool());
         
         if (request.allergens() != null) {
             ingredient.setAllergens(request.allergens().stream()
@@ -116,16 +132,23 @@ public class IngredientServiceImpl implements IngredientService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<IngredientResponse> findAll() {
-        return ingredientRepository.findAll().stream()
-            .map(this::mapToResponse)
-            .collect(Collectors.toList());
+    public Page<IngredientResponse> findAll(Pageable pageable) {
+        return ingredientRepository.findAll(pageable)
+            .map(this::mapToResponse);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<IngredientResponse> findLowStock() {
         return ingredientRepository.findLowStockIngredients().stream()
+            .map(this::mapToResponse)
+            .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<IngredientResponse> findDailyPerishables() {
+        return ingredientRepository.findByShelfLifeDays(1).stream()
             .map(this::mapToResponse)
             .collect(Collectors.toList());
     }
@@ -199,6 +222,12 @@ public class IngredientServiceImpl implements IngredientService {
             ingredient.getCriticalLevel(),
             ingredient.getMaxStockLevel(),
             ingredient.isAutoReplenish(),
+            ingredient.getRestockingMode(),
+            ingredient.getShelfLifeDays(),
+            ingredient.getStorageType(),
+            ingredient.isDailyRestockEnrolled(),
+            ingredient.getCategory(),
+            ingredient.getBidSupplierPool(),
             ingredient.getAllergens().stream().map(Enum::name).collect(Collectors.toSet()),
             ingredient.getSupplier() != null ? ingredient.getSupplier().getId() : null,
             ingredient.getSupplier() != null ? ingredient.getSupplier().getCompanyName() : null,

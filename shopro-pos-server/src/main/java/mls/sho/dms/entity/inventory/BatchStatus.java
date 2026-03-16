@@ -6,5 +6,6 @@ package mls.sho.dms.entity.inventory;
 public enum BatchStatus {
     ACTIVE,
     DEPLETED,
-    EXPIRED
+    EXPIRED,
+    QUARANTINED
 }

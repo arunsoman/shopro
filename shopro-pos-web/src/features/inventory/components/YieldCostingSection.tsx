@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Percent, ArrowRight, Calculator } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface YieldCostingSectionProps {
     baseCost: number;
@@ -17,6 +18,7 @@ export const YieldCostingSection: React.FC<YieldCostingSectionProps> = ({
     initialYieldPct,
     onYieldChange
 }) => {
+    const { t } = useTranslation();
     const [yieldPct, setYieldPct] = useState(initialYieldPct * 100);
 
     const effectiveCost = yieldPct > 0
@@ -38,13 +40,13 @@ export const YieldCostingSection: React.FC<YieldCostingSectionProps> = ({
             <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-semibold flex items-center gap-2">
                     <Calculator className="h-4 w-4 text-blue-600" />
-                    Yield & Effective Costing
+                    {t('inventory.yield.title')}
                 </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                        <Label htmlFor="yield-pct" className="text-xs">Usable Yield %</Label>
+                        <Label htmlFor="yield-pct" className="text-xs">{t('inventory.yield.usableLabel')}</Label>
                         <div className="relative">
                             <Input
                                 id="yield-pct"
@@ -58,34 +60,34 @@ export const YieldCostingSection: React.FC<YieldCostingSectionProps> = ({
                             <Percent className="absolute right-2 top-2.5 h-4 w-4 text-muted-foreground" />
                         </div>
                         <p className="text-[10px] text-muted-foreground leading-tight">
-                            e.g. 50% for whole fish after cleaning and filleting.
+                            {t('inventory.yield.hint')}
                         </p>
                     </div>
 
                     <div className="flex flex-col justify-center items-center p-2 bg-white rounded-md border border-blue-100 shadow-sm">
-                        <div className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Effective Cost</div>
+                        <div className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">{t('inventory.yield.effectiveCost')}</div>
                         <div className="text-lg font-bold text-blue-700">
-                            ${effectiveCost.toFixed(4)}
+                            {t('common.currencySymbol')}{effectiveCost.toFixed(4)}
                         </div>
-                        <div className="text-[10px] text-muted-foreground">per {unitOfMeasure}</div>
+                        <div className="text-[10px] text-muted-foreground">{t('common.per')} {t(`common.units.${unitOfMeasure}`, unitOfMeasure)}</div>
                     </div>
                 </div>
 
                 <div className="flex items-center gap-3 py-2 px-3 bg-white/50 rounded-lg text-xs border border-blue-100/50">
                     <div className="flex-1 text-center">
-                        <div className="text-muted-foreground mb-1">Raw Cost</div>
-                        <div className="font-semibold">${baseCost.toFixed(2)}</div>
+                        <div className="text-muted-foreground mb-1">{t('inventory.yield.rawCost')}</div>
+                        <div className="font-semibold">{t('common.currencySymbol')}{baseCost.toFixed(2)}</div>
                     </div>
                     <ArrowRight className="h-4 w-4 text-blue-400" />
                     <div className="flex-1 text-center">
-                        <div className="text-muted-foreground mb-1">Usage Qty</div>
-                        <div className="font-semibold">1 {unitOfMeasure}</div>
+                        <div className="text-muted-foreground mb-1">{t('inventory.yield.usageQty')}</div>
+                        <div className="font-semibold">1 {t(`common.units.${unitOfMeasure}`, unitOfMeasure)}</div>
                     </div>
                     <ArrowRight className="h-4 w-4 text-blue-400" />
                     <div className="flex-1 text-center">
-                        <div className="text-muted-foreground mb-1">Stock Impact</div>
+                        <div className="text-muted-foreground mb-1">{t('inventory.yield.stockImpact')}</div>
                         <div className="font-bold text-blue-600">
-                            {(1 / (yieldPct / 100 || 1)).toFixed(2)} {unitOfMeasure}
+                            {(1 / (yieldPct / 100 || 1)).toFixed(2)} {t(`common.units.${unitOfMeasure}`, unitOfMeasure)}
                         </div>
                     </div>
                 </div>

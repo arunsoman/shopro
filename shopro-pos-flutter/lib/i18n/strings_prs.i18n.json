@@ -1,0 +1,25 @@
+{
+  "common": {
+    "cancel": "لغو",
+    "save": "ذخیره",
+    "delete": "حذف",
+    "edit": "ویرایش",
+    "total": "مجموع",
+    "processing": "در حال پردازش..."
+  },
+  "menu": {
+    "itemName": "نام محصول",
+    "price": "قیمت",
+    "category": "دسته بندی",
+    "description": "توضیحات",
+    "required": "الزامی",
+    "optional": "اختیاری"
+  },
+  "pos": {
+    "order": "سفارش",
+    "table": "میز",
+    "checkout": "تصفیه حساب",
+    "pay": "پرداخت",
+    "printReceipt": "چاپ رسید"
+  }
+}

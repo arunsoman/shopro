@@ -1,35 +1,63 @@
-# 🍽️ Restaurant Online Inventory Management System
-### Automated Replenishment, Bidding Notifications & Purchase Order Generation
+# 🍽️ Shopro: Next-Gen Restaurant Inventory Management System
+### Automated Replenishment, Bidding Notifications & AI-Driven Procurement
+
+---
+
+> **Document Type:** Comprehensive System Design & Requirement Specification  
+> **Scope:** Full-stack, cloud-native, AI-augmented Inventory Management System  
+> **Version:** 1.2 — Merged Base & Extended Requirements  
 
 ---
 
 ## Table of Contents
 
-1. [Executive Summary](#executive-summary)
-2. [System Overview](#system-overview)
-3. [Core Components](#core-components)
-4. [End-to-End Workflow](#end-to-end-workflow)
-5. [Threshold & Monitoring Module](#threshold--monitoring-module)
-6. [Notification Engine](#notification-engine)
-7. [Vendor Bidding Algorithm](#vendor-bidding-algorithm)
-8. [Purchase Order (PO) Generation](#purchase-order-po-generation)
-9. [Data Models](#data-models)
-10. [System Architecture](#system-architecture)
-11. [Roles & Permissions](#roles--permissions)
-12. [Integration Points](#integration-points)
-13. [KPIs & Reporting](#kpis--reporting)
-14. [Risk & Exception Handling](#risk--exception-handling)
-15. [Implementation Roadmap](#implementation-roadmap)
+1. [Executive Summary & Vision](#1-executive-summary--vision)
+2. [System Architecture](#2-system-architecture)
+3. [Core Data Models](#3-core-data-models)
+4. [High-Level End-to-End Workflow](#4-high-level-end-to-end-workflow)
+5. [Module 1 — Inventory Lifecycle Management](#5-module-1--inventory-lifecycle-management)
+6. [Module 2 — Daily Restocking Engine](#6-module-2--daily-restocking-engine)
+7. [Module 3 — Shelf Life & Auto-Expiry System](#7-module-3--shelf-life--auto-expiry-system)
+8. [Module 4 — Supplier & Lead Time Management](#8-module-4--supplier--lead-time-management)
+9. [Module 5 — Restocking Mode Configuration](#9-module-5--restocking-mode-configuration)
+10. [Module 6 — Bid Auction System](#10-module-6--bid-auction-system)
+11. [Module 7 — Lead-Time Based Bidding (LTBB)](#11-module-7--lead-time-based-bidding-ltbb)
+12. [Module 8 — Demand Forecasting & AI Engine](#12-module-8--demand-forecasting--ai-engine)
+13. [Module 9 — Alerts, Notifications & Escalations](#13-module-9--alerts-notifications--escalations)
+14. [Module 10 — Analytics & Reporting Dashboard](#14-module-10--analytics--reporting-dashboard)
+15. [Module 11 — Integrations & APIs](#15-module-11--integrations--apis)
+16. [Security & Compliance](#16-security--compliance)
+17. [KPIs & Reporting](#17-kpis--reporting)
+18. [Risk & Exception Handling](#18-risk--exception-handling)
+19. [Glossary](#19-glossary)
+20. [Implementation Roadmap](#20-implementation-roadmap)
 
 ---
 
-## Executive Summary
+## 1. Executive Summary & Vision
 
-This document describes a fully automated, web-based **Restaurant Inventory Management System (RIMS)** designed to eliminate stockouts, reduce over-ordering, and ensure cost-effective procurement. The system continuously monitors inventory levels, triggers automatic replenishment requests when stock falls below defined thresholds, broadcasts competitive bidding invitations to registered vendors, evaluates bids using a multi-criteria scoring algorithm, and raises a Purchase Order (PO) to the winning vendor — all with minimal human intervention.
+### 1.1 Executive Summary
+
+This document describes a fully automated, web-based **Restaurant Inventory Management System (RIMS)** designed to eliminate stockouts, reduce over-ordering, and ensure cost-effective procurement. The system operates autonomously — tracking stock in real time, triggering restocking orders daily, enforcing shelf-life expiry rules, negotiating with suppliers via automated bidding, and factoring in lead times so that perishables always arrive just-in-time without waste or stockouts.
+
+### 1.2 Vision
+
+A fully online, cloud-native IMS purpose-built for next-generation restaurants. The system operates end-to-end without daily human touch, prioritising freshness and cost intelligence through rule-based logic and AI-augmented forecasting.
+
+### 1.3 Design Principles
+
+- **Zero Manual Intervention by Default** — the system should operate end-to-end without daily human touch.
+- **Freshness First** — every decision algorithm prioritises shelf-life and food safety.
+- **Cost Intelligence** — bidding and procurement decisions are optimised for cost, quality, and reliability.
+- **Lead Time Awareness** — no order is placed without considering arrival time vs. need.
+- **Full Auditability** — every stock movement and bid is logged immutably.
+- **Graceful Degradation** — human override workflows activate if automation fails.
 
 ---
 
-## System Overview
+## 2. System Architecture
+
+### 2.1 High-Level Flow
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
@@ -43,449 +71,7 @@ This document describes a fully automated, web-based **Restaurant Inventory Mana
 └──────────────────────────────────────────────────────────────┘
 ```
 
-**Key Goals:**
-- Real-time inventory visibility across all restaurant departments (kitchen, bar, dry storage, cold storage)
-- Automated threshold-based replenishment triggers
-- Transparent, competitive vendor bidding process
-- Rule-based, auditable PO generation
-- Full traceability from stock depletion to delivery confirmation
-
----
-
-## Core Components
-
-### 1. Inventory Dashboard
-A live web/mobile interface displaying current stock levels, unit costs, last updated timestamps, and threshold status for every inventory item.
-
-### 2. Threshold Engine
-A background service that continuously compares current stock quantities against pre-defined minimum and reorder thresholds for each item category.
-
-### 3. Notification Engine
-An automated communication layer that sends alerts via Email, SMS, and in-app push notifications to relevant vendors and internal staff when thresholds are breached.
-
-### 4. Bidding Module
-A time-bound, competitive bidding portal where registered vendors submit their quotes in response to replenishment requests.
-
-### 5. Bid Evaluation Algorithm
-A multi-criteria scoring engine that ranks bids based on price, delivery time, vendor rating, payment terms, and compliance history.
-
-### 6. PO Generation Engine
-An automated module that drafts, validates, and dispatches a Purchase Order to the winning vendor, routes it for manager approval if required, and logs all actions.
-
-### 7. Receiving & Reconciliation Module
-Handles goods receipt confirmation, quantity verification, invoice matching, and closes the replenishment cycle.
-
----
-
-## End-to-End Workflow
-
-The following is the complete, step-by-step lifecycle of an inventory replenishment event.
-
----
-
-### PHASE 1 — Continuous Inventory Monitoring
-
-```
-STEP 1: Stock Update
-  ├── Kitchen staff log consumption via tablet/POS terminal
-  ├── POS system deducts ingredients automatically based on recipes sold
-  ├── Wastage entries recorded by kitchen supervisor
-  └── Deliveries received update stock upward in real time
-
-STEP 2: Real-Time Stock Calculation
-  ├── Current Stock = Opening Stock + Received − Consumed − Wasted
-  ├── System calculates "Days of Supply Remaining" based on avg. daily usage
-  └── Stock levels refresh every 15 minutes (configurable)
-```
-
----
-
-### PHASE 2 — Threshold Breach Detection
-
-```
-STEP 3: Threshold Check (runs every 15 min)
-  ├── For each inventory item:
-  │     ├── IF Current Stock ≤ CRITICAL THRESHOLD → Trigger Emergency Alert
-  │     ├── IF Current Stock ≤ REORDER THRESHOLD  → Trigger Standard Replenishment
-  │     └── IF Current Stock > REORDER THRESHOLD  → No action, continue monitoring
-  │
-  └── Thresholds defined per item, per location, per season (configurable)
-```
-
-**Threshold Types:**
-
-| Threshold Level | Description | Action Triggered |
-|---|---|---|
-| **Maximum Stock** | Upper cap to avoid overstocking | Warning to purchasing team |
-| **Reorder Point (ROP)** | Level at which replenishment is initiated | Standard bid request sent |
-| **Safety Stock** | Buffer against supply disruption | High-priority bid request |
-| **Critical Level** | Near-zero stock, operational risk | Emergency order + manager alert |
-
----
-
-### PHASE 3 — Internal Alert & Review
-
-```
-STEP 4: Internal Notification
-  ├── Inventory Manager receives in-app alert and email
-  ├── Head Chef notified for perishables (dairy, meat, produce)
-  ├── Bar Manager notified for beverages
-  └── General Manager notified for Critical-level items
-
-STEP 5: Auto-Replenishment Decision
-  ├── IF item is marked "Auto-Approve" → skip manual review, proceed to bidding
-  ├── IF item requires approval → Inventory Manager reviews and approves within SLA
-  └── SLA: Standard = 2 hours, Critical = 30 minutes
-```
-
----
-
-### PHASE 4 — Vendor Bid Invitation
-
-```
-STEP 6: Replenishment Request (RFQ) Generation
-  ├── System auto-generates a Request for Quotation (RFQ) containing:
-  │     ├── Item name, SKU, specification
-  │     ├── Required quantity
-  │     ├── Required delivery date/window
-  │     ├── Quality standards / certifications required
-  │     ├── Payment terms accepted
-  │     └── Bid submission deadline
-  │
-STEP 7: Vendor Notification Dispatch
-  ├── RFQ sent simultaneously to ALL eligible vendors for that item category
-  ├── Channels: Email + SMS + Vendor Portal push notification
-  ├── Vendor eligibility filters:
-  │     ├── Active contract / registration status
-  │     ├── Category match (produce, meat, beverages, packaging, etc.)
-  │     ├── Geographic proximity / delivery capability
-  │     └── No active compliance or quality violations
-  │
-STEP 8: Bid Window Opens
-  ├── Standard items: Bid window = 4 hours
-  ├── Critical items: Bid window = 1 hour
-  └── Vendors submit bids via secure Vendor Portal
-```
-
----
-
-### PHASE 5 — Bid Collection & Evaluation
-
-```
-STEP 9: Vendor Bid Submission
-  ├── Each vendor submits:
-  │     ├── Unit price (with applicable taxes)
-  │     ├── Available quantity
-  │     ├── Promised delivery date & time window
-  │     ├── Payment terms requested
-  │     └── Supporting documents (if required)
-  │
-STEP 10: Bid Validation
-  ├── System validates bids for completeness
-  ├── Bids outside acceptable price range (> 30% above market avg.) flagged
-  ├── Vendors unable to meet minimum quantity automatically disqualified
-  └── Late bids rejected (timestamped on submission)
-
-STEP 11: Bid Scoring Algorithm (see detailed section below)
-  ├── Each valid bid receives a Composite Score (0–100)
-  ├── Scores calculated using weighted multi-criteria model
-  └── Ranked list generated for review
-```
-
----
-
-### PHASE 6 — Purchase Order Generation
-
-```
-STEP 12: Winner Selection
-  ├── IF Auto-Award enabled: Highest-scoring bid automatically selected
-  ├── IF Manual Review required: Inventory Manager reviews top 3 bids
-  └── Tie-breaking rule: Faster delivery time preferred
-
-STEP 13: PO Drafting
-  ├── System auto-populates PO with:
-  │     ├── PO Number (auto-generated, sequential)
-  │     ├── Vendor details (name, address, bank/payment info)
-  │     ├── Line items (item, qty, unit price, total)
-  │     ├── Delivery address & instructions
-  │     ├── Payment terms
-  │     └── Terms & conditions reference
-  │
-STEP 14: PO Approval Workflow
-  ├── PO Value < $500      → Auto-approved, dispatched immediately
-  ├── PO Value $500–$2,000 → Inventory Manager approval required
-  ├── PO Value > $2,000    → General Manager approval required
-  └── Approval via email link or in-app one-click confirm
-
-STEP 15: PO Dispatch
-  ├── Approved PO sent to vendor via email + vendor portal
-  ├── PO logged in system with status "Sent"
-  ├── Vendor acknowledges receipt (acknowledgement timestamp logged)
-  └── Non-acknowledgement within 1 hour → automated follow-up reminder
-```
-
----
-
-### PHASE 7 — Delivery & Closure
-
-```
-STEP 16: Goods Receipt
-  ├── Receiving staff verify delivery against PO (qty, quality, spec)
-  ├── Discrepancies flagged and routed to Inventory Manager
-  ├── Accepted items immediately update inventory stock levels
-  └── Partial deliveries handled — PO status set to "Partially Fulfilled"
-
-STEP 17: Invoice Matching & Payment Trigger
-  ├── Vendor invoice matched against PO (3-way match: PO / GRN / Invoice)
-  ├── Matched invoices forwarded to Finance for payment processing
-  └── Discrepancies routed for dispute resolution
-
-STEP 18: Cycle Closure & Feedback
-  ├── PO marked "Closed" upon full delivery and invoice match
-  ├── Vendor performance score updated (on-time %, quality pass rate)
-  └── Data fed back into bidding algorithm for future vendor ranking
-```
-
----
-
-## Threshold & Monitoring Module
-
-### Threshold Calculation Formula
-
-```
-Reorder Point (ROP) = (Average Daily Usage × Lead Time) + Safety Stock
-
-Safety Stock = Z-score × σ(demand) × √(Lead Time)
-
-Where:
-  Z-score    = Service level factor (e.g., 1.65 for 95% service level)
-  σ(demand)  = Standard deviation of daily demand
-  Lead Time  = Average vendor delivery time in days
-```
-
-### Item Category Thresholds (Example Configuration)
-
-| Category | Reorder Point | Safety Stock | Critical Level | Max Stock |
-|---|---|---|---|---|
-| Fresh Produce | 2-day supply | 1-day supply | 0.5-day supply | 5-day supply |
-| Dairy Products | 3-day supply | 1-day supply | 1-day supply | 7-day supply |
-| Dry Goods | 7-day supply | 3-day supply | 2-day supply | 30-day supply |
-| Beverages | 5-day supply | 2-day supply | 1-day supply | 21-day supply |
-| Frozen Items | 7-day supply | 3-day supply | 2-day supply | 14-day supply |
-| Packaging | 10-day supply | 5-day supply | 3-day supply | 45-day supply |
-
----
-
-## Notification Engine
-
-### Notification Triggers & Recipients
-
-| Event | Recipient | Channel | Priority |
-|---|---|---|---|
-| Reorder threshold breached | Inventory Manager | Email + In-app | Normal |
-| Safety stock breached | Inventory Manager + Head Chef | Email + SMS + In-app | High |
-| Critical level reached | Inventory Mgr + GM + Head Chef | Email + SMS + In-app + Call | Critical |
-| RFQ sent to vendors | All eligible vendors | Email + Portal + SMS | Normal |
-| Bid window closing (30 min warning) | Vendors who haven't bid | Email + SMS | Normal |
-| Bid received | Inventory Manager | In-app | Normal |
-| Bid awarded | Winning vendor | Email + Portal | High |
-| Bid not awarded | Losing vendors | Email | Normal |
-| PO dispatched | Vendor + Finance team | Email + Portal | High |
-| PO acknowledgement overdue | Inventory Manager | In-app + SMS | High |
-| Delivery due today | Receiving staff | In-app + SMS | Normal |
-| Delivery overdue | Inventory Manager | Email + SMS | High |
-
-### Notification Message Template (RFQ Example)
-
-```
-Subject: [RIMS] New Bid Request — {Item Name} | Bid Deadline: {DateTime}
-
-Dear {Vendor Name},
-
-You are invited to submit a quotation for the following requirement:
-
-  Item       : {Item Name} ({SKU})
-  Quantity   : {Required Qty} {Unit}
-  Specification: {Item Spec}
-  Delivery Required By: {Delivery Date}
-  Delivery Location   : {Restaurant Address}
-
-Please submit your bid before: {Bid Deadline}
-
-[SUBMIT BID NOW] → {Vendor Portal Link}
-
-Note: Late bids will not be accepted. For queries, contact: {Procurement Email}
-
-Regards,
-{Restaurant Name} Procurement Team
-```
-
----
-
-## Vendor Bidding Algorithm
-
-### Multi-Criteria Weighted Scoring Model
-
-Each submitted bid is scored on a scale of 0–100 using the following weighted criteria:
-
-| Criteria | Weight | Description |
-|---|---|---|
-| **Unit Price** | 40% | Normalized against lowest bid received |
-| **Delivery Time** | 25% | Faster delivery scores higher |
-| **Vendor Rating** | 20% | Historical performance score (quality + on-time %) |
-| **Payment Terms** | 10% | Longer payment terms score higher (better cash flow) |
-| **Compliance Score** | 5% | Certifications, food safety compliance, audit history |
-
-### Scoring Formula
-
-```
-Price Score        = (Lowest Bid Price / Vendor's Bid Price) × 100
-Delivery Score     = (Fastest Delivery / Vendor's Delivery Time) × 100
-Vendor Rating      = Historical Score (0–100, updated after each transaction)
-Payment Score      = min(Payment Days / 30, 1) × 100
-Compliance Score   = Compliance audit pass rate × 100
-
-Composite Score =
-  (Price Score × 0.40) +
-  (Delivery Score × 0.25) +
-  (Vendor Rating × 0.20) +
-  (Payment Score × 0.10) +
-  (Compliance Score × 0.05)
-```
-
-### Bid Evaluation Example
-
-| Vendor | Unit Price | Delivery | Rating | Payment Terms | Composite Score |
-|---|---|---|---|---|---|
-| Vendor A | $4.20 | 6 hrs | 88/100 | Net 30 | **82.4** ✅ Winner |
-| Vendor B | $3.95 | 24 hrs | 91/100 | Net 7 | 74.1 |
-| Vendor C | $4.50 | 4 hrs | 78/100 | Net 14 | 70.9 |
-| Vendor D | $4.10 | 8 hrs | 65/100 | Net 30 | 69.3 |
-
-### Bid Disqualification Rules
-
-A bid is automatically disqualified if any of the following apply:
-- Quoted quantity is less than the minimum required quantity
-- Delivery date exceeds the maximum acceptable lead time
-- Vendor has an active quality or compliance violation flag
-- Vendor's food safety certification is expired
-- Bid submitted after the deadline timestamp
-- Price exceeds the pre-set price ceiling (configurable per item)
-
----
-
-## Purchase Order (PO) Generation
-
-### PO Structure
-
-```
-┌─────────────────────────────────────────────────────┐
-│              PURCHASE ORDER                          │
-│  PO Number   : PO-2024-XXXXX                        │
-│  Date Issued : DD/MM/YYYY                           │
-│  Status      : Draft / Pending Approval / Approved  │
-├─────────────────────────────────────────────────────┤
-│  VENDOR DETAILS            │  SHIP TO               │
-│  Name: ____________        │  Restaurant Name       │
-│  Address: __________       │  Address: _________    │
-│  Contact: __________       │  Contact: _________    │
-├─────────────────────────────────────────────────────┤
-│  Item  │ SKU  │ Qty │ Unit │ Unit Price │ Total      │
-│  ────  │ ─── │ ─── │ ──── │ ────────── │ ─────      │
-│  ...   │ ... │ ... │ ...  │    ...     │   ...      │
-├─────────────────────────────────────────────────────┤
-│  Subtotal:          $XXX.XX                         │
-│  Tax (if applicable): $XX.XX                        │
-│  TOTAL:             $XXX.XX                         │
-├─────────────────────────────────────────────────────┤
-│  Payment Terms : Net 30                             │
-│  Delivery By   : DD/MM/YYYY                         │
-│  Special Instructions: ___________                  │
-│  Authorized By : ___________  [Digital Signature]  │
-└─────────────────────────────────────────────────────┘
-```
-
-### PO Approval Matrix
-
-| PO Value | Approver | SLA |
-|---|---|---|
-| < $500 | Auto-approved by system | Immediate |
-| $500 – $2,000 | Inventory Manager | 1 hour |
-| $2,001 – $5,000 | General Manager | 2 hours |
-| > $5,000 | Owner / Finance Director | 4 hours |
-
-### PO Status Lifecycle
-
-```
-DRAFT → PENDING APPROVAL → APPROVED → SENT TO VENDOR
-  → ACKNOWLEDGED → IN TRANSIT → DELIVERED
-  → PARTIALLY FULFILLED / CLOSED / DISPUTED
-```
-
----
-
-## Data Models
-
-### Inventory Item
-
-```json
-{
-  "item_id": "SKU-00123",
-  "name": "Cherry Tomatoes",
-  "category": "Fresh Produce",
-  "unit": "kg",
-  "current_stock": 8.5,
-  "reorder_point": 10.0,
-  "safety_stock": 5.0,
-  "critical_level": 2.0,
-  "max_stock": 40.0,
-  "avg_daily_usage": 3.2,
-  "lead_time_days": 1.5,
-  "last_updated": "2024-11-20T14:30:00Z",
-  "auto_replenish": true,
-  "preferred_vendor_ids": ["VND-001", "VND-007"]
-}
-```
-
-### Replenishment Request (RFQ)
-
-```json
-{
-  "rfq_id": "RFQ-2024-00456",
-  "item_id": "SKU-00123",
-  "quantity_required": 25.0,
-  "unit": "kg",
-  "bid_deadline": "2024-11-20T18:30:00Z",
-  "delivery_required_by": "2024-11-21T10:00:00Z",
-  "triggered_by": "threshold_breach",
-  "threshold_breached": "reorder_point",
-  "status": "bid_open",
-  "vendors_notified": ["VND-001", "VND-003", "VND-007", "VND-012"],
-  "created_at": "2024-11-20T14:35:00Z"
-}
-```
-
-### Vendor Bid
-
-```json
-{
-  "bid_id": "BID-2024-00789",
-  "rfq_id": "RFQ-2024-00456",
-  "vendor_id": "VND-001",
-  "unit_price": 4.20,
-  "total_price": 105.00,
-  "available_qty": 30.0,
-  "delivery_eta": "2024-11-21T08:00:00Z",
-  "payment_terms": "Net 30",
-  "composite_score": 82.4,
-  "status": "submitted",
-  "submitted_at": "2024-11-20T16:45:00Z"
-}
-```
-
----
-
-## System Architecture
+### 2.2 Technical Architecture
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
@@ -497,132 +83,294 @@ DRAFT → PENDING APPROVAL → APPROVED → SENT TO VENDOR
 └─────────┼──────────────────┼──────────────────────┼─────────────┘
           │                  │                      │
 ┌─────────▼──────────────────▼──────────────────────▼─────────────┐
-│                        API GATEWAY (REST / GraphQL)              │
-└──────────────────────────────┬───────────────────────────────────┘
-                               │
-┌──────────────────────────────▼───────────────────────────────────┐
-│                      BACKEND SERVICES                            │
-│  ┌─────────────┐  ┌───────────────┐  ┌───────────────────────┐  │
-│  │  Inventory  │  │  Threshold &  │  │  Bidding & Scoring    │  │
-│  │  Service    │  │  Alert Engine │  │  Engine               │  │
-│  └─────────────┘  └───────────────┘  └───────────────────────┘  │
-│  ┌─────────────┐  ┌───────────────┐  ┌───────────────────────┐  │
-│  │ Notification│  │   PO Engine   │  │  Reporting & Analytics│  │
-│  │  Service    │  │               │  │  Service              │  │
-│  └─────────────┘  └───────────────┘  └───────────────────────┘  │
-└──────────────────────────────┬───────────────────────────────────┘
-                               │
-┌──────────────────────────────▼───────────────────────────────────┐
-│                          DATA LAYER                              │
-│  ┌──────────────┐  ┌──────────────┐  ┌───────────────────────┐  │
-│  │  PostgreSQL  │  │  Redis Cache │  │  File/Document Store  │  │
-│  │  (Primary DB)│  │  (Real-time) │  │  (PO PDFs, Invoices)  │  │
-│  └──────────────┘  └──────────────┘  └───────────────────────┘  │
-└──────────────────────────────────────────────────────────────────┘
-                               │
-┌──────────────────────────────▼───────────────────────────────────┐
-│                      EXTERNAL INTEGRATIONS                       │
-│   POS System │ Accounting/ERP │ Email/SMS Provider │ e-Signature │
-└──────────────────────────────────────────────────────────────────┘
+│                       API GATEWAY (REST + WebSocket)             │
+└────────┬──────────┬──────────┬──────────┬──────────┬────────────┘
+          │          │          │          │          │
+    ┌────▼───┐ ┌───▼────┐ ┌──▼─────┐ ┌──▼─────┐ ┌──▼─────┐
+    │Inventory│ │Restock  │ │Expiry  │ │Bidding │ │Foreast │
+    │Service  │ │Engine   │ │Engine  │ │Engine  │ │Service │
+    └────┬───┘ └───┬────┘ └──┬─────┘ └──┬─────┘ └──┬─────┘
+          │          │          │          │          │
+┌─────────▼──────────▼──────────▼──────────▼──────────▼───────────┐
+│                    DATABASE & DATA LAYER                         │
+│  PostgreSQL (Transactional + Events) │ Redis │ S3 (Audit/Docs)   │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
----
-
-## Roles & Permissions
-
-| Role | Capabilities |
-|---|---|
-| **Kitchen Staff** | Log consumption, report wastage, view own item stock levels |
-| **Receiving Staff** | Confirm deliveries, log discrepancies, update GRN |
-| **Inventory Manager** | Full inventory access, approve replenishments, review bids, approve POs (<$2K) |
-| **Head Chef** | View stock levels, flag urgency, approve perishable orders |
-| **General Manager** | Approve POs (<$5K), view all reports, override auto-decisions |
-| **Finance Team** | View POs, process invoices, manage vendor payment records |
-| **Vendor** | Respond to RFQs, submit bids, acknowledge POs, update delivery status |
-| **System Admin** | Configure thresholds, manage vendor registry, set scoring weights |
+**Architectural Note:** To leverage the existing infrastructure, the system utilizes **PostgreSQL** for both primary data persistence and asynchronous processing. Inter-module communication and background tasks are handled via PostgreSQL job tables and/or `LISTEN/NOTIFY` mechanisms, eliminating the need for an external message broker like Kafka or SQS.
 
 ---
 
-## Integration Points
+## 3. Core Data Models
 
-| System | Integration Type | Data Exchanged |
-|---|---|---|
-| **POS / EPOS System** | Real-time API | Sales data → ingredient deduction |
-| **Recipe Management System** | API | Recipe-ingredient mapping for auto-deduction |
-| **Accounting / ERP (e.g., QuickBooks, SAP)** | API / Webhook | POs, invoices, payment records |
-| **Email Provider (SendGrid, SES)** | SMTP / API | RFQ emails, PO dispatch, alerts |
-| **SMS Provider (Twilio)** | API | Critical stock alerts, bid reminders |
-| **e-Signature Platform (DocuSign)** | API | PO digital approval and signing |
-| **Vendor Portal** | Web App | RFQ viewing, bid submission, PO acknowledgement |
+### 3.1 SKU (Stock Keeping Unit)
+The primary unit of inventory, containing rules for `restocking_mode` (manual_po, auto_po, bid_auction), `shelf_life_days`, and thresholds.
+
+### 3.2 Inventory Batch
+Immutable records of goods received, tracking `expires_at`, `quantity_remaining`, and `supplier_id`.
+
+### 3.3 Supplier & Bid Auction
+Suppliers have rolling performance metrics (lead time, reliability). Auctions can be `system_restock` (nightly) or `manager_adhoc`.
 
 ---
 
-## KPIs & Reporting
+## 4. High-Level End-to-End Workflow
 
-### Operational KPIs
+The replenishment lifecycle consists of 7 key phases:
+
+1.  **Continuous Monitoring**: POS sales deduct ingredients; staff log wastage; real-time stock calculated.
+2.  **Threshold Detection**: Every 15 mins, system checks stock against ROP, Safety, and Critical levels.
+3.  **Internal Alert & Review**: Managers notified; auto-approve SKUs skip to bidding; SLA-enforced reviews for others.
+4.  **Vendor Bid Invitation**: RFQs auto-generated; notified via Email/SMS/Portal; bid window opens (1-4 hours).
+5.  **Bid Collection & Evaluation**: Scoring algorithm ranks bids based on Price (40%), Lead Time (25%), Rating (20%), etc.
+6.  **PO Generation**: Winner awarded; PO drafted and routed for approval matrix; dispatched to vendor.
+7.  **Delivery & Closure**: Goods receipt verified (GRN); 3-way match (PO/GRN/Invoice); vendor performance updated.
+
+---
+
+## 5. Module 1 — Inventory Lifecycle Management
+
+### 5.1 Stock Tracking & FIFO
+Every movement is recorded as a `StockEvent`. The system enforces **FIFO (First In, First Out)**, pulling from the oldest non-expired batch first to minimize waste.
+
+### 5.2 Storage Location Tracking
+Batches are assigned to specific zones (Cold Storage, Dry Store, etc.). Location transfers log a `transfer` event.
+
+---
+
+## 6. Module 2 — Daily Restocking Engine
+
+### 6.1 Restocking Trigger
+Triggered when `quantity_available + quantity_in_transit < reorder_point + safety_stock`.
+
+### 6.2 1-Day Shelf-Life Auto-Enrolment
+SKUs with `shelf_life_days = 1` are **Daily Perishables**. They are unconditionally enrolled in nightly restocking regardless of stock, as today's stock cannot carry over.
+
+### 6.3 Nightly Restocking Job (02:00 Local)
+- **Phase 1 (Perishables)**: Ignores on-hand stock; orders based on tomorrow's forecast + safety stock.
+- **Phase 2 (Standard SKUs)**: Standard ROP logic; computes quantity to hit par level.
+
+---
+
+## 7. Module 3 — Shelf Life & Auto-Expiry System
+
+### 7.1 Monitoring & Alerts
+Hourly jobs scan batches. Warning/Critical alerts trigger menu specials or price markdowns in the POS to move stock before it expires.
+
+### 7.2 End-of-Day Expiry
+At 23:45, all remaining `shelf_life_days = 1` stock is auto-expired. Waste is logged, and donation partners are notified if applicable.
+
+---
+
+## 8. Module 4 — Supplier & Lead Time Management
+
+### 8.1 Lead-Time Based Bidding (LTBB)
+Bid scoring penalises slow delivery when stock is low. "Safety Stock" calculation is dynamic, factoring in a supplier's historical `lead_time_variance`.
+
+### 8.2 Multi-Supplier Strategy
+Each SKU has Primary, Backup, and Emergency suppliers. The system auto-routes to the Emergency supplier if a stockout is imminent.
+
+---
+
+## 9. Module 5 — Restocking Mode Configuration
+
+Configurable per SKU:
+- **manual_po**: System drafts PO; manager reviews/sends.
+- **auto_po**: System auto-sends PO to preferred vendor (15-min grace window for cancellation).
+- **bid_auction**: System opens a competitive reverse auction.
+
+---
+
+## 10. Module 6 — Bid Auction System
+
+### 10.1 Types
+- **system_restock**: Nightly, automated based on SKU needs.
+- **manager_adhoc**: Manually created for events, bulk buy, or market testing.
+
+### 10.2 Scoring Algorithm
+`BidScore = (Price × 0.40) + (LeadTime × 0.25) + (Reliability × 0.20) + (Quality × 0.10) + (Freshness × 0.05)`
+
+---
+
+## 11. Module 7 — Lead-Time Based Bidding (LTBB)
+
+LTBB adds the "cost of waiting" to the score. Urgency scales the lead time weight as `days_of_stock_remaining` approaches zero. Suppliers are tiered into Express (≤1d), Standard (2-3d), and Economy (4d+).
+
+---
+
+## 12. Module 8 — Demand Forecasting & AI Engine
+
+### 12.1 LSTM + XGBoost Ensemble
+Nightly models process POS data, weather, events, and reservations to predict SKU-level demand. 
+
+### 12.2 BOM Mapping
+Converts cover forecasts (e.g., "Expected 200 Steaks") into raw ingredient needs using the Bill of Materials.
+
+---
+
+## 13. Module 9 — Alerts, Notifications & Escalations
+
+### 13.1 Alert Taxonomy
+- **INFO**: System events (Auto-PO raised).
+- **WARNING**: Stock low, expiry approaching.
+- **CRITICAL**: Stockout risk, SLA breach on draft PO.
+- **EMERGENCY**: Stock depleted, cold chain breach.
+
+### 13.2 Escalation
+Unacknowledged Warning → Critical (4h). Unacknowledged Critical → GM Notification (1h). Perishables have shorter 30-min escalation windows.
+
+---
+
+## 14. Module 10 — Analytics & Reporting Dashboard
+
+- **Daily**: Forecast vs. Actual, Waste Summary, Auction Outcomes.
+- **Weekly**: Supplier Performance Scorecards, MAPE (Forecast Accuracy).
+- **Monthly**: Inventory Turnover, Carrying Costs, Savings Report.
+
+---
+
+## 15. Module 11 — Integrations & APIs
+
+- **POS System**: Real-time sales → ingredient deduction.
+- **Accounting**: PO/Invoice 3-way match (Xero/QuickBooks).
+- **IoT Sensors**: Temperature monitoring in walk-ins.
+- **Supplier EDI/API**: Direct ordering and status tracking.
+
+---
+
+## 16. Security & Compliance
+
+- **RBAC**: Roles including Kitchen Staff, Receiving, Inventory Manager, Procurement Officer, GM, Finance.
+- **Data Security**: AES-256 encryption; append-only audit logs.
+- **Food Safety**: Full batch traceability matching FSMA 204 requirements.
+
+---
+
+## 17. KPIs & Reporting
 
 | KPI | Target | Frequency |
 |---|---|---|
 | Stockout Incidents | < 2 per month | Weekly |
-| Reorder Trigger to PO Dispatch Time | < 3 hours (standard) | Daily |
-| Bid Response Rate (vendors) | > 70% | Per RFQ |
-| PO Approval Cycle Time | < 2 hours average | Daily |
-| Vendor On-Time Delivery Rate | > 92% | Monthly |
-| Cost Savings vs. Manual Procurement | > 8% annually | Quarterly |
+| Bid Response Rate | > 70% | Per RFQ |
+| Forecast Accuracy (MAPE) | < 10% | Monthly |
+| Cost Savings via Bidding | > 8% | Quarterly |
 | Inventory Accuracy | > 98% | Weekly |
-| Days Inventory Outstanding (DIO) | Optimized per category | Monthly |
-
-### Available Reports
-
-- **Daily Stock Summary** — current levels, days of supply, items near threshold
-- **Procurement Activity Report** — RFQs raised, bids received, POs issued
-- **Vendor Performance Scorecard** — ranking by on-time delivery, quality, price competitiveness
-- **Cost Analysis Report** — spend by category, savings vs. prior period
-- **Wastage Report** — items and quantities wasted, cost impact
-- **Audit Trail Report** — complete log of all system actions with timestamps and user IDs
 
 ---
 
-## Risk & Exception Handling
+## 18. Risk & Exception Handling
 
 | Risk | Mitigation |
 |---|---|
-| No bids received before deadline | System auto-extends window by 30 min; alerts Inventory Manager; falls back to preferred vendor direct order |
-| All bids exceed price ceiling | Flags for manual review; notifies GM; allows override with justification |
-| Winning vendor fails to acknowledge PO | Reminder sent at 30-min intervals; PO re-awarded to runner-up after 2 hours |
-| Delivery quantity short | Partial GRN raised; remaining qty triggers new RFQ automatically |
-| Quality rejection at receiving | PO marked disputed; vendor notified; replacement order raised; performance score penalized |
-| System downtime | Manual override mode available; staff can raise emergency POs via paper-based fallback procedure |
-| Threshold misconfigured | Monthly threshold review process; alerts if item hits critical level more than 3 times in a month |
+| No bids received | Auto-extend 30m; fallback to direct order from preferred vendor. |
+| Price ceiling hit | Flag for GM manual override; notifies procurement. |
+| Delivery short | Partial GRN raised; system re-triggers replenishment for delta. |
+| Quality rejection | Batch quarantined; performance penalty for vendor; re-order. |
 
 ---
 
-## Implementation Roadmap
+## 19. Database Schema & Infrastructure Requirements
 
-### Phase 1 — Foundation (Weeks 1–4)
-- Set up core inventory database and item master data
-- Implement stock tracking with manual entry interface
-- Configure item thresholds for all categories
-- Build internal alerting for threshold breaches
+### 19.1 Existing Table Alterations
 
-### Phase 2 — Vendor & Bidding Module (Weeks 5–8)
-- Build vendor registration and management portal
-- Implement RFQ generation and multi-channel notification engine
-- Launch vendor bidding portal
-- Implement bid scoring algorithm and evaluation dashboard
+To support the Next-Gen features, the following core tables require structural updates:
 
-### Phase 3 — PO Automation (Weeks 9–11)
-- Implement PO generation, approval workflow, and dispatch
-- Build digital signature integration
-- Connect to accounting/ERP for invoice matching
+#### [ALTER] `raw_ingredient` (SKU Master)
+- `restocking_mode`: Enum (`MANUAL_PO`, `AUTO_PO`, `BID_AUCTION`) — determines fulfilment logic.
+- `shelf_life_days`: Integer — tracking period for perishables.
+- `storage_type`: String/Enum — (Ambient, Refrigerated, Frozen).
+- `daily_restock_enrolled`: Boolean — forces inclusion in nightly job (auto-true if `shelf_life_days=1`).
+- `category`: String/Enum — classification for bidding pools (Produce, Protein, etc.).
+- `bid_supplier_pool`: UUID Array — default list of suppliers invited to auctions.
 
-### Phase 4 — Integrations & Optimization (Weeks 12–16)
-- Integrate with POS system for real-time ingredient deduction
-- Enable predictive threshold adjustment using historical demand data
-- Launch full reporting and analytics dashboard
-- Staff training and go-live
+#### [ALTER] `supplier`
+- `lead_time_variance`: Numeric — standard deviation of delivery times (used for safety stock).
+- `reliability_score`: Numeric — percentage of on-time deliveries.
+- `min_order_value`: Numeric — constraint for auto-PO generation.
+- `bid_eligible`: Boolean — if false, excluded from auctions.
+- `payment_terms`: String — (Net30, COD, etc.).
+- `categories`: Text Array — types of goods supplied.
+
+#### [ALTER] `purchase_order`
+- `order_type`: Enum (`AUTO_RESTOCK`, `MANUAL`, `EMERGENCY`, `BID_AWARDED`) — traceability for origin.
+
+#### [ALTER] `rfq` (Bid Auction)
+- `auction_type`: Enum (`SYSTEM_RESTOCK`, `MANAGER_ADHOC`).
+- `initiated_by`: UUID (FK to `staff_member`) — null for system-driven.
+- `supplier_pool`: Enum (`ALL_ELIGIBLE`, `CUSTOM_LIST`).
+- `delivery_window_days`: Integer — urgency constraint.
+- `auto_award`: Boolean — toggle for system confirmation.
+- `max_unit_price`: Numeric — price ceiling.
+
+#### [ALTER] `vendor_bid`
+- `composite_score`: Numeric — final rank from bidding algorithm.
+- `proposed_lead_time_days`: Integer — supplier's promise for LTBB.
+- `quality_grade`: String — grade (A, B, C).
+- `cold_chain_certified`: Boolean — safety check.
+
+#### [ALTER] `inventory_transaction` (StockEvent)
+- `batch_id`: UUID (FK to `inventory_batch`) — links transaction to specific batch lifecycle.
+
+### 19.2 New Table Definitions
+
+#### [NEW] `inventory_batch`
+Tracks the lifecycle of received goods.
+- `id`: UUID (PK)
+- `ingredient_id`: UUID (FK to `raw_ingredient`)
+- `quantity_received`: Numeric
+- `quantity_remaining`: Numeric
+- `unit_cost`: Numeric
+- `received_at`: Timestamp
+- `expires_at`: Timestamp (`received_at + shelf_life_days`)
+- `supplier_id`: UUID (FK to `supplier`)
+- `purchase_order_id`: UUID (FK to `purchase_order`)
+- `status`: Enum (`ACTIVE`, `EXPIRED`, `DISCARDED`, `DONATED`)
+- `location_id`: UUID (FK to `inventory_location`)
+
+#### [NEW] `inventory_location`
+Master location data for storage zones.
+- `id`: UUID (PK)
+- `name`: String (e.g., "Walk-in Freezer A")
+- `type`: Enum (`REFRIGERATED`, `AMBIENT`, `PREP_STATION`)
+- `capacity_limit`: Numeric (Optional)
+
+#### [NEW] `demand_forecast`
+Stores AI engine predictions.
+- `id`: UUID (PK)
+- `ingredient_id`: UUID (FK to `raw_ingredient`)
+- `date`: Date
+- `predicted_demand`: Numeric
+- `confidence_interval_low`: Numeric
+- `confidence_interval_high`: Numeric
+- `model_version`: String
+
+#### [NEW] `rfq_item`
+Join table for multi-SKU auctions.
+- `rfq_id`: UUID (FK to `rfq`)
+- `ingredient_id`: UUID (FK to `raw_ingredient`)
+- `required_qty`: Numeric
+- `max_unit_price`: Numeric
 
 ---
 
-*Document Version: 1.0 | Prepared for: Restaurant Operations & Procurement Team*
-*Last Updated: 2024 | Classification: Internal Use*
+## 20. Glossary
+
+- **SKU**: Stock Keeping Unit.
+- **PAR**: Target stock level.
+- **ROP**: Stock level that triggers order.
+- **LTBB**: Lead-Time Based Bidding.
+- **FIFO**: First In, First Out usage.
+- **BOM**: Bill of Materials (Ingredient list).
+
+---
+
+## 21. Implementation Roadmap
+
+1.  **Phase 1 (Weeks 1-4)**: Database migrations (alters & new tables), batch-level ingredient tracking, manual thresholds.
+2.  **Phase 2 (Weeks 5-8)**: Vendor portal, RFQ engine, bidding module.
+3.  **Phase 3 (Weeks 9-11)**: PO Automation, e-Signature, Invoice matching.
+4.  **Phase 4 (Weeks 12-16)**: AI Forecasting, POS BOM integration, IoT sensors.
+
+---
+
+*Document Version: 1.2 | Prepared for: Shopro POS Operations Team*

@@ -1,14 +1,24 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
-import type { Ingredient, Recipe, CreateIngredientRequest, PurchaseOrder } from '../api/types';
+import type { Ingredient, Recipe, CreateIngredientRequest, PurchaseOrder, InventoryLocation, InventoryBatch, DemandForecast } from '../api/types';
 
 const API_BASE = '/api/v1/inventory';
 
-export const useIngredients = () => {
+export interface PageResponse<T> {
+    content: T[];
+    totalElements: number;
+    totalPages: number;
+    size: number;
+    number: number;
+}
+
+export const useIngredients = (page: number = 0, size: number = 20) => {
     return useQuery({
-        queryKey: ['ingredients'],
+        queryKey: ['ingredients', page, size],
         queryFn: async () => {
-            const { data } = await axios.get<Ingredient[]>(`${API_BASE}/ingredients`);
+            const { data } = await axios.get<PageResponse<Ingredient>>(`${API_BASE}/ingredients`, {
+                params: { page, size }
+            });
             return data;
         },
     });
@@ -174,6 +184,90 @@ export const useCancelRFQ = () => {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['inventory', 'rfqs'] });
             queryClient.invalidateQueries({ queryKey: ['ingredients'] });
+        },
+    });
+};
+
+export const useInventoryLocations = () => {
+    return useQuery({
+        queryKey: ['inventory', 'locations'],
+        queryFn: async () => {
+            const { data } = await axios.get<InventoryLocation[]>(`${API_BASE}/locations`);
+            return data;
+        },
+    });
+};
+
+export const useWasteLog = () => {
+    return useQuery({
+        queryKey: ['inventory', 'waste-log'],
+        queryFn: async () => {
+            const { data } = await axios.get<import('../api/types').WasteLogResponse[]>(`${API_BASE}/waste`);
+            return data;
+        },
+    });
+};
+
+export const useActiveBatches = () => {
+    return useQuery({
+        queryKey: ['inventory', 'batches', 'active'],
+        queryFn: async () => {
+            const { data } = await axios.get<InventoryBatch[]>(`${API_BASE}/batches/active`);
+            return data;
+        },
+    });
+};
+
+export const useIngredientBatches = (ingredientId: string) => {
+    return useQuery({
+        queryKey: ['inventory', 'batches', ingredientId],
+        queryFn: async () => {
+            const { data } = await axios.get<InventoryBatch[]>(`${API_BASE}/batches/ingredient/${ingredientId}`);
+            return data;
+        },
+        enabled: !!ingredientId,
+    });
+};
+
+export const useIngredientForecast = (ingredientId: string, startDate: string, endDate: string) => {
+    return useQuery({
+        queryKey: ['inventory', 'forecast', ingredientId, startDate, endDate],
+        queryFn: async () => {
+            const response = await fetch(`${API_BASE}/forecasts/${ingredientId}?startDate=${startDate}&endDate=${endDate}`);
+            if (!response.ok) throw new Error('Failed to fetch ingredient forecast');
+            return response.json() as Promise<DemandForecast[]>;
+        },
+        enabled: !!ingredientId && !!startDate && !!endDate,
+    });
+};
+
+export const useDailyPerishables = () => {
+    return useQuery({
+        queryKey: ['inventory', 'daily-perishables'],
+        queryFn: async () => {
+            const response = await fetch(`${API_BASE}/ingredients/daily-perishables`);
+            if (!response.ok) throw new Error('Failed to fetch daily perishables');
+            return response.json() as Promise<Ingredient[]>;
+        },
+    });
+};
+
+export const useShelfLifeAnalytics = () => {
+    return useQuery({
+        queryKey: ['inventory', 'analytics', 'shelf-life'],
+        queryFn: async () => {
+            const { data } = await axios.get<import('../api/types').ShelfLifeAnalyticsResponse>(`${API_BASE}/analytics/shelf-life`);
+            return data;
+        },
+    });
+};
+
+export const useYieldAnalysis = () => {
+    return useQuery({
+        queryKey: ['inventory', 'analytics', 'yield'],
+        queryFn: async () => {
+            const { data } = await axios.get<import('../api/types').YieldAnalysisResponse>(`${API_BASE}/analytics/yield`);
+            return data;
         },
     });
 };

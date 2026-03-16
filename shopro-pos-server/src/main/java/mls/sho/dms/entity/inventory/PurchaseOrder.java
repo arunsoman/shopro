@@ -38,8 +38,12 @@ public class PurchaseOrder extends BaseEntity {
     private StaffMember generatedBy;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false, length = 20)
+    @Column(name = "status", nullable = false, length = 30)
     private PurchaseOrderStatus status = PurchaseOrderStatus.DRAFT;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "order_type", nullable = false, length = 20)
+    private OrderType orderType = OrderType.STANDARD;
 
     @Column(name = "total_value", nullable = false, precision = 12, scale = 4)
     private java.math.BigDecimal totalValue = java.math.BigDecimal.ZERO;

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -13,6 +14,7 @@ interface Props {
 }
 
 export const EditRoleModal: React.FC<Props> = ({ member, onClose }) => {
+    const { t } = useTranslation();
     const { mutate, isPending } = useUpdateRole();
     const { data: roles } = useRoles();
     const { register, handleSubmit } = useForm<UpdateRoleRequest>({
@@ -29,25 +31,25 @@ export const EditRoleModal: React.FC<Props> = ({ member, onClose }) => {
         <Dialog open={!!member} onOpenChange={onClose}>
             <DialogContent className="sm:max-w-sm">
                 <DialogHeader>
-                    <DialogTitle>Change Role — {member?.fullName}</DialogTitle>
+                    <DialogTitle>{t('staff.editRole.title', { name: member?.fullName })}</DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-2">
                     <div className="space-y-2">
-                        <Label>New Role</Label>
+                        <Label>{t('staff.editRole.newRole')}</Label>
                         <select
                             className="w-full flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                             {...register('role')}
                         >
-                            <option value="">Select a role...</option>
+                            <option value="">{t('staff.createStaff.rolePlaceholder')}</option>
                             {roles?.map(r => (
-                                <option key={r.id} value={r.name}>{r.name.replace('_', ' ')}</option>
+                                <option key={r.id} value={r.name}>{t(`roles.${r.name}`)}</option>
                             ))}
                         </select>
                     </div>
                     <DialogFooter>
-                        <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+                        <Button type="button" variant="outline" onClick={onClose}>{t('common.cancel')}</Button>
                         <Button type="submit" disabled={isPending}>
-                            {isPending ? 'Saving…' : 'Update Role'}
+                            {isPending ? t('common.processing') : t('staff.editRole.button')}
                         </Button>
                     </DialogFooter>
                 </form>

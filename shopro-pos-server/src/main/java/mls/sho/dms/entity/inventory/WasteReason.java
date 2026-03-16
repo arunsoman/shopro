@@ -12,5 +12,6 @@ public enum WasteReason {
     THEFT,
     UNDERCOUNTED_PREP,
     MEASUREMENT_ERROR,
+    DONATION,
     OTHER
 }

@@ -9,6 +9,7 @@ import { useUpdateIngredient } from '../hooks/useInventory';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import type { Ingredient } from '../api/types';
+import { useTranslation } from 'react-i18next';
 
 interface EditThresholdsPanelProps {
     ingredient: Ingredient | null;
@@ -17,6 +18,7 @@ interface EditThresholdsPanelProps {
 }
 
 export const EditThresholdsPanel: React.FC<EditThresholdsPanelProps> = ({ ingredient, open, onClose }) => {
+    const { t } = useTranslation();
     const updateMutation = useUpdateIngredient(ingredient?.id || '');
 
     const [formData, setFormData] = useState({
@@ -44,10 +46,10 @@ export const EditThresholdsPanel: React.FC<EditThresholdsPanelProps> = ({ ingred
     const handleSave = async () => {
         try {
             await updateMutation.mutateAsync(formData);
-            toast.success(`Thresholds for ${ingredient.name} updated successfully`);
+            toast.success(t('inventory.thresholds.success', { name: ingredient.name }));
             onClose();
         } catch (error) {
-            toast.error('Failed to update thresholds');
+            toast.error(t('inventory.thresholds.error'));
         }
     };
 
@@ -63,8 +65,8 @@ export const EditThresholdsPanel: React.FC<EditThresholdsPanelProps> = ({ ingred
             <div className="fixed right-0 top-14 h-[calc(100vh-3.5rem)] w-[400px] bg-card border-l border-border shadow-2xl z-50 flex flex-col animate-in slide-in-from-right duration-300">
                 <div className="p-6 border-b border-border flex items-center justify-between">
                     <div>
-                        <h2 className="text-xl font-bold">Edit {ingredient.name}</h2>
-                        <p className="text-sm text-muted-foreground mt-1">Configure stock alerts and reorder points</p>
+                        <h2 className="text-xl font-bold">{t('inventory.thresholds.editTitle', { name: ingredient.name })}</h2>
+                        <p className="text-sm text-muted-foreground mt-1">{t('inventory.thresholds.editDesc')}</p>
                     </div>
                     <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full">
                         <X className="h-5 w-5" />
@@ -73,26 +75,26 @@ export const EditThresholdsPanel: React.FC<EditThresholdsPanelProps> = ({ ingred
 
                 <div className="flex-1 overflow-y-auto p-6 space-y-8">
                     <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
-                        <span className="text-sm font-medium">Current Stock</span>
+                        <span className="text-sm font-medium">{t('inventory.stockLevel')}</span>
                         <Badge variant="outline" className="text-sm font-bold bg-background">
-                            {ingredient.currentStock} {ingredient.unitOfMeasure}
+                            {ingredient.currentStock} {t(`common.units.${ingredient.unitOfMeasure}`, ingredient.unitOfMeasure)}
                         </Badge>
                     </div>
 
                     <div className="space-y-4">
                         <div className="grid gap-2">
-                            <Label htmlFor="reorderPoint">Reorder Point</Label>
+                            <Label htmlFor="reorderPoint">{t('inventory.thresholds.reorderPoint')}</Label>
                             <Input
                                 id="reorderPoint"
                                 type="number"
                                 value={formData.reorderPoint}
                                 onChange={(e) => setFormData({ ...formData, reorderPoint: parseFloat(e.target.value) })}
                             />
-                            <p className="text-[11px] text-muted-foreground">Trigger for purchase order recommendations</p>
+                            <p className="text-[11px] text-muted-foreground">{t('inventory.thresholds.reorderPointHint')}</p>
                         </div>
 
                         <div className="grid gap-2">
-                            <Label htmlFor="safetyLevel">Safety Level</Label>
+                            <Label htmlFor="safetyLevel">{t('inventory.thresholds.safetyLevel')}</Label>
                             <Input
                                 id="safetyLevel"
                                 type="number"
@@ -100,11 +102,11 @@ export const EditThresholdsPanel: React.FC<EditThresholdsPanelProps> = ({ ingred
                                 onChange={(e) => setFormData({ ...formData, safetyLevel: parseFloat(e.target.value) })}
                                 className={cn(formData.safetyLevel >= ingredient.currentStock && "border-warning")}
                             />
-                            <p className="text-[11px] text-muted-foreground">Warn when stock falls below this level (Yellow Alert)</p>
+                            <p className="text-[11px] text-muted-foreground">{t('inventory.thresholds.safetyLevelHint')}</p>
                         </div>
 
                         <div className="grid gap-2">
-                            <Label htmlFor="criticalLevel">Critical Level</Label>
+                            <Label htmlFor="criticalLevel">{t('inventory.thresholds.criticalLevel')}</Label>
                             <Input
                                 id="criticalLevel"
                                 type="number"
@@ -112,24 +114,24 @@ export const EditThresholdsPanel: React.FC<EditThresholdsPanelProps> = ({ ingred
                                 onChange={(e) => setFormData({ ...formData, criticalLevel: parseFloat(e.target.value) })}
                                 className={cn(formData.criticalLevel >= ingredient.currentStock && "border-error")}
                             />
-                            <p className="text-[11px] text-muted-foreground">Alert urgently when stock hits this level (Red Alert)</p>
+                            <p className="text-[11px] text-muted-foreground">{t('inventory.thresholds.criticalLevelHint')}</p>
                         </div>
 
                         <div className="grid gap-2">
-                            <Label htmlFor="maxStockLevel">Max Stock Level</Label>
+                            <Label htmlFor="maxStockLevel">{t('inventory.thresholds.maxStockLevel')}</Label>
                             <Input
                                 id="maxStockLevel"
                                 type="number"
                                 value={formData.maxStockLevel}
                                 onChange={(e) => setFormData({ ...formData, maxStockLevel: parseFloat(e.target.value) })}
                             />
-                            <p className="text-[11px] text-muted-foreground">Maximum capacity for this ingredient</p>
+                            <p className="text-[11px] text-muted-foreground">{t('inventory.thresholds.maxStockLevelHint')}</p>
                         </div>
 
                         <div className="flex items-center justify-between pt-4 border-t border-border">
                             <div className="space-y-0.5">
-                                <Label>Auto-Replenish</Label>
-                                <p className="text-[11px] text-muted-foreground">Automatically generate POs at reorder point</p>
+                                <Label>{t('inventory.autoReplenish')}</Label>
+                                <p className="text-[11px] text-muted-foreground">{t('inventory.thresholds.autoReplenishHint')}</p>
                             </div>
                             <Switch
                                 checked={formData.autoReplenish}
@@ -142,7 +144,7 @@ export const EditThresholdsPanel: React.FC<EditThresholdsPanelProps> = ({ ingred
                 <div className="p-6 border-t border-border bg-muted/20">
                     <div className="flex gap-3">
                         <Button variant="outline" className="flex-1" onClick={onClose} disabled={updateMutation.isPending}>
-                            Cancel
+                            {t('common.cancel')}
                         </Button>
                         <Button className="flex-1" onClick={handleSave} disabled={updateMutation.isPending}>
                             {updateMutation.isPending ? (
@@ -150,7 +152,7 @@ export const EditThresholdsPanel: React.FC<EditThresholdsPanelProps> = ({ ingred
                             ) : (
                                 <Save className="h-4 w-4 mr-2" />
                             )}
-                            Save Changes
+                            {t('common.saveChanges')}
                         </Button>
                     </div>
                 </div>

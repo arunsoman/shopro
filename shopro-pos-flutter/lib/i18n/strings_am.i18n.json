@@ -1,0 +1,25 @@
+{
+  "common": {
+    "cancel": "ሰርዝ",
+    "save": "አስቀምጥ",
+    "delete": "አጥፋ",
+    "edit": "አስተካክል",
+    "total": "ጠቅላላ",
+    "processing": "በማቀነባበር ላይ..."
+  },
+  "menu": {
+    "itemName": "የዕቃው ስም",
+    "price": "ዋጋ",
+    "category": "ምድብ",
+    "description": "መግለጫ",
+    "required": "አስፈላጊ",
+    "optional": "አማራጭ"
+  },
+  "pos": {
+    "order": "ትዕዛዝ",
+    "table": "ጠረጴዛ",
+    "checkout": "ክፍያ",
+    "pay": "ክፈል",
+    "printReceipt": "ደረሰኝ አትም"
+  }
+}

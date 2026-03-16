@@ -17,4 +17,10 @@ public interface POGeneratorService {
      * Creates a DRAFT PO from an accepted VendorPriceProposal.
      */
     PurchaseOrder createFromProposal(UUID proposalId, UUID staffId);
+    
+    /**
+     * Creates a DRAFT or SENT PO directly based on Ingredient's primary supplier.
+     * Used for AUTO restocking mode.
+     */
+    PurchaseOrder generateAutoPO(mls.sho.dms.entity.inventory.RawIngredient ingredient);
 }

@@ -3,8 +3,10 @@ package mls.sho.dms.application.service.inventory.job;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import mls.sho.dms.application.service.inventory.AlertService;
+import mls.sho.dms.application.service.inventory.POGeneratorService;
 import mls.sho.dms.application.service.inventory.RFQService;
 import mls.sho.dms.entity.inventory.RawIngredient;
+import mls.sho.dms.entity.inventory.RestockingMode;
 import mls.sho.dms.repository.inventory.RawIngredientRepository;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -25,6 +27,7 @@ public class StockThresholdJob {
     private final RawIngredientRepository ingredientRepository;
     private final AlertService alertService;
     private final RFQService rfqService;
+    private final POGeneratorService poGeneratorService;
     
     // Simple in-memory debounce map to prevent alerting multiple times per 24h
     // Maps Ingredient ID -> Last Alert Time
@@ -66,9 +69,16 @@ public class StockThresholdJob {
                 }
             }
             
-            // US-13.1 Check Reorder Point for RFQ generation
+            // US-13.1 Check Reorder Point for automated replenishment
             if (ingredient.isAutoReplenish() && ingredient.getReorderPoint() != null && ingredient.getCurrentStock().compareTo(ingredient.getReorderPoint()) <= 0) {
-                rfqService.generateRfqIfEligible(ingredient);
+                if (ingredient.getRestockingMode() == RestockingMode.BID) {
+                    rfqService.generateRfqIfEligible(ingredient);
+                } else if (ingredient.getRestockingMode() == RestockingMode.AUTO) {
+                    poGeneratorService.generateAutoPO(ingredient);
+                } else {
+                    // Manual mode: Just alert (handled above by sendSafetyStockAlert/sendCriticalStockAlert)
+                    log.debug("Ingredient {} needs restock but is in MANUAL mode.", ingredient.getName());
+                }
             }
         }
         

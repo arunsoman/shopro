@@ -8,5 +8,6 @@ public enum RfqStatus {
     CLOSED,
     AWARDED,
     FAILED,
-    CANCELLED
+    CANCELLED,
+    PENDING_REVIEW
 }

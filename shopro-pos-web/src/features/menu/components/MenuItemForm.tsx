@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 interface MenuItemFormProps {
     categories: MenuCategoryResponse[];
@@ -15,6 +16,7 @@ interface MenuItemFormProps {
 }
 
 export function MenuItemForm({ categories, onComplete }: MenuItemFormProps) {
+    const { t } = useTranslation();
     const createItem = useCreateMenuItem();
     const uploadPhoto = useUploadMenuItemPhoto();
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -49,7 +51,7 @@ export function MenuItemForm({ categories, onComplete }: MenuItemFormProps) {
                     form.setError(field as any, { type: "server", message: (messages as string[])[0] });
                 });
             } else {
-                form.setError("root", { type: "server", message: err.message || "Failed to create item" });
+                form.setError("root", { type: "server", message: err.message || t('menu.failedToCreate') });
             }
         }
     };
@@ -64,25 +66,25 @@ export function MenuItemForm({ categories, onComplete }: MenuItemFormProps) {
         <form onSubmit={form.handleSubmit(onSubmit)} className="max-w-xl space-y-6 rounded-lg border border-border bg-surface p-6 shadow-sm">
             <div className="space-y-4">
                 <div className="space-y-2">
-                    <Label htmlFor="name">Item Name</Label>
-                    <Input id="name" placeholder="Truffle Burger" {...form.register("name")} />
+                    <Label htmlFor="name">{t('menu.itemName')}</Label>
+                    <Input id="name" placeholder={t('menu.itemNamePlaceholder') || "e.g. Truffle Burger"} {...form.register("name")} />
                     {form.formState.errors.name && <p className="text-xs text-red-500">{form.formState.errors.name.message}</p>}
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="basePrice">Base Price ($)</Label>
+                    <Label htmlFor="basePrice">{t('menu.basePrice')} ({t('common.currencySymbol')})</Label>
                     <Input id="basePrice" type="number" step="0.01" {...form.register("basePrice", { valueAsNumber: true })} />
                     {form.formState.errors.basePrice && <p className="text-xs text-red-500">{form.formState.errors.basePrice.message}</p>}
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="categoryId">Category</Label>
+                    <Label htmlFor="categoryId">{t('menu.category')}</Label>
                     <select
                         id="categoryId"
                         className="flex h-9 w-full rounded-md border border-border bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus:border-primary focus:outline-none"
                         {...form.register("categoryId")}
                     >
-                        <option value="">Select a category</option>
+                        <option value="">{t('menu.selectCategory')}</option>
                         {categories.map(cat => (
                             <option key={cat.id} value={cat.id}>{cat.name}</option>
                         ))}
@@ -91,7 +93,7 @@ export function MenuItemForm({ categories, onComplete }: MenuItemFormProps) {
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="photoFile">Item Photo (Optional)</Label>
+                    <Label htmlFor="photoFile">{t('menu.itemPhoto')} ({t('common.optional')})</Label>
                     <div className="flex items-center gap-4">
                         <Input
                             id="photoFile"
@@ -106,11 +108,11 @@ export function MenuItemForm({ categories, onComplete }: MenuItemFormProps) {
                             </div>
                         )}
                     </div>
-                    <p className="text-[10px] text-muted-foreground">Max 5MB (JPEG, PNG only)</p>
+                    <p className="text-[10px] text-muted-foreground">{t('menu.photoFormat')}</p>
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="description">Description (Optional)</Label>
+                    <Label htmlFor="description">{t('menu.description')} ({t('common.optional')})</Label>
                     <textarea
                         id="description"
                         className="flex w-full rounded-md border border-border bg-transparent px-3 py-2 text-sm shadow-sm transition-colors focus:border-primary focus:outline-none"
@@ -122,7 +124,7 @@ export function MenuItemForm({ categories, onComplete }: MenuItemFormProps) {
 
                 {modifierGroups && modifierGroups.length > 0 && (
                     <div className="space-y-3 pt-2">
-                        <Label>Modifier Groups (Optional)</Label>
+                        <Label>{t('menu.modifierGroups')} ({t('common.optional')})</Label>
                         <div className="rounded-md border border-border bg-muted/5 p-4 space-y-2">
                             {modifierGroups.map(group => (
                                 <div key={group.id} className="flex items-center space-x-2">
@@ -134,7 +136,7 @@ export function MenuItemForm({ categories, onComplete }: MenuItemFormProps) {
                                         {...form.register("modifierGroupIds")}
                                     />
                                     <Label htmlFor={`modifier-${group.id}`} className="font-normal cursor-pointer text-foreground">
-                                        {group.name} <span className="text-xs text-muted ml-1">({group.required ? 'Required' : 'Optional'})</span>
+                                        {group.name} <span className="text-xs text-muted ml-1">({group.required ? t('common.required') : t('common.optional')})</span>
                                     </Label>
                                 </div>
                             ))}
@@ -151,7 +153,7 @@ export function MenuItemForm({ categories, onComplete }: MenuItemFormProps) {
 
             <div className="flex justify-end pt-4">
                 <Button type="submit" disabled={createItem.isPending || uploadPhoto.isPending}>
-                    {createItem.isPending || uploadPhoto.isPending ? "Processing..." : "Create Item"}
+                    {createItem.isPending || uploadPhoto.isPending ? t('common.processing') : t('menu.createItem')}
                 </Button>
             </div>
         </form>

@@ -3,6 +3,8 @@ package mls.sho.dms.application.dto.inventory;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.PositiveOrZero;
+import java.math.BigDecimal;
+import java.util.List;
 
 public record CreateSupplierRequest(
     @NotBlank(message = "Company name is required")
@@ -18,5 +20,14 @@ public record CreateSupplierRequest(
     String contactPhone,
 
     @PositiveOrZero(message = "Lead time must be 0 or greater")
-    int leadTimeDays
+    int leadTimeDays,
+
+    @PositiveOrZero(message = "Min order value must be 0 or greater")
+    BigDecimal minOrderValue,
+
+    boolean bidEligible,
+
+    String paymentTerms,
+
+    List<String> categories
 ) {}

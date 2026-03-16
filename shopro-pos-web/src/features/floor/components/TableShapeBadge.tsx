@@ -1,4 +1,5 @@
 import type { TableShapeResponse, TableStatus } from "../schema/floorSchema";
+import { useTranslation } from "react-i18next";
 
 interface TableStatusConfig {
     bg: string;
@@ -95,6 +96,7 @@ interface TableShapeBadgeProps {
 }
 
 export function TableShapeBadge({ table, isDragTarget, onClick }: TableShapeBadgeProps) {
+    const { t } = useTranslation();
     const config = TABLE_STATUS_CONFIG[table.status];
     const isCircle = table.shapeType === "CIRCLE" || table.shapeType === "ROUND" || table.shapeType === "OVAL";
 
@@ -119,12 +121,12 @@ export function TableShapeBadge({ table, isDragTarget, onClick }: TableShapeBadg
                     ? "ring-2 ring-white ring-offset-1 ring-offset-zinc-900 scale-105"
                     : "hover:scale-105 hover:ring-1 hover:ring-white/40",
             ].join(" ")}
-            title={`${table.name} — ${config.label}`}
+            title={`${table.name} — ${t(`floor.${table.status.toLowerCase()}`, { defaultValue: config.label })}`}
         >
             <span className="text-xs font-bold leading-none">{table.name}</span>
-            <span className="text-[10px] opacity-70 mt-0.5">{table.capacity} pax</span>
+            <span className="text-[10px] opacity-70 mt-0.5">{table.capacity} {t('floor.pax')}</span>
             <span className="text-[9px] mt-0.5 font-medium uppercase tracking-wider">
-                {config.label}
+                {t(`floor.${table.status.toLowerCase()}`, { defaultValue: config.label })}
             </span>
         </button>
     );

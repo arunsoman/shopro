@@ -1,7 +1,11 @@
 package mls.sho.dms.application.dto.inventory;
 
 import jakarta.validation.constraints.*;
+import mls.sho.dms.entity.inventory.RestockingMode;
+import mls.sho.dms.entity.inventory.StorageType;
+
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 public record CreateIngredientRequest(
@@ -43,6 +47,20 @@ public record CreateIngredientRequest(
     BigDecimal maxStockLevel,
 
     boolean autoReplenish,
+
+    RestockingMode restockingMode,
+
+    @Min(value = 0, message = "Shelf life cannot be negative.")
+    int shelfLifeDays,
+
+    StorageType storageType,
+
+    boolean dailyRestockEnrolled,
+
+    @Size(max = 50, message = "Category name is too long.")
+    String category,
+
+    List<UUID> bidSupplierPool,
 
     java.util.Set<mls.sho.dms.entity.inventory.Allergen> allergens,
 

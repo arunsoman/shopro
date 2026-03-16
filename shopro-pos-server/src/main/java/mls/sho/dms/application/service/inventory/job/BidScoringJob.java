@@ -16,13 +16,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Slf4j
@@ -32,8 +30,6 @@ public class BidScoringJob {
 
     private final RFQRepository rfqRepository;
     private final VendorBidRepository vendorBidRepository;
-    private final PurchaseOrderRepository purchaseOrderRepository;
-    private final PurchaseOrderLineRepository purchaseOrderLineRepository;
     private final StaffRepository staffMemberRepository;
     private final AlertService alertService;
     private final POGeneratorService poGeneratorService;
@@ -42,6 +38,9 @@ public class BidScoringJob {
     private static final double PRICE_WEIGHT = 0.50;
     private static final double DELIVERY_WEIGHT = 0.30;
     private static final double RATING_WEIGHT = 0.20;
+    
+    // Auto-award only if gap between top 2 bids is significant (US-13.3)
+    private static final double AUTO_AWARD_GAP_THRESHOLD = 10.0; 
 
     @Scheduled(fixedRateString = "${shopro.inventory.bid-scoring-rate:60000}") // Every minute
     @Transactional
@@ -94,32 +93,20 @@ public class BidScoringJob {
             .min(BigDecimal::compareTo)
             .orElseThrow();
             
-        long fastestDeliveryDays = bids.stream()
+        long fastestDeliveryDaysRaw = bids.stream()
             .mapToLong(b -> ChronoUnit.DAYS.between(LocalDate.now(), b.getDeliveryDate()))
             .min()
             .orElse(1);
-        if (fastestDeliveryDays <= 0) fastestDeliveryDays = 1; // Prevent div/0
+        final long fastestDeliveryDays = fastestDeliveryDaysRaw <= 0 ? 1 : fastestDeliveryDaysRaw;
 
         // --- Step 2: Score bids ---
         VendorBid winningBid = null;
         double highestScore = -1.0;
 
         for (VendorBid bid : bids) {
-            double priceScore = lowestPrice.doubleValue() / Math.max(0.01, bid.getUnitPrice().doubleValue()) * 100.0;
+            double compositeScore = calculateScore(bid, lowestPrice, fastestDeliveryDays);
             
-            long deliveryDays = ChronoUnit.DAYS.between(LocalDate.now(), bid.getDeliveryDate());
-            if (deliveryDays <= 0) deliveryDays = 1;
-            double deliveryScore = (double) fastestDeliveryDays / deliveryDays * 100.0;
-            
-            double ratingScore = bid.getSupplier().getVendorRating() != null 
-                ? bid.getSupplier().getVendorRating().doubleValue() : 70.0;
-
-            double compositeScore = (priceScore * PRICE_WEIGHT) 
-                                  + (deliveryScore * DELIVERY_WEIGHT) 
-                                  + (ratingScore * RATING_WEIGHT);
-            
-            log.debug("Bid {} scored: Price={}, Delivery={}, Rating={}, Total={}", 
-                bid.getId(), priceScore, deliveryScore, ratingScore, compositeScore);
+            log.debug("Bid {} scored: Total={}", bid.getId(), compositeScore);
 
             // Tie breaker logic: Score -> Delivery Days -> Price
             if (compositeScore > highestScore) {
@@ -127,7 +114,8 @@ public class BidScoringJob {
                 winningBid = bid;
             } else if (Math.abs(compositeScore - highestScore) < 0.01 && winningBid != null) {
                 long currentWinnerDays = ChronoUnit.DAYS.between(LocalDate.now(), winningBid.getDeliveryDate());
-                long newBidDays = deliveryDays;
+                long newBidDays = ChronoUnit.DAYS.between(LocalDate.now(), bid.getDeliveryDate());
+                if (newBidDays <= 0) newBidDays = 1;
                 
                 if (newBidDays < currentWinnerDays) {
                     winningBid = bid; // Tie breaker 1: Faster delivery
@@ -139,8 +127,45 @@ public class BidScoringJob {
             }
         }
 
-        // --- Step 3: Award ---
-        awardBid(rfq, winningBid, bids);
+        // --- Step 3: Check Gap for Auto-Award (US-13.3) ---
+        final double currentHighest = highestScore;
+        List<Double> scores = bids.stream()
+            .map(b -> calculateScore(b, lowestPrice, fastestDeliveryDays))
+            .sorted(Comparator.reverseOrder())
+            .toList();
+            
+        double secondHighest = scores.size() > 1 ? scores.get(1) : 0.0;
+        double gap = currentHighest - secondHighest;
+        
+        if (gap >= AUTO_AWARD_GAP_THRESHOLD) {
+            log.info("Auto-award gap threshold met (gap: {}). Awarding RFQ #{} automatically.", gap, rfq.getId());
+            awardBid(rfq, winningBid, bids);
+        } else {
+            log.info("Auto-award gap threshold NOT met (gap: {}). RFQ #{} remains for manual review.", gap, rfq.getId());
+            rfq.setStatus(RfqStatus.PENDING_REVIEW); // New status to flag for manager
+            rfqRepository.save(rfq);
+            
+            alertService.sendNotification(
+                "Manager",
+                "RFQ Manual Review Required: " + rfq.getIngredient().getName(),
+                "Bid scoring for RFQ #" + rfq.getId() + " is complete but gap is only " + String.format("%.2f", gap) + " pts. Please review and award manually."
+            );
+        }
+    }
+
+    private double calculateScore(VendorBid bid, BigDecimal lowestPrice, long fastestDeliveryDays) {
+        double priceScore = lowestPrice.doubleValue() / Math.max(0.01, bid.getUnitPrice().doubleValue()) * 100.0;
+        
+        long deliveryDays = ChronoUnit.DAYS.between(LocalDate.now(), bid.getDeliveryDate());
+        if (deliveryDays <= 0) deliveryDays = 1;
+        double deliveryScore = (double) fastestDeliveryDays / deliveryDays * 100.0;
+        
+        double ratingScore = bid.getSupplier().getVendorRating() != null 
+            ? bid.getSupplier().getVendorRating().doubleValue() : 70.0;
+
+        return (priceScore * PRICE_WEIGHT) 
+             + (deliveryScore * DELIVERY_WEIGHT) 
+             + (ratingScore * RATING_WEIGHT);
     }
 
     private void awardBid(RFQ rfq, VendorBid winningBid, List<VendorBid> allBids) {
@@ -173,7 +198,7 @@ public class BidScoringJob {
     }
 
     private void createDraftPurchaseOrder(RFQ rfq, VendorBid winningBid) {
-        // Look for a management staff member (priority: OWNER, GENERAL_MANAGER, KITCHEN_MANAGER)
+        // Look for a management staff member
         List<StaffMember> activeStaff = staffMemberRepository.findByActiveTrue();
         
         StaffMember creator = activeStaff.stream()

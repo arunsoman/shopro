@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { TrendingDown, Clock, Star, AlertCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface PriceComparisonDialogProps {
     ingredientId?: string;
@@ -18,6 +19,7 @@ export const PriceComparisonDialog: React.FC<PriceComparisonDialogProps> = ({
     open,
     onOpenChange
 }) => {
+    const { t, i18n } = useTranslation();
     const { data: comparison, isLoading } = usePriceComparison(ingredientId || '');
 
     if (!ingredientId) return null;
@@ -28,7 +30,7 @@ export const PriceComparisonDialog: React.FC<PriceComparisonDialogProps> = ({
                 <DialogHeader>
                     <div className="flex items-center gap-2">
                         <TrendingDown className="h-5 w-5 text-primary" />
-                        <DialogTitle>Market Price Benchmarking: {ingredientName}</DialogTitle>
+                        <DialogTitle>{t('inventory.benchmarking.title', { name: ingredientName })}</DialogTitle>
                     </div>
                 </DialogHeader>
 
@@ -40,18 +42,18 @@ export const PriceComparisonDialog: React.FC<PriceComparisonDialogProps> = ({
                     ) : !comparison?.prices?.length ? (
                         <div className="h-48 flex flex-col items-center justify-center text-muted gap-2">
                             <AlertCircle className="h-8 w-8 opacity-20" />
-                            <p>No supplier pricing found for this ingredient.</p>
-                            <p className="text-xs">Import vendor catalogs to enable benchmarking.</p>
+                            <p>{t('inventory.benchmarking.noPrices')}</p>
+                            <p className="text-xs">{t('inventory.benchmarking.importCatalogs')}</p>
                         </div>
                     ) : (
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead>Supplier</TableHead>
-                                    <TableHead>Unit Price</TableHead>
-                                    <TableHead>Lead Time</TableHead>
-                                    <TableHead>Rating</TableHead>
-                                    <TableHead className="text-right">Variance</TableHead>
+                                    <TableHead>{t('inventory.benchmarking.table.supplier')}</TableHead>
+                                    <TableHead>{t('inventory.benchmarking.table.unitPrice')}</TableHead>
+                                    <TableHead>{t('inventory.benchmarking.table.leadTime')}</TableHead>
+                                    <TableHead>{t('inventory.benchmarking.table.rating')}</TableHead>
+                                    <TableHead className="text-right">{t('inventory.benchmarking.table.variance')}</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -63,14 +65,14 @@ export const PriceComparisonDialog: React.FC<PriceComparisonDialogProps> = ({
                                         <TableRow key={p.supplierId} className={p.isLowest ? "bg-primary/5" : ""}>
                                             <TableCell>
                                                 <div className="font-medium text-foreground">{p.supplierName}</div>
-                                                <div className="text-xs text-muted">SKU: {p.vendorSku || 'N/A'}</div>
+                                                <div className="text-xs text-muted">{p.vendorSku ? t('inventory.benchmarking.sku', { value: p.vendorSku }) : t('inventory.benchmarking.na')}</div>
                                             </TableCell>
                                             <TableCell>
                                                 <div className="flex items-center gap-2 font-semibold text-foreground">
-                                                    ${p.price.toFixed(2)}
+                                                    {t('common.currencySymbol')}{p.price.toLocaleString(i18n.language, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                     {p.isLowest && (
                                                         <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/10 border-0 h-5 px-1.5">
-                                                            Best Price
+                                                            {t('inventory.benchmarking.bestPrice')}
                                                         </Badge>
                                                     )}
                                                 </div>
@@ -78,7 +80,7 @@ export const PriceComparisonDialog: React.FC<PriceComparisonDialogProps> = ({
                                             <TableCell>
                                                 <div className="flex items-center gap-1.5 text-sm text-foreground">
                                                     <Clock className="h-3.5 w-3.5 text-muted" />
-                                                    {p.leadTime}d
+                                                    {t('inventory.benchmarking.days', { count: p.leadTime })}
                                                 </div>
                                             </TableCell>
                                             <TableCell>
@@ -89,7 +91,7 @@ export const PriceComparisonDialog: React.FC<PriceComparisonDialogProps> = ({
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 {p.isLowest ? (
-                                                    <span className="text-xs font-semibold text-emerald-500">Benchmark</span>
+                                                    <span className="text-xs font-semibold text-emerald-500">{t('inventory.benchmarking.benchmark')}</span>
                                                 ) : (
                                                     <span className="text-xs font-semibold text-error">
                                                         +{variance.toFixed(1)}%

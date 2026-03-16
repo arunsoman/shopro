@@ -2,6 +2,7 @@ import type { MenuItemResponse } from "../schema/menuSchema";
 import { Badge } from "@/components/ui/badge";
 import { MoreVertical, Image as ImageIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 interface MenuItemCardProps {
     item: MenuItemResponse;
@@ -10,18 +11,19 @@ interface MenuItemCardProps {
 }
 
 export function MenuItemCard({ item, onEdit, onUpdateStatus }: MenuItemCardProps) {
+    const { t } = useTranslation();
     const is86 = item.status === "EIGHTY_SIXED";
 
     const getStatusBadge = () => {
         switch (item.status) {
             case "PUBLISHED":
-                return <Badge variant="success">LIVE</Badge>;
+                return <Badge variant="success">{t('menu.live')}</Badge>;
             case "DRAFT":
-                return <Badge variant="warning">DRAFT</Badge>;
+                return <Badge variant="warning">{t('menu.draft')}</Badge>;
             case "EIGHTY_SIXED":
-                return <Badge variant="secondary">86'd</Badge>;
+                return <Badge variant="secondary">{t('menu.eightySix')}</Badge>;
             case "ARCHIVED":
-                return <Badge variant="destructive">ARCHIVED</Badge>;
+                return <Badge variant="destructive">{t('menu.archived')}</Badge>;
             default:
                 return null;
         }
@@ -49,14 +51,14 @@ export function MenuItemCard({ item, onEdit, onUpdateStatus }: MenuItemCardProps
                         className="rounded-full bg-blue-500/80 px-2 py-1 text-[10px] font-bold text-white hover:bg-blue-600/90"
                         onClick={() => onUpdateStatus?.(item.id, item.status)}
                     >
-                        PUBLISH
+                        {t('menu.publish')}
                     </button>
                 ) : (
                     <button
                         className="rounded-full bg-black/40 px-2 py-1 text-[10px] font-bold text-white hover:bg-black/60"
                         onClick={() => onUpdateStatus?.(item.id, item.status)}
                     >
-                        {is86 ? 'UN-86' : '86'}
+                        {is86 ? t('menu.unEightySix') : t('menu.eightySix')}
                     </button>
                 )}
             </div>
@@ -81,13 +83,13 @@ export function MenuItemCard({ item, onEdit, onUpdateStatus }: MenuItemCardProps
                 <div>
                     <h3 className="font-semibold leading-tight tracking-tight">{item.name}</h3>
                     <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
-                        {item.description || "No description provided."}
+                        {item.description || t('menu.noDescription')}
                     </p>
                 </div>
 
                 <div className="mt-4 flex items-center justify-between">
                     <span className="font-medium tabular-nums text-primary">
-                        ${item.basePrice.toFixed(2)}
+                        {t('common.currencySymbol')}{item.basePrice.toFixed(2)}
                     </span>
                     <span className="text-xs text-muted-foreground">{item.categoryName}</span>
                 </div>
@@ -95,9 +97,9 @@ export function MenuItemCard({ item, onEdit, onUpdateStatus }: MenuItemCardProps
 
             {/* 86 Overlay Text */}
             {is86 && (
-                <div className="absolute inset-0 z-20 flex items-center justify-center">
+                <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
                     <div className="rotate-[-12deg] rounded-md border-2 border-red-500 bg-red-500/10 px-4 py-1 text-2xl font-black tracking-widest text-red-500 backdrop-blur-sm">
-                        86'd
+                        {t('menu.eightySix')}
                     </div>
                 </div>
             )}

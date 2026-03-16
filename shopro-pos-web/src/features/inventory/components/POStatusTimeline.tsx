@@ -3,14 +3,17 @@ import type { POStatusHistory, PurchaseOrderStatus } from '../api/types';
 import { Badge } from '@/components/ui/badge';
 import { Clock, User, MessageSquare } from 'lucide-react';
 import { format } from 'date-fns';
+import { useTranslation } from 'react-i18next';
 
 interface POStatusTimelineProps {
     history: POStatusHistory[];
 }
 
 export const POStatusTimeline: React.FC<POStatusTimelineProps> = ({ history }) => {
+    const { t } = useTranslation();
+
     if (!history || history.length === 0) {
-        return <div className="text-muted-foreground text-sm py-4">No status history available.</div>;
+        return <div className="text-muted-foreground text-sm py-4">{t('inventory.po.noHistory')}</div>;
     }
 
     const getStatusColor = (status: PurchaseOrderStatus) => {
@@ -46,13 +49,13 @@ export const POStatusTimeline: React.FC<POStatusTimelineProps> = ({ history }) =
                         <div className="flex items-center justify-between gap-4">
                             <div className="flex items-center gap-2">
                                 <Badge variant="outline" className={getStatusColor(event.toStatus)}>
-                                    {event.toStatus.replace('_', ' ')}
+                                    {t(`inventory.po.statuses.${event.toStatus}`)}
                                 </Badge>
                                 {event.fromStatus && (
                                     <>
-                                        <span className="text-muted-foreground text-xs">from</span>
+                                        <span className="text-muted-foreground text-xs">{t('inventory.po.fromStatus')}</span>
                                         <Badge variant="outline" className="opacity-60 text-muted-foreground">
-                                            {event.fromStatus.replace('_', ' ')}
+                                            {t(`inventory.po.statuses.${event.fromStatus}`)}
                                         </Badge>
                                     </>
                                 )}

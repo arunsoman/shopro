@@ -3,6 +3,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Search, AlertTriangle, AlertCircle, RefreshCcw } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { useTranslation } from 'react-i18next';
 
 export type StockFilterType = 'all' | 'critical' | 'reorder' | 'safety';
 
@@ -25,12 +26,13 @@ export const StockFilterBar: React.FC<StockFilterBarProps> = ({
     onFilterChange,
     counts
 }) => {
+    const { t } = useTranslation();
     return (
         <div className="flex flex-col md:flex-row gap-4 mb-4">
             <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted" />
                 <Input
-                    placeholder="Search ingredients..."
+                    placeholder={t('inventory.ingredientPlaceholder')}
                     value={search}
                     onChange={(e) => onSearchChange(e.target.value)}
                     className="pl-9 bg-surface/50"
@@ -44,7 +46,7 @@ export const StockFilterBar: React.FC<StockFilterBarProps> = ({
                     onClick={() => onFilterChange('all')}
                     className="rounded-full"
                 >
-                    All
+                    {t('inventory.filters.all')}
                 </Button>
                 
                 <Button
@@ -54,7 +56,7 @@ export const StockFilterBar: React.FC<StockFilterBarProps> = ({
                     className={`rounded-full gap-2 ${currentFilter === 'critical' ? 'text-error' : 'text-muted-foreground hover:text-error'}`}
                 >
                     <AlertTriangle className="h-3.5 w-3.5" />
-                    Critical
+                    {t('inventory.filters.critical')}
                     {counts && counts.critical > 0 && (
                         <Badge variant="destructive" className="h-4 px-1.5 min-w-[18px] flex items-center justify-center font-bold">
                             {counts.critical}
@@ -69,7 +71,7 @@ export const StockFilterBar: React.FC<StockFilterBarProps> = ({
                     className={`rounded-full gap-2 ${currentFilter === 'reorder' ? 'text-warning' : 'text-muted-foreground hover:text-warning'}`}
                 >
                     <RefreshCcw className="h-3.5 w-3.5" />
-                    Reorder
+                    {t('inventory.filters.reorder')}
                     {counts && counts.reorder > 0 && (
                         <Badge variant="warning" className="h-4 px-1.5 min-w-[18px] flex items-center justify-center font-bold text-background">
                             {counts.reorder}
@@ -84,7 +86,7 @@ export const StockFilterBar: React.FC<StockFilterBarProps> = ({
                     className={`rounded-full gap-2 ${currentFilter === 'safety' ? 'text-warning' : 'text-muted-foreground hover:text-warning'}`}
                 >
                     <AlertCircle className="h-3.5 w-3.5" />
-                    Safety
+                    {t('inventory.filters.safety')}
                     {counts && counts.safety > 0 && (
                         <Badge variant="warning" className="h-4 px-1.5 min-w-[18px] flex items-center justify-center font-bold text-background">
                             {counts.safety}

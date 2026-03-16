@@ -3,6 +3,7 @@ import { CheckCheck, Trash2, Armchair } from "lucide-react";
 import type { TableShapeResponse } from "../schema/floorSchema";
 import { TABLE_STATUS_CONFIG } from "./TableShapeBadge";
 import { useDeleteTable, useMarkTableClean, useUpdateTableStatus } from "../hooks/useFloor";
+import { useTranslation } from "react-i18next";
 
 interface TableActionModalProps {
     table: TableShapeResponse;
@@ -10,6 +11,7 @@ interface TableActionModalProps {
 }
 
 export function TableActionModal({ table, onClose }: TableActionModalProps) {
+    const { t } = useTranslation();
     const config = TABLE_STATUS_CONFIG[table.status];
     const cleanMutation = useMarkTableClean();
     const deleteMutation = useDeleteTable();
@@ -51,9 +53,9 @@ export function TableActionModal({ table, onClose }: TableActionModalProps) {
                         <div>
                             <h3 className="font-bold text-white text-lg tracking-tight">{table.name}</h3>
                             <div className="flex items-center gap-2 text-xs font-medium text-zinc-400">
-                                <span>{table.capacity} Guests</span>
+                                <span>{t('floor.guestsCount', { count: table.capacity })}</span>
                                 <span className="w-1 h-1 rounded-full bg-zinc-600" />
-                                <span className={config.text}>{config.label}</span>
+                                <span className={config.text}>{t(`floor.${table.status.toLowerCase()}`, { defaultValue: config.label })}</span>
                             </div>
                         </div>
                     </div>
@@ -74,7 +76,7 @@ export function TableActionModal({ table, onClose }: TableActionModalProps) {
                                         <Armchair className="h-4 w-4" />
                                     </div>
                                     <span className="text-emerald-100 font-semibold text-sm">
-                                        {updateStatusMutation.isPending ? "Seating..." : "Seat Walk-in"}
+                                        {updateStatusMutation.isPending ? t('floor.seating') : t('floor.seatWalkIn')}
                                     </span>
                                 </div>
                                 <div className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse" />
@@ -90,7 +92,7 @@ export function TableActionModal({ table, onClose }: TableActionModalProps) {
                                 <div className="p-2 rounded-lg bg-teal-500/20 text-teal-400">
                                     <CheckCheck className="h-4 w-4" />
                                 </div>
-                                <span className="font-semibold text-sm">{cleanMutation.isPending ? "Clearing..." : "Mark Table Available"}</span>
+                                <span className="font-semibold text-sm">{cleanMutation.isPending ? t('floor.clearing') : t('floor.markAvailable')}</span>
                             </button>
                         )}
                     </div>
@@ -98,7 +100,7 @@ export function TableActionModal({ table, onClose }: TableActionModalProps) {
                     {/* Manual Overrides */}
                     <div className="pt-4 space-y-3">
                         <div className="flex items-center justify-between px-1">
-                            <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-zinc-500">Quick Status</span>
+                            <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-zinc-500">{t('floor.quickStatus')}</span>
                         </div>
                         <div className="grid grid-cols-2 gap-2">
                             {['AVAILABLE', 'OCCUPIED', 'FOOD_SENT', 'RESERVED', 'DIRTY'].map(status => (
@@ -112,7 +114,7 @@ export function TableActionModal({ table, onClose }: TableActionModalProps) {
                                             : 'bg-white/5 text-zinc-400 border-white/5 hover:bg-white/10 hover:text-zinc-200 hover:border-white/10'
                                     }`}
                                 >
-                                    {status.replace('_', ' ')}
+                                    {t(`floor.${status.toLowerCase()}`, { defaultValue: status.replace('_', ' ') })}
                                 </button>
                             ))}
                         </div>
@@ -127,23 +129,23 @@ export function TableActionModal({ table, onClose }: TableActionModalProps) {
                                     className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-zinc-600 hover:text-red-400 hover:bg-red-500/10 transition-all duration-200"
                                 >
                                     <Trash2 className="h-3.5 w-3.5" />
-                                    <span className="text-[11px] font-semibold uppercase tracking-wider">Remove Table</span>
+                                    <span className="text-[11px] font-semibold uppercase tracking-wider">{t('floor.removeTable')}</span>
                                 </button>
                             ) : (
                                 <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-4 space-y-3 animate-in fade-in zoom-in-95 duration-200">
                                     <p className="text-[11px] text-red-200 text-center font-medium leading-relaxed">
-                                        Permanently remove <strong>{table.name}</strong>?
+                                        {t('common.deleteConfirm', { name: table.name })}
                                     </p>
                                     <div className="flex gap-2">
                                         <button onClick={() => setConfirmDelete(false)} className="flex-1 py-2 text-[10px] font-bold rounded-lg bg-zinc-800 text-zinc-400 hover:bg-zinc-700">
-                                            Cancel
+                                            {t('common.cancel')}
                                         </button>
                                         <button
                                             onClick={handleDelete}
                                             disabled={deleteMutation.isPending}
                                             className="flex-1 py-2 text-[10px] font-bold rounded-lg bg-red-600 text-white hover:bg-red-500 disabled:opacity-50"
                                         >
-                                            {deleteMutation.isPending ? "Wait..." : "Delete"}
+                                            {deleteMutation.isPending ? t('common.wait') : t('common.delete')}
                                         </button>
                                     </div>
                                 </div>
@@ -157,7 +159,7 @@ export function TableActionModal({ table, onClose }: TableActionModalProps) {
                     onClick={onClose} 
                     className="w-full py-4 text-xs font-bold text-zinc-500 hover:text-zinc-300 hover:bg-white/5 border-t border-white/5 transition-all"
                 >
-                    Dismiss
+                    {t('common.dismiss')}
                 </button>
             </div>
         </div>

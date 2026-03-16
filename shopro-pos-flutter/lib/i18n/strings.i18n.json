@@ -1,0 +1,25 @@
+{
+  "common": {
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "total": "Total",
+    "processing": "Processing..."
+  },
+  "menu": {
+    "itemName": "Item Name",
+    "price": "Price",
+    "category": "Category",
+    "description": "Description",
+    "required": "Required",
+    "optional": "Optional"
+  },
+  "pos": {
+    "order": "Order",
+    "table": "Table",
+    "checkout": "Checkout",
+    "pay": "Pay",
+    "printReceipt": "Print Receipt"
+  }
+}

@@ -12,10 +12,13 @@ import org.springframework.data.jpa.repository.Query;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Optional;
+import java.util.List;
 import java.util.UUID;
 
 @Repository
 public interface InventoryTransactionRepository extends JpaRepository<InventoryTransaction, UUID> {
+    
+    List<InventoryTransaction> findAllByTransactionTypeOrderByTransactedAtDesc(InventoryTransactionType type);
     
     @Query("SELECT SUM(t.quantityDelta) FROM InventoryTransaction t " +
            "WHERE t.ingredient.id = :ingredientId AND t.transactionType = :type " +

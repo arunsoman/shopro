@@ -1,0 +1,25 @@
+{
+  "common": {
+    "cancel": "Soke",
+    "save": "Ajiye",
+    "delete": "Goge",
+    "edit": "Gyara",
+    "total": "Jimilla",
+    "processing": "Ana sarrafawa..."
+  },
+  "menu": {
+    "itemName": "Sunan Abu",
+    "price": "Farashi",
+    "category": "Rukuni",
+    "description": "Bayanin Bayani",
+    "required": "Dole ne",
+    "optional": "Zabibi"
+  },
+  "pos": {
+    "order": "Oda",
+    "table": "Tebur",
+    "checkout": "Biyan Kuɗi",
+    "pay": "Biya",
+    "printReceipt": "Buga Rasiti"
+  }
+}

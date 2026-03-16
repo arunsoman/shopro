@@ -4,6 +4,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { useTranslation } from 'react-i18next';
 
 export function NotificationBadge({ user, onClick }: { user?: NotificationUser; onClick?: () => void }) {
     const { unreadCount } = useNotifications(user);
@@ -34,6 +35,7 @@ export function NotificationBadge({ user, onClick }: { user?: NotificationUser; 
 
 export function NotificationTray({ open, onClose, user }: { open: boolean; onClose: () => void; user?: NotificationUser }) {
     const { notifications, markAsRead, dismiss } = useNotifications(user);
+    const { t } = useTranslation();
 
     if (!open) return null;
 
@@ -42,7 +44,7 @@ export function NotificationTray({ open, onClose, user }: { open: boolean; onClo
             {/* Header */}
             <div className="relative p-4 border-b border-border flex items-center justify-between overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
-                <h3 className="text-sm font-bold text-foreground tracking-tight">Notifications</h3>
+                <h3 className="text-sm font-bold text-foreground tracking-tight">{t('notifications.title')}</h3>
                 <Button 
                     variant="ghost" 
                     size="icon" 
@@ -60,7 +62,7 @@ export function NotificationTray({ open, onClose, user }: { open: boolean; onClo
                         <div className="p-3 rounded-2xl bg-muted/20 text-muted-foreground">
                              <Bell className="h-6 w-6" />
                         </div>
-                        <p className="text-muted-foreground font-medium text-xs">All caught up</p>
+                        <p className="text-muted-foreground font-medium text-xs">{t('notifications.empty')}</p>
                     </div>
                 ) : (
                     <div className="px-2 space-y-1">
@@ -90,33 +92,33 @@ export function NotificationTray({ open, onClose, user }: { open: boolean; onClo
                                                 {n.title}
                                             </p>
                                             <span className="text-[10px] text-muted-foreground/60 font-medium whitespace-nowrap">
-                                                {formatDistanceToNow(new Date(n.createdAt), { addSuffix: true })}
+                                                {formatDistanceToNow(new Date(n.createdAt), { addSuffix: false })} {t('notifications.timeSuffix')}
                                             </span>
                                         </div>
                                         <p className="text-[11px] leading-relaxed text-muted-foreground line-clamp-2 pr-6">
                                             {n.message}
                                         </p>
                                         
-                                        <div className="mt-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-1 group-hover:translate-y-0">
+                                        <div className="mt-3 flex gap-2">
                                             {!n.isRead && (
                                                 <Button
                                                     variant="ghost"
                                                     size="sm"
-                                                    className="h-7 px-3 text-[10px] font-bold rounded-lg bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary transition-colors border border-primary/20"
+                                                    className="h-7 px-3 text-[10px] font-bold rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 active:scale-95 transition-all border border-primary/20 shadow-md"
                                                     onClick={(e) => { e.stopPropagation(); markAsRead(n.id); }}
                                                 >
-                                                    <Check className="h-3 w-3 mr-1.5" />
-                                                    Mark Read
+                                                    <Check className="h-3 w-3 mr-1.5 stroke-[4]" />
+                                                    {t('notifications.markRead')}
                                                 </Button>
                                             )}
                                             <Button
                                                 variant="ghost"
                                                 size="sm"
-                                                className="h-7 px-3 text-[10px] font-bold rounded-lg bg-destructive/5 text-muted hover:bg-destructive/10 hover:text-destructive border border-white/5 hover:border-destructive/20 transition-colors"
+                                                className="h-7 px-3 text-[10px] font-bold rounded-lg bg-destructive text-destructive-foreground hover:bg-destructive/90 active:scale-95 transition-all border border-destructive/20 shadow-md"
                                                 onClick={(e) => { e.stopPropagation(); dismiss(n.id); }}
                                             >
-                                                <Trash2 className="h-3 w-3 mr-1.5" />
-                                                Dismiss
+                                                <Trash2 className="h-3 w-3 mr-1.5 stroke-[4]" />
+                                                {t('notifications.dismiss')}
                                             </Button>
                                         </div>
                                     </div>
@@ -133,10 +135,10 @@ export function NotificationTray({ open, onClose, user }: { open: boolean; onClo
                     <Button 
                         variant="ghost" 
                         size="sm" 
-                        className="w-full h-8 text-[11px] font-bold text-muted-foreground hover:text-foreground hover:bg-muted/10 rounded-xl transition-all"
+                        className="w-full h-10 text-[11px] font-bold text-foreground hover:bg-primary/10 border border-primary/20 hover:border-primary/40 rounded-xl transition-all shadow-sm active:scale-[0.98]"
                         onClick={onClose}
                     >
-                        Close Tray
+                        {t('notifications.close')}
                     </Button>
                 </div>
             )}

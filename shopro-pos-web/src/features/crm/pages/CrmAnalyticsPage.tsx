@@ -14,26 +14,26 @@ import {
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 export const CrmAnalyticsPage: React.FC = () => {
+    const { t, i18n } = useTranslation();
     const navigate = useNavigate();
     const { data: stats, isLoading: statsLoading } = useCrmAnalytics();
     const { data: atRisk, isLoading: atRiskLoading } = useAtRiskCustomers();
     const { data: serverStats, isLoading: serverLoading } = useServerFeedbackStats();
 
     const formatCurrency = (value: number) => {
-        return new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: 'USD',
-        }).format(value);
+        const symbol = t('common.currencySymbol');
+        return `${symbol}${value.toLocaleString(i18n.language, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     };
 
     return (
         <div className="p-6 space-y-6">
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">CRM Analytics</h1>
-                    <p className="text-muted-foreground">Strategic insights into guest behavior and program health.</p>
+                    <h1 className="text-3xl font-bold tracking-tight">{t('crm.crmAnalytics.title')}</h1>
+                    <p className="text-muted-foreground">{t('crm.crmAnalytics.desc')}</p>
                 </div>
             </div>
 
@@ -41,7 +41,7 @@ export const CrmAnalyticsPage: React.FC = () => {
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <Card className="relative overflow-hidden">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Avg. Lifetime Value</CardTitle>
+                        <CardTitle className="text-sm font-medium">{t('crm.crmAnalytics.avgClv')}</CardTitle>
                         <TrendingUp className="h-4 w-4 text-emerald-500" />
                     </CardHeader>
                     <CardContent>
@@ -50,32 +50,32 @@ export const CrmAnalyticsPage: React.FC = () => {
                 </Card>
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Active Members</CardTitle>
+                        <CardTitle className="text-sm font-medium">{t('crm.crmAnalytics.activeMembers')}</CardTitle>
                         <Users className="h-4 w-4 text-blue-500" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{statsLoading ? '...' : stats?.activeMembers || 0}</div>
-                        <p className="text-xs text-muted-foreground">Visited in last 30 days</p>
+                        <p className="text-xs text-muted-foreground">{t('crm.crmAnalytics.activeMembersDesc')}</p>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">New Enrollments</CardTitle>
+                        <CardTitle className="text-sm font-medium">{t('crm.crmAnalytics.newEnrollments')}</CardTitle>
                         <UserPlus className="h-4 w-4 text-purple-500" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{statsLoading ? '...' : stats?.newEnrollments || 0}</div>
-                        <p className="text-xs text-muted-foreground">Joining this month</p>
+                        <p className="text-xs text-muted-foreground">{t('crm.crmAnalytics.newEnrollmentsDesc')}</p>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Points Liability</CardTitle>
+                        <CardTitle className="text-sm font-medium">{t('crm.crmAnalytics.pointsLiability')}</CardTitle>
                         <Coins className="h-4 w-4 text-amber-500" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{statsLoading ? '...' : formatCurrency(stats?.totalPointsLiability || 0)}</div>
-                        <p className="text-xs text-muted-foreground">Estimated redemption value</p>
+                        <p className="text-xs text-muted-foreground">{t('crm.crmAnalytics.pointsLiabilityDesc')}</p>
                     </CardContent>
                 </Card>
             </div>
@@ -86,8 +86,8 @@ export const CrmAnalyticsPage: React.FC = () => {
                     <CardHeader>
                         <div className="flex items-center justify-between">
                             <div>
-                                <CardTitle>At-Risk Guests</CardTitle>
-                                <CardDescription>Guests who haven't visited in 60+ days.</CardDescription>
+                                <CardTitle>{t('crm.crmAnalytics.atRiskGuests')}</CardTitle>
+                                <CardDescription>{t('crm.crmAnalytics.atRiskDesc')}</CardDescription>
                             </div>
                             <AlertCircle className="h-5 w-5 text-destructive" />
                         </div>
@@ -95,9 +95,9 @@ export const CrmAnalyticsPage: React.FC = () => {
                     <CardContent>
                         <div className="space-y-4">
                             {atRiskLoading ? (
-                                <p className="text-sm text-muted-foreground">Loading guests...</p>
+                                <p className="text-sm text-muted-foreground">{t('crm.crmAnalytics.loadingGuests')}</p>
                             ) : atRisk?.length === 0 ? (
-                                <p className="text-sm text-muted-foreground">No guests currently at high risk.</p>
+                                <p className="text-sm text-muted-foreground">{t('crm.crmAnalytics.noAtRisk')}</p>
                             ) : (
                                 atRisk?.slice(0, 5).map((customer) => (
                                     <div key={customer.id} className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
@@ -107,18 +107,18 @@ export const CrmAnalyticsPage: React.FC = () => {
                                             </div>
                                             <div>
                                                 <div className="text-sm font-medium">{customer.firstName} {customer.lastName}</div>
-                                                <div className="text-xs text-muted-foreground">Last visit: {customer.lastVisitAt ? new Date(customer.lastVisitAt).toLocaleDateString() : 'Never'}</div>
+                                                <div className="text-xs text-muted-foreground">{t('crm.crmAnalytics.lastVisit')} {customer.lastVisitAt ? new Date(customer.lastVisitAt).toLocaleDateString(i18n.language) : t('crm.crmAnalytics.never')}</div>
                                             </div>
                                         </div>
                                         <Button variant="outline" size="sm" onClick={() => navigate(`/crm/customers/${customer.id}`)}>
-                                            Win-Back Offer
+                                            {t('crm.crmAnalytics.winBackOffer')}
                                         </Button>
                                     </div>
                                 ))
                             )}
                             {atRisk && atRisk.length > 5 && (
                                 <Button variant="ghost" className="w-full text-xs text-muted-foreground">
-                                    View all {atRisk.length} at-risk guests
+                                    {t('crm.crmAnalytics.viewAllAtRisk', { count: atRisk.length })}
                                 </Button>
                             )}
                         </div>
@@ -128,13 +128,13 @@ export const CrmAnalyticsPage: React.FC = () => {
                 {/* Server Performance Summary */}
                 <Card className="col-span-3">
                     <CardHeader>
-                        <CardTitle>Server Feedback Stats</CardTitle>
-                        <CardDescription>Aggregate guest ratings by server.</CardDescription>
+                        <CardTitle>{t('crm.crmAnalytics.feedbackStats')}</CardTitle>
+                        <CardDescription>{t('crm.crmAnalytics.feedbackDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-6">
                             {serverLoading ? (
-                                <p className="text-sm text-muted-foreground">Loading server stats...</p>
+                                <p className="text-sm text-muted-foreground">{t('crm.crmAnalytics.loadingFeedback')}</p>
                             ) : (
                                 serverStats?.slice(0, 5).map((server) => (
                                     <div key={server.serverId} className="space-y-2">
@@ -152,7 +152,7 @@ export const CrmAnalyticsPage: React.FC = () => {
                             )}
                         </div>
                         <Button variant="ghost" className="w-full mt-6 text-sm flex items-center gap-2" onClick={() => navigate('/crm/feedback')}>
-                            Full Feedback Report <ChevronRight className="h-4 w-4" />
+                            {t('crm.crmAnalytics.fullFeedbackReport')} <ChevronRight className="h-4 w-4" />
                         </Button>
                     </CardContent>
                 </Card>
@@ -160,3 +160,4 @@ export const CrmAnalyticsPage: React.FC = () => {
         </div>
     );
 };
+

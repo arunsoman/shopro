@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { Settings, LogOut, Delete, LogIn, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
+import { LanguageSelector } from "@/components/layout/LanguageSelector";
 
 const PIN_DIGITS = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
 
@@ -55,6 +57,7 @@ const ROLE_HINTS = [
 export function LoginPage() {
     const { login } = useAuth();
     const navigate = useNavigate();
+    const { t } = useTranslation();
 
     const [pin, setPin] = useState("");
     const [error, setError] = useState<string | null>(null);
@@ -68,7 +71,7 @@ export function LoginPage() {
             const home = ROLE_HOME[session.role] ?? "/floor";
             navigate(home, { replace: true });
         } catch (err: any) {
-            const msg = err?.message ?? "Incorrect PIN. Please try again.";
+            const msg = err?.message ?? t('auth.incorrectPin');
             setError(msg);
             setPin("");
         } finally {
@@ -108,9 +111,10 @@ export function LoginPage() {
                     <span className="font-extrabold text-2xl tracking-tight text-slate-800 dark:text-slate-100">Shopro</span>
                 </div>
                 <div className="flex items-center gap-6">
+                    <LanguageSelector />
                     <div className="hidden sm:flex gap-6">
-                        <button className="text-slate-500 dark:text-slate-400 font-semibold hover:text-primary transition-colors">Help</button>
-                        <button className="text-slate-500 dark:text-slate-400 font-semibold hover:text-primary transition-colors">Support</button>
+                        <button className="text-slate-500 dark:text-slate-400 font-semibold hover:text-primary transition-colors">{t('common.help')}</button>
+                        <button className="text-slate-500 dark:text-slate-400 font-semibold hover:text-primary transition-colors">{t('common.support')}</button>
                     </div>
                     <div className="flex items-center gap-3">
                         <button className="p-2 text-slate-400 hover:text-primary hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-all">
@@ -128,8 +132,8 @@ export function LoginPage() {
                 <div className="w-full max-w-lg flex flex-col items-center">
                     {/* Login Header */}
                     <div className="text-center mb-8 animate-fade-up">
-                        <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-2">Welcome Back</h1>
-                        <p className="text-slate-500 dark:text-slate-400 text-lg">Enter your terminal PIN to start your shift</p>
+                        <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-2">{t('auth.welcome')}</h1>
+                        <p className="text-slate-500 dark:text-slate-400 text-lg">{t('auth.enterPin')}</p>
                     </div>
 
                     {/* PIN Display */}
@@ -190,8 +194,8 @@ export function LoginPage() {
                     <div className="w-full bg-slate-100/50 dark:bg-slate-800/40 p-8 rounded-[2.5rem] relative overflow-hidden animate-fade-up" style={{ animationDelay: '0.2s' }}>
                         <div className="relative z-10">
                             <div className="flex items-center justify-between mb-8">
-                                <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">Quick Staff Login</h2>
-                                <span className="bg-[#a13920] text-white px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest">New Shift</span>
+                                <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">{t('auth.quickStaffLogin')}</h2>
+                                <span className="bg-[#a13920] text-white px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest">{t('auth.newShift')}</span>
                             </div>
                             <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-8">
                                 {ROLE_HINTS.map((staff) => (
@@ -219,7 +223,7 @@ export function LoginPage() {
                                             </div>
                                         </div>
                                         <span className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-[0.15em] transition-colors group-hover:text-primary">
-                                            {staff.role}
+                                            {t(`roles.${staff.role.toUpperCase()}`, { defaultValue: staff.role })}
                                         </span>
                                     </button>
                                 ))}
@@ -231,11 +235,11 @@ export function LoginPage() {
 
             {/* Footer */}
             <footer className="px-10 py-8 flex flex-col md:flex-row items-center justify-between border-t border-slate-200 dark:border-slate-800/50">
-                <p className="text-slate-400 text-xs mb-4 md:mb-0">© 2026 Shopro POS Systems. All rights reserved.</p>
+                <p className="text-slate-400 text-xs mb-4 md:mb-0">{t('common.copyright')}</p>
                 <div className="flex gap-8">
-                    <button className="text-slate-400 text-xs font-semibold hover:text-primary transition-colors">Privacy Policy</button>
-                    <button className="text-slate-400 text-xs font-semibold hover:text-primary transition-colors">Terms of Service</button>
-                    <button className="text-slate-400 text-xs font-semibold hover:text-primary transition-colors">Contact</button>
+                    <button className="text-slate-400 text-xs font-semibold hover:text-primary transition-colors">{t('common.privacy')}</button>
+                    <button className="text-slate-400 text-xs font-semibold hover:text-primary transition-colors">{t('common.terms')}</button>
+                    <button className="text-slate-400 text-xs font-semibold hover:text-primary transition-colors">{t('common.contact')}</button>
                 </div>
             </footer>
         </div>

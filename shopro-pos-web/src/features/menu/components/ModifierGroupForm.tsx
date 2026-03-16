@@ -8,12 +8,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Plus, Trash2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface ModifierGroupFormProps {
     onComplete: () => void;
 }
 
 export function ModifierGroupForm({ onComplete }: ModifierGroupFormProps) {
+    const { t } = useTranslation();
     const createGroup = useCreateModifierGroup();
 
     const form = useForm<CreateModifierGroupRequest>({
@@ -39,7 +41,7 @@ export function ModifierGroupForm({ onComplete }: ModifierGroupFormProps) {
             await createGroup.mutateAsync(data);
             onComplete();
         } catch (err: any) {
-            form.setError("root", { type: "server", message: err.message || "Failed to create modifier group" });
+            form.setError("root", { type: "server", message: err.message || t('menu.failedCreateModifier') });
         }
     };
 
@@ -48,15 +50,15 @@ export function ModifierGroupForm({ onComplete }: ModifierGroupFormProps) {
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div className="space-y-4 md:col-span-2">
                     <div className="space-y-2">
-                        <Label htmlFor="name">Group Name</Label>
-                        <Input id="name" placeholder="e.g., Meat Temperature, Add-ons" {...form.register("name")} />
+                        <Label htmlFor="name">{t('menu.groupName')}</Label>
+                        <Input id="name" placeholder={t('menu.groupNamePlaceholder')} {...form.register("name")} />
                         {form.formState.errors.name && <p className="text-xs text-red-500">{form.formState.errors.name.message}</p>}
                     </div>
                 </div>
 
                 <div className="flex flex-col justify-center space-y-2 rounded-md border border-border p-4">
                     <div className="flex items-center justify-between">
-                        <Label htmlFor="required" className="cursor-pointer">Required Modifier?</Label>
+                        <Label htmlFor="required" className="cursor-pointer">{t('menu.requiredModifier')}</Label>
                         <Switch
                             id="required"
                             checked={isRequired}
@@ -70,18 +72,18 @@ export function ModifierGroupForm({ onComplete }: ModifierGroupFormProps) {
                             }}
                         />
                     </div>
-                    <p className="text-xs text-muted-foreground">If enabled, staff must select an option.</p>
+                    <p className="text-xs text-muted-foreground">{t('menu.requiredModifierDesc')}</p>
                 </div>
 
                 <div className="space-y-4 rounded-md border border-border p-4">
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                            <Label htmlFor="minSelections">Min Selections</Label>
+                            <Label htmlFor="minSelections">{t('menu.minSelections')}</Label>
                             <Input id="minSelections" type="number" min={0} {...form.register("minSelections", { valueAsNumber: true })} />
                             {form.formState.errors.minSelections && <p className="text-xs text-red-500">{form.formState.errors.minSelections.message}</p>}
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="maxSelections">Max Selections</Label>
+                            <Label htmlFor="maxSelections">{t('menu.maxSelections')}</Label>
                             <Input id="maxSelections" type="number" min={1} {...form.register("maxSelections", { valueAsNumber: true })} />
                             {form.formState.errors.maxSelections && <p className="text-xs text-red-500">{form.formState.errors.maxSelections.message}</p>}
                         </div>
@@ -91,9 +93,9 @@ export function ModifierGroupForm({ onComplete }: ModifierGroupFormProps) {
 
             <div className="space-y-4">
                 <div className="flex items-center justify-between border-b pb-2">
-                    <h3 className="font-semibold text-lg">Options</h3>
+                    <h3 className="font-semibold text-lg">{t('menu.modifiers')}</h3>
                     <Button type="button" variant="outline" size="sm" onClick={() => append({ label: "", upchargeAmount: 0, displayOrder: fields.length })}>
-                        <Plus className="mr-2 h-4 w-4" /> Add Option
+                        <Plus className="mr-2 h-4 w-4" /> {t('menu.addOption')}
                     </Button>
                 </div>
 
@@ -105,14 +107,14 @@ export function ModifierGroupForm({ onComplete }: ModifierGroupFormProps) {
                     {fields.map((field, index) => (
                         <div key={field.id} className="flex items-start gap-4 rounded-md border border-border bg-muted/5 p-3">
                             <div className="flex-1 space-y-2">
-                                <Label className="text-xs text-muted-foreground">Option Label</Label>
-                                <Input placeholder="e.g. Rare, Extra Cheese" {...form.register(`options.${index}.label`)} />
+                                <Label className="text-xs text-muted-foreground">{t('menu.optionLabel')}</Label>
+                                <Input placeholder={t('menu.optionPlaceholder')} {...form.register(`options.${index}.label`)} />
                                 {form.formState.errors.options?.[index]?.label && (
                                     <p className="text-xs text-red-500">{form.formState.errors.options[index]?.label?.message}</p>
                                 )}
                             </div>
                             <div className="w-32 space-y-2">
-                                <Label className="text-xs text-muted-foreground">Upcharge ($)</Label>
+                                <Label className="text-xs text-muted-foreground">{t('menu.upcharge')} ({t('common.currencySymbol')})</Label>
                                 <Input type="number" step="0.01" min={0} {...form.register(`options.${index}.upchargeAmount`, { valueAsNumber: true })} />
                                 {form.formState.errors.options?.[index]?.upchargeAmount && (
                                     <p className="text-xs text-red-500">{form.formState.errors.options[index]?.upchargeAmount?.message}</p>
@@ -136,7 +138,7 @@ export function ModifierGroupForm({ onComplete }: ModifierGroupFormProps) {
 
             <div className="flex justify-end border-t pt-4">
                 <Button type="submit" disabled={createGroup.isPending}>
-                    {createGroup.isPending ? "Saving..." : "Save Modifier Group"}
+                    {createGroup.isPending ? t('common.processing') : t('menu.saveModifierGroup')}
                 </Button>
             </div>
         </form>

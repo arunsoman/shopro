@@ -4,8 +4,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Trophy, Clock, DollarSign, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Trophy, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 interface ReviewBidsDialogProps {
     rfqId?: string;
@@ -20,6 +21,7 @@ export const ReviewBidsDialog: React.FC<ReviewBidsDialogProps> = ({
     open,
     onOpenChange
 }) => {
+    const { t, i18n } = useTranslation();
     const { data: bids, isLoading } = useRfqBids(rfqId || '');
     const awardBid = useAwardBid();
 
@@ -28,10 +30,10 @@ export const ReviewBidsDialog: React.FC<ReviewBidsDialogProps> = ({
     const handleAward = async (bidId: string) => {
         try {
             await awardBid.mutateAsync(bidId);
-            toast.success('Bid awarded successfully. Purchase Order generated.');
+            toast.success(t('inventory.bids.awardSuccess'));
             onOpenChange?.(false);
         } catch (error) {
-            toast.error('Failed to award bid');
+            toast.error(t('inventory.bids.awardError'));
         }
     };
 
@@ -41,7 +43,7 @@ export const ReviewBidsDialog: React.FC<ReviewBidsDialogProps> = ({
                 <DialogHeader>
                     <div className="flex items-center gap-2">
                         <Trophy className="h-5 w-5 text-yellow-500" />
-                        <DialogTitle>Review Vendor Bids: {rfqReference}</DialogTitle>
+                        <DialogTitle>{t('inventory.bids.reviewTitle', { ref: rfqReference })}</DialogTitle>
                     </div>
                 </DialogHeader>
 
@@ -53,19 +55,20 @@ export const ReviewBidsDialog: React.FC<ReviewBidsDialogProps> = ({
                     ) : !bids?.length ? (
                         <div className="h-48 flex flex-col items-center justify-center text-muted gap-2 text-center">
                             <Clock className="h-8 w-8 opacity-20" />
-                            <p>No bids received yet for this RFQ.</p>
-                            <p className="text-xs max-w-xs">Vendors have been notified and will submit quotes through the Supplier Portal.</p>
+                            <p>{t('inventory.bids.noBids')}</p>
+                            <p className="text-xs max-w-xs">{t('inventory.bids.vendorNotification')}</p>
                         </div>
                     ) : (
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead>Supplier</TableHead>
-                                    <TableHead>Unit Price</TableHead>
-                                    <TableHead>Qty Available</TableHead>
-                                    <TableHead>Delivery ETA</TableHead>
-                                    <TableHead>Status</TableHead>
-                                    <TableHead className="text-right">Action</TableHead>
+                                    <TableHead>{t('inventory.bids.supplier')}</TableHead>
+                                    <TableHead>{t('inventory.bids.unitPrice')}</TableHead>
+                                    <TableHead>{t('inventory.bids.qtyAvailable')}</TableHead>
+                                    <TableHead>{t('inventory.bids.deliveryEta')}</TableHead>
+                                    <TableHead>{t('inventory.bids.status')}</TableHead>
+                                    <TableHead>{t('inventory.rfq.table.score')}</TableHead>
+                                    <TableHead className="text-right">{t('inventory.bids.action')}</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -77,17 +80,17 @@ export const ReviewBidsDialog: React.FC<ReviewBidsDialogProps> = ({
                                         </TableCell>
                                         <TableCell>
                                             <div className="flex items-center gap-1 font-mono text-emerald-500">
-                                                <DollarSign className="h-3 w-3" />
-                                                {bid.unitPrice.toFixed(2)}
+                                                <span className="text-sm">{t('common.currencySymbol')}</span>
+                                                {bid.unitPrice.toLocaleString(i18n.language, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                             </div>
                                         </TableCell>
                                         <TableCell>
-                                            {bid.quantityAvailable}
+                                            {bid.quantityAvailable.toLocaleString(i18n.language)}
                                         </TableCell>
                                         <TableCell>
                                             <div className="flex items-center gap-1.5 text-xs">
                                                 <Clock className="h-3.5 w-3.5 text-muted" />
-                                                {new Date(bid.deliveryDate).toLocaleDateString()}
+                                                {new Date(bid.deliveryDate).toLocaleDateString(i18n.language)}
                                             </div>
                                         </TableCell>
                                         <TableCell>
@@ -98,9 +101,23 @@ export const ReviewBidsDialog: React.FC<ReviewBidsDialogProps> = ({
                                                     bid.status === 'LOST' || bid.status === 'REJECTED' ? "bg-error/10 text-error border-error/20" :
                                                     "bg-primary/10 text-primary border-primary/20"
                                                 }
-                                            >
-                                                {bid.status}
-                                            </Badge>
+                                             >
+                                                 {t(`inventory.bids.statuses.${bid.status}`, { defaultValue: bid.status })}
+                                             </Badge>
+                                        </TableCell>
+                                        <TableCell>
+                                            <div className="space-y-1 w-24">
+                                                <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                                                    <span>{t('inventory.rfq.table.score')}</span>
+                                                    <span>{bid.score || 0} {t('common.points')}</span>
+                                                </div>
+                                                <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                                                    <div 
+                                                        className={`h-full rounded-full ${bid.status === 'WON' ? 'bg-emerald-500' : 'bg-primary'}`} 
+                                                        style={{ width: `${bid.score || 0}%` }} 
+                                                    />
+                                                </div>
+                                            </div>
                                         </TableCell>
                                         <TableCell className="text-right">
                                             {bid.status === 'SUBMITTED' ? (
@@ -112,12 +129,12 @@ export const ReviewBidsDialog: React.FC<ReviewBidsDialogProps> = ({
                                                     disabled={awardBid.isPending}
                                                 >
                                                     <CheckCircle2 className="h-4 w-4" />
-                                                    Award
+                                                    {t('inventory.bids.award')}
                                                 </Button>
                                             ) : bid.status === 'WON' ? (
                                                 <div className="flex items-center justify-end gap-1 text-emerald-500 text-xs font-semibold">
                                                     <CheckCircle2 className="h-4 w-4" />
-                                                    Awarded
+                                                    {t('inventory.bids.awarded')}
                                                 </div>
                                             ) : null}
                                         </TableCell>
@@ -131,10 +148,11 @@ export const ReviewBidsDialog: React.FC<ReviewBidsDialogProps> = ({
                 <DialogFooter className="sm:justify-start">
                     <div className="flex items-center gap-2 text-xs text-muted">
                         <AlertCircle className="h-4 w-4" />
-                        <span>Awarding a bid will close the RFQ and automatically notify the vendor.</span>
+                        <span>{t('inventory.bids.awardWarning')}</span>
                     </div>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
     );
 };
+

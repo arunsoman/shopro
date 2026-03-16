@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Plus, Trash2, Save, Loader2, Info } from 'lucide-react';
 import { toast } from 'sonner';
-import type { RecipeIngredient, SubRecipe, Ingredient } from '../api/types';
+import type { RecipeIngredient, SubRecipe } from '../api/types';
+import { useTranslation } from 'react-i18next';
 
 interface SubRecipeBuilderProps {
     subRecipeId: string;
@@ -13,6 +14,7 @@ interface SubRecipeBuilderProps {
 }
 
 export const SubRecipeBuilder: React.FC<SubRecipeBuilderProps> = ({ subRecipeId, subRecipeName }) => {
+    const { t } = useTranslation();
     const { data: ingredients } = useIngredients();
     const { data: subRecipes } = useSubRecipes();
     const { data: existingRecipe } = useRecipe(subRecipeId, true);
@@ -31,7 +33,7 @@ export const SubRecipeBuilder: React.FC<SubRecipeBuilderProps> = ({ subRecipeId,
     useEffect(() => {
         const cost = localIngredients.reduce((acc, curr) => {
             if (curr.ingredientId) {
-                const ing = ingredients?.find((i: Ingredient) => i.id === curr.ingredientId);
+                const ing = ingredients?.content?.find((i: any) => i.id === curr.ingredientId);
                 return acc + (ing && ing.effectiveCostPerUnit != null ? ing.effectiveCostPerUnit * curr.quantity : 0);
             } else if (curr.subRecipeId) {
                 const sub = subRecipes?.find((s: SubRecipe) => s.id === curr.subRecipeId);
@@ -61,7 +63,7 @@ export const SubRecipeBuilder: React.FC<SubRecipeBuilderProps> = ({ subRecipeId,
 
     const handleSave = () => {
         if (localIngredients.some(i => (!i.ingredientId && !i.subRecipeId) || i.quantity <= 0)) {
-            toast.error("Please select an item and valid quantity for all lines.");
+            toast.error(t('inventory.recipes.validationError'));
             return;
         }
 
@@ -73,10 +75,13 @@ export const SubRecipeBuilder: React.FC<SubRecipeBuilderProps> = ({ subRecipeId,
             }))
         }, {
             onSuccess: () => {
-                toast.success(`Sub-recipe saved! Batch cost: $${totalCost.toFixed(2)}`);
+                toast.success(t('inventory.recipes.saveSubSuccess', { 
+                    symbol: t('common.currencySymbol'), 
+                    cost: totalCost.toFixed(2) 
+                }));
             },
             onError: () => {
-                toast.error('Failed to save sub-recipe');
+                toast.error(t('inventory.recipes.saveSubError'));
             }
         });
     };
@@ -85,28 +90,29 @@ export const SubRecipeBuilder: React.FC<SubRecipeBuilderProps> = ({ subRecipeId,
         <Card className="w-full">
             <CardHeader className="flex flex-row items-center justify-between">
                 <div>
-                    <CardTitle>Sub-Recipe Builder: {subRecipeName}</CardTitle>
+                    <CardTitle>{t('inventory.recipes.subBuilderTitle', { name: subRecipeName })}</CardTitle>
                     <div className="text-sm text-muted-foreground mt-1">
-                        Ingredients required for one full prep batch
+                        {t('inventory.recipes.subBuilderDesc')}
                     </div>
                 </div>
                 <div className="text-right">
-                    <div className="text-sm font-medium">Batch Cost</div>
-                    <div className="text-2xl font-bold text-primary">${totalCost.toFixed(2)}</div>
+                    <div className="text-sm font-medium">{t('inventory.recipes.batchCost')}</div>
+                    <div className="text-2xl font-bold text-primary">
+                        {t('common.currencySymbol')}{totalCost.toFixed(2)}
+                    </div>
                 </div>
             </CardHeader>
             <CardContent className="space-y-4">
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex gap-3 text-xs text-blue-700">
                     <Info className="h-4 w-4 text-blue-600 shrink-0" />
                     <div>
-                        Logging a production batch will automatically deplete the items listed below from stock.
-                        Cost per unit will be updated based on the total batch cost divided by the yield quantity.
+                        {t('inventory.recipes.batchDepleteInfo')}
                     </div>
                 </div>
 
                 <div className="space-y-2">
                     {localIngredients.map((item, index) => {
-                        const selectedIng = ingredients?.find((i: Ingredient) => i.id === item.ingredientId);
+                        const selectedIng = ingredients?.content?.find((i: any) => i.id === item.ingredientId);
                         const selectedSub = subRecipes?.find((s: SubRecipe) => s.id === item.subRecipeId);
                         const unitOfMeasure = selectedIng?.unitOfMeasure || selectedSub?.unitOfMeasure || '-';
                         const lineCost = selectedIng ? (selectedIng.effectiveCostPerUnit * item.quantity) :
@@ -115,7 +121,7 @@ export const SubRecipeBuilder: React.FC<SubRecipeBuilderProps> = ({ subRecipeId,
                         return (
                             <div key={index} className="flex gap-4 items-end border-b pb-4 last:border-0">
                                 <div className="flex-1 space-y-1">
-                                    <label className="text-xs font-semibold">Source Item</label>
+                                    <label className="text-xs font-semibold">{t('inventory.recipes.sourceItem')}</label>
                                     <select
                                         className="w-full flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                         value={item.ingredientId || item.subRecipeId || ''}
@@ -125,13 +131,13 @@ export const SubRecipeBuilder: React.FC<SubRecipeBuilderProps> = ({ subRecipeId,
                                             updateLine(index, isSub ? 'subRecipeId' : 'ingredientId', val);
                                         }}
                                     >
-                                        <option value="">Select Item...</option>
-                                        <optgroup label="Raw Ingredients">
-                                            {ingredients?.map((ing: Ingredient) => (
+                                        <option value="">{t('inventory.recipes.selectItem')}</option>
+                                        <optgroup label={t('inventory.rawIngredients')}>
+                                            {ingredients?.content?.map((ing: any) => (
                                                 <option key={ing.id} value={ing.id}>{ing.name}</option>
                                             ))}
                                         </optgroup>
-                                        <optgroup label="Other Sub-Recipes">
+                                        <optgroup label={t('inventory.subRecipes')}>
                                             {subRecipes?.filter((s: SubRecipe) => s.id !== subRecipeId).map((sub: SubRecipe) => (
                                                 <option key={sub.id} value={sub.id}>{sub.name}</option>
                                             ))}
@@ -139,18 +145,18 @@ export const SubRecipeBuilder: React.FC<SubRecipeBuilderProps> = ({ subRecipeId,
                                     </select>
                                 </div>
                                 <div className="w-24 space-y-1">
-                                    <label className="text-xs font-semibold">Qty</label>
+                                    <label className="text-xs font-semibold">{t('inventory.qty')}</label>
                                     <Input
                                         type="number"
                                         value={item.quantity}
                                         onChange={(e) => updateLine(index, 'quantity', parseFloat(e.target.value))}
                                     />
                                 </div>
-                                <div className="w-16 flex items-center h-10 text-sm text-muted-foreground pt-6">
-                                    {unitOfMeasure}
+                                <div className="w-20 flex items-center h-10 text-sm text-muted-foreground pt-6 overflow-hidden truncate">
+                                    {t(`common.units.${unitOfMeasure}`, unitOfMeasure)}
                                 </div>
                                 <div className="w-32 text-right h-10 flex items-center justify-end pt-6 font-medium">
-                                    ${lineCost.toFixed(2)}
+                                    {t('common.currencySymbol')}{lineCost.toFixed(2)}
                                 </div>
                                 <Button
                                     variant="ghost"
@@ -167,11 +173,11 @@ export const SubRecipeBuilder: React.FC<SubRecipeBuilderProps> = ({ subRecipeId,
 
                 <div className="flex justify-between items-center pt-4">
                     <Button variant="outline" onClick={addLine} className="gap-2">
-                        <Plus className="h-4 w-4" /> Add Item
+                        <Plus className="h-4 w-4" /> {t('inventory.recipes.addItem')}
                     </Button>
                     <Button onClick={handleSave} disabled={updateRecipe.isPending} className="gap-2">
                         {updateRecipe.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                        Save Sub-Recipe
+                        {t('inventory.recipes.saveSubRecipe')}
                     </Button>
                 </div>
             </CardContent>

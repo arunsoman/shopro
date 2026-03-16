@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -29,6 +30,7 @@ import type { PurchaseOrder, PurchaseOrderStatus } from '../api/types';
 import { useAuth } from '@/lib/auth/AuthContext';
 
 export const POManagementPage: React.FC = () => {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const { session } = useAuth();
     const { data: pos, isLoading } = usePurchaseOrders();
@@ -78,9 +80,9 @@ export const POManagementPage: React.FC = () => {
     const handleSubmit = async (id: string) => {
         try {
             await submitForApproval.mutateAsync(id);
-            toast.success('Purchase Order submitted for approval');
+            toast.success(t('inventory.po.toasts.submitSuccess'));
         } catch (error) {
-            toast.error('Failed to submit PO');
+            toast.error(t('inventory.po.toasts.submitError'));
         }
     };
 
@@ -88,10 +90,10 @@ export const POManagementPage: React.FC = () => {
         if (!selectedPo || !session) return;
         try {
             await approveOrder.mutateAsync({ id: selectedPo.id, staffId: session.id });
-            toast.success('Purchase Order approved');
+            toast.success(t('inventory.po.toasts.approveSuccess'));
             setIsDetailsOpen(false);
         } catch (error) {
-            toast.error('Failed to approve PO');
+            toast.error(t('inventory.po.toasts.approveError'));
         }
     };
 
@@ -99,12 +101,12 @@ export const POManagementPage: React.FC = () => {
         if (!selectedPo || !session || !rejectReason) return;
         try {
             await rejectOrder.mutateAsync({ id: selectedPo.id, staffId: session.id, reason: rejectReason });
-            toast.success('Purchase Order rejected');
+            toast.success(t('inventory.po.toasts.rejectSuccess'));
             setIsRejectDialogOpen(false);
             setIsDetailsOpen(false);
             setRejectReason('');
         } catch (error) {
-            toast.error('Failed to reject PO');
+            toast.error(t('inventory.po.toasts.rejectError'));
         }
     };
 
@@ -113,10 +115,10 @@ export const POManagementPage: React.FC = () => {
         if (!session) return;
         try {
             await sendOrder.mutateAsync({ id, staffId: session.id });
-            toast.success('Purchase Order sent to supplier successfully');
+            toast.success(t('inventory.po.toasts.sendSuccess'));
             setIsDetailsOpen(false);
         } catch (error) {
-            toast.error('Failed to send PO to supplier');
+            toast.error(t('inventory.po.toasts.sendError'));
         }
     };
 
@@ -124,13 +126,13 @@ export const POManagementPage: React.FC = () => {
         <div className="space-y-6">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
-                    <h1 className="text-4xl font-bold tracking-tight text-foreground">Purchase Orders</h1>
-                    <p className="text-muted-foreground mt-2">Monitor procurement lifecycle and manage approvals.</p>
+                    <h1 className="text-4xl font-bold tracking-tight text-foreground">{t('inventory.po.title')}</h1>
+                    <p className="text-muted-foreground mt-2">{t('inventory.po.desc')}</p>
                 </div>
                 <div className="flex items-center gap-2">
                     <Button variant="outline" className="gap-2">
                         <Download className="h-4 w-4" />
-                        Export
+                        {t('inventory.po.export')}
                     </Button>
                 </div>
             </div>
@@ -143,7 +145,7 @@ export const POManagementPage: React.FC = () => {
                                 <Clock className="h-5 w-5 text-primary" />
                             </div>
                             <div>
-                                <p className="text-sm text-muted-foreground">Pending Action</p>
+                                <p className="text-sm text-muted-foreground">{t('inventory.po.pendingAction')}</p>
                                 <p className="text-xl font-bold">{pos?.filter(p => ['DRAFT', 'PENDING_APPROVAL', 'COUNTER_OFFERED', 'DISCREPANCY_REVIEW'].includes(p.status)).length || 0}</p>
                             </div>
                         </div>
@@ -156,7 +158,7 @@ export const POManagementPage: React.FC = () => {
                                 <Truck className="h-5 w-5 text-blue-500" />
                             </div>
                             <div>
-                                <p className="text-sm text-muted-foreground">In Transit</p>
+                                <p className="text-sm text-muted-foreground">{t('inventory.po.inTransit')}</p>
                                 <p className="text-xl font-bold">{pos?.filter(p => p.status === 'SHIPPED').length || 0}</p>
                             </div>
                         </div>
@@ -169,7 +171,7 @@ export const POManagementPage: React.FC = () => {
                                 <CheckCircle2 className="h-5 w-5 text-emerald-500" />
                             </div>
                             <div>
-                                <p className="text-sm text-muted-foreground">Completed (MTD)</p>
+                                <p className="text-sm text-muted-foreground">{t('inventory.po.completedMtd')}</p>
                                 <p className="text-xl font-bold">{pos?.filter(p => p.status === 'CLOSED').length || 0}</p>
                             </div>
                         </div>
@@ -182,7 +184,7 @@ export const POManagementPage: React.FC = () => {
                                 <AlertTriangle className="h-5 w-5 text-red-500" />
                             </div>
                             <div>
-                                <p className="text-sm text-muted-foreground">Exceptions</p>
+                                <p className="text-sm text-muted-foreground">{t('inventory.po.exceptions')}</p>
                                 <p className="text-xl font-bold">{pos?.filter(p => p.status === 'DISCREPANCY_REVIEW').length || 0}</p>
                             </div>
                         </div>
@@ -192,12 +194,12 @@ export const POManagementPage: React.FC = () => {
 
             <Card>
                 <CardHeader className="pb-3 flex flex-row items-center justify-between">
-                    <CardTitle className="text-lg">Order Registry</CardTitle>
+                    <CardTitle className="text-lg">{t('inventory.po.registryTitle')}</CardTitle>
                     <div className="flex items-center gap-4">
                         <div className="relative w-64">
                             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                             <Input
-                                placeholder="Search by ID or Supplier..."
+                                placeholder={t('inventory.po.searchPlaceholder')}
                                 className="pl-9"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -210,14 +212,14 @@ export const POManagementPage: React.FC = () => {
                                 value={statusFilter}
                                 onChange={(e) => setStatusFilter(e.target.value)}
                             >
-                                <option value="ALL">All Statuses</option>
-                                <option value="DRAFT">Drafts</option>
-                                <option value="PENDING_APPROVAL">Pending Approval</option>
-                                <option value="SENT">Sent to Vendor</option>
-                                <option value="COUNTER_OFFERED">Counter Offered</option>
-                                <option value="SHIPPED">Shipped</option>
-                                <option value="DISCREPANCY_REVIEW">Discrepancy</option>
-                                <option value="CLOSED">Closed</option>
+                                <option value="ALL">{t('inventory.po.allStatuses')}</option>
+                                <option value="DRAFT">{t('inventory.po.statuses.DRAFT')}</option>
+                                <option value="PENDING_APPROVAL">{t('inventory.po.statuses.PENDING_APPROVAL')}</option>
+                                <option value="SENT">{t('inventory.po.statuses.SENT')}</option>
+                                <option value="COUNTER_OFFERED">{t('inventory.po.statuses.COUNTER_OFFERED')}</option>
+                                <option value="SHIPPED">{t('inventory.po.statuses.SHIPPED')}</option>
+                                <option value="DISCREPANCY_REVIEW">{t('inventory.po.statuses.DISCREPANCY_REVIEW')}</option>
+                                <option value="CLOSED">{t('inventory.po.statuses.CLOSED')}</option>
                             </select>
                         </div>
                     </div>
@@ -226,13 +228,13 @@ export const POManagementPage: React.FC = () => {
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead className="w-[100px]">Order ID</TableHead>
-                                <TableHead>Date</TableHead>
-                                <TableHead>Supplier</TableHead>
-                                <TableHead>Value</TableHead>
-                                <TableHead>Expected Delivery</TableHead>
-                                <TableHead>Status</TableHead>
-                                <TableHead className="text-right">Actions</TableHead>
+                                <TableHead className="w-[100px]">{t('inventory.po.table.id')}</TableHead>
+                                <TableHead>{t('inventory.po.table.date')}</TableHead>
+                                <TableHead>{t('inventory.po.table.supplier')}</TableHead>
+                                <TableHead>{t('inventory.po.table.value')}</TableHead>
+                                <TableHead>{t('inventory.po.table.delivery')}</TableHead>
+                                <TableHead>{t('inventory.po.table.status')}</TableHead>
+                                <TableHead className="text-right">{t('inventory.po.table.actions')}</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -245,7 +247,7 @@ export const POManagementPage: React.FC = () => {
                             ) : filteredPos?.length === 0 ? (
                                 <TableRow>
                                     <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">
-                                        No purchase orders found matching your criteria.
+                                        {t('inventory.po.noOrders')}
                                     </TableCell>
                                 </TableRow>
                             ) : (
@@ -261,43 +263,43 @@ export const POManagementPage: React.FC = () => {
                                             {po.supplierName}
                                         </TableCell>
                                         <TableCell className="tabular-nums font-semibold">
-                                            ${po.totalValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                            {t('common.currencySymbol')}{po.totalValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                         </TableCell>
                                         <TableCell className="text-xs text-muted-foreground">
                                             {po.expectedDeliveryDate ? format(new Date(po.expectedDeliveryDate), 'MMM dd, yyyy') : 'N/A'}
                                         </TableCell>
                                         <TableCell>
                                             <Badge variant="outline" className={getStatusVariant(po.status)}>
-                                                {po.status.replace('_', ' ')}
+                                                {t(`inventory.po.statuses.${po.status}`)}
                                             </Badge>
                                         </TableCell>
                                         <TableCell className="text-right">
                                             <div className="flex justify-end gap-2">
-                                                <Button 
-                                                    variant="ghost" 
-                                                    size="sm" 
-                                                    className="h-8 gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity"
-                                                    onClick={() => {
-                                                        setSelectedPo(po);
-                                                        setIsDetailsOpen(true);
-                                                    }}
-                                                >
-                                                    <Eye className="h-4 w-4" />
-                                                    Explore
-                                                </Button>
-                                                {po.status === 'DRAFT' && (
                                                     <Button 
+                                                        variant="ghost" 
                                                         size="sm" 
-                                                        className="h-8 gap-1.5"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            handleSubmit(po.id);
+                                                        className="h-8 gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                        onClick={() => {
+                                                            setSelectedPo(po);
+                                                            setIsDetailsOpen(true);
                                                         }}
                                                     >
-                                                        Submit
-                                                        <ArrowRight className="h-4 w-4" />
+                                                        <Eye className="h-4 w-4" />
+                                                        {t('inventory.po.actions.explore')}
                                                     </Button>
-                                                )}
+                                                    {po.status === 'DRAFT' && (
+                                                        <Button 
+                                                            size="sm" 
+                                                            className="h-8 gap-1.5"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleSubmit(po.id);
+                                                            }}
+                                                        >
+                                                            {t('inventory.po.actions.submit')}
+                                                            <ArrowRight className="h-4 w-4" />
+                                                        </Button>
+                                                    )}
                                                 {po.status === 'APPROVED' && (
                                                     <Button 
                                                         size="sm" 
@@ -305,7 +307,7 @@ export const POManagementPage: React.FC = () => {
                                                         onClick={(e) => handleSend(po.id, e)}
                                                         disabled={sendOrder.isPending}
                                                     >
-                                                        {sendOrder.isPending ? 'Sending...' : 'Send'}
+                                                        {sendOrder.isPending ? t('inventory.po.actions.sending') : t('inventory.po.actions.send')}
                                                         <Truck className="h-4 w-4" />
                                                     </Button>
                                                 )}
@@ -318,7 +320,7 @@ export const POManagementPage: React.FC = () => {
                                                             navigate(`/inventory/po/${po.id}/receive`);
                                                         }}
                                                     >
-                                                        Receive Goods
+                                                        {t('inventory.po.actions.receive')}
                                                         <Box className="h-4 w-4" />
                                                     </Button>
                                                 )}
@@ -331,7 +333,7 @@ export const POManagementPage: React.FC = () => {
                                                             navigate(`/inventory/po/${po.id}/match`);
                                                         }}
                                                     >
-                                                        Match Invoice
+                                                        {t('inventory.po.actions.match')}
                                                         <FileText className="h-4 w-4" />
                                                     </Button>
                                                 )}
@@ -352,13 +354,16 @@ export const POManagementPage: React.FC = () => {
                         <div className="flex items-center justify-between gap-4 mr-6">
                             <div>
                                 <DialogTitle className="text-2xl font-bold flex items-center gap-3">
-                                    Purchase Order #{selectedPo?.id.slice(0, 8)}
+                                    {t('inventory.po.details.id', { id: selectedPo?.id.slice(0, 8) })}
                                     <Badge variant="outline" className={selectedPo ? getStatusVariant(selectedPo.status) : ''}>
-                                        {selectedPo?.status.replace('_', ' ')}
+                                        {selectedPo ? t(`inventory.po.statuses.${selectedPo.status}`) : ''}
                                     </Badge>
                                 </DialogTitle>
                                 <DialogDescription className="mt-1">
-                                    Issued to <span className="text-foreground font-medium">{selectedPo?.supplierName}</span> on {selectedPo && format(new Date(selectedPo.createdAt), 'PPPP')}
+                                    {selectedPo ? t('inventory.po.details.issuedTo', { 
+                                        supplier: selectedPo.supplierName, 
+                                        date: format(new Date(selectedPo.createdAt), 'PPPP') 
+                                    }) : ''}
                                 </DialogDescription>
                             </div>
                             <div className="flex items-center gap-2">
@@ -366,11 +371,11 @@ export const POManagementPage: React.FC = () => {
                                     <>
                                         <Button variant="outline" className="text-red-500 hover:text-red-600 border-red-200 hover:bg-red-50" onClick={() => setIsRejectDialogOpen(true)}>
                                             <XCircle className="mr-2 h-4 w-4" />
-                                            Reject
+                                            {t('inventory.po.details.reject')}
                                         </Button>
                                         <Button className="bg-emerald-600 hover:bg-emerald-700" onClick={handleApprove}>
                                             <CheckCircle2 className="mr-2 h-4 w-4" />
-                                            Approve Order
+                                            {t('inventory.po.details.approve')}
                                         </Button>
                                     </>
                                 )}
@@ -381,7 +386,7 @@ export const POManagementPage: React.FC = () => {
                                         disabled={sendOrder.isPending}
                                     >
                                         <Truck className="mr-2 h-4 w-4" />
-                                        {sendOrder.isPending ? 'Sending...' : 'Send to Vendor'}
+                                        {sendOrder.isPending ? t('inventory.po.actions.sending') : t('inventory.po.details.sendToVendor')}
                                     </Button>
                                 )}
                             </div>
@@ -390,34 +395,34 @@ export const POManagementPage: React.FC = () => {
 
                     <Tabs defaultValue="items" className="mt-6">
                         <TabsList className="grid w-full grid-cols-2">
-                            <TabsTrigger value="items">Line Items</TabsTrigger>
-                            <TabsTrigger value="history">Lifecycle Timeline</TabsTrigger>
+                            <TabsTrigger value="items">{t('inventory.po.details.lineItems')}</TabsTrigger>
+                            <TabsTrigger value="history">{t('inventory.po.details.timeline')}</TabsTrigger>
                         </TabsList>
                         
                         <TabsContent value="items" className="space-y-4 pt-4">
                             <div className="grid grid-cols-2 gap-8 mb-4">
                                 <div className="space-y-4">
-                                    <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Logistics Summary</h4>
+                                    <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">{t('inventory.po.details.logistics')}</h4>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
-                                            <p className="text-xs text-muted-foreground">Expected Delivery</p>
-                                            <p className="text-sm font-medium">{selectedPo?.expectedDeliveryDate ? format(new Date(selectedPo.expectedDeliveryDate), 'PPP') : 'N/A'}</p>
+                                            <p className="text-xs text-muted-foreground">{t('inventory.po.details.delivery')}</p>
+                                            <p className="text-sm font-medium">{selectedPo?.expectedDeliveryDate ? format(new Date(selectedPo.expectedDeliveryDate), 'PPP') : t('inventory.benchmarking.na')}</p>
                                         </div>
                                         <div>
-                                            <p className="text-xs text-muted-foreground">Tracking Ref</p>
-                                            <p className="text-sm font-medium font-mono">{selectedPo?.trackingNumber || 'Awaiting Shipment'}</p>
+                                            <p className="text-xs text-muted-foreground">{t('inventory.po.details.trackingRef')}</p>
+                                            <p className="text-sm font-medium font-mono">{selectedPo?.trackingNumber || t('inventory.po.details.awaitingShipment')}</p>
                                         </div>
                                     </div>
                                 </div>
                                 <div className="space-y-4">
-                                    <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Financial Overview</h4>
+                                    <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">{t('inventory.po.details.financial')}</h4>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
-                                            <p className="text-xs text-muted-foreground">Total Value</p>
-                                            <p className="text-xl font-bold text-primary">${selectedPo?.totalValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+                                            <p className="text-xs text-muted-foreground">{t('inventory.po.details.totalValue')}</p>
+                                            <p className="text-xl font-bold text-primary">{t('common.currencySymbol')}{selectedPo?.totalValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
                                         </div>
                                         <div>
-                                            <p className="text-xs text-muted-foreground">Payment Terms</p>
+                                            <p className="text-xs text-muted-foreground">{t('inventory.po.details.paymentTerms')}</p>
                                             <p className="text-sm font-medium">Net 30</p>
                                         </div>
                                     </div>
@@ -428,19 +433,19 @@ export const POManagementPage: React.FC = () => {
                                 <Table>
                                     <TableHeader className="bg-muted/20">
                                         <TableRow>
-                                            <TableHead>Ingredient</TableHead>
-                                            <TableHead className="text-right">Unit Cost</TableHead>
-                                            <TableHead className="text-right">Quantity</TableHead>
-                                            <TableHead className="text-right">Subtotal</TableHead>
+                                            <TableHead>{t('inventory.po.details.ingredient')}</TableHead>
+                                            <TableHead className="text-right">{t('inventory.po.details.unitCost')}</TableHead>
+                                            <TableHead className="text-right">{t('inventory.po.details.qty')}</TableHead>
+                                            <TableHead className="text-right">{t('inventory.po.details.subtotal')}</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
                                         {selectedPo?.items.map((item) => (
                                             <TableRow key={item.id}>
                                                 <TableCell className="font-medium">{item.ingredientName}</TableCell>
-                                                <TableCell className="text-right tabular-nums">${item.unitCost.toFixed(2)}</TableCell>
+                                                <TableCell className="text-right tabular-nums">{t('common.currencySymbol')}{item.unitCost.toFixed(2)}</TableCell>
                                                 <TableCell className="text-right tabular-nums">{item.orderedQty}</TableCell>
-                                                <TableCell className="text-right tabular-nums font-semibold">${(item.unitCost * item.orderedQty).toFixed(2)}</TableCell>
+                                                <TableCell className="text-right tabular-nums font-semibold">{t('common.currencySymbol')}{(item.unitCost * item.orderedQty).toFixed(2)}</TableCell>
                                             </TableRow>
                                         ))}
                                     </TableBody>
@@ -459,23 +464,23 @@ export const POManagementPage: React.FC = () => {
             <Dialog open={isRejectDialogOpen} onOpenChange={setIsRejectDialogOpen}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Reject Purchase Order</DialogTitle>
+                        <DialogTitle>{t('inventory.po.rejection.title')}</DialogTitle>
                         <DialogDescription>
-                            Please provide a reason for rejecting this purchase order. This will be shared with the procurement team.
+                            {t('inventory.po.rejection.desc')}
                         </DialogDescription>
                     </DialogHeader>
                     <div className="py-4">
-                        <label className="text-sm font-medium mb-2 block">Reason for Rejection</label>
+                        <label className="text-sm font-medium mb-2 block">{t('inventory.po.rejection.reasonLabel')}</label>
                         <Input 
-                            placeholder="e.g., Price exceeds negotiated limit, incorrect quantity..."
+                            placeholder={t('inventory.po.rejection.reasonPlaceholder')}
                             value={rejectReason}
                             onChange={(e) => setRejectReason(e.target.value)}
                         />
                     </div>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setIsRejectDialogOpen(false)}>Cancel</Button>
+                        <Button variant="outline" onClick={() => setIsRejectDialogOpen(false)}>{t('common.cancel')}</Button>
                         <Button variant="destructive" onClick={handleReject} disabled={!rejectReason}>
-                            Confirm Rejection
+                            {t('inventory.po.rejection.confirm')}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

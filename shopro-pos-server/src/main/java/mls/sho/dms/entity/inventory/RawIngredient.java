@@ -4,9 +4,13 @@ import jakarta.persistence.*;
 import mls.sho.dms.entity.core.BaseEntity;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.Generated;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.generator.EventType;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
+import java.util.List;
+import java.util.UUID;
 
 /**
  * A single purchasable ingredient tracked at the raw material level.
@@ -80,6 +84,27 @@ public class RawIngredient extends BaseEntity {
     @Column(name = "auto_replenish", nullable = false)
     private boolean autoReplenish = false;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "restocking_mode", nullable = false, length = 20)
+    private RestockingMode restockingMode = RestockingMode.MANUAL;
+
+    @Column(name = "shelf_life_days", nullable = false)
+    private int shelfLifeDays = 0;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "storage_type", nullable = false, length = 20)
+    private StorageType storageType = StorageType.AMBIENT;
+
+    @Column(name = "daily_restock_enrolled", nullable = false)
+    private boolean dailyRestockEnrolled = false;
+
+    @Column(name = "category", length = 50)
+    private String category;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "bid_supplier_pool", columnDefinition = "jsonb")
+    private List<UUID> bidSupplierPool = new java.util.ArrayList<>();
+
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "raw_ingredient_allergen", joinColumns = @JoinColumn(name = "ingredient_id",
             foreignKey = @ForeignKey(name = "fk_allergen_ingredient")))
@@ -115,6 +140,18 @@ public class RawIngredient extends BaseEntity {
     public void setMaxStockLevel(BigDecimal maxStockLevel) { this.maxStockLevel = maxStockLevel; }
     public boolean isAutoReplenish() { return autoReplenish; }
     public void setAutoReplenish(boolean autoReplenish) { this.autoReplenish = autoReplenish; }
+    public RestockingMode getRestockingMode() { return restockingMode; }
+    public void setRestockingMode(RestockingMode restockingMode) { this.restockingMode = restockingMode; }
+    public int getShelfLifeDays() { return shelfLifeDays; }
+    public void setShelfLifeDays(int shelfLifeDays) { this.shelfLifeDays = shelfLifeDays; }
+    public StorageType getStorageType() { return storageType; }
+    public void setStorageType(StorageType storageType) { this.storageType = storageType; }
+    public boolean isDailyRestockEnrolled() { return dailyRestockEnrolled; }
+    public void setDailyRestockEnrolled(boolean dailyRestockEnrolled) { this.dailyRestockEnrolled = dailyRestockEnrolled; }
+    public String getCategory() { return category; }
+    public void setCategory(String category) { this.category = category; }
+    public List<UUID> getBidSupplierPool() { return bidSupplierPool; }
+    public void setBidSupplierPool(List<UUID> bidSupplierPool) { this.bidSupplierPool = bidSupplierPool; }
     public java.util.Set<Allergen> getAllergens() { return allergens; }
     public void setAllergens(java.util.Set<Allergen> allergens) { this.allergens = allergens; }
     public Supplier getSupplier() { return supplier; }

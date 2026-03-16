@@ -7,6 +7,8 @@ import mls.sho.dms.application.dto.inventory.CreateIngredientRequest;
 import mls.sho.dms.application.dto.inventory.UpdateIngredientRequest;
 import mls.sho.dms.application.dto.inventory.IngredientResponse;
 import mls.sho.dms.application.service.inventory.IngredientService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -33,8 +35,8 @@ public class IngredientController {
     }
 
     @GetMapping
-    public List<IngredientResponse> findAll() {
-        return ingredientService.findAll();
+    public Page<IngredientResponse> findAll(Pageable pageable) {
+        return ingredientService.findAll(pageable);
     }
 
     @GetMapping("/{id}")
@@ -45,5 +47,10 @@ public class IngredientController {
     @GetMapping("/low-stock")
     public List<IngredientResponse> findLowStock() {
         return ingredientService.findLowStock();
+    }
+
+    @GetMapping("/daily-perishables")
+    public List<IngredientResponse> findDailyPerishables() {
+        return ingredientService.findDailyPerishables();
     }
 }

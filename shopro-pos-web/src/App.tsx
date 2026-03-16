@@ -33,6 +33,7 @@ const POManagementPage = lazy(() => import('./features/inventory/pages/POManagem
 const GoodsReceivingPage = lazy(() => import('./features/inventory/pages/GoodsReceivingPage').then(m => ({ default: m.GoodsReceivingPage })));
 const ThreeWayMatchPanel = lazy(() => import('./features/inventory/pages/ThreeWayMatchPanel').then(m => ({ default: m.ThreeWayMatchPanel })));
 const VendorRFQPage = lazy(() => import('./features/inventory/pages/VendorRFQPage').then(m => ({ default: m.VendorRFQPage })));
+const DailyPerishablesPanel = lazy(() => import('./features/inventory/pages/DailyPerishablesPanel').then(m => ({ default: m.DailyPerishablesPanel })));
 const CrmLayout = lazy(() => import('./features/crm/layouts/CrmLayout').then(m => ({ default: m.CrmLayout })));
 const CustomerListPage = lazy(() => import('./features/crm/pages/CustomerListPage').then(m => ({ default: m.CustomerListPage })));
 const CustomerDetailPage = lazy(() => import('./features/crm/pages/CustomerDetailPage').then(m => ({ default: m.CustomerDetailPage })));
@@ -62,6 +63,12 @@ const SupplierPOFulfillmentPage = lazy(() => import('./features/inventory/pages/
 const SupplierPOListPage = lazy(() => import('./features/inventory/pages/SupplierPOListPage').then(m => ({ default: m.SupplierPOListPage })));
 const SupplierProposalsList = lazy(() => import('./features/inventory/components/SupplierProposalsList').then(m => ({ default: m.SupplierProposalsList })));
 const TaxesDashboardPage = lazy(() => import('./features/taxes/pages/TaxesDashboardPage').then(m => ({ default: m.TaxesDashboardPage })));
+const ExpiryMonitor = lazy(() => import('./features/inventory/pages/ExpiryMonitor').then(m => ({ default: m.ExpiryMonitor })));
+const WasteDonationLog = lazy(() => import('./features/inventory/pages/WasteDonationLog').then(m => ({ default: m.WasteDonationLog })));
+const SupplierDetailPage = lazy(() => import('./features/inventory/pages/SupplierDetailPage').then(m => ({ default: m.SupplierDetailPage })));
+const ShelfLifeRotationDashboard = lazy(() => import('./features/inventory/pages/ShelfLifeRotationDashboard').then(m => ({ default: m.ShelfLifeRotationDashboard })));
+const YieldAnalysisPage = lazy(() => import('./features/inventory/pages/YieldAnalysisPage').then(m => ({ default: m.YieldAnalysisPage })));
+const SKUDetailPage = lazy(() => import('./features/inventory/pages/SKUDetailPage').then(m => ({ default: m.SKUDetailPage })));
 
 const PageLoader = () => (
     <div className="flex h-dvh w-full items-center justify-center">
@@ -90,9 +97,8 @@ function AppContent() {
       {/*
        * Brand accent bar — the animated teal→cyan→coral gradient strip
        * that runs across the very top of every page, echoing the logo palette.
-       */}
+       */}{' '}
       <div className="brand-bar fixed top-0 left-0 right-0 z-[70]" aria-hidden />
-
       <Toaster
         position="top-right"
         theme={theme}
@@ -104,15 +110,13 @@ function AppContent() {
           },
         }}
       />
-
       <Suspense fallback={<PageLoader />}>
         <Routes>
-        {/* ── Public ─────────────────────────────────────────────── */}
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/denied" element={<AccessDeniedPage />} />
-        <Route path="/vendor/rfq/:rfqId" element={<VendorRFQPage />} />
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-
+          {/* ── Public ─────────────────────────────────────────────── */}
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/denied" element={<AccessDeniedPage />} />
+          <Route path="/vendor/rfq/:rfqId" element={<VendorRFQPage />} />
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
           {/* ── Protected shell — header + sidebar live inside AppContent wrapper ── */}
           <Route
             element={
@@ -138,8 +142,15 @@ function AppContent() {
           >
             <Route index element={<Navigate to="stock" replace />} />
             <Route path="stock" element={<InventoryDashboard />} />
+            <Route path="stock/:id" element={<SKUDetailPage />} />
+            <Route path="shelf-life" element={<ShelfLifeRotationDashboard />} />
+            <Route path="yield" element={<YieldAnalysisPage />} />
+            <Route path="perishables" element={<DailyPerishablesPanel />} />
+            <Route path="expiry" element={<ExpiryMonitor />} />
             <Route path="recipes" element={<RecipesPage />} />
+            <Route path="waste" element={<WasteDonationLog />} />
             <Route path="vendors" element={<SupplierManagementPage />} />
+            <Route path="vendors/:id" element={<SupplierDetailPage />} />
             <Route path="procurement" element={<RFQManagementPage />} />
             <Route path="pos" element={<POManagementPage />} />
             <Route path="po/:id/receive" element={<GoodsReceivingPage />} />

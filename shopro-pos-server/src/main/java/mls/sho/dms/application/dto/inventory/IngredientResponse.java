@@ -1,6 +1,10 @@
 package mls.sho.dms.application.dto.inventory;
 
+import mls.sho.dms.entity.inventory.RestockingMode;
+import mls.sho.dms.entity.inventory.StorageType;
+
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 public record IngredientResponse(
@@ -17,6 +21,12 @@ public record IngredientResponse(
     BigDecimal criticalLevel,
     BigDecimal maxStockLevel,
     boolean autoReplenish,
+    RestockingMode restockingMode,
+    int shelfLifeDays,
+    StorageType storageType,
+    boolean dailyRestockEnrolled,
+    String category,
+    List<UUID> bidSupplierPool,
     java.util.Set<String> allergens,
     UUID supplierId,
     String supplierName,

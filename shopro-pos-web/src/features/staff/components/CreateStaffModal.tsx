@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -14,6 +15,7 @@ interface Props {
 }
 
 export const CreateStaffModal: React.FC<Props> = ({ isOpen, onClose }) => {
+    const { t } = useTranslation();
     const { mutate, isPending } = useCreateStaff();
     const { data: roles } = useRoles();
     const { register, handleSubmit, reset, formState: { errors } } = useForm<CreateStaffRequest>({
@@ -28,32 +30,32 @@ export const CreateStaffModal: React.FC<Props> = ({ isOpen, onClose }) => {
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>
-                    <DialogTitle>Add New Staff Member</DialogTitle>
+                    <DialogTitle>{t('staff.createStaff.title')}</DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-2">
                     <div className="space-y-2">
-                        <Label htmlFor="fullName">Full Name</Label>
-                        <Input id="fullName" {...register('fullName')} placeholder="e.g. Arun Kumar" />
+                        <Label htmlFor="fullName">{t('staff.createStaff.fullName')}</Label>
+                        <Input id="fullName" {...register('fullName')} placeholder={t('staff.createStaff.fullNamePlaceholder')} />
                         {errors.fullName && <p className="text-xs text-destructive">{errors.fullName.message}</p>}
                     </div>
 
                     <div className="space-y-2">
-                        <Label htmlFor="role">Role</Label>
+                        <Label htmlFor="role">{t('staff.table.role')}</Label>
                         <select
                             id="role"
                             className="w-full flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                             {...register('role')}
                         >
-                            <option value="">Select a role…</option>
+                            <option value="">{t('staff.createStaff.rolePlaceholder')}</option>
                             {roles?.map(r => (
-                                <option key={r.id} value={r.name}>{r.name.replace('_', ' ')}</option>
+                                <option key={r.id} value={r.name}>{t(`roles.${r.name}`)}</option>
                             ))}
                         </select>
                         {errors.role && <p className="text-xs text-destructive">{errors.role.message}</p>}
                     </div>
 
                     <div className="space-y-2">
-                        <Label htmlFor="pin">4-Digit PIN</Label>
+                        <Label htmlFor="pin">{t('staff.createStaff.pin')}</Label>
                         <Input
                             id="pin"
                             type="password"
@@ -66,9 +68,9 @@ export const CreateStaffModal: React.FC<Props> = ({ isOpen, onClose }) => {
                     </div>
 
                     <DialogFooter>
-                        <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+                        <Button type="button" variant="outline" onClick={onClose}>{t('common.cancel')}</Button>
                         <Button type="submit" disabled={isPending}>
-                            {isPending ? 'Creating…' : 'Create Staff'}
+                            {isPending ? t('staff.createStaff.creating') : t('staff.createStaff.button')}
                         </Button>
                     </DialogFooter>
                 </form>

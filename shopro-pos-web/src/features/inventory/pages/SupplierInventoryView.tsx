@@ -14,10 +14,13 @@ import { useSupplierAuth } from '@/features/auth/SupplierAuthContext';
 import { useSupplierPortalInventory, useProposePrice } from '../hooks/useSupplierPortal';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import InventorySkeleton from '../components/InventorySkeletons';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 export const SupplierInventoryView: React.FC = () => {
+    const { t } = useTranslation();
     const { session } = useSupplierAuth();
     const { data: inventory, isLoading } = useSupplierPortalInventory(session?.supplierId);
 
@@ -27,7 +30,9 @@ export const SupplierInventoryView: React.FC = () => {
 
     const proposeMutation = useProposePrice();
 
-    if (isLoading) return <div className="text-slate-500">Syncing stock visibility...</div>;
+    if (isLoading) {
+        return <InventorySkeleton variant="dashboard" />;
+    }
 
     const handleProposalSubmit = async () => {
         try {
@@ -40,12 +45,12 @@ export const SupplierInventoryView: React.FC = () => {
                     notes: notes
                 }
             });
-            toast.success('Price proposal sent to procurement');
+            toast.success(t('inventory.supplierInventory.toasts.success'));
             setSelectedItem(null);
             setProposedPrice(0);
             setNotes('');
         } catch (e) {
-            toast.error('Failed to send proposal');
+            toast.error(t('inventory.supplierInventory.toasts.error'));
         }
     };
 
@@ -56,17 +61,15 @@ export const SupplierInventoryView: React.FC = () => {
                     <Info className="h-5 w-5 text-amber-700 dark:text-amber-400" />
                 </div>
                 <div>
-                    <h3 className="text-sm font-bold text-amber-900 dark:text-amber-200">Replenishment Intelligence</h3>
-                    <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
-                        We only show you inventory levels for items in your active catalog. Items marked as <strong>Below Par</strong> are strong candidates for upcoming RFQs.
-                    </p>
+                    <h3 className="text-sm font-bold text-amber-900 dark:text-amber-200">{t('inventory.supplierInventory.title')}</h3>
+                    <p className="text-sm text-amber-700 dark:text-amber-300 mt-1" dangerouslySetInnerHTML={{ __html: t('inventory.supplierInventory.desc') }} />
                 </div>
             </div>
 
             <div className="flex gap-4 items-center">
                 <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                    <Input placeholder="Search your catalog..." className="pl-10" />
+                    <Input placeholder={t('inventory.supplierInventory.searchPlaceholder')} className="pl-10" />
                 </div>
             </div>
 
@@ -83,18 +86,18 @@ export const SupplierInventoryView: React.FC = () => {
                                     <h3 className="font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 transition-colors uppercase tracking-tight">
                                         {item.ingredientName}
                                     </h3>
-                                    <p className="text-xs text-slate-500">Current Unit: {item.unitOfMeasure}</p>
+                                    <p className="text-xs text-slate-500">{t('inventory.supplierInventory.currentUnit', { unit: t(`common.units.${item.unitOfMeasure}`, item.unitOfMeasure) })}</p>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-xs text-slate-400 uppercase font-bold">Your Price</p>
-                                    <p className="font-bold text-slate-900 dark:text-slate-100">${Number(item.currentVendorPrice || 0).toFixed(2)}</p>
+                                    <p className="text-xs text-slate-400 uppercase font-bold">{t('inventory.supplierInventory.yourPrice')}</p>
+                                    <p className="font-bold text-slate-900 dark:text-slate-100">{t('common.currencySymbol')}{Number(item.currentVendorPrice || 0).toFixed(2)}</p>
                                 </div>
                             </div>
 
                             <div className="space-y-4">
                                 <div className="flex justify-between items-end text-sm">
                                     <div className="space-y-1">
-                                        <p className="text-xs text-slate-500 font-medium tracking-wide">STOCK STATUS</p>
+                                        <p className="text-xs text-slate-500 font-medium tracking-wide">{t('inventory.supplierInventory.stockStatus')}</p>
                                         <p className={cn(
                                             "font-bold text-lg",
                                             item.belowPar ? "text-orange-600" : "text-emerald-600"
@@ -105,12 +108,12 @@ export const SupplierInventoryView: React.FC = () => {
                                     {item.belowPar ? (
                                         <Badge variant="outline" className="text-[10px] bg-orange-50 text-orange-700 border-orange-200 gap-1 uppercase tracking-tighter">
                                             <AlertTriangle className="h-2.5 w-2.5" />
-                                            Needs Supply
+                                            {t('inventory.supplierInventory.needsSupply')}
                                         </Badge>
                                     ) : (
                                         <Badge variant="outline" className="text-[10px] bg-emerald-50 text-emerald-700 border-emerald-200 gap-1 uppercase tracking-tighter">
                                             <CheckCircle2 className="h-2.5 w-2.5" />
-                                            Optimal
+                                            {t('inventory.supplierInventory.optimal')}
                                         </Badge>
                                     )}
                                 </div>
@@ -134,7 +137,7 @@ export const SupplierInventoryView: React.FC = () => {
                                 >
                                     <div className="flex items-center gap-2">
                                         <TrendingDown className="h-4 w-4" />
-                                        <span>Propose Restock Quote</span>
+                                        <span>{t('inventory.supplierInventory.proposeRestock')}</span>
                                     </div>
                                     <ArrowRight className="h-3 w-3" />
                                 </button>
@@ -148,21 +151,21 @@ export const SupplierInventoryView: React.FC = () => {
             <Dialog open={!!selectedItem} onOpenChange={() => setSelectedItem(null)}>
                 <DialogContent className="sm:max-w-[425px]">
                     <DialogHeader>
-                        <DialogTitle>Propose Instant Restock</DialogTitle>
+                        <DialogTitle>{t('inventory.supplierInventory.dialog.title')}</DialogTitle>
                     </DialogHeader>
                     <div className="grid gap-6 py-4">
                         <div className="space-y-4">
                             <div className="p-4 bg-slate-50 dark:bg-slate-900 rounded-lg">
-                                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Ingredient</p>
+                                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">{t('inventory.po.details.ingredient')}</p>
                                 <p className="font-bold text-slate-900 dark:text-white">{selectedItem?.ingredientName}</p>
                                 <div className="flex justify-between mt-2 text-xs text-slate-500">
-                                    <span>Current Stock: {selectedItem?.currentStock}</span>
-                                    <span>Par Level: {selectedItem?.parLevel}</span>
+                                    <span>{t('inventory.supplierInventory.stockStatus')}: {selectedItem?.currentStock}</span>
+                                    <span>{t('inventory.po.details.parLevel')}: {selectedItem?.parLevel}</span>
                                 </div>
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-sm font-semibold">Proposed Price (${selectedItem?.unitOfMeasure})</label>
+                                <label className="text-sm font-semibold">{t('inventory.supplierInventory.dialog.proposedPriceLabel', { unit: t(`common.units.${selectedItem?.unitOfMeasure}`, selectedItem?.unitOfMeasure) })}</label>
                                 <Input
                                     type="number"
                                     value={proposedPrice}
@@ -171,9 +174,9 @@ export const SupplierInventoryView: React.FC = () => {
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-sm font-semibold">Optional Message</label>
+                                <label className="text-sm font-semibold">{t('inventory.supplierInventory.dialog.messageLabel')}</label>
                                 <Input
-                                    placeholder="Availability, volume discounts, etc."
+                                    placeholder={t('inventory.supplierInventory.dialog.messagePlaceholder')}
                                     value={notes}
                                     onChange={e => setNotes(e.target.value)}
                                 />
@@ -181,13 +184,13 @@ export const SupplierInventoryView: React.FC = () => {
                         </div>
                     </div>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setSelectedItem(null)}>Cancel</Button>
+                        <Button variant="outline" onClick={() => setSelectedItem(null)}>{t('common.cancel')}</Button>
                         <Button
                             className="bg-indigo-600 hover:bg-indigo-700 gap-2"
                             disabled={proposeMutation.isPending}
                             onClick={handleProposalSubmit}
                         >
-                            {proposeMutation.isPending ? 'Sending...' : 'Send Proposal'}
+                            {proposeMutation.isPending ? t('inventory.supplierInventory.dialog.sending') : t('inventory.supplierInventory.dialog.sendButton')}
                             <ArrowRight className="h-4 w-4" />
                         </Button>
                     </DialogFooter>

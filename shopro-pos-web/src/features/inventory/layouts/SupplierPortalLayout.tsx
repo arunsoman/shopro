@@ -14,7 +14,10 @@ import { cn } from '@/lib/utils';
 import { sideNavItemClass } from '@/components/layout/SideNavItem';
 import { NotificationBadge, NotificationTray } from '@/features/notifications/components/NotificationTray';
 
+import { useTranslation } from 'react-i18next';
+
 export const SupplierPortalLayout: React.FC = () => {
+    const { t } = useTranslation();
     const { session, logout } = useSupplierAuth();
     const location = useLocation();
     const [isNotificationsOpen, setIsNotificationsOpen] = React.useState(false);
@@ -22,11 +25,11 @@ export const SupplierPortalLayout: React.FC = () => {
     const notificationUser = session ? { id: session.userId, role: session.role } : undefined;
 
     const navigation = [
-        { name: 'Dashboard', href: '/supplier/dashboard', icon: LayoutDashboard },
-        { name: 'Active RFQs', href: '/supplier/rfqs', icon: ClipboardList },
-        { name: 'Purchase Orders', href: '/supplier/pos', icon: Package },
-        { name: 'Inventory View', href: '/supplier/inventory', icon: Package },
-        { name: 'Price Proposals', href: '/supplier/proposals', icon: TrendingUp },
+        { name: t('supplierPortal.dashboard'), href: '/supplier/dashboard', icon: LayoutDashboard },
+        { name: t('supplierPortal.activeRfqs'), href: '/supplier/rfqs', icon: ClipboardList },
+        { name: t('supplierPortal.purchaseOrders'), href: '/supplier/pos', icon: Package },
+        { name: t('supplierPortal.inventoryView'), href: '/supplier/inventory', icon: Package },
+        { name: t('supplierPortal.priceProposals'), href: '/supplier/proposals', icon: TrendingUp },
     ];
 
     if (!session) return <Outlet />;
@@ -41,7 +44,7 @@ export const SupplierPortalLayout: React.FC = () => {
                             V
                         </div>
                         <div className="overflow-hidden">
-                            <h2 className="font-bold text-foreground truncate">Supplier Portal</h2>
+                            <h2 className="font-bold text-foreground truncate">{t('supplierPortal.title')}</h2>
                             <p className="text-xs text-muted-foreground truncate">{session.supplierName}</p>
                         </div>
                     </div>
@@ -50,7 +53,7 @@ export const SupplierPortalLayout: React.FC = () => {
                 <nav className="flex-1 p-3 lg:p-4 space-y-1 w-full text-center">
                     {navigation.map((item) => (
                         <Link
-                            key={item.name}
+                            key={item.href}
                             to={item.href}
                             className={cn(
                                  sideNavItemClass(location.pathname === item.href),
@@ -78,10 +81,10 @@ export const SupplierPortalLayout: React.FC = () => {
                         size="sm"
                         className="w-full justify-center lg:justify-start gap-3 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30"
                         onClick={logout}
-                        title="Log Out"
+                        title={t('supplierPortal.logout')}
                     >
                         <LogOut className="h-4 w-4 shrink-0" />
-                        <span className="hidden lg:block">Log Out</span>
+                        <span className="hidden lg:block">{t('supplierPortal.logout')}</span>
                     </Button>
                 </div>
             </aside>
@@ -90,7 +93,7 @@ export const SupplierPortalLayout: React.FC = () => {
             <main className="flex-1 flex flex-col overflow-hidden">
                 <header className="h-16 border-b bg-surface border-border flex items-center justify-between px-8">
                     <h1 className="text-lg font-semibold text-foreground">
-                        {navigation.find(n => n.href === location.pathname)?.name || 'Portal'}
+                        {navigation.find(n => n.href === location.pathname)?.name || t('common.portal', 'Portal')}
                     </h1>
                     <div className="flex items-center gap-4 relative">
                         <NotificationBadge

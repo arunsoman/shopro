@@ -3,9 +3,11 @@ import { useMenuCategories, useCreateMenuCategory, useReorderMenuCategories } fr
 import { CategoryDraggableList } from "../components/CategoryDraggableList";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useTranslation } from "react-i18next";
 import type { MenuCategoryResponse } from "../schema/menuSchema";
 
 export function CategoriesPage() {
+    const { t } = useTranslation();
     const { data: categories, isLoading, error } = useMenuCategories();
     const createCategory = useCreateMenuCategory();
     const reorderCategories = useReorderMenuCategories();
@@ -22,7 +24,7 @@ export function CategoriesPage() {
             setIsCreating(false);
             setErrorMsg(null);
         } catch (err: any) {
-            setErrorMsg(err.message || "Failed to create category");
+            setErrorMsg(err.message || t('menu.failedCreateCategory'));
         }
     };
 
@@ -40,10 +42,10 @@ export function CategoriesPage() {
         <div className="space-y-6">
             <div className="flex items-center justify-between border-b pb-4">
                 <div>
-                    <h1 className="text-2xl font-bold tracking-tight">Categories</h1>
-                    <p className="text-muted-foreground text-sm">Organize your menu structure.</p>
+                    <h1 className="text-2xl font-bold tracking-tight">{t('menu.categories')}</h1>
+                    <p className="text-muted-foreground text-sm">{t('menu.categoriesDesc')}</p>
                 </div>
-                <Button onClick={() => setIsCreating(true)}>+ Create Category</Button>
+                <Button onClick={() => setIsCreating(true)}>{t('menu.createCategory')}</Button>
             </div>
 
             {isCreating && (
@@ -51,14 +53,14 @@ export function CategoriesPage() {
                     <Input
                         value={newCategoryName}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewCategoryName(e.target.value)}
-                        placeholder="e.g. Appetizers, Mains"
+                        placeholder={t('menu.categoryPlaceholder')}
                         autoFocus
                     />
                     <Button onClick={handleCreate} disabled={createCategory.isPending}>
-                        {createCategory.isPending ? "Saving..." : "Save"}
+                        {createCategory.isPending ? t('common.wait') : t('common.save')}
                     </Button>
                     <Button variant="ghost" onClick={() => { setIsCreating(false); setErrorMsg(null); }}>
-                        Cancel
+                        {t('common.cancel')}
                     </Button>
                     {errorMsg && <p className="text-sm text-red-500">{errorMsg}</p>}
                 </div>
@@ -69,7 +71,7 @@ export function CategoriesPage() {
                     {[1, 2, 3].map(i => <div key={i} className="h-14 skeleton-shimmer rounded-md" />)}
                 </div>
             ) : error ? (
-                <div className="text-red-500">Failed to load categories.</div>
+                <div className="text-red-500">{t('menu.failedLoadCategories')}</div>
             ) : (
                 <CategoryDraggableList
                     categories={categories || []}

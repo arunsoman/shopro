@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -16,6 +17,7 @@ interface Props {
 }
 
 export const RoleEditorModal: React.FC<Props> = ({ role, isOpen, onClose, allPermissions }) => {
+    const { t } = useTranslation();
     const updateMutation = useUpdateRoleEntity();
     const createMutation = useCreateRole();
 
@@ -66,23 +68,23 @@ export const RoleEditorModal: React.FC<Props> = ({ role, isOpen, onClose, allPer
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                    <DialogTitle>{role ? `Edit Role: ${role.name}` : 'Create New Role'}</DialogTitle>
+                    <DialogTitle>{role ? t('staff.roleEditor.titleEdit', { name: role.name }) : t('staff.roleEditor.titleCreate')}</DialogTitle>
                 </DialogHeader>
 
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 py-4">
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                            <Label>Role Name</Label>
+                            <Label>{t('staff.accessControl.roleName')}</Label>
                             <Input {...register('name')} placeholder="e.g. FLOOR_MANAGER" />
                         </div>
                         <div className="space-y-2">
-                            <Label>Description</Label>
-                            <Input {...register('description')} placeholder="Brief role summary" />
+                            <Label>{t('staff.roleEditor.description')}</Label>
+                            <Input {...register('description')} placeholder={t('staff.roleEditor.descPlaceholder')} />
                         </div>
                     </div>
 
                     <div className="space-y-4">
-                        <Label className="text-base">Permissions Matrix</Label>
+                        <Label className="text-base">{t('staff.roleEditor.matrixTitle')}</Label>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 border rounded-xl p-4 bg-muted/30">
                             {categories.map(cat => (
                                 <div key={cat} className="space-y-3">
@@ -117,9 +119,9 @@ export const RoleEditorModal: React.FC<Props> = ({ role, isOpen, onClose, allPer
                     </div>
 
                     <DialogFooter>
-                        <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+                        <Button type="button" variant="outline" onClick={onClose}>{t('common.cancel')}</Button>
                         <Button type="submit" disabled={updateMutation.isPending || createMutation.isPending}>
-                            {role ? 'Save Changes' : 'Create Role'}
+                            {role ? t('common.save') : t('common.create')}
                         </Button>
                     </DialogFooter>
                 </form>

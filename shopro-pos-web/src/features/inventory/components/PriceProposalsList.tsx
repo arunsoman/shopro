@@ -7,12 +7,14 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Check, X, Tag, History, Clock, ShoppingCart } from 'lucide-react';
 import { toast } from 'sonner';
-import { format } from 'date-fns';
 import { useAuth } from '@/lib/auth/AuthContext';
+import { useTranslation } from 'react-i18next';
 import { usePendingProposals, useReviewProposal, useProposalHistory, useCreatePoFromProposal } from '../hooks/usePriceProposals';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import InventorySkeleton from '../components/InventorySkeletons';
 
 export const PriceProposalsList: React.FC = () => {
+    const { t, i18n } = useTranslation();
     const { session } = useAuth();
     const { data: pendingProposals, isLoading: isPendingLoading } = usePendingProposals();
     const { data: historyProposals, isLoading: isHistoryLoading } = useProposalHistory();
@@ -32,9 +34,9 @@ export const PriceProposalsList: React.FC = () => {
                     staffId: session?.id || ''
                 }
             });
-            toast.success(`Proposal for ${ingredientName} accepted successfully.`);
+            toast.success(t('inventory.proposals.toasts.acceptSuccess', { ingredient: ingredientName }));
         } catch (error) {
-            toast.error('Failed to accept proposal.');
+            toast.error(t('inventory.proposals.toasts.acceptError'));
         }
     };
 
@@ -55,11 +57,11 @@ export const PriceProposalsList: React.FC = () => {
                     staffId: session?.id || ''
                 }
             });
-            toast.success('Proposal rejected.');
+            toast.success(t('inventory.proposals.toasts.rejectSuccess'));
             setIsRejectDialogOpen(false);
             setSelectedProposalId(null);
         } catch (error) {
-            toast.error('Failed to reject proposal.');
+            toast.error(t('inventory.proposals.toasts.rejectError'));
         }
     };
 
@@ -69,14 +71,14 @@ export const PriceProposalsList: React.FC = () => {
                 id: proposalId,
                 staffId: session?.id || ''
             });
-            toast.success(`Draft PO created for ${ingredientName}.`);
+            toast.success(t('inventory.proposals.toasts.createPoSuccess', { ingredient: ingredientName }));
         } catch (error) {
-            toast.error('Failed to create draft PO.');
+            toast.error(t('inventory.proposals.toasts.createPoError'));
         }
     };
 
     if (isPendingLoading || isHistoryLoading) {
-        return <div className="p-4 text-center">Loading proposals...</div>;
+        return <InventorySkeleton variant="dashboard" />;
     }
 
     const renderProposalTable = (proposals: any[], isHistory = false) => {
@@ -85,7 +87,7 @@ export const PriceProposalsList: React.FC = () => {
                 <Card>
                     <CardContent className="flex flex-col items-center justify-center py-12 text-muted-foreground">
                         <Tag className="h-12 w-12 mb-4 opacity-20" />
-                        <p>{isHistory ? 'No proposal history found.' : 'No pending price proposals to review.'}</p>
+                        <p>{isHistory ? t('inventory.proposals.noHistory') : t('inventory.proposals.noPending')}</p>
                     </CardContent>
                 </Card>
             );
@@ -97,13 +99,13 @@ export const PriceProposalsList: React.FC = () => {
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>Date</TableHead>
-                                <TableHead>Supplier</TableHead>
-                                <TableHead>Ingredient</TableHead>
-                                <TableHead>Current Price</TableHead>
-                                <TableHead>Proposed Price</TableHead>
-                                <TableHead>Notes</TableHead>
-                                {isHistory ? <TableHead>Status</TableHead> : <TableHead className="text-right">Actions</TableHead>}
+                                <TableHead>{t('inventory.proposals.table.date')}</TableHead>
+                                <TableHead>{t('inventory.proposals.table.supplier')}</TableHead>
+                                <TableHead>{t('inventory.proposals.table.ingredient')}</TableHead>
+                                <TableHead>{t('inventory.proposals.table.currentPrice')}</TableHead>
+                                <TableHead>{t('inventory.proposals.table.proposedPrice')}</TableHead>
+                                <TableHead>{t('inventory.proposals.table.notes')}</TableHead>
+                                {isHistory ? <TableHead>{t('inventory.proposals.table.status')}</TableHead> : <TableHead className="text-right">{t('inventory.proposals.table.actions')}</TableHead>}
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -111,16 +113,16 @@ export const PriceProposalsList: React.FC = () => {
                                 const isLower = proposal.proposedPrice < proposal.currentPrice;
                                 return (
                                     <TableRow key={proposal.id}>
-                                        <TableCell>{format(new Date(isHistory ? proposal.reviewedAt || proposal.createdAt : proposal.createdAt), 'MMM d, yyyy')}</TableCell>
-                                        <TableCell className="font-medium">{proposal.supplierName}</TableCell>
+                                        <TableCell>{new Date(isHistory ? proposal.reviewedAt || proposal.createdAt : proposal.createdAt).toLocaleDateString(i18n.language, { month: 'short', day: 'numeric', year: 'numeric' })}</TableCell>
+                                        <TableCell>{proposal.supplierName}</TableCell>
                                         <TableCell>{proposal.ingredientName}</TableCell>
-                                        <TableCell>${proposal.currentPrice.toFixed(2)} / {proposal.unitOfMeasure}</TableCell>
+                                        <TableCell>{t('common.currencySymbol')}{proposal.currentPrice.toFixed(2)} / {t(`common.units.${proposal.unitOfMeasure}`, proposal.unitOfMeasure)}</TableCell>
                                         <TableCell>
                                             <div className="flex items-center gap-2">
-                                                <span className="font-bold">${proposal.proposedPrice.toFixed(2)}</span>
+                                                <span className="font-bold">{t('common.currencySymbol')}{proposal.proposedPrice.toFixed(2)}</span>
                                                 {isLower && (
                                                     <Badge variant="secondary" className="bg-green-100 text-green-800 hover:bg-green-100 border-green-200">
-                                                        Savings
+                                                        {t('inventory.proposals.savings')}
                                                     </Badge>
                                                 )}
                                             </div>
@@ -133,11 +135,11 @@ export const PriceProposalsList: React.FC = () => {
                                                 <div className="flex justify-end items-center gap-3">
                                                     {proposal.generatedPoStatus ? (
                                                         <Badge variant="outline" className="bg-indigo-50 text-indigo-700 border-indigo-200">
-                                                            {proposal.generatedPoStatus.replace('_', ' ')}
+                                                            {t(`inventory.po.statuses.${proposal.generatedPoStatus}`)}
                                                         </Badge>
                                                     ) : (
                                                         <Badge variant={proposal.status === 'ACCEPTED' ? 'success' : 'destructive'} className={proposal.status === 'ACCEPTED' ? 'bg-green-100 text-green-800' : ''}>
-                                                            {proposal.status}
+                                                            {t(`inventory.proposals.statuses.${proposal.status}`)}
                                                         </Badge>
                                                     )}
                                                     {proposal.status === 'ACCEPTED' && !proposal.generatedPoId && (
@@ -146,7 +148,7 @@ export const PriceProposalsList: React.FC = () => {
                                                             variant="ghost" 
                                                             className="h-8 w-8 p-0 text-primary hover:text-primary hover:bg-primary/10"
                                                             onClick={() => handleCreatePO(proposal.id, proposal.ingredientName)}
-                                                            title="Create Draft PO"
+                                                            title={t('inventory.proposals.createDraftPo')}
                                                         >
                                                             <ShoppingCart className="h-4 w-4" />
                                                         </Button>
@@ -156,11 +158,11 @@ export const PriceProposalsList: React.FC = () => {
                                                 <div className="flex justify-end gap-2">
                                                     <Button size="sm" variant="outline" className="text-red-500 hover:bg-red-50" onClick={() => handleRejectClick(proposal.id)}>
                                                         <X className="h-4 w-4 mr-1" />
-                                                        Reject
+                                                        {t('common.reject')}
                                                     </Button>
                                                     <Button size="sm" onClick={() => handleAccept(proposal.id, proposal.ingredientName)}>
                                                         <Check className="h-4 w-4 mr-1" />
-                                                        Accept
+                                                        {t('common.accept')}
                                                     </Button>
                                                 </div>
                                             )}
@@ -182,7 +184,7 @@ export const PriceProposalsList: React.FC = () => {
                     <TabsList>
                         <TabsTrigger value="pending" className="flex items-center gap-2">
                             <Clock className="h-4 w-4" />
-                            Pending Proposals
+                            {t('inventory.proposals.tabs.pending')}
                             {pendingProposals && pendingProposals.length > 0 && (
                                 <Badge variant="secondary" className="ml-2 bg-primary/10 text-primary border-none">
                                     {pendingProposals.length}
@@ -191,7 +193,7 @@ export const PriceProposalsList: React.FC = () => {
                         </TabsTrigger>
                         <TabsTrigger value="history" className="flex items-center gap-2">
                             <History className="h-4 w-4" />
-                            Review History
+                            {t('inventory.proposals.tabs.history')}
                         </TabsTrigger>
                     </TabsList>
                 </div>
@@ -208,21 +210,21 @@ export const PriceProposalsList: React.FC = () => {
             <Dialog open={isRejectDialogOpen} onOpenChange={setIsRejectDialogOpen}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Reject Price Proposal</DialogTitle>
+                        <DialogTitle>{t('inventory.proposals.rejectDialog.title')}</DialogTitle>
                         <DialogDescription>
-                            Please provide a reason for rejecting this proposal. This will be visible to the supplier (optional).
+                            {t('inventory.proposals.rejectDialog.description')}
                         </DialogDescription>
                     </DialogHeader>
                     <div className="py-4">
                         <Input 
                             value={rejectReason}
                             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRejectReason(e.target.value)}
-                            placeholder="e.g., Price is still too high compared to market..."
+                            placeholder={t('inventory.proposals.rejectDialog.placeholder')}
                         />
                     </div>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setIsRejectDialogOpen(false)}>Cancel</Button>
-                        <Button variant="destructive" onClick={submitReject}>Reject Proposal</Button>
+                        <Button variant="outline" onClick={() => setIsRejectDialogOpen(false)}>{t('common.cancel')}</Button>
+                        <Button variant="destructive" onClick={submitReject}>{t('inventory.proposals.rejectDialog.button')}</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

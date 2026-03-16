@@ -3,6 +3,8 @@ import type { DropResult } from '@hello-pangea/dnd';
 import type { MenuCategoryResponse } from '../schema/menuSchema';
 import { GripVertical, MoreVertical } from 'lucide-react';
 
+import { useTranslation } from 'react-i18next';
+
 interface CategoryDraggableListProps {
     categories: MenuCategoryResponse[];
     onReorder: (newOrderedIds: string[]) => void;
@@ -10,6 +12,7 @@ interface CategoryDraggableListProps {
 }
 
 export function CategoryDraggableList({ categories, onReorder, onEdit }: CategoryDraggableListProps) {
+    const { t } = useTranslation();
 
     const handleDragEnd = (result: DropResult) => {
         if (!result.destination) return;
@@ -30,8 +33,8 @@ export function CategoryDraggableList({ categories, onReorder, onEdit }: Categor
     if (categories.length === 0) {
         return (
             <div className="flex h-32 flex-col items-center justify-center rounded-lg border border-dashed border-border text-muted">
-                <p className="text-sm">No categories found.</p>
-                <p className="text-xs">Click '+ Create Category' to get started.</p>
+                <p className="text-sm">{t('menu.noCategoriesFound')}</p>
+                <p className="text-xs">{t('menu.clickToGetStarted')}</p>
             </div>
         );
     }
