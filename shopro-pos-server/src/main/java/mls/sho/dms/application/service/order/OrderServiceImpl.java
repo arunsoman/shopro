@@ -63,6 +63,7 @@ public class OrderServiceImpl implements OrderService {
     private final mls.sho.dms.tax.repository.TaxRuleRepository taxRuleRepository;
 
     @Override
+    @Transactional
     public OrderResponse createOrder(CreateOrderRequest request, String performedBy) {
         StaffMember server = staffMemberRepository.findByFullName(performedBy)
             .orElseThrow(() -> new ResourceNotFoundException("Server not found: " + performedBy));
@@ -122,6 +123,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public OrderResponse addOrderItem(UUID orderId, AddOrderItemRequest request) {
         log.warn("=== ADD ITEM REQUEST ===");
         log.warn("Order: {}", orderId);
@@ -181,6 +183,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public OrderResponse updateItemQuantity(UUID orderId, UUID itemId, int newQuantity) {
         OrderTicket ticket = orderTicketRepository.findById(orderId)
             .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + orderId));
@@ -202,6 +205,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public OrderResponse sendToKitchen(UUID orderId) {
         OrderTicket ticket = orderTicketRepository.findById(orderId)
             .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + orderId));
@@ -244,6 +248,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public OrderResponse fireCourse(UUID orderId, int courseNumber) {
         OrderTicket ticket = orderTicketRepository.findById(orderId)
             .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + orderId));
@@ -282,6 +287,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public OrderResponse applyDiscount(UUID orderId, BigDecimal amount, boolean isPercentage, String managerPin) {
         // TODO: Implement Manager PIN validation
         OrderTicket ticket = orderTicketRepository.findById(orderId)
@@ -386,6 +392,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public OrderResponse updateStatus(UUID orderId, TicketStatus status) {
         OrderTicket ticket = orderTicketRepository.findById(orderId)
             .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + orderId));
