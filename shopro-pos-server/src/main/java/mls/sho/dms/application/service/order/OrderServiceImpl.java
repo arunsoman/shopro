@@ -362,7 +362,17 @@ public class OrderServiceImpl implements OrderService {
         }
 
         ticket.setStatus(TicketStatus.SERVED);
-        recordAuditLog(ticket, "ORDER_SERVED", "Order items delivered to guest", ticket.getServer());
+
+        // Update individual items to DELIVERED (US-4.3)
+        List<OrderItem> items = orderItemRepository.findByTicketAndStatusNotOrderByCreatedAtAsc(ticket, OrderItemStatus.VOIDED);
+        for (OrderItem item : items) {
+            if (item.getStatus() != OrderItemStatus.DELIVERED) {
+                item.setStatus(OrderItemStatus.DELIVERED);
+                orderItemRepository.save(item);
+            }
+        }
+
+        recordAuditLog(ticket, "ORDER_SERVED", "Order items delivered to guest. " + items.size() + " items marked as delivered.", ticket.getServer());
         
         if (ticket.getTable() != null) {
             TableShape table = ticket.getTable();
