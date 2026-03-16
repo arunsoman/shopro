@@ -161,18 +161,6 @@ class _UnifiedOrderingScreenState extends ConsumerState<UnifiedOrderingScreen> {
             ],
           ),
           const Spacer(),
-          if (isDineIn)
-            OutlinedButton(
-              onPressed: () {},
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: AppColors.lightBorder),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                ),
-              ),
-              child: const Text('Move Table'),
-            ),
-          const SizedBox(width: AppSpacing.md),
           ElevatedButton(
             onPressed: () {},
             style: ElevatedButton.styleFrom(
