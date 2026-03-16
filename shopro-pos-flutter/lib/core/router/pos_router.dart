@@ -4,7 +4,6 @@ import '../../features/auth/presentation/providers/auth_provider.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/floor_plan/presentation/screens/floor_plan_screen.dart';
 import '../../features/order/presentation/screens/order_course_management_screen.dart';
-import '../../features/menu/presentation/screens/menu_navigation_screen.dart';
 import '../../features/order/presentation/screens/checkout_screen.dart';
 import '../../features/order/presentation/screens/order_history_screen.dart';
 import '../../features/order/presentation/screens/staff_dashboard_screen.dart';
@@ -63,7 +62,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           final order = state.extra as OrderTicket?;
           return MainNavigationLayout(
             location: state.uri.path,
-            child: OrderCourseManagementScreen(order: order),
+            child: UnifiedOrderingScreen(order: order),
           );
         },
       ),
@@ -71,7 +70,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/menu',
         builder: (context, state) => MainNavigationLayout(
           location: state.uri.path,
-          child: const MenuNavigationScreen(),
+          child: const UnifiedOrderingScreen(),
         ),
       ),
       GoRoute(
