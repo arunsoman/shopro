@@ -11,6 +11,7 @@ import {
     ChevronRight,
     Truck,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface NavCard {
     title: string;
@@ -115,25 +116,76 @@ const NAV_CARDS: NavCard[] = [
 
 export function DashboardPage() {
     const { session, hasRole } = useAuth();
-    const visibleCards = NAV_CARDS.filter(card => hasRole(card.roles));
+    const { t } = useTranslation();
+
+    const translatedCards = [
+        {
+            ...NAV_CARDS[0],
+            title: t('dashboard.floorTitle'),
+            description: t('dashboard.floorDesc'),
+        },
+        {
+            ...NAV_CARDS[1],
+            title: t('dashboard.menuTitle'),
+            description: t('dashboard.menuDesc'),
+        },
+        {
+            ...NAV_CARDS[2],
+            title: t('dashboard.inventoryTitle'),
+            description: t('dashboard.inventoryDesc'),
+        },
+        {
+            ...NAV_CARDS[3],
+            title: t('dashboard.suppliersTitle'),
+            description: t('dashboard.suppliersDesc'),
+        },
+        {
+            ...NAV_CARDS[4],
+            title: t('dashboard.crmTitle'),
+            description: t('dashboard.crmDesc'),
+        },
+        {
+            ...NAV_CARDS[5],
+            title: t('dashboard.staffTitle'),
+            description: t('dashboard.staffDesc'),
+        },
+        {
+            ...NAV_CARDS[6],
+            title: t('dashboard.rolesTitle'),
+            description: t('dashboard.rolesDesc'),
+        },
+        {
+            ...NAV_CARDS[7],
+            title: t('dashboard.taxesTitle'),
+            description: t('dashboard.taxesDesc'),
+        },
+        {
+            ...NAV_CARDS[8],
+            title: t('dashboard.settingsTitle'),
+            description: t('dashboard.settingsDesc'),
+        },
+    ];
+
+    const visibleCards = translatedCards.filter(card => hasRole(card.roles));
 
     return (
         <div className="max-w-7xl mx-auto px-6">
             {/* Hero greeting */}
-            <div className="pt-12 pb-10">
-                <p className="text-muted-foreground text-sm font-medium uppercase tracking-widest mb-2">
-                    Welcome back
-                </p>
-                <h1 className="text-4xl font-bold tracking-tight text-foreground">
-                    {session?.fullName?.split(' ')[0]},&nbsp;
-                    <span className="bg-gradient-to-r from-orange-400 to-red-500 bg-clip-text text-transparent">
-                        what are we doing today?
-                    </span>
-                </h1>
-                <p className="mt-3 text-muted-foreground max-w-xl">
-                    Select a section below to get started. You have access to{' '}
-                    <span className="text-foreground font-medium">{visibleCards.length} modules</span> based on your role.
-                </p>
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pt-12 pb-10">
+                <div className="flex-1">
+                    <p className="text-muted-foreground text-sm font-medium uppercase tracking-widest mb-2">
+                        {t('dashboard.welcome')}
+                    </p>
+                    <h1 className="text-4xl font-bold tracking-tight text-foreground">
+                        {session?.fullName?.split(' ')[0]},&nbsp;
+                        <span className="bg-gradient-to-r from-orange-400 to-red-500 bg-clip-text text-transparent">
+                            {t('dashboard.question')}
+                        </span>
+                    </h1>
+                    <p className="mt-3 text-muted-foreground max-w-xl">
+                        {t('dashboard.description', { count: visibleCards.length })}
+                    </p>
+                </div>
             </div>
 
             {/* Cards grid */}
@@ -167,7 +219,7 @@ export function DashboardPage() {
                                 </p>
 
                                 <div className="mt-5 flex items-center gap-1 text-xs font-medium text-muted-foreground group-hover:text-primary transition-colors">
-                                    Open module
+                                    {t('dashboard.openModule')}
                                     <ChevronRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
                                 </div>
                             </div>
