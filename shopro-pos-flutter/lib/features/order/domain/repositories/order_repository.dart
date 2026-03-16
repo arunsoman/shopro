@@ -132,8 +132,8 @@ class OrderRepositoryImpl implements OrderRepository {
     Map<String, dynamic> itemData,
   ) async {
     final response = await _apiClient.patch(
-      '/orders/$orderId/items/$itemId',
-      data: itemData,
+      '/orders/$orderId/items/$itemId/quantity',
+      queryParameters: {'newQuantity': itemData['quantity']},
     );
     return OrderTicket.fromJson(response.data);
   }

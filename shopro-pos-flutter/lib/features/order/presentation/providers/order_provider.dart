@@ -244,10 +244,6 @@ class OrderNotifier extends Notifier<OrderState> {
 
   Future<void> updateItemQuantity(String itemId, int newQuantity) async {
     if (state.activeOrder == null) return;
-    if (newQuantity <= 0) {
-      // Potentially void item logic here
-      return;
-    }
 
     state = state.copyWith(isLoading: true);
     try {
