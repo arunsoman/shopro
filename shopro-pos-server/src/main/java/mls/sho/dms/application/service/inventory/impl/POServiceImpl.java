@@ -48,6 +48,8 @@ public class POServiceImpl implements POService {
     private final POGeneratorService poGeneratorService;
     private final POStatusHistoryRepository historyRepository;
     private final SupplierUserRepository supplierUserRepository;
+    
+    private static final UUID SYSTEM_ACTOR_ID = UUID.fromString("00000000-0000-0000-0000-000000000000");
 
     @Override
     @Transactional(readOnly = true)
@@ -60,7 +62,8 @@ public class POServiceImpl implements POService {
     private PurchaseOrderResponse mapToResponse(PurchaseOrder po) {
         return PurchaseOrderResponse.builder()
                 .id(po.getId())
-                .supplierName(po.getSupplier().getCompanyName())
+                .supplierId(po.getSupplier() != null ? po.getSupplier().getId() : null)
+                .supplierName(po.getSupplier() != null ? po.getSupplier().getCompanyName() : "Pending Award")
                 .status(po.getStatus())
                 .totalValue(po.getTotalValue())
                 .expectedDeliveryDate(po.getExpectedDeliveryDate())
@@ -100,15 +103,17 @@ public class POServiceImpl implements POService {
 
         BigDecimal total = po.getTotalValue();
         
+        UUID authorId = po.getGeneratedBy() != null ? po.getGeneratedBy().getId() : SYSTEM_ACTOR_ID;
+
         // Auto Approval Tier (< $500)
         if (total.compareTo(TIER1_AUTO_LIMIT) < 0) {
             log.info("PO #{} auto-approved (Value: ${})", po.getId(), total);
-            stateMachineService.transition(poId, PurchaseOrderStatus.APPROVED, po.getGeneratedBy().getId(), "System Auto-Approved (<$500)");
+            stateMachineService.transition(poId, PurchaseOrderStatus.APPROVED, authorId, "System Auto-Approved (<$500)");
             return getPoOrThrow(poId);
         }
 
         // Needs Manual Approval
-        stateMachineService.transition(poId, PurchaseOrderStatus.PENDING_APPROVAL, po.getGeneratedBy().getId(), "Submitted for review");
+        stateMachineService.transition(poId, PurchaseOrderStatus.PENDING_APPROVAL, authorId, "Submitted for review");
 
         return poRepository.save(po);
     }

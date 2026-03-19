@@ -23,6 +23,7 @@ export const VendorRFQPage: React.FC = () => {
         paymentTerms: 'NET30',
         notes: ''
     });
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleSubmit = async () => {
         if (!supplierId) {
@@ -177,10 +178,10 @@ export const VendorRFQPage: React.FC = () => {
                             <CardFooter>
                                 <Button
                                     className="w-full"
-                                    disabled={submitBid.isPending || isExpired}
+                                    disabled={submitBid.isPending || isSubmitting || isExpired}
                                     onClick={handleSubmit}
                                 >
-                                    {submitBid.isPending ? 'Submitting...' : 'Submit Quotation'}
+                                    {submitBid.isPending || isSubmitting ? 'Submitting...' : 'Submit Quotation'}
                                 </Button>
                             </CardFooter>
                         </Card>

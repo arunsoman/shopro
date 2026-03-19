@@ -89,16 +89,11 @@ public class ReceivingServiceImpl implements ReceivingService {
                 grnLine.setGoodsReceiptNote(grn);
                 grnLine.setIngredient(poLine.getIngredient());
                 grnLine.setReceivedQty(qtyReceived);
-                grnLineRepository.save(grnLine);
+                // grnLineRepository.save(grnLine); // Line 92 - already saved above
 
-                // Update stock level
-                RawIngredient ingredient = poLine.getIngredient();
-                ingredient.setCurrentStock(ingredient.getCurrentStock().add(qtyReceived));
-                ingredientRepository.save(ingredient);
-
-                // Record transaction
+                // RECORD TRANSACTION (QUANTITY ONLY FOR NOW, DO NOT UPDATE STOCK YET)
                 InventoryTransaction txn = new InventoryTransaction();
-                txn.setIngredient(ingredient);
+                txn.setIngredient(poLine.getIngredient());
                 txn.setTransactionType(InventoryTransactionType.PURCHASE_RECEIPT);
                 txn.setQuantityDelta(qtyReceived);
                 txn.setUnitCostAtTime(poLine.getUnitCost());
@@ -201,6 +196,29 @@ public class ReceivingServiceImpl implements ReceivingService {
         if (priceVarianceRequiresReview || quantityDiscrepancy) {
             stateMachineService.transition(poId, PurchaseOrderStatus.DISCREPANCY_REVIEW, UUID.randomUUID(), "Discrepancy detected outside tolerance");
         } else {
+            // SUCCESSFUL MATCH - INCREASE INVENTORY NOW
+            for (PurchaseOrderLine poLine : poLines) {
+                UUID ingredientId = poLine.getIngredient().getId();
+                BigDecimal invoicedQty = invoicedQuantities.getOrDefault(ingredientId, BigDecimal.ZERO);
+                
+                if (invoicedQty.compareTo(BigDecimal.ZERO) > 0) {
+                    RawIngredient ingredient = poLine.getIngredient();
+                    ingredient.setCurrentStock(ingredient.getCurrentStock().add(invoicedQty));
+                    ingredientRepository.save(ingredient);
+
+                    // Record Final Approval Transaction
+                    InventoryTransaction txn = new InventoryTransaction();
+                    txn.setIngredient(ingredient);
+                    txn.setTransactionType(InventoryTransactionType.PURCHASE_RECEIPT); // Or a new type like INVOICE_MATCHED
+                    txn.setQuantityDelta(invoicedQty);
+                    txn.setUnitCostAtTime(invoicedPrices.getOrDefault(ingredientId, poLine.getUnitCost()));
+                    txn.setTransactedAt(Instant.now());
+                    txn.setReferenceId(invoice.getId());
+                    txn.setReason("Finalized 3-Way Match for PO " + po.getId());
+                    transactionRepository.save(txn);
+                }
+            }
+
             stateMachineService.transition(poId, PurchaseOrderStatus.CLOSED, UUID.randomUUID(), "3-Way Match Passed");
         }
 

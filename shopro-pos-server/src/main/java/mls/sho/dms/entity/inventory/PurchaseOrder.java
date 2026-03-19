@@ -29,12 +29,12 @@ public class PurchaseOrder extends BaseEntity {
     @OneToMany(mappedBy = "purchaseOrder", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PurchaseOrderLine> lines = new ArrayList<>();
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "supplier_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
+    @JoinColumn(name = "supplier_id", nullable = true)
     private Supplier supplier;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "generated_by_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
+    @JoinColumn(name = "generated_by_id", nullable = true)
     private StaffMember generatedBy;
 
     @Enumerated(EnumType.STRING)
@@ -80,6 +80,10 @@ public class PurchaseOrder extends BaseEntity {
 
     @Column(name = "source_bid_id")
     private UUID sourceBidId;
+
+@OneToOne(fetch = FetchType.LAZY)
+@JoinColumn(name = "rfq_id")
+private RFQ rfq;
 
     @Column(name = "source_proposal_id")
     private UUID sourceProposalId;
@@ -144,4 +148,7 @@ public class PurchaseOrder extends BaseEntity {
     public void setCounterOfferNotes(String counterOfferNotes) { this.counterOfferNotes = counterOfferNotes; }
     public Instant getAcknowledgedAt() { return acknowledgedAt; }
     public void setAcknowledgedAt(Instant acknowledgedAt) { this.acknowledgedAt = acknowledgedAt; }
+
+    public RFQ getRfq() { return rfq; }
+    public void setRfq(RFQ rfq) { this.rfq = rfq; }
 }

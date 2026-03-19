@@ -14,6 +14,7 @@ import { useTranslation } from 'react-i18next';
 import { ReviewBidsDialog } from '../components/ReviewBidsDialog';
 import { PriceProposalsList } from '../components/PriceProposalsList';
 import InventorySkeleton from '../components/InventorySkeletons';
+import { CreateBidFlow } from '../components/CreateBidFlow';
 
 export const RFQManagementPage: React.FC = () => {
     const { t, i18n } = useTranslation();
@@ -32,6 +33,7 @@ export const RFQManagementPage: React.FC = () => {
     const [selectedRfqId, setSelectedRfqId] = useState<string | undefined>();
     const [selectedRfqRef, setSelectedRfqRef] = useState<string | undefined>();
     const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
+    const [isBidFlowOpen, setIsBidFlowOpen] = useState(false);
     const [wizardStep, setWizardStep] = useState(1);
 
     const handleCreate = async () => {
@@ -56,22 +58,22 @@ export const RFQManagementPage: React.FC = () => {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-4xl font-bold tracking-tight text-foreground">{t('inventory.rfq.title')}</h1>
-                    <p className="text-muted mt-2">{t('inventory.rfq.desc')}</p>
-                </div>
-                <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-                    <DialogTrigger asChild>
-                        <Button className="gap-2">
-                            <Plus className="h-4 w-4" />
-                            {t('inventory.rfq.issueManual')}
-                        </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-2xl">
-                        <DialogHeader>
-                            <DialogTitle>{t('inventory.rfq.wizard.title')}</DialogTitle>
-                            <div className="flex items-center gap-2 mt-4">
+                <div className="flex gap-2">
+                    <Button variant="outline" className="gap-2" onClick={() => setIsBidFlowOpen(true)}>
+                        <Plus className="h-4 w-4" />
+                        {t('inventory.rfq.createBid.title')}
+                    </Button>
+                    <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                        <DialogTrigger asChild>
+                            <Button className="gap-2">
+                                <Plus className="h-4 w-4" />
+                                {t('inventory.rfq.issueManual')}
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-2xl">
+                            <DialogHeader>
+                                <DialogTitle>{t('inventory.rfq.wizard.title')}</DialogTitle>
+                                <div className="flex items-center gap-2 mt-4">
                                 {[1, 2, 3, 4].map(step => (
                                     <div 
                                         key={step} 
@@ -113,12 +115,12 @@ export const RFQManagementPage: React.FC = () => {
                                 <div className="grid grid-cols-2 gap-3 max-h-48 overflow-y-auto pr-2">
                                     {['Amazon Fresh', 'BigBasket', 'Local Mandi', 'Swiggy Instamart'].map(s => (
                                         <div key={s} className="flex items-center space-x-2 p-2 border rounded hover:bg-muted/50 transition-colors">
-                                            <input type="checkbox" id={s} defaultChecked className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary" />
+                                            <input type="checkbox" id={s} defaultChecked className="h-4 w-4 rounded border-input bg-background text-primary focus:ring-primary" />
                                             <label htmlFor={s} className="text-sm cursor-pointer">{s}</label>
                                         </div>
                                     ))}
                                 </div>
-                                <p className="text-xs text-muted italic">* {t('inventory.rfq.wizard.supplierHint')}</p>
+                                <p className="text-xs text-muted-foreground italic font-medium">* {t('inventory.rfq.wizard.supplierHint')}</p>
                             </div>
                         )}
 
@@ -154,23 +156,23 @@ export const RFQManagementPage: React.FC = () => {
                             <div className="py-4 space-y-4">
                                 <div className="bg-muted p-4 rounded-lg space-y-2">
                                     <div className="flex justify-between text-sm">
-                                        <span className="text-muted">{t('inventory.po.details.ingredient')}:</span>
+                                        <span className="text-muted-foreground">{t('inventory.po.details.ingredient')}:</span>
                                         <span className="font-semibold">{ingredients?.content?.find((i: any) => i.id === formData.ingredientId)?.name}</span>
                                     </div>
                                     <div className="flex justify-between text-sm">
-                                        <span className="text-muted">{t('inventory.rfq.table.qty')}:</span>
+                                        <span className="text-muted-foreground">{t('inventory.rfq.table.qty')}:</span>
                                         <span className="font-semibold">{formData.requiredQty}</span>
                                     </div>
                                     <div className="flex justify-between text-sm">
-                                        <span className="text-muted">{t('inventory.rfq.table.deadline')}:</span>
+                                        <span className="text-muted-foreground">{t('inventory.rfq.table.deadline')}:</span>
                                         <span className="font-semibold">3 Hours</span>
                                     </div>
                                     <div className="flex justify-between text-sm">
-                                        <span className="text-muted">{t('common.suppliers')}:</span>
+                                        <span className="text-muted-foreground">{t('common.suppliers')}:</span>
                                         <span className="font-semibold">{t('inventory.rfq.wizard.invitedCount', { count: 4 })}</span>
                                     </div>
                                 </div>
-                                <div className="flex items-start gap-2 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg text-amber-700 dark:text-amber-400 text-xs text-balance">
+                                <div className="flex items-start gap-2 p-3 bg-warning/10 border border-warning/20 rounded-lg text-warning-foreground dark:text-warning text-xs text-balance">
                                     <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
                                     <p>{t('inventory.rfq.wizard.launchNotice')}</p>
                                 </div>
@@ -210,7 +212,7 @@ export const RFQManagementPage: React.FC = () => {
                                 <FileText className="h-6 w-6 text-primary" />
                             </div>
                             <div>
-                                <p className="text-sm text-muted">{t('inventory.rfq.activeRfqs')}</p>
+                                <p className="text-sm text-muted-foreground font-medium">{t('inventory.rfq.activeRfqs')}</p>
                                 <p className="text-2xl font-bold text-foreground">
                                     {rfqs?.filter(r => r.status === 'OPEN').length || 0}
                                 </p>
@@ -221,11 +223,11 @@ export const RFQManagementPage: React.FC = () => {
                 <Card>
                     <CardContent className="pt-6">
                         <div className="flex items-center gap-4">
-                            <div className="p-3 bg-emerald-500/10 rounded-full">
-                                <Send className="h-6 w-6 text-emerald-500" />
+                            <div className="p-3 bg-success/10 rounded-full">
+                                <Send className="h-6 w-6 text-success" />
                             </div>
                             <div>
-                                <p className="text-sm text-muted">{t('inventory.rfq.bidsReceived')}</p>
+                                <p className="text-sm text-muted-foreground font-medium">{t('inventory.rfq.bidsReceived')}</p>
                                 <p className="text-2xl font-bold text-foreground">0</p>
                             </div>
                         </div>
@@ -238,7 +240,7 @@ export const RFQManagementPage: React.FC = () => {
                                 <AlertCircle className="h-6 w-6 text-warning" />
                             </div>
                             <div>
-                                <p className="text-sm text-muted">{t('inventory.rfq.expiringSoon')}</p>
+                                <p className="text-sm text-muted-foreground font-medium">{t('inventory.rfq.expiringSoon')}</p>
                                 <p className="text-2xl font-bold text-foreground">0</p>
                             </div>
                         </div>
@@ -276,7 +278,7 @@ export const RFQManagementPage: React.FC = () => {
                                     </TableRow>
                                 ) : rfqs?.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={6} className="h-32 text-center text-muted">
+                                        <TableCell colSpan={6} className="h-32 text-center text-muted-foreground font-medium">
                                             {t('inventory.rfq.noRfqs')}
                                         </TableCell>
                                     </TableRow>
@@ -294,8 +296,8 @@ export const RFQManagementPage: React.FC = () => {
                                             </TableCell>
                                             <TableCell>
                                                 <div className="flex items-center gap-1.5 text-xs">
-                                                    <Clock className="h-3 w-3 text-muted" />
-                                                    <span className={new Date(rfq.bidDeadline).getTime() - Date.now() < 1800000 ? "text-red-500 font-medium" : ""}>
+                                                    <Clock className="h-3 w-3 text-muted-foreground" />
+                                                    <span className={new Date(rfq.bidDeadline).getTime() - Date.now() < 1800000 ? "text-error font-medium" : "text-foreground"}>
                                                         {new Date(rfq.bidDeadline).toLocaleString(i18n.language)}
                                                         {rfq.status === 'OPEN' && (
                                                             <span className="ml-1 text-[10px] opacity-70">
@@ -308,7 +310,7 @@ export const RFQManagementPage: React.FC = () => {
                                             <TableCell>
                                                 <Badge
                                                     variant="outline"
-                                                    className={rfq.status === 'OPEN' ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" : ""}
+                                                    className={rfq.status === 'OPEN' ? "bg-success/10 text-success border-success/20" : "bg-muted text-muted-foreground"}
                                                 >
                                                     {t(`inventory.rfq.statuses.${rfq.status}`)}
                                                 </Badge>
@@ -332,7 +334,7 @@ export const RFQManagementPage: React.FC = () => {
                                                         <Button 
                                                             variant="ghost" 
                                                             size="sm" 
-                                                            className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-500/10"
+                                                            className="h-8 w-8 p-0 text-error hover:text-error hover:bg-error/10"
                                                             onClick={() => handleCancel(rfq.id)}
                                                             title={t('inventory.rfq.table.cancelTitle')}
                                                         >
@@ -361,6 +363,11 @@ export const RFQManagementPage: React.FC = () => {
                 rfqReference={selectedRfqRef}
                 open={reviewDialogOpen}
                 onOpenChange={setReviewDialogOpen}
+            />
+
+            <CreateBidFlow 
+                open={isBidFlowOpen}
+                onClose={() => setIsBidFlowOpen(false)}
             />
         </div>
     );

@@ -577,7 +577,8 @@
       "statuses": {
         "OPEN": "باز",
         "CLOSED": "بسته شد",
-        "CANCELLED": "لغو شد"
+        "CANCELLED": "لغو شد",
+        "AWARDED": "اعطا شده"
       }
     },
     "proposals": {

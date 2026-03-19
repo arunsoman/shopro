@@ -25,11 +25,11 @@ import InventorySkeleton from '../components/InventorySkeletons';
 export const ExpiryMonitor: React.FC = () => {
     const { t } = useTranslation();
     const { data: batches, isLoading } = useActiveBatches();
+    const [searchQuery, setSearchQuery] = useState('');
 
     if (isLoading) {
         return <InventorySkeleton variant="dashboard" />;
     }
-    const [searchQuery, setSearchQuery] = useState('');
 
     const filteredBatches = batches?.filter(batch => 
         batch.ingredientName?.toLowerCase().includes(searchQuery.toLowerCase()) ||

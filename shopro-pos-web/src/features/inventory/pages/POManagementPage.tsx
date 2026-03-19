@@ -21,7 +21,8 @@ import {
     Filter,
     Download,
     Box,
-    FileText
+    FileText,
+    Zap
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -60,20 +61,20 @@ export const POManagementPage: React.FC = () => {
             case 'APPROVED':
             case 'RECEIVED':
             case 'INVOICE_MATCHED':
-                return 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20';
+                return 'bg-success/10 text-success border-success/20';
             case 'REJECTED':
             case 'CANCELLED':
-                return 'bg-red-500/10 text-red-500 border-red-500/20';
+                return 'bg-error/10 text-error border-error/20';
             case 'PENDING_APPROVAL':
             case 'COUNTER_OFFERED':
             case 'DISCREPANCY_REVIEW':
-                return 'bg-amber-500/10 text-amber-500 border-amber-500/20';
+                return 'bg-warning/10 text-warning border-warning/20';
             case 'SENT':
             case 'ACKNOWLEDGED':
             case 'SHIPPED':
-                return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
+                return 'bg-info/10 text-info border-info/20';
             default:
-                return 'bg-slate-500/10 text-slate-500 border-slate-500/20';
+                return 'bg-muted text-muted-foreground border-border';
         }
     };
 
@@ -130,6 +131,13 @@ export const POManagementPage: React.FC = () => {
                     <p className="text-muted-foreground mt-2">{t('inventory.po.desc')}</p>
                 </div>
                 <div className="flex items-center gap-2">
+                    <Button 
+                        onClick={() => navigate('/inventory/po/smart-match')}
+                        className="gap-2 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20"
+                    >
+                        <Zap className="h-4 w-4 fill-current" />
+                        Smart Match AI
+                    </Button>
                     <Button variant="outline" className="gap-2">
                         <Download className="h-4 w-4" />
                         {t('inventory.po.export')}
@@ -154,12 +162,12 @@ export const POManagementPage: React.FC = () => {
                 <Card>
                     <CardContent className="pt-6">
                         <div className="flex items-center gap-4">
-                            <div className="p-2 bg-blue-500/10 rounded-lg">
-                                <Truck className="h-5 w-5 text-blue-500" />
+                            <div className="p-2 bg-info/10 rounded-lg">
+                                <Truck className="h-5 w-5 text-info" />
                             </div>
                             <div>
-                                <p className="text-sm text-muted-foreground">{t('inventory.po.inTransit')}</p>
-                                <p className="text-xl font-bold">{pos?.filter(p => p.status === 'SHIPPED').length || 0}</p>
+                                <p className="text-sm text-muted-foreground font-medium">{t('inventory.po.inTransit')}</p>
+                                <p className="text-xl font-bold text-foreground">{pos?.filter(p => p.status === 'SHIPPED').length || 0}</p>
                             </div>
                         </div>
                     </CardContent>
@@ -167,12 +175,12 @@ export const POManagementPage: React.FC = () => {
                 <Card>
                     <CardContent className="pt-6">
                         <div className="flex items-center gap-4">
-                            <div className="p-2 bg-emerald-500/10 rounded-lg">
-                                <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                            <div className="p-2 bg-success/10 rounded-lg">
+                                <CheckCircle2 className="h-5 w-5 text-success" />
                             </div>
                             <div>
-                                <p className="text-sm text-muted-foreground">{t('inventory.po.completedMtd')}</p>
-                                <p className="text-xl font-bold">{pos?.filter(p => p.status === 'CLOSED').length || 0}</p>
+                                <p className="text-sm text-muted-foreground font-medium">{t('inventory.po.completedMtd')}</p>
+                                <p className="text-xl font-bold text-foreground">{pos?.filter(p => p.status === 'CLOSED').length || 0}</p>
                             </div>
                         </div>
                     </CardContent>
@@ -180,12 +188,12 @@ export const POManagementPage: React.FC = () => {
                 <Card>
                     <CardContent className="pt-6">
                         <div className="flex items-center gap-4">
-                            <div className="p-2 bg-red-500/10 rounded-lg">
-                                <AlertTriangle className="h-5 w-5 text-red-500" />
+                            <div className="p-2 bg-error/10 rounded-lg">
+                                <AlertTriangle className="h-5 w-5 text-error" />
                             </div>
                             <div>
-                                <p className="text-sm text-muted-foreground">{t('inventory.po.exceptions')}</p>
-                                <p className="text-xl font-bold">{pos?.filter(p => p.status === 'DISCREPANCY_REVIEW').length || 0}</p>
+                                <p className="text-sm text-muted-foreground font-medium">{t('inventory.po.exceptions')}</p>
+                                <p className="text-xl font-bold text-foreground">{pos?.filter(p => p.status === 'DISCREPANCY_REVIEW').length || 0}</p>
                             </div>
                         </div>
                     </CardContent>
@@ -303,7 +311,7 @@ export const POManagementPage: React.FC = () => {
                                                 {po.status === 'APPROVED' && (
                                                     <Button 
                                                         size="sm" 
-                                                        className="h-8 gap-1.5 bg-blue-600 hover:bg-blue-700 text-white"
+                                                        className="h-8 gap-1.5 bg-info hover:bg-info/90 text-info-foreground"
                                                         onClick={(e) => handleSend(po.id, e)}
                                                         disabled={sendOrder.isPending}
                                                     >
@@ -314,7 +322,7 @@ export const POManagementPage: React.FC = () => {
                                                 {po.status === 'SHIPPED' && (
                                                     <Button 
                                                         size="sm" 
-                                                        className="h-8 gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
+                                                        className="h-8 gap-1.5 bg-success hover:bg-success/90 text-success-foreground"
                                                         onClick={(e) => {
                                                             e.stopPropagation();
                                                             navigate(`/inventory/po/${po.id}/receive`);
@@ -327,7 +335,7 @@ export const POManagementPage: React.FC = () => {
                                                 {(po.status === 'RECEIVED' || po.status === 'PARTIALLY_RECEIVED') && (
                                                     <Button 
                                                         size="sm" 
-                                                        className="h-8 gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white"
+                                                        className="h-8 gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground"
                                                         onClick={(e) => {
                                                             e.stopPropagation();
                                                             navigate(`/inventory/po/${po.id}/match`);
@@ -369,11 +377,11 @@ export const POManagementPage: React.FC = () => {
                             <div className="flex items-center gap-2">
                                 {selectedPo?.status === 'PENDING_APPROVAL' && (
                                     <>
-                                        <Button variant="outline" className="text-red-500 hover:text-red-600 border-red-200 hover:bg-red-50" onClick={() => setIsRejectDialogOpen(true)}>
+                                        <Button variant="outline" className="text-error hover:text-error hover:bg-error/10 border-error/20" onClick={() => setIsRejectDialogOpen(true)}>
                                             <XCircle className="mr-2 h-4 w-4" />
                                             {t('inventory.po.details.reject')}
                                         </Button>
-                                        <Button className="bg-emerald-600 hover:bg-emerald-700" onClick={handleApprove}>
+                                        <Button className="bg-success hover:bg-success/90 text-success-foreground" onClick={handleApprove}>
                                             <CheckCircle2 className="mr-2 h-4 w-4" />
                                             {t('inventory.po.details.approve')}
                                         </Button>
@@ -381,7 +389,7 @@ export const POManagementPage: React.FC = () => {
                                 )}
                                 {selectedPo?.status === 'APPROVED' && (
                                     <Button 
-                                        className="bg-blue-600 hover:bg-blue-700" 
+                                        className="bg-info hover:bg-info/90 text-info-foreground" 
                                         onClick={(e) => handleSend(selectedPo.id, e)}
                                         disabled={sendOrder.isPending}
                                     >

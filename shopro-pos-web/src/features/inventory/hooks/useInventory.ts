@@ -271,3 +271,13 @@ export const useYieldAnalysis = () => {
         },
     });
 };
+
+export const useRestockAlerts = () => {
+    return useQuery({
+        queryKey: ['inventory', 'restock-alerts'],
+        queryFn: async () => {
+            const { data } = await axios.get<import('../api/types').RestockAlertResponse[]>(`/api/v1/inventory/alerts/restock`);
+            return data;
+        },
+    });
+};

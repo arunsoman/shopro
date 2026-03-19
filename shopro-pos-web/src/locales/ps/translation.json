@@ -540,7 +540,8 @@
       "statuses": {
         "OPEN": "خلاص",
         "CLOSED": "تړل شوی",
-        "CANCELLED": "لغوه شوی"
+        "CANCELLED": "لغوه شوی",
+        "AWARDED": "ورکړل شو"
       }
     },
     "proposals": {

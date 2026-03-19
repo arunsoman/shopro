@@ -32,5 +32,7 @@ public record IngredientResponse(
     String supplierName,
     UUID activeOrderId,
     String activeOrderType,
-    String activeOrderStatus
+    String activeOrderStatus,
+    int bidClosingDays,
+    int expectedArrivalDays
 ) {}

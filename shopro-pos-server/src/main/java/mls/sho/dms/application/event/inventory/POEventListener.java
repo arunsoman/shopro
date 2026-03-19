@@ -38,7 +38,10 @@ public class POEventListener {
                 notifyStaff(po, "PO Rejected", String.format("PO #%s was rejected. Reason: %s", po.getId(), event.getReason()));
                 break;
             case SENT:
-                log.info("PO #{} marked as SENT and dispatched to vendor.", po.getId());
+                dispatchPoToVendor(po);
+                break;
+            case ACKNOWLEDGED:
+                notifyStaff(po, "PO Acknowledged", String.format("Supplier acknowledged PO #%s.", po.getId()));
                 break;
             case COUNTER_OFFERED:
                 notifyStaff(po, "PO Counter-Offer Received", 
@@ -46,6 +49,9 @@ public class POEventListener {
                 break;
             case SHIPPED:
                 notifyStaff(po, "PO Shipped", String.format("PO #%s has been marked as SHIPPED by the supplier.", po.getId()));
+                break;
+            case CANCELLED:
+                notifyStaff(po, "PO Cancelled", String.format("PO #%s was cancelled. Reason: %s", po.getId(), event.getReason()));
                 break;
             case GRN_FLAGGED:
                 notifyStaff(po, "GRN Discrepancy", String.format("PO #%s has a receipt discrepancy and requires review.", po.getId()));

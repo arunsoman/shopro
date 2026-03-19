@@ -27,13 +27,13 @@ export function LanguageSelector() {
     return (
         <div className="flex items-center gap-2">
             <Select value={i18n.language} onValueChange={handleLanguageChange}>
-                <SelectTrigger className="w-[140px] h-8 bg-white/5 border-white/10 text-white/70 hover:text-white transition-colors">
+                <SelectTrigger className="w-[140px] h-8 bg-surface border-border text-foreground hover:bg-muted/50 transition-colors">
                     <div className="flex items-center gap-2">
                         <Languages className="h-3.5 w-3.5" />
                         <SelectValue placeholder={t('common.language')} />
                     </div>
                 </SelectTrigger>
-                <SelectContent className="bg-[#180B33] border-white/10 text-white">
+                <SelectContent className="bg-surface border-border text-foreground">
                     {languages.map((lang) => (
                         <SelectItem key={lang.code} value={lang.code} className="hover:bg-white/10 focus:bg-white/10">
                             <span className="mr-2">{lang.flag}</span>

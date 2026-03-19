@@ -63,14 +63,14 @@ export const TheoreticalVsActualReport: React.FC = () => {
                     <Table>
                         <TableHeader>
                             <TableRow className="border-border">
-                                <TableHead className="text-muted">{t('inventory.ingredient')}</TableHead>
-                                <TableHead className="text-right text-muted">{t('inventory.analytics.opening')}</TableHead>
-                                <TableHead className="text-right text-muted">{t('inventory.analytics.purchases')}</TableHead>
-                                <TableHead className="text-right text-muted">{t('inventory.analytics.theorUsage')}</TableHead>
-                                <TableHead className="text-right text-muted">{t('inventory.analytics.theorClosing')}</TableHead>
-                                <TableHead className="text-right text-muted">{t('inventory.analytics.actualClosing')}</TableHead>
-                                <TableHead className="text-right text-muted">{t('inventory.analytics.variance')}</TableHead>
-                                <TableHead className="text-center text-muted">{t('common.status')}</TableHead>
+                                <TableHead className="text-muted-foreground font-medium uppercase text-xs tracking-wider">{t('inventory.ingredient')}</TableHead>
+                                <TableHead className="text-right text-muted-foreground font-medium uppercase text-xs tracking-wider">{t('inventory.analytics.opening')}</TableHead>
+                                <TableHead className="text-right text-muted-foreground font-medium uppercase text-xs tracking-wider">{t('inventory.analytics.purchases')}</TableHead>
+                                <TableHead className="text-right text-muted-foreground font-medium uppercase text-xs tracking-wider">{t('inventory.analytics.theorUsage')}</TableHead>
+                                <TableHead className="text-right text-muted-foreground font-medium uppercase text-xs tracking-wider">{t('inventory.analytics.theorClosing')}</TableHead>
+                                <TableHead className="text-right text-muted-foreground font-medium uppercase text-xs tracking-wider">{t('inventory.analytics.actualClosing')}</TableHead>
+                                <TableHead className="text-right text-muted-foreground font-medium uppercase text-xs tracking-wider">{t('inventory.analytics.variance')}</TableHead>
+                                <TableHead className="text-center text-muted-foreground font-medium uppercase text-xs tracking-wider">{t('common.status')}</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -110,7 +110,7 @@ export const TheoreticalVsActualReport: React.FC = () => {
                                 </TableRow>
                             ) : data.length === 0 && (
                                 <TableRow>
-                                    <TableCell colSpan={8} className="h-24 text-center text-muted">
+                                    <TableCell colSpan={8} className="h-24 text-center text-muted-foreground font-medium">
                                         {t('inventory.analytics.noData')}
                                     </TableCell>
                                 </TableRow>

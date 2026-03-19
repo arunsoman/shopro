@@ -105,6 +105,14 @@ public class RawIngredient extends BaseEntity {
     @Column(name = "bid_supplier_pool", columnDefinition = "jsonb")
     private List<UUID> bidSupplierPool = new java.util.ArrayList<>();
 
+    @Column(name = "bid_closing_days", nullable = false)
+    @ColumnDefault("1")
+    private int bidClosingDays = 1;
+
+    @Column(name = "expected_arrival_days", nullable = false)
+    @ColumnDefault("3")
+    private int expectedArrivalDays = 3;
+
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "raw_ingredient_allergen", joinColumns = @JoinColumn(name = "ingredient_id",
             foreignKey = @ForeignKey(name = "fk_allergen_ingredient")))
@@ -152,6 +160,10 @@ public class RawIngredient extends BaseEntity {
     public void setCategory(String category) { this.category = category; }
     public List<UUID> getBidSupplierPool() { return bidSupplierPool; }
     public void setBidSupplierPool(List<UUID> bidSupplierPool) { this.bidSupplierPool = bidSupplierPool; }
+    public int getBidClosingDays() { return bidClosingDays; }
+    public void setBidClosingDays(int d) { this.bidClosingDays = d; }
+    public int getExpectedArrivalDays() { return expectedArrivalDays; }
+    public void setExpectedArrivalDays(int d) { this.expectedArrivalDays = d; }
     public java.util.Set<Allergen> getAllergens() { return allergens; }
     public void setAllergens(java.util.Set<Allergen> allergens) { this.allergens = allergens; }
     public Supplier getSupplier() { return supplier; }

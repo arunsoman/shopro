@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import mls.sho.dms.entity.core.BaseEntity;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 
 /**
  * A bid submitted by a Supplier against an active RFQ.
@@ -49,6 +50,10 @@ public class VendorBid extends BaseEntity {
     @JoinColumn(name = "submitted_by_id")
     private SupplierUser submittedBy;
 
+    @Column(name = "awarded_at")
+    private Instant awardedAt;
+
+
     public RFQ getRfq() { return rfq; }
     public void setRfq(RFQ rfq) { this.rfq = rfq; }
     public Supplier getSupplier() { return supplier; }
@@ -67,4 +72,8 @@ public class VendorBid extends BaseEntity {
     public void setStatus(VendorBidStatus status) { this.status = status; }
     public SupplierUser getSubmittedBy() { return submittedBy; }
     public void setSubmittedBy(SupplierUser submittedBy) { this.submittedBy = submittedBy; }
+
+    public Instant getAwardedAt() { return awardedAt; }
+    public void setAwardedAt(Instant awardedAt) { this.awardedAt = awardedAt; }
+
 }

@@ -8,5 +8,7 @@ public enum VendorBidStatus {
     OVER_CEILING,
     WON,
     LOST,
-    REJECTED
+    REJECTED,
+    ACKNOWLEDGED,
+    UNACKED
 }

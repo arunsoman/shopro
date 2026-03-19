@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { apiClient } from '@/lib/api/client';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { 
     Package, 
@@ -23,8 +24,12 @@ import {
     DialogTitle, 
     DialogFooter 
 } from '@/components/ui/dialog';
-import { useAcknowledgePO, useShipPO, useCounterOfferPO } from '../hooks/useSupplierPO';
-import { useSupplierPortalPOs } from '../hooks/useSupplierPortal';
+import { 
+    useSupplierPortalPOs, 
+    useAcknowledgeOrder, 
+    useShipOrder, 
+    useCounterOffer 
+} from '../hooks/useSupplierPortal';
 import { useSupplierAuth } from '@/features/auth/SupplierAuthContext';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
@@ -35,9 +40,9 @@ export const SupplierPOFulfillmentPage: React.FC = () => {
     const { session } = useSupplierAuth();
     const { data: pos, isLoading } = useSupplierPortalPOs(session?.supplierId);
     
-    const acknowledgeMutation = useAcknowledgePO();
-    const shipMutation = useShipPO();
-    const counterOfferMutation = useCounterOfferPO();
+    const acknowledgeMutation = useAcknowledgeOrder();
+    const shipMutation = useShipOrder();
+    const counterOfferMutation = useCounterOffer();
     
     const [trackingNumber, setTrackingNumber] = useState('');
     const [deliveryNoteRef, setDeliveryNoteRef] = useState('');
@@ -49,6 +54,7 @@ export const SupplierPOFulfillmentPage: React.FC = () => {
         proposedQuantity: 0,
         reason: ''
     });
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const po = pos?.find(p => p.id === id);
 
@@ -69,7 +75,8 @@ export const SupplierPOFulfillmentPage: React.FC = () => {
     );
 
     const handleAcknowledge = async () => {
-        if (!session?.userId) return;
+        if (!session?.userId || isSubmitting) return;
+        setIsSubmitting(true);
         try {
             await acknowledgeMutation.mutateAsync({ id: po.id, userId: session.userId });
             toast.success("PO Acknowledged", {
@@ -77,11 +84,14 @@ export const SupplierPOFulfillmentPage: React.FC = () => {
             });
         } catch {
             toast.error("Failed to acknowledge. Error details sent to support.");
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
     const handleCounterOffer = async () => {
-        if (!session?.userId) return;
+        if (!session?.userId || isSubmitting) return;
+        setIsSubmitting(true);
         try {
             await counterOfferMutation.mutateAsync({ 
                 id: po.id, 
@@ -95,11 +105,15 @@ export const SupplierPOFulfillmentPage: React.FC = () => {
             navigate('/supplier/dashboard');
         } catch {
             toast.error("Failed to submit counter-offer.");
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
     const handleShip = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (isSubmitting) return;
+        
         if (!trackingNumber) {
             toast.error("Please enter a tracking number.");
             return;
@@ -109,25 +123,40 @@ export const SupplierPOFulfillmentPage: React.FC = () => {
             return;
         }
         
+        setIsSubmitting(true);
         try {
-            const mockInvoiceId = "11111111-2222-3333-4444-555555555555"; 
+            // 1. Upload the file first
+            const formData = new FormData();
+            formData.append('file', invoiceFile);
             
+            const uploadRes = await apiClient.post<{fileId: string}>('/documents/upload', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+            
+            const fileId = uploadRes.data.fileId;
+            
+            // 2. Submit shipment with the real fileId
             await shipMutation.mutateAsync({
                 id: po.id,
                 userId: session?.userId || '',
                 request: {
                     trackingNumber,
                     deliveryNoteRef,
-                    invoiceFileId: mockInvoiceId
+                    invoiceFileId: fileId
                 }
             });
             
             toast.success("Order Shipped", {
-                description: "Fulfillment details have been sent to the restaurant.",
+                description: "Fulfillment details and invoice have been sent to the restaurant.",
             });
             navigate('/supplier/dashboard');
-        } catch {
-            toast.error("Shipping Failed: Could not update order status.");
+        } catch (error) {
+            console.error("Shipping failed", error);
+            toast.error("Shipping Failed: Could not upload invoice or update order status.");
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -248,9 +277,9 @@ export const SupplierPOFulfillmentPage: React.FC = () => {
                                         <Button 
                                             className="px-8 h-12 text-md font-bold shadow-indigo-200/50 bg-indigo-600 hover:bg-indigo-700"
                                             onClick={handleAcknowledge}
-                                            disabled={acknowledgeMutation.isPending}
+                                            disabled={acknowledgeMutation.isPending || isSubmitting}
                                         >
-                                            {acknowledgeMutation.isPending ? 'Processing...' : 'Acknowledge Now'}
+                                            {acknowledgeMutation.isPending || isSubmitting ? 'Processing...' : 'Acknowledge Now'}
                                         </Button>
                                     </div>
                                 </div>
@@ -341,9 +370,9 @@ export const SupplierPOFulfillmentPage: React.FC = () => {
                                         <Button 
                                             type="submit" 
                                             className="px-10 h-11 text-md font-bold shadow-lg shadow-indigo-500/20"
-                                            disabled={shipMutation.isPending}
+                                            disabled={shipMutation.isPending || isSubmitting}
                                         >
-                                            {shipMutation.isPending ? 'Submitting...' : 'Mark as Shipped'}
+                                            {shipMutation.isPending || isSubmitting ? 'Submitting...' : 'Mark as Shipped'}
                                         </Button>
                                     </div>
                                 </form>
@@ -500,9 +529,9 @@ export const SupplierPOFulfillmentPage: React.FC = () => {
                         <Button 
                             className="bg-indigo-600 text-white"
                             onClick={handleCounterOffer}
-                            disabled={counterOfferMutation.isPending || !counterOfferData.reason}
+                            disabled={counterOfferMutation.isPending || isSubmitting || !counterOfferData.reason}
                         >
-                            {counterOfferMutation.isPending ? 'Submitting...' : 'Send Counter-Offer'}
+                            {counterOfferMutation.isPending || isSubmitting ? 'Submitting...' : 'Send Counter-Offer'}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

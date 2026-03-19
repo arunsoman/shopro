@@ -1,0 +1,100 @@
+nohup: ignoring input
+INFO:     Started server process [1537120]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+Analyzing: /tmp/PO-2025-KCH2-0847.pdf
+Starting Pipeline...
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/858 [00:00<?, ?it/s]Loading weights:  93%|█████████▎| 796/858 [00:00<00:00, 7953.22it/s]Loading weights: 100%|██████████| 858/858 [00:00<00:00, 7354.94it/s]
+Pipeline started!
+GLM-OCR initialized in self-hosted mode
+Result type: <class 'glmocr.parser_result.pipeline_result.PipelineResult'>
+Markdown length: 2399
+JSON data type: <class 'list'>
+Stopping Pipeline...
+Pipeline stopped!
+INFO:     127.0.0.1:33650 - "POST /analyze HTTP/1.1" 200 OK
+Analyzing: /tmp/PO-2025-KCH2-0847.pdf
+Starting Pipeline...
+Loading weights:   0%|          | 0/858 [00:00<?, ?it/s]Loading weights:  47%|████▋     | 407/858 [00:00<00:00, 4052.98it/s]Loading weights:  95%|█████████▍| 813/858 [00:00<00:00, 3068.28it/s]Loading weights: 100%|██████████| 858/858 [00:00<00:00, 3168.05it/s]
+Pipeline started!
+GLM-OCR initialized in self-hosted mode
+Result type: <class 'glmocr.parser_result.pipeline_result.PipelineResult'>
+Markdown length: 2399
+JSON data type: <class 'list'>
+Stopping Pipeline...
+Pipeline stopped!
+INFO:     127.0.0.1:37912 - "POST /analyze HTTP/1.1" 200 OK
+Analyzing: /tmp/po.pdf
+Starting Pipeline...
+Loading weights:   0%|          | 0/858 [00:00<?, ?it/s]Loading weights:  49%|████▉     | 420/858 [00:00<00:00, 4197.47it/s]Loading weights:  98%|█████████▊| 840/858 [00:00<00:00, 4081.17it/s]Loading weights: 100%|██████████| 858/858 [00:00<00:00, 4041.79it/s]
+Pipeline started!
+GLM-OCR initialized in self-hosted mode
+Result type: <class 'glmocr.parser_result.pipeline_result.PipelineResult'>
+Markdown length: 2399
+JSON data type: <class 'list'>
+Stopping Pipeline...
+Pipeline stopped!
+INFO:     127.0.0.1:50832 - "POST /analyze HTTP/1.1" 200 OK
+Analyzing: /tmp/invoice.pdf
+Starting Pipeline...
+Loading weights:   0%|          | 0/858 [00:00<?, ?it/s]Loading weights:  59%|█████▉    | 506/858 [00:00<00:00, 5054.21it/s]Loading weights: 100%|██████████| 858/858 [00:00<00:00, 5419.27it/s]
+Pipeline started!
+GLM-OCR initialized in self-hosted mode
+Result type: <class 'glmocr.parser_result.pipeline_result.PipelineResult'>
+Markdown length: 2221
+JSON data type: <class 'list'>
+Stopping Pipeline...
+Pipeline stopped!
+INFO:     127.0.0.1:50832 - "POST /analyze HTTP/1.1" 200 OK
+Analyzing: /tmp/grn.pdf
+Starting Pipeline...
+Loading weights:   0%|          | 0/858 [00:00<?, ?it/s]Loading weights:  60%|██████    | 517/858 [00:00<00:00, 5166.91it/s]Loading weights: 100%|██████████| 858/858 [00:00<00:00, 4965.26it/s]
+Pipeline started!
+GLM-OCR initialized in self-hosted mode
+Result type: <class 'glmocr.parser_result.pipeline_result.PipelineResult'>
+Markdown length: 3107
+JSON data type: <class 'list'>
+Stopping Pipeline...
+Pipeline stopped!
+INFO:     127.0.0.1:50832 - "POST /analyze HTTP/1.1" 200 OK
+Analyzing: /tmp/po.pdf
+Starting Pipeline...
+Loading weights:   0%|          | 0/858 [00:00<?, ?it/s]Loading weights:  55%|█████▌    | 473/858 [00:00<00:00, 4728.56it/s]Loading weights: 100%|██████████| 858/858 [00:00<00:00, 4950.41it/s]
+Pipeline started!
+GLM-OCR initialized in self-hosted mode
+Result type: <class 'glmocr.parser_result.pipeline_result.PipelineResult'>
+Markdown length: 2399
+JSON data type: <class 'list'>
+Stopping Pipeline...
+Pipeline stopped!
+INFO:     127.0.0.1:58954 - "POST /analyze HTTP/1.1" 200 OK
+Analyzing: /tmp/invoice.pdf
+Starting Pipeline...
+Loading weights:   0%|          | 0/858 [00:00<?, ?it/s]Loading weights:  59%|█████▊    | 504/858 [00:00<00:00, 5036.03it/s]Loading weights: 100%|██████████| 858/858 [00:00<00:00, 5237.40it/s]
+Pipeline started!
+GLM-OCR initialized in self-hosted mode
+Result type: <class 'glmocr.parser_result.pipeline_result.PipelineResult'>
+Markdown length: 2221
+JSON data type: <class 'list'>
+Stopping Pipeline...
+Pipeline stopped!
+INFO:     127.0.0.1:58954 - "POST /analyze HTTP/1.1" 200 OK
+Analyzing: /tmp/grn.pdf
+Starting Pipeline...
+Loading weights:   0%|          | 0/858 [00:00<?, ?it/s]Loading weights:  70%|███████   | 604/858 [00:00<00:00, 6022.60it/s]Loading weights: 100%|██████████| 858/858 [00:00<00:00, 5912.55it/s]
+Pipeline started!
+GLM-OCR initialized in self-hosted mode
+Result type: <class 'glmocr.parser_result.pipeline_result.PipelineResult'>
+Markdown length: 3107
+JSON data type: <class 'list'>
+Stopping Pipeline...
+Pipeline stopped!
+INFO:     127.0.0.1:58954 - "POST /analyze HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [1537120]
+/usr/lib/python3.14/multiprocessing/resource_tracker.py:396: UserWarning: resource_tracker: There appear to be 1 leaked semaphore objects to clean up at shutdown: {'/mp-2xjt089t'}
+  warnings.warn(

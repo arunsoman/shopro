@@ -44,6 +44,14 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-testcontainers'
     testImplementation 'org.testcontainers:junit-jupiter'
     testImplementation 'org.testcontainers:postgresql'
+
+    // AI 3-Way Matching Engine Dependencies
+    implementation 'org.apache.pdfbox:pdfbox:2.0.30'
+    implementation 'net.sourceforge.tess4j:tess4j:5.10.0'
+    implementation 'org.openpnp:opencv:4.9.0-0'
+    implementation 'org.jgrapht:jgrapht-core:1.5.2'
+    implementation 'org.apache.commons:commons-text:1.11.0'
+    implementation 'com.itextpdf:itext7-core:8.0.2'
 }
 
 tasks.named('test') {

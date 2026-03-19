@@ -1,5 +1,6 @@
 package mls.sho.dms.application.service.inventory;
 
+import mls.sho.dms.application.dto.inventory.CreateBidRequest;
 import mls.sho.dms.application.dto.inventory.CreateRFQRequest;
 import mls.sho.dms.application.dto.inventory.RFQResponse;
 import mls.sho.dms.application.dto.inventory.VendorBidRequest;
@@ -20,6 +21,11 @@ public interface RFQService {
      * Manually creates an RFQ.
      */
     RFQResponse createRfq(CreateRFQRequest request);
+
+    /**
+     * Creates a multi-ingredient bid with invited suppliers.
+     */
+    void createBid(CreateBidRequest request);
 
     /**
      * Retrieves all RFQs with optional status filter.

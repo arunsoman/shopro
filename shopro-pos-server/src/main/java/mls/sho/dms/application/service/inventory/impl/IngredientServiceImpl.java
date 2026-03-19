@@ -73,6 +73,8 @@ public class IngredientServiceImpl implements IngredientService {
         if (request.allergens() != null) {
             ingredient.setAllergens(request.allergens());
         }
+        ingredient.setBidClosingDays(request.bidClosingDays());
+        ingredient.setExpectedArrivalDays(request.expectedArrivalDays());
 
         if (request.supplierId() != null) {
             Supplier supplier = supplierRepository.findById(request.supplierId())
@@ -105,6 +107,8 @@ public class IngredientServiceImpl implements IngredientService {
         if (request.dailyRestockEnrolled() != null) ingredient.setDailyRestockEnrolled(request.dailyRestockEnrolled());
         if (request.category() != null) ingredient.setCategory(request.category());
         if (request.bidSupplierPool() != null) ingredient.setBidSupplierPool(request.bidSupplierPool());
+        if (request.bidClosingDays() != null) ingredient.setBidClosingDays(request.bidClosingDays());
+        if (request.expectedArrivalDays() != null) ingredient.setExpectedArrivalDays(request.expectedArrivalDays());
         
         if (request.allergens() != null) {
             ingredient.setAllergens(request.allergens().stream()
@@ -233,7 +237,9 @@ public class IngredientServiceImpl implements IngredientService {
             ingredient.getSupplier() != null ? ingredient.getSupplier().getCompanyName() : null,
             activeOrderId,
             activeOrderType,
-            activeOrderStatus
+            activeOrderStatus,
+            ingredient.getBidClosingDays(),
+            ingredient.getExpectedArrivalDays()
         );
     }
 }

@@ -28,7 +28,7 @@ public class POStateMachineServiceImpl implements POStateMachineService {
     private static final Map<PurchaseOrderStatus, Set<PurchaseOrderStatus>> ALLOWED_TRANSITIONS = new EnumMap<>(PurchaseOrderStatus.class);
 
     static {
-        ALLOWED_TRANSITIONS.put(PurchaseOrderStatus.DRAFT, EnumSet.of(PurchaseOrderStatus.PENDING_APPROVAL, PurchaseOrderStatus.APPROVED, PurchaseOrderStatus.CANCELLED));
+        ALLOWED_TRANSITIONS.put(PurchaseOrderStatus.DRAFT, EnumSet.of(PurchaseOrderStatus.PENDING_APPROVAL, PurchaseOrderStatus.APPROVED, PurchaseOrderStatus.SENT, PurchaseOrderStatus.CANCELLED));
         ALLOWED_TRANSITIONS.put(PurchaseOrderStatus.PENDING_APPROVAL, EnumSet.of(PurchaseOrderStatus.APPROVED, PurchaseOrderStatus.REJECTED));
         ALLOWED_TRANSITIONS.put(PurchaseOrderStatus.REJECTED, EnumSet.of(PurchaseOrderStatus.DRAFT));
         ALLOWED_TRANSITIONS.put(PurchaseOrderStatus.APPROVED, EnumSet.of(PurchaseOrderStatus.SENT));

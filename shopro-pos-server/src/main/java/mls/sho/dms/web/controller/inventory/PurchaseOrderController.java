@@ -84,7 +84,7 @@ public class PurchaseOrderController {
     private PurchaseOrderResponse mapToResponse(mls.sho.dms.entity.inventory.PurchaseOrder po) {
         return PurchaseOrderResponse.builder()
                 .id(po.getId())
-                .supplierName(po.getSupplier().getCompanyName())
+                .supplierName(po.getSupplier() != null ? po.getSupplier().getCompanyName() : "Pending Award")
                 .status(po.getStatus())
                 .totalValue(po.getTotalValue())
                 .expectedDeliveryDate(po.getExpectedDeliveryDate())

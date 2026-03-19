@@ -150,14 +150,14 @@ export const YieldAnalysisPage: React.FC = () => {
                         <CardContent className="h-64 pt-0">
                             <ResponsiveContainer width="100%" height="100%">
                                 <BarChart layout="vertical" data={[...metrics].sort((a,b) => b.varianceCost - a.varianceCost).slice(0, 5)}>
-                                    <CartesianGrid strokeDasharray="3 3" horizontal={false} strokeOpacity={0.1} />
+                                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="hsl(var(--border))" strokeOpacity={0.5} />
                                     <XAxis type="number" hide />
                                     <YAxis dataKey="ingredientName" type="category" width={80} style={{ fontSize: '10px' }} />
                                     <Tooltip 
                                         formatter={(val: number) => [`${t('common.currencySymbol')}${val.toLocaleString()}`, t('inventory.yieldAnalysis.costImpact')]}
                                         contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
                                     />
-                                    <Bar dataKey="varianceCost" fill="#ef4444" radius={[0, 4, 4, 0]} />
+                                    <Bar dataKey="varianceCost" fill="hsl(var(--error))" radius={[0, 4, 4, 0]} />
                                 </BarChart>
                             </ResponsiveContainer>
                         </CardContent>

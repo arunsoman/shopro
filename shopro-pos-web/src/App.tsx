@@ -1,12 +1,14 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { lazy, Suspense } from 'react';
 import { AuthProvider } from '@/lib/auth/AuthContext';
 import { ThemeProvider, useTheme } from '@/lib/theme/ThemeContext';
 import { ProtectedRoute } from '@/lib/auth/ProtectedRoute';
 import { Toaster } from 'sonner';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Clock } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { SupplierProtectedRoute } from './features/auth/SupplierProtectedRoute';
+import { SupplierAuthProvider } from './features/auth/SupplierAuthContext';
 import type { StaffRole } from '@/lib/auth/AuthContext';
 
 // --- Lazy loaded Layouts ---
@@ -32,6 +34,7 @@ const RFQManagementPage = lazy(() => import('./features/inventory/pages/RFQManag
 const POManagementPage = lazy(() => import('./features/inventory/pages/POManagementPage').then(m => ({ default: m.POManagementPage })));
 const GoodsReceivingPage = lazy(() => import('./features/inventory/pages/GoodsReceivingPage').then(m => ({ default: m.GoodsReceivingPage })));
 const ThreeWayMatchPanel = lazy(() => import('./features/inventory/pages/ThreeWayMatchPanel').then(m => ({ default: m.ThreeWayMatchPanel })));
+const AIThreeWayMatchPage = lazy(() => import('./features/inventory/pages/AIThreeWayMatchPage').then(m => ({ default: m.AIThreeWayMatchPage })));
 const VendorRFQPage = lazy(() => import('./features/inventory/pages/VendorRFQPage').then(m => ({ default: m.VendorRFQPage })));
 const DailyPerishablesPanel = lazy(() => import('./features/inventory/pages/DailyPerishablesPanel').then(m => ({ default: m.DailyPerishablesPanel })));
 const CrmLayout = lazy(() => import('./features/crm/layouts/CrmLayout').then(m => ({ default: m.CrmLayout })));
@@ -69,6 +72,7 @@ const SupplierDetailPage = lazy(() => import('./features/inventory/pages/Supplie
 const ShelfLifeRotationDashboard = lazy(() => import('./features/inventory/pages/ShelfLifeRotationDashboard').then(m => ({ default: m.ShelfLifeRotationDashboard })));
 const YieldAnalysisPage = lazy(() => import('./features/inventory/pages/YieldAnalysisPage').then(m => ({ default: m.YieldAnalysisPage })));
 const SKUDetailPage = lazy(() => import('./features/inventory/pages/SKUDetailPage').then(m => ({ default: m.SKUDetailPage })));
+const RestockingAlertDashboard = lazy(() => import('./features/inventory/pages/RestockingAlertDashboard').then(m => ({ default: m.RestockingAlertDashboard })));
 
 const PageLoader = () => (
     <div className="flex h-dvh w-full items-center justify-center">
@@ -91,6 +95,20 @@ const ALL_STAFF: StaffRole[] = [
 
 function AppContent() {
   const { theme } = useTheme();
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  };
+
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString([], { day: '2-digit', month: 'short', year: 'numeric' });
+  };
 
   return (
     <BrowserRouter>
@@ -147,6 +165,7 @@ function AppContent() {
             <Route path="yield" element={<YieldAnalysisPage />} />
             <Route path="perishables" element={<DailyPerishablesPanel />} />
             <Route path="expiry" element={<ExpiryMonitor />} />
+            <Route path="alerts" element={<RestockingAlertDashboard />} />
             <Route path="recipes" element={<RecipesPage />} />
             <Route path="waste" element={<WasteDonationLog />} />
             <Route path="vendors" element={<SupplierManagementPage />} />
@@ -155,6 +174,7 @@ function AppContent() {
             <Route path="pos" element={<POManagementPage />} />
             <Route path="po/:id/receive" element={<GoodsReceivingPage />} />
             <Route path="po/:id/match" element={<ThreeWayMatchPanel />} />
+            <Route path="po/smart-match" element={<AIThreeWayMatchPage />} />
           </Route>
 
           {/* Menu — admin only */}
@@ -290,7 +310,14 @@ function AppContent() {
 
 
         {/* ── Supplier Portal ──────────────────────────────────────── */}
-        <Route path="/supplier/login" element={<SupplierLoginPage />} />
+        <Route
+          element={
+            <SupplierAuthProvider>
+              <Outlet />
+            </SupplierAuthProvider>
+          }
+        >
+          <Route path="/supplier/login" element={<SupplierLoginPage />} />
           <Route
             element={
               <SupplierProtectedRoute>
@@ -298,17 +325,36 @@ function AppContent() {
               </SupplierProtectedRoute>
             }
           >
-          <Route path="/supplier/dashboard" element={<SupplierDashboard />} />
-          <Route path="/supplier/rfqs" element={<SupplierRfqList />} />
-          <Route path="/supplier/pos" element={<SupplierPOListPage />} />
-          <Route path="/supplier/inventory" element={<SupplierInventoryView />} />
-          <Route path="/supplier/proposals" element={<SupplierProposalsList />} />
-          <Route path="/supplier/po/:id" element={<SupplierPOFulfillmentPage />} />
+            <Route path="/supplier/dashboard" element={<SupplierDashboard />} />
+            <Route path="/supplier/rfqs" element={<SupplierRfqList />} />
+            <Route path="/supplier/pos" element={<SupplierPOListPage />} />
+            <Route path="/supplier/inventory" element={<SupplierInventoryView />} />
+            <Route path="/supplier/proposals" element={<SupplierProposalsList />} />
+            <Route path="/supplier/po/:id" element={<SupplierPOFulfillmentPage />} />
+          </Route>
         </Route>
 
         {/* Catch-all */}
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes >
+
+      {/* ---- Global Sticky Thin Footer ---- */}
+      <footer className="fixed bottom-0 left-0 right-0 h-7 border-t border-border/40 bg-background/80 backdrop-blur-md z-[60] flex items-center justify-between px-4 text-[9px] text-muted-foreground/60 select-none transition-colors pointer-events-none">
+        <div className="flex items-center gap-4">
+          <span className="font-medium">&copy; {new Date().getFullYear()} Shopro System Dashboard</span>
+          <span className="opacity-30">|</span>
+          <span className="flex items-center gap-1.5 opacity-80">
+            <Clock className="h-2.5 w-2.5" />
+            {formatDate(currentTime)} &bull; {formatTime(currentTime)}
+          </span>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="px-1.5 py-0.5 rounded-sm bg-primary/5 border border-primary/10 text-primary font-mono font-bold">
+            BUILD: v0.1.4-beta
+          </span>
+          <span className="opacity-40">NODE: {window.location.hostname}</span>
+        </div>
+      </footer>
     </Suspense>
   </BrowserRouter >
   );

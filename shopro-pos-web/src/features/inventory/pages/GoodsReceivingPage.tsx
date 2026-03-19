@@ -44,16 +44,16 @@ export const GoodsReceivingPage: React.FC = () => {
         return <InventorySkeleton variant="dashboard" />;
     }
     
-    if (!po) return <div className="p-8 text-red-500">{t('inventory.grn.poNotFound')}</div>;
+    if (!po) return <div className="p-8 text-error font-medium">{t('inventory.grn.poNotFound')}</div>;
     
     if (po.status !== 'SHIPPED' && po.status !== 'PARTIALLY_RECEIVED') {
         return (
             <div className="p-8 max-w-3xl mx-auto">
-                <Card className="border-amber-200 bg-amber-50">
+                <Card className="border-warning/20 bg-warning/5">
                     <CardContent className="p-8 flex flex-col items-center justify-center text-center space-y-4">
-                        <AlertCircle className="h-12 w-12 text-amber-500" />
-                        <h2 className="text-xl font-bold text-amber-900">{t('inventory.grn.cannotReceive')}</h2>
-                        <p className="text-amber-700 max-w-md">{t('inventory.grn.statusRestriction', { status: po.status })}</p>
+                        <AlertCircle className="h-12 w-12 text-warning" />
+                        <h2 className="text-xl font-bold text-foreground">{t('inventory.grn.cannotReceive')}</h2>
+                        <p className="text-muted-foreground font-medium max-w-md">{t('inventory.grn.statusRestriction', { status: po.status })}</p>
                         <Button variant="outline" onClick={() => navigate('/inventory/pos')} className="mt-4">{t('inventory.grn.backToPurchases')}</Button>
                     </CardContent>
                 </Card>
@@ -109,11 +109,11 @@ export const GoodsReceivingPage: React.FC = () => {
                     <ArrowLeft className="h-5 w-5" />
                 </Button>
                 <div>
-                    <h2 className="text-3xl font-bold tracking-tight text-slate-900 group flex items-center gap-3">
+                    <h2 className="text-3xl font-bold tracking-tight text-foreground group flex items-center gap-3">
                         {t('inventory.grn.title')}
-                        <Badge className="bg-emerald-500 hover:bg-emerald-600">{t('inventory.grn.receiving')}</Badge>
+                        <Badge className="bg-success hover:bg-success/90 text-success-foreground">{t('inventory.grn.receiving')}</Badge>
                     </h2>
-                    <p className="text-muted-foreground mt-1 text-sm">{t('inventory.grn.logPo', { id: po.id.slice(0, 8) })}</p>
+                    <p className="text-muted-foreground font-medium mt-1 text-sm">{t('inventory.grn.logPo', { id: po.id.slice(0, 8) })}</p>
                 </div>
             </div>
 
@@ -129,7 +129,7 @@ export const GoodsReceivingPage: React.FC = () => {
                         </CardHeader>
                         <CardContent className="p-0">
                             <Table>
-                                <TableHeader className="bg-slate-50/80">
+                                <TableHeader className="bg-muted/30">
                                     <TableRow>
                                         <TableHead>{t('inventory.grn.ingredient')}</TableHead>
                                         <TableHead>{t('inventory.grn.ordered')}</TableHead>
@@ -143,17 +143,17 @@ export const GoodsReceivingPage: React.FC = () => {
                                         const isOver = received > item.orderedQty;
                                         
                                         return (
-                                            <TableRow key={item.id} className={isShort ? 'bg-amber-50/30' : ''}>
+                                            <TableRow key={item.id} className={isShort ? 'bg-warning/5' : ''}>
                                                 <TableCell>
                                                     <div className="font-medium">{item.ingredientName}</div>
                                                 </TableCell>
                                                 <TableCell>
-                                                    <span className="text-slate-500">{item.orderedQty} {t(`common.units.${item.unitOfMeasure}`, item.unitOfMeasure)}</span>
+                                                    <span className="text-muted-foreground font-medium">{item.orderedQty} {t(`common.units.${item.unitOfMeasure}`, item.unitOfMeasure)}</span>
                                                 </TableCell>
                                                 <TableCell className="text-right pr-6">
                                                     <div className="flex items-center justify-end gap-3">
                                                         {(isShort || isOver) && (
-                                                            <Badge variant="outline" className={isShort ? 'text-amber-600 border-amber-200 bg-amber-50' : 'text-blue-600 border-blue-200 bg-blue-50'}>
+                                                            <Badge variant="outline" className={isShort ? 'text-warning border-warning/20 bg-warning/10' : 'text-info border-info/20 bg-info/10'}>
                                                                 {isShort ? t('inventory.grn.short') : t('inventory.grn.overage')}
                                                             </Badge>
                                                         )}
@@ -162,11 +162,11 @@ export const GoodsReceivingPage: React.FC = () => {
                                                                 type="number" 
                                                                 value={received || ''}
                                                                 onChange={(e) => handleQuantityChange(item.ingredientId, e.target.value)}
-                                                                className={`text-right ${isShort ? 'border-amber-300 focus-visible:ring-amber-500' : ''}`}
+                                                                className={`text-right ${isShort ? 'border-warning/40 focus-visible:ring-warning' : ''}`}
                                                                 step="0.01"
                                                                 min="0"
                                                             />
-                                                            <span className="text-xs text-slate-400 font-medium w-max text-left px-1">
+                                                            <span className="text-xs text-muted-foreground font-bold w-max text-left px-1">
                                                                 {t(`common.units.${item.unitOfMeasure}`, item.unitOfMeasure)}
                                                             </span>
                                                         </div>
@@ -189,10 +189,10 @@ export const GoodsReceivingPage: React.FC = () => {
                         <CardContent className="space-y-6">
                             <div className="space-y-3">
                                 <Label>{t('inventory.grn.supplierInfo')}</Label>
-                                <div className="p-4 rounded-lg bg-slate-50 border border-slate-100">
-                                    <p className="font-medium">{po.supplierName}</p>
-                                    <p className="text-sm text-slate-500 mt-1">{t('inventory.grn.expected')} {po.expectedDeliveryDate ? new Date(po.expectedDeliveryDate).toLocaleDateString(i18n.language) : t('inventory.benchmarking.na')}</p>
-                                    <p className="text-sm text-slate-500">{t('inventory.grn.tracking')} {po.trackingNumber || t('inventory.benchmarking.na')}</p>
+                                <div className="p-4 rounded-lg bg-muted border border-border">
+                                    <p className="font-bold text-foreground">{po.supplierName}</p>
+                                    <p className="text-sm text-muted-foreground mt-1 font-medium">{t('inventory.grn.expected')} {po.expectedDeliveryDate ? new Date(po.expectedDeliveryDate).toLocaleDateString(i18n.language) : t('inventory.benchmarking.na')}</p>
+                                    <p className="text-sm text-muted-foreground font-medium">{t('inventory.grn.tracking')} {po.trackingNumber || t('inventory.benchmarking.na')}</p>
                                 </div>
                             </div>
                             
@@ -205,7 +205,7 @@ export const GoodsReceivingPage: React.FC = () => {
                                         value={deliveryNote}
                                         onChange={(e) => setDeliveryNote(e.target.value)}
                                     />
-                                    <p className="text-[10px] text-slate-400">{t('inventory.grn.deliveryHint')}</p>
+                                    <p className="text-[10px] text-muted-foreground font-medium">{t('inventory.grn.deliveryHint')}</p>
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="notes">{t('inventory.grn.receivingNotes')}</Label>
@@ -225,7 +225,7 @@ export const GoodsReceivingPage: React.FC = () => {
                         form="grn-form"
                         type="submit" 
                         size="lg" 
-                        className={`w-full h-14 text-base font-bold shadow-lg ${hasDiscrepancy ? 'bg-amber-600 hover:bg-amber-700 shadow-amber-500/20 text-white' : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-500/20 text-white'}`}
+                        className={`w-full h-14 text-base font-bold shadow-lg transition-all ${hasDiscrepancy ? 'bg-warning hover:bg-warning/90 shadow-warning/20 text-warning-foreground' : 'bg-primary hover:bg-primary/90 shadow-primary/20 text-primary-foreground'}`}
                         disabled={receiveGoods.isPending}
                     >
                         {receiveGoods.isPending ? t('common.processing') : (
@@ -237,7 +237,7 @@ export const GoodsReceivingPage: React.FC = () => {
                     </Button>
                     
                     {hasDiscrepancy && (
-                        <p className="text-xs text-amber-600 text-center px-4 font-medium">
+                        <p className="text-xs text-warning text-center px-4 font-bold animate-pulse">
                             {t('inventory.grn.discrepancyFlag')}
                         </p>
                     )}

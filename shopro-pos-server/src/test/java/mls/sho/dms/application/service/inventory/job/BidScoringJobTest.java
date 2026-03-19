@@ -1,6 +1,7 @@
 package mls.sho.dms.application.service.inventory.job;
 
 import mls.sho.dms.application.service.inventory.AlertService;
+import mls.sho.dms.application.service.inventory.BidStateMachineService;
 import mls.sho.dms.application.service.inventory.POGeneratorService;
 import mls.sho.dms.entity.inventory.*;
 import mls.sho.dms.entity.staff.Role;
@@ -39,6 +40,7 @@ class BidScoringJobTest {
     @Mock private StaffRepository staffMemberRepository;
     @Mock private AlertService alertService;
     @Mock private POGeneratorService poGeneratorService;
+    @Mock private BidStateMachineService bidStateMachineService;
 
     @InjectMocks
     private BidScoringJob bidScoringJob;
@@ -111,11 +113,10 @@ class BidScoringJobTest {
         s3.setCompanyName("Supplier C");
         s3.setVendorRating(BigDecimal.valueOf(85));
 
-        VendorBid b3 = new VendorBid(); // Best balance (Lowest Price + Best Rating + Moderate Delivery) -> Actually, we test tie breaker elsewhere.
-        // Let's just make b3 definitively the best score
+        VendorBid b3 = new VendorBid(); // Best balance (Lowest Price + Best Rating + Moderate Delivery)
         b3.setId(UUID.randomUUID());
         b3.setSupplier(s3);
-        b3.setUnitPrice(BigDecimal.valueOf(1.90)); 
+        b3.setUnitPrice(BigDecimal.valueOf(1.50)); // Lower price to increase gap
         b3.setDeliveryDate(LocalDate.now().plusDays(2));
         b3.setQuantityAvailable(BigDecimal.valueOf(50));
         b3.setStatus(VendorBidStatus.SUBMITTED);
@@ -125,20 +126,20 @@ class BidScoringJobTest {
             .thenReturn(List.of(b1, b2, b3));
         
         when(staffMemberRepository.findByActiveTrue()).thenReturn(List.of(admin));
-        
-        PurchaseOrder dummyPo = new PurchaseOrder();
-        dummyPo.setId(UUID.randomUUID());
-        when(poGeneratorService.createFromBid(any(UUID.class), any())).thenReturn(dummyPo);
 
         bidScoringJob.evaluateExpiredRfqs();
 
-        assertEquals(VendorBidStatus.WON, b3.getStatus());
-        assertEquals(VendorBidStatus.LOST, b1.getStatus());
-        assertEquals(VendorBidStatus.LOST, b2.getStatus());
+        // RFQ status is still updated by the job itself
         assertEquals(RfqStatus.CLOSED, expiredRfq.getStatus());
 
-        verify(poGeneratorService).createFromBid(eq(b3.getId()), any());
+        // Bid transitions are now delegated to the state machine
+        verify(bidStateMachineService).transition(eq(b3.getId()), eq(VendorBidStatus.WON), isNull(), anyString());
+        verify(bidStateMachineService).transition(eq(b1.getId()), eq(VendorBidStatus.LOST), isNull(), anyString());
+        verify(bidStateMachineService).transition(eq(b2.getId()), eq(VendorBidStatus.LOST), isNull(), anyString());
         
-        verify(alertService).sendNotification(eq("Manager"), contains("Bid Awarded & PO Drafted"), anyString());
+        // PO generation no longer happens here
+        verifyNoInteractions(poGeneratorService);
+        
+        verify(alertService).sendNotification(eq("Manager"), contains("Bid Awarded & PO Dispatched"), anyString());
     }
 }

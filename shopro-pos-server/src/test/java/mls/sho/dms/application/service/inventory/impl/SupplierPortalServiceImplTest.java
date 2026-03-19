@@ -4,6 +4,9 @@ import mls.sho.dms.application.dto.inventory.RFQResponse;
 import mls.sho.dms.application.dto.inventory.SupplierDashboardResponse;
 import mls.sho.dms.application.dto.inventory.SupplierInventoryView;
 import mls.sho.dms.application.service.inventory.AlertService;
+import mls.sho.dms.application.service.inventory.BidStateMachineService;
+import mls.sho.dms.application.service.inventory.POGeneratorService;
+import mls.sho.dms.application.service.inventory.POStateMachineService;
 import mls.sho.dms.entity.inventory.*;
 import mls.sho.dms.repository.inventory.*;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,6 +36,10 @@ class SupplierPortalServiceImplTest {
     @Mock private SupplierIngredientPricingRepository pricingRepository;
     @Mock private RawIngredientRepository ingredientRepository;
     @Mock private AlertService alertService;
+    @Mock private BidStateMachineService bidStateMachineService;
+    @Mock private POGeneratorService poGeneratorService;
+    @Mock private POStateMachineService poStateMachineService;
+    @Mock private PurchaseOrderRepository poRepository;
 
     @InjectMocks
     private SupplierPortalServiceImpl portalService;

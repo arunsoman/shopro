@@ -53,9 +53,9 @@ export const ReviewBidsDialog: React.FC<ReviewBidsDialogProps> = ({
                             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
                         </div>
                     ) : !bids?.length ? (
-                        <div className="h-48 flex flex-col items-center justify-center text-muted gap-2 text-center">
-                            <Clock className="h-8 w-8 opacity-20" />
-                            <p>{t('inventory.bids.noBids')}</p>
+                        <div className="h-48 flex flex-col items-center justify-center text-muted-foreground gap-2 text-center">
+                            <Clock className="h-8 w-8 opacity-40" />
+                            <p className="font-medium text-foreground">{t('inventory.bids.noBids')}</p>
                             <p className="text-xs max-w-xs">{t('inventory.bids.vendorNotification')}</p>
                         </div>
                     ) : (
@@ -76,10 +76,10 @@ export const ReviewBidsDialog: React.FC<ReviewBidsDialogProps> = ({
                                     <TableRow key={bid.id}>
                                         <TableCell>
                                             <div className="font-semibold text-foreground">{bid.supplierName}</div>
-                                            {bid.notes && <div className="text-xs text-muted truncate max-w-[200px]">{bid.notes}</div>}
+                                            {bid.notes && <div className="text-xs text-muted-foreground truncate max-w-[200px]">{bid.notes}</div>}
                                         </TableCell>
                                         <TableCell>
-                                            <div className="flex items-center gap-1 font-mono text-emerald-500">
+                                            <div className="flex items-center gap-1 font-mono text-success">
                                                 <span className="text-sm">{t('common.currencySymbol')}</span>
                                                 {bid.unitPrice.toLocaleString(i18n.language, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                             </div>
@@ -88,20 +88,20 @@ export const ReviewBidsDialog: React.FC<ReviewBidsDialogProps> = ({
                                             {bid.quantityAvailable.toLocaleString(i18n.language)}
                                         </TableCell>
                                         <TableCell>
-                                            <div className="flex items-center gap-1.5 text-xs">
-                                                <Clock className="h-3.5 w-3.5 text-muted" />
+                                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                                                <Clock className="h-3.5 w-3.5" />
                                                 {new Date(bid.deliveryDate).toLocaleDateString(i18n.language)}
                                             </div>
                                         </TableCell>
                                         <TableCell>
-                                            <Badge 
-                                                variant="outline"
-                                                className={
-                                                    bid.status === 'WON' ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" :
-                                                    bid.status === 'LOST' || bid.status === 'REJECTED' ? "bg-error/10 text-error border-error/20" :
-                                                    "bg-primary/10 text-primary border-primary/20"
-                                                }
-                                             >
+                                             <Badge 
+                                                 variant="outline"
+                                                 className={
+                                                     bid.status === 'WON' ? "bg-success/10 text-success border-success/20" :
+                                                     bid.status === 'LOST' || bid.status === 'REJECTED' ? "bg-error/10 text-error border-error/20" :
+                                                     "bg-primary/10 text-primary border-primary/20"
+                                                 }
+                                              >
                                                  {t(`inventory.bids.statuses.${bid.status}`, { defaultValue: bid.status })}
                                              </Badge>
                                         </TableCell>
@@ -111,12 +111,12 @@ export const ReviewBidsDialog: React.FC<ReviewBidsDialogProps> = ({
                                                     <span>{t('inventory.rfq.table.score')}</span>
                                                     <span>{bid.score || 0} {t('common.points')}</span>
                                                 </div>
-                                                <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-                                                    <div 
-                                                        className={`h-full rounded-full ${bid.status === 'WON' ? 'bg-emerald-500' : 'bg-primary'}`} 
-                                                        style={{ width: `${bid.score || 0}%` }} 
-                                                    />
-                                                </div>
+                                                 <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                                                     <div 
+                                                         className={`h-full rounded-full ${bid.status === 'WON' ? 'bg-success' : 'bg-primary'}`} 
+                                                         style={{ width: `${bid.score || 0}%` }} 
+                                                     />
+                                                 </div>
                                             </div>
                                         </TableCell>
                                         <TableCell className="text-right">
@@ -131,11 +131,11 @@ export const ReviewBidsDialog: React.FC<ReviewBidsDialogProps> = ({
                                                     <CheckCircle2 className="h-4 w-4" />
                                                     {t('inventory.bids.award')}
                                                 </Button>
-                                            ) : bid.status === 'WON' ? (
-                                                <div className="flex items-center justify-end gap-1 text-emerald-500 text-xs font-semibold">
-                                                    <CheckCircle2 className="h-4 w-4" />
-                                                    {t('inventory.bids.awarded')}
-                                                </div>
+                                             ) : bid.status === 'WON' ? (
+                                                 <div className="flex items-center justify-end gap-1 text-success text-xs font-semibold">
+                                                     <CheckCircle2 className="h-4 w-4" />
+                                                     {t('inventory.bids.awarded')}
+                                                 </div>
                                             ) : null}
                                         </TableCell>
                                     </TableRow>
@@ -145,14 +145,13 @@ export const ReviewBidsDialog: React.FC<ReviewBidsDialogProps> = ({
                     )}
                 </div>
 
-                <DialogFooter className="sm:justify-start">
-                    <div className="flex items-center gap-2 text-xs text-muted">
-                        <AlertCircle className="h-4 w-4" />
-                        <span>{t('inventory.bids.awardWarning')}</span>
-                    </div>
-                </DialogFooter>
+                 <DialogFooter className="sm:justify-start">
+                     <div className="flex items-center gap-2 text-xs text-muted-foreground font-medium">
+                         <AlertCircle className="h-4 w-4 text-warning" />
+                         <span>{t('inventory.bids.awardWarning')}</span>
+                     </div>
+                 </DialogFooter>
             </DialogContent>
         </Dialog>
     );
 };
-

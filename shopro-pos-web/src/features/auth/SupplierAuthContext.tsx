@@ -6,7 +6,7 @@ export type SupplierRole = 'SUPPLIER_ADMIN' | 'SUPPLIER_BIDDER' | 'SUPPLIER_PLAN
 export interface SupplierSession {
     userId: UUID;
     supplierId: UUID;
-    userName: string;
+    fullName: string;
     supplierName: string;
     role: SupplierRole;
     token?: string;

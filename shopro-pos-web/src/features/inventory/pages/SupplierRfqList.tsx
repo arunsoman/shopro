@@ -41,6 +41,7 @@ export const SupplierRfqList: React.FC = () => {
     // Filtering State
     const [searchTerm, setSearchTerm] = useState('');
     const [filterType, setFilterType] = useState('ALL');
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const submitBidMutation = useSubmitPortalBid(selectedRfq?.id || '');
 
@@ -67,6 +68,8 @@ export const SupplierRfqList: React.FC = () => {
     if (isLoading) return <div className="text-slate-500">Fetching active RFQs...</div>;
 
     const handleBidSubmit = async () => {
+        if (isSubmitting) return;
+        setIsSubmitting(true);
         try {
             await submitBidMutation.mutateAsync({
                 userId: session?.userId || '',
@@ -82,6 +85,8 @@ export const SupplierRfqList: React.FC = () => {
             setSelectedRfq(null);
         } catch (e) {
             toast.error('Failed to submit bid');
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -130,6 +135,11 @@ export const SupplierRfqList: React.FC = () => {
                                             <Badge variant="secondary" className="bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-400">
                                                 {rfq.requiredQty} units required
                                             </Badge>
+                                            {rfq.alreadyBid && (
+                                                <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/20 dark:text-emerald-400">
+                                                    Bid Submitted
+                                                </Badge>
+                                            )}
                                         </div>
                                         <div className="flex flex-wrap gap-4 text-sm text-slate-500">
                                             <div className="flex items-center gap-1.5">
@@ -145,14 +155,16 @@ export const SupplierRfqList: React.FC = () => {
 
                                     <div className="flex items-center gap-3">
                                         <Button
-                                            className="gap-2 bg-indigo-600 hover:bg-indigo-700"
+                                            className={`gap-2 ${rfq.alreadyBid ? 'bg-slate-100 text-slate-500 hover:bg-slate-100 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700'}`}
+                                            disabled={rfq.alreadyBid}
                                             onClick={() => {
                                                 setSelectedRfq(rfq);
                                                 setBidData({ ...bidData, quantityAvailable: rfq.requiredQty });
                                             }}
                                         >
-                                            Submit Quote
-                                            <ArrowRight className="h-4 w-4" />
+                                            {rfq.alreadyBid ? (rfq.currentBidStatus ? rfq.currentBidStatus.charAt(0) + rfq.currentBidStatus.slice(1).toLowerCase() : 'Submitted') : 'Submit Quote'}
+                                            {!rfq.alreadyBid && <ArrowRight className="h-4 w-4" />}
+                                            {rfq.alreadyBid && <CheckCircle2 className="h-4 w-4 text-emerald-500" />}
                                         </Button>
                                     </div>
                                 </div>
@@ -213,10 +225,10 @@ export const SupplierRfqList: React.FC = () => {
                         <Button variant="outline" onClick={() => setSelectedRfq(null)}>Review Later</Button>
                         <Button
                             className="bg-indigo-600 hover:bg-indigo-700 gap-2"
-                            disabled={submitBidMutation.isPending || !bidData.unitPrice}
+                            disabled={submitBidMutation.isPending || isSubmitting || !bidData.unitPrice}
                             onClick={handleBidSubmit}
                         >
-                            {submitBidMutation.isPending ? 'Submitting...' : 'Confirm Quote'}
+                            {submitBidMutation.isPending || isSubmitting ? 'Submitting...' : 'Confirm Quote'}
                             <CheckCircle2 className="h-4 w-4" />
                         </Button>
                     </DialogFooter>

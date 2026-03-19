@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import mls.sho.dms.application.dto.inventory.*;
 import mls.sho.dms.application.service.inventory.AlertService;
+import mls.sho.dms.application.service.inventory.BidStateMachineService;
+import mls.sho.dms.application.service.inventory.POGeneratorService;
 import mls.sho.dms.application.service.inventory.POStateMachineService;
 import mls.sho.dms.application.service.inventory.SupplierPortalService;
 import mls.sho.dms.entity.inventory.*;
@@ -33,6 +35,8 @@ public class SupplierPortalServiceImpl implements SupplierPortalService {
     private final VendorPriceProposalRepository proposalRepository;
     private final AlertService alertService;
     private final POStateMachineService poStateMachineService;
+    private final BidStateMachineService bidStateMachineService;
+    private final POGeneratorService poGeneratorService;
 
     @Override
     @Transactional(readOnly = true)
@@ -67,8 +71,19 @@ public class SupplierPortalServiceImpl implements SupplierPortalService {
         java.util.Set<UUID> ingredientIds = new java.util.HashSet<>(pricingRepository.findByIngredientIdInSupplierCatalog(supplierId));
         ingredientRepository.findBySupplierId(supplierId).forEach(ing -> ingredientIds.add(ing.getId()));
         
-        return rfqRepository.findOpenRfqsByIngredientIds(new java.util.ArrayList<>(ingredientIds), RfqStatus.OPEN).stream()
-                .map(this::mapToRfqResponse)
+        List<RFQ> openRfqs = rfqRepository.findOpenRfqsByIngredientIds(new java.util.ArrayList<>(ingredientIds), RfqStatus.OPEN);
+        List<VendorBid> supplierBids = bidRepository.findBySupplierIdAndRfqIdIn(
+                supplierId, 
+                openRfqs.stream().map(RFQ::getId).collect(Collectors.toList())
+        );
+
+        java.util.Map<UUID, VendorBid> bidMap = supplierBids.stream()
+                .collect(Collectors.toMap(b -> b.getRfq().getId(), b -> b, (b1, b2) -> b1));
+
+        log.debug("Found {} open RFQs and {} matching bids for supplier {}", openRfqs.size(), supplierBids.size(), supplierId);
+
+        return openRfqs.stream()
+                .map(rfq -> mapToRfqResponse(rfq, bidMap.get(rfq.getId())))
                 .collect(Collectors.toList());
     }
 
@@ -132,6 +147,7 @@ public class SupplierPortalServiceImpl implements SupplierPortalService {
         bid.setStatus(VendorBidStatus.SUBMITTED);
 
         bidRepository.save(bid);
+        
         log.info("Supplier Portal: Bid submitted by {} for RFQ #{}", user.getFullName(), rfqId);
     }
 
@@ -182,8 +198,18 @@ public class SupplierPortalServiceImpl implements SupplierPortalService {
              throw new SecurityException("Unauthorized to acknowledge this PO");
         }
 
+        // Find associated winning bid and transition it
+        if (po.getRfq() != null) {
+            bidRepository.findByRfqIdAndStatus(po.getRfq().getId(), VendorBidStatus.WON).stream()
+                .findFirst()
+                .ifPresent(bid -> {
+                    bidStateMachineService.transition(bid.getId(), VendorBidStatus.ACKNOWLEDGED, supplierUserId, "Supplier Acknowledged Order");
+                });
+        }
+        
+        // PO transition is handled by BidStateMachine side-effect, but we ensure timestamp is set
         po.setAcknowledgedAt(Instant.now());
-        poStateMachineService.transition(poId, PurchaseOrderStatus.ACKNOWLEDGED, supplierUserId, "Supplier Acknowledged");
+        poRepository.save(po);
         
         return mapPoToResponse(poRepository.findById(poId).get());
     }
@@ -303,7 +329,7 @@ public class SupplierPortalServiceImpl implements SupplierPortalService {
                 .build();
     }
 
-    private RFQResponse mapToRfqResponse(RFQ rfq) {
+    private RFQResponse mapToRfqResponse(RFQ rfq, VendorBid existingBid) {
         return new RFQResponse(
             rfq.getId(),
             rfq.getIngredient().getId(),
@@ -311,7 +337,9 @@ public class SupplierPortalServiceImpl implements SupplierPortalService {
             rfq.getRequiredQty(),
             rfq.getStatus(),
             rfq.getDesiredDeliveryDate(),
-            rfq.getBidDeadline()
+            rfq.getBidDeadline(),
+            existingBid != null,
+            existingBid != null ? existingBid.getStatus() : null
         );
     }
 }

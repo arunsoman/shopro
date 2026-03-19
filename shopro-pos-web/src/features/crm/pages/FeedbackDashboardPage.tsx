@@ -34,9 +34,9 @@ export default function FeedbackDashboardPage() {
     if (isLoading) return <div>Loading feedback stats...</div>;
 
     const sentimentData = [
-        { name: "Positive", value: stats?.positiveCount || 0, color: "#10b981" },
-        { name: "Neutral", value: stats?.neutralCount || 0, color: "#f59e0b" },
-        { name: "Negative", value: stats?.negativeCount || 0, color: "#ef4444" },
+        { name: "Positive", value: stats?.positiveCount || 0, color: "hsl(var(--success))" },
+        { name: "Neutral", value: stats?.neutralCount || 0, color: "hsl(var(--warning))" },
+        { name: "Negative", value: stats?.negativeCount || 0, color: "hsl(var(--error))" },
     ];
 
     return (

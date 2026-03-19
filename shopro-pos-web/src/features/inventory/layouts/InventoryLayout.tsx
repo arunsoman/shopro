@@ -85,7 +85,7 @@ export function InventoryLayout() {
     return (
         <div className="flex min-h-screen w-full bg-background animate-in fade-in duration-300">
             {/* Sidebar */}
-            <aside className="w-16 lg:w-64 border-r bg-surface px-3 lg:px-4 py-6 shrink-0 transition-all duration-300 flex flex-col items-center lg:items-stretch">
+            <aside className="w-16 lg:w-64 border-r nav-panel-bg px-3 lg:px-4 py-6 shrink-0 transition-all duration-300 flex flex-col items-center lg:items-stretch">
                 <div className="mb-8 px-2 hidden lg:block">
                     <h2 className="text-lg font-semibold tracking-tight truncate">{title}</h2>
                     <p className="text-[11px] text-muted-2 mt-1 uppercase tracking-wider font-bold truncate">
@@ -107,7 +107,7 @@ export function InventoryLayout() {
                             >
                                 <div className={cn(
                                     "p-1.5 rounded-md transition-colors shrink-0",
-                                    isActive ? "bg-background shadow-sm" : "bg-transparent"
+                                    isActive ? "shadow-sm border border-primary/20 bg-primary/5" : "bg-transparent"
                                 )}>
                                     {isActive ? React.cloneElement(item.icon, { className: "h-4 w-4 text-primary" }) : item.icon}
                                 </div>
@@ -129,7 +129,7 @@ export function InventoryLayout() {
             </aside>
 
             {/* Main Content Area */}
-            <main className="flex-1 overflow-auto p-8 bg-background">
+            <main className="flex-1 p-8 bg-background">
                 <div className="mx-auto max-w-7xl">
                     <Outlet />
                 </div>

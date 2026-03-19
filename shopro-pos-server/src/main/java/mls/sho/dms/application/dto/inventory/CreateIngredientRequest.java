@@ -64,5 +64,7 @@ public record CreateIngredientRequest(
 
     java.util.Set<mls.sho.dms.entity.inventory.Allergen> allergens,
 
-    UUID supplierId
+    UUID supplierId,
+    int bidClosingDays,
+    int expectedArrivalDays
 ) {}

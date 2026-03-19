@@ -21,6 +21,8 @@ export interface Ingredient {
     dailyRestockEnrolled: boolean;
     category?: string;
     bidSupplierPool?: string[];
+    bidClosingDays: number;
+    expectedArrivalDays: number;
     allergens?: string[];
     supplierId?: string;
     supplierName?: string;
@@ -49,6 +51,8 @@ export interface CreateIngredientRequest {
     dailyRestockEnrolled: boolean;
     category?: string;
     bidSupplierPool?: string[];
+    bidClosingDays: number;
+    expectedArrivalDays: number;
     supplierId?: string;
 }
 
@@ -69,6 +73,8 @@ export interface UpdateIngredientRequest {
     dailyRestockEnrolled?: boolean;
     category?: string;
     bidSupplierPool?: string[];
+    bidClosingDays?: number;
+    expectedArrivalDays?: number;
     allergens?: string[];
     supplierId?: string;
 }
@@ -308,12 +314,26 @@ export interface RFQResponse {
     status: RfqStatus;
     desiredDeliveryDate: string;
     bidDeadline: string;
+    alreadyBid: boolean;
+    currentBidStatus?: string;
 }
 
 export interface CreateRFQRequest {
     ingredientId: string;
     requiredQty: number;
     desiredDeliveryDate: string;
+}
+
+export interface BidLineItemRequest {
+    ingredientId: string;
+    quantity: number;
+    deliveryDate: string;
+}
+
+export interface CreateBidRequest {
+    items: BidLineItemRequest[];
+    supplierIds: string[];
+    bidDeadline: string;
 }
 
 export interface VendorBid {
@@ -326,9 +346,11 @@ export interface VendorBid {
     deliveryDate: string;
     paymentTerms?: string;
     notes?: string;
-    status: 'SUBMITTED' | 'WON' | 'LOST' | 'REJECTED' | 'OVER_CEILING';
+    status: 'SUBMITTED' | 'WON' | 'LOST' | 'REJECTED' | 'OVER_CEILING' | 'ACKNOWLEDGED' | 'UNACKED';
     score?: number;
     createdAt: string;
+    awardedAt?: string;
+    generatedPoId?: string;
 }
 
 export interface VendorBidRequest {
@@ -501,4 +523,56 @@ export interface FreshnessMetric {
     category: string;
     count: number;
     averageFreshnessPct: number;
+}
+
+export type AIMatchStatus = 
+    | 'MATCHED'
+    | 'QTY_MISMATCH'
+    | 'PRICE_VARIANCE'
+    | 'MISSING_IN_INV'
+    | 'MISSING_IN_GRN'
+    | 'MISSING_IN_PO'
+    | 'PHANTOM_INVOICE_ITEM'
+    | 'ANOMALY';
+
+export interface AIMatchPair {
+    poItem?: any;
+    invoiceItem?: any;
+    grnItem?: any;
+    status: AIMatchStatus;
+    qtyDeltaPoInv: number;
+    qtyDeltaPoGrn: number;
+    priceDeltaPct: number;
+    poInvoiceDistance: number;
+    poGrnDistance: number;
+    remarks: string;
+}
+
+export interface AIAnomalyRecord {
+    description: string;
+    anomalyScore: number;
+    anomalyType: string;
+    detail: string;
+}
+
+export interface AIMatchResult {
+    matchedPairs: AIMatchPair[];
+    anomalies: AIAnomalyRecord[];
+    poTotal: number;
+    invoiceTotal: number;
+    grnTotal: number;
+    overallStatus: 'APPROVED' | 'EXCEPTION' | 'FRAUD_RISK';
+    reportGeneratedAt: string;
+}
+
+export interface RestockAlertResponse {
+    id: string;
+    type: 'PO' | 'RFQ';
+    ingredientName: string;
+    supplierName: string;
+    status: string;
+    createdAt: string;
+    stalledSince: string;
+    severity: 'HIGH' | 'MEDIUM';
+    actionRequired: string;
 }

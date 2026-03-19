@@ -141,7 +141,7 @@ export function AppShell() {
             </header>
 
             {/* ---- Page content ---- */}
-            <main className="flex-1 text-foreground">
+            <main className="flex-1 text-foreground overflow-y-auto overflow-x-hidden">
                 <Outlet />
             </main>
         </div>

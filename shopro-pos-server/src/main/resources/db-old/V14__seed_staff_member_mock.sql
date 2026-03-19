@@ -1,0 +1,13 @@
+-- V14__seed_staff_member_mock.sql
+INSERT INTO staff_member (id, full_name, pin_hash, active, created_at, updated_at, version, role_id)
+VALUES
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a13', 'Hannah Host', '$2a$10$DkWN.f8uJam5vZoSgbnr3efSfHq2z4XFahxIEsO8d.6cORf5hssUK', true, '2026-03-13T16:54:47.130Z', '2026-03-13T16:54:47.130Z', 0, '00000000-0000-0000-0000-000000000105'),
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a14', 'Sam Server', '$2a$10$nJnSnlQjK6xHIy6lt6STkuhHF0Tl9ivb1B9yj.b.DzCBryLa0xdp2', true, '2026-03-13T16:54:47.130Z', '2026-03-13T16:54:47.130Z', 0, '00000000-0000-0000-0000-000000000101'),
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a15', 'Carlos Cashier', '$2a$10$LXAT3Ev69vdJY/Sw8BwEDOrBGwJQf3kdfDoQqRvysRgaaJ4oCYZbO', true, '2026-03-13T16:54:47.130Z', '2026-03-13T16:54:47.130Z', 0, '00000000-0000-0000-0000-000000000106'),
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a16', 'Brie Busser', '$2a$10$uO3i1hJfgMvJ4nlqp0YZbO6sWCIZCzureSc3gEJE0n1R5rzvg/NIO', true, '2026-03-13T16:54:47.130Z', '2026-03-13T16:54:47.130Z', 0, '00000000-0000-0000-0000-000000000107'),
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a12', 'Maria Manager', '$2a$10$vwRlvaykjS3Je/7EJXlKkOLCIZGrAguY9nR8a1Daq66HHASRNer/.', true, '2026-03-13T16:54:47.130Z', '2026-03-13T16:54:47.130Z', 0, '00000000-0000-0000-0000-000000000004'),
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Alex Owner', '$2a$10$cuRLesBMc68B6FMcGLyfkeN11Qh4xjTKGhdQcLTXaZbjSMFx3R2W2', true, '2026-03-13T16:54:47.130Z', '2026-03-13T16:54:47.130Z', 0, '00000000-0000-0000-0000-000000000001'),
+('cd235a87-5b6a-45e6-8e2a-b43d28ca3fed', 'Benny Busser', '$2a$10$uO3i1hJfgMvJ4nlqp0YZbO6sWCIZCzureSc3gEJE0n1R5rzvg/NIO', true, '2026-03-13T16:54:48.429Z', '2026-03-13T16:54:48.429Z', 0, '00000000-0000-0000-0000-000000000107'),
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a18', 'Kevin Kitchen', '$2a$10$dIhthVRDnRBUCs8ofKiqmOWflej/ic2CX13AUAtkO7rlX0gg/EqTe', true, '2026-03-13T16:54:48.783Z', '2026-03-13T16:54:48.783Z', 0, '00000000-0000-0000-0000-000000000008'),
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a19', 'Stan Station', '$2a$10$bBpcmli79wKXDjJ93QzHjOBiEieihlaJz1CTmQRCAr2jkR9SvlBQm', true, '2026-03-13T16:54:48.788Z', '2026-03-13T16:54:48.788Z', 0, '00000000-0000-0000-0000-000000000110')
+ON CONFLICT (id) DO NOTHING;

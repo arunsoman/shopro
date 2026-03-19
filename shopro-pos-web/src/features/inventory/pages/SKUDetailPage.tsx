@@ -191,7 +191,7 @@ export const SKUDetailPage: React.FC = () => {
                             {forecastData && forecastData.length > 0 ? (
                                 <ResponsiveContainer width="100%" height="100%">
                                     <BarChart data={forecastData}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
+                                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
                                         <XAxis 
                                             dataKey="forecastDate" 
                                             tickFormatter={(val) => format(new Date(val), 'MMM dd')}

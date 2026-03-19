@@ -37,7 +37,7 @@ export const SupplierPortalLayout: React.FC = () => {
     return (
         <div className="flex h-screen bg-background">
             {/* Sidebar */}
-            <aside className="w-16 lg:w-64 border-r bg-surface flex flex-col transition-all duration-300 items-center lg:items-stretch">
+            <aside className="w-16 lg:w-64 border-r nav-panel-bg flex flex-col transition-all duration-300 items-center lg:items-stretch">
                 <div className="p-6 border-b w-full hidden lg:block">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold">
@@ -72,7 +72,7 @@ export const SupplierPortalLayout: React.FC = () => {
                             <User className="h-4 w-4 text-muted-foreground" />
                         </div>
                         <div className="overflow-hidden hidden lg:block">
-                            <p className="text-sm font-medium text-foreground truncate">{session.userName}</p>
+                            <p className="text-sm font-medium text-foreground truncate">{session.fullName}</p>
                             <p className="text-xs text-muted-foreground capitalize">{session.role.replace('SUPPLIER_', '').toLowerCase()}</p>
                         </div>
                     </div>
@@ -108,7 +108,7 @@ export const SupplierPortalLayout: React.FC = () => {
                     </div>
                 </header>
 
-                <div className="flex-1 overflow-y-auto p-8">
+                <div className="flex-1 p-8">
                     <Outlet />
                 </div>
             </main>

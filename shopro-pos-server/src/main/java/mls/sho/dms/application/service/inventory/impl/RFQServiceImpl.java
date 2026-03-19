@@ -2,6 +2,8 @@ package mls.sho.dms.application.service.inventory.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import mls.sho.dms.application.dto.inventory.BidLineItemRequest;
+import mls.sho.dms.application.dto.inventory.CreateBidRequest;
 import mls.sho.dms.application.dto.inventory.CreateRFQRequest;
 import mls.sho.dms.application.dto.inventory.RFQResponse;
 import mls.sho.dms.application.dto.inventory.VendorBidRequest;
@@ -9,8 +11,10 @@ import mls.sho.dms.application.dto.inventory.VendorBidResponse;
 import mls.sho.dms.application.exception.BusinessRuleException;
 import mls.sho.dms.application.exception.ResourceNotFoundException;
 import mls.sho.dms.application.service.inventory.AlertService;
+import mls.sho.dms.application.service.inventory.BidStateMachineService;
 import mls.sho.dms.application.service.inventory.RFQService;
 import mls.sho.dms.application.service.inventory.POGeneratorService;
+import mls.sho.dms.application.service.inventory.BiddingStateMachineService;
 import mls.sho.dms.entity.inventory.*;
 import mls.sho.dms.repository.inventory.*;
 import org.springframework.stereotype.Service;
@@ -39,6 +43,11 @@ public class RFQServiceImpl implements RFQService {
     private final SupplierIngredientPricingRepository pricingRepository;
     private final AlertService alertService;
     private final POGeneratorService poGeneratorService;
+    private final BiddingStateMachineService stateMachineService;
+    private final BidStateMachineService bidStateMachineService;
+
+    // Default system actor for automated transitions
+    private static final UUID SYSTEM_ACTOR_ID = UUID.fromString("00000000-0000-0000-0000-000000000000");
 
     @Override
     @Transactional
@@ -64,30 +73,46 @@ public class RFQServiceImpl implements RFQService {
             return null;
         }
 
-        List<SupplierIngredientPricing> eligibleSuppliers = pricingRepository.findByIngredientId(ingredient.getId());
+        List<SupplierIngredientPricing> prices = pricingRepository.findByIngredientId(ingredient.getId());
+        List<UUID> pool = ingredient.getBidSupplierPool();
+        List<SupplierIngredientPricing> eligibleSuppliers;
+
+        if (pool != null && !pool.isEmpty()) {
+            eligibleSuppliers = prices.stream()
+                .filter(p -> pool.contains(p.getSupplier().getId()))
+                .filter(p -> p.getSupplier().isBidEligible())
+                .collect(Collectors.toList());
+        } else {
+            eligibleSuppliers = prices.stream()
+                .filter(p -> p.getSupplier().isBidEligible())
+                .collect(Collectors.toList());
+        }
         
         if (eligibleSuppliers.isEmpty()) {
             alertService.sendNotification(
                 "Manager", 
                 "Manual Intervention Required: " + ingredient.getName(), 
-                ingredient.getName() + " has hit Reorder level but has no eligible vendors. Manual intervention required."
+                ingredient.getName() + " has hit Reorder level (BID mode) but has no eligible vendors in the pool. Manual intervention required."
             );
             return null;
         }
-
-        int maxLeadTime = eligibleSuppliers.stream()
-            .mapToInt(p -> p.getSupplier().getLeadTimeDays())
-            .max()
-            .orElse(3);
 
         RFQ rfq = new RFQ();
         rfq.setIngredient(ingredient);
         rfq.setRequiredQty(qtyNeeded);
         rfq.setStatus(RfqStatus.OPEN);
-        rfq.setDesiredDeliveryDate(LocalDate.now().plusDays(maxLeadTime));
-        rfq.setBidDeadline(Instant.now().plus(2, ChronoUnit.HOURS));
+        
+        // Automated timing from ingredient settings (X, Y days)
+        rfq.setBidDeadline(Instant.now().plus(ingredient.getBidClosingDays(), ChronoUnit.DAYS));
+        rfq.setDesiredDeliveryDate(LocalDate.now().plusDays(ingredient.getExpectedArrivalDays()));
         
         RFQ savedRfq = rfqRepository.save(rfq);
+        
+        // Create Shell PO
+        poGeneratorService.createFromRfq(savedRfq.getId(), SYSTEM_ACTOR_ID);
+        
+        // Record initial state in history and trigger notifications
+        stateMachineService.transition(savedRfq.getId(), RfqStatus.OPEN, SYSTEM_ACTOR_ID, "Automated Generation");
         
         alertService.sendNotification(
             "Manager", 
@@ -139,6 +164,13 @@ public class RFQServiceImpl implements RFQService {
             rfq.setBidDeadline(Instant.now().plus(24, ChronoUnit.HOURS)); // Manual RFQs get 24h by default
 
             RFQ saved = rfqRepository.save(rfq);
+            
+            // Create Shell PO
+            poGeneratorService.createFromRfq(saved.getId(), SYSTEM_ACTOR_ID);
+
+            // Record initial state in history and trigger notifications
+            stateMachineService.transition(saved.getId(), RfqStatus.OPEN, SYSTEM_ACTOR_ID, "Manual RFQ Creation");
+            
             log.info("Manual RFQ created: #{} for ingredient {}", saved.getId(), ingredient.getName());
             return mapToResponse(saved);
         } catch (Exception e) {
@@ -148,12 +180,66 @@ public class RFQServiceImpl implements RFQService {
     }
 
     @Override
+    @Transactional
+    public void createBid(CreateBidRequest request) {
+        log.info("Creating multi-ingredient bid for {} ingredients and {} suppliers", 
+            request.items().size(), request.supplierIds().size());
+
+        for (BidLineItemRequest itemRequest : request.items()) {
+            RawIngredient ingredient = ingredientRepository.findById(itemRequest.ingredientId())
+                .orElseThrow(() -> new ResourceNotFoundException("Ingredient not found: " + itemRequest.ingredientId()));
+
+            // Check for existing active RFQs for this ingredient
+            List<RFQ> activeRfqs = rfqRepository.findActiveRfqsByIngredientId(ingredient.getId(), RfqStatus.OPEN);
+            if (!activeRfqs.isEmpty()) {
+                log.warn("Active RFQ already exists for ingredient: {}", ingredient.getName());
+                throw new BusinessRuleException("An active RFQ already exists for " + ingredient.getName());
+            }
+
+            RFQ rfq = new RFQ();
+            rfq.setIngredient(ingredient);
+            rfq.setRequiredQty(itemRequest.quantity());
+            rfq.setStatus(RfqStatus.OPEN);
+            rfq.setDesiredDeliveryDate(itemRequest.deliveryDate());
+            rfq.setBidDeadline(request.bidDeadline());
+
+            RFQ saved = rfqRepository.save(rfq);
+            
+            // Create Shell PO
+            poGeneratorService.createFromRfq(saved.getId(), SYSTEM_ACTOR_ID);
+
+            // Record initial state in history and trigger notifications
+            stateMachineService.transition(saved.getId(), RfqStatus.OPEN, SYSTEM_ACTOR_ID, "Multi-ingredient Bid Creation");
+            
+            log.debug("RFQ #{} created for ingredient {}", saved.getId(), ingredient.getName());
+
+            // Notify each invited supplier
+            for (UUID supplierId : request.supplierIds()) {
+                Supplier supplier = supplierRepository.findById(supplierId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Supplier not found: " + supplierId));
+                
+                String vendorEmail = supplier.getContactEmail();
+                if (vendorEmail != null) {
+                    String vendorPortalUrl = "http://localhost:3000/vendor/rfq/" + saved.getId() + "?supplier=" + supplier.getId();
+                    alertService.sendNotification(
+                        vendorEmail,
+                        "New Bid Opportunity: " + ingredient.getName(),
+                        "You have been invited to bid for " + ingredient.getName() + " (" + itemRequest.quantity() + "). Deadline: " + request.bidDeadline() + ". Portal: " + vendorPortalUrl
+                    );
+                }
+            }
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<RFQResponse> getAllRfqs(RfqStatus status) {
         List<RFQ> rfqs = (status == null) ? rfqRepository.findAll() : rfqRepository.findByStatus(status);
         return rfqs.stream().map(this::mapToResponse).collect(Collectors.toList());
     }
 
     @Override
+    @Transactional(readOnly = true)
     public RFQResponse getRfqById(UUID id) {
         return rfqRepository.findById(id)
             .map(this::mapToResponse)
@@ -170,8 +256,7 @@ public class RFQServiceImpl implements RFQService {
             throw new BusinessRuleException("Only open RFQs can be cancelled.");
         }
 
-        rfq.setStatus(RfqStatus.CANCELLED);
-        rfqRepository.save(rfq);
+        stateMachineService.transition(rfqId, RfqStatus.CANCELLED, SYSTEM_ACTOR_ID, "Manual Cancellation");
         log.info("RFQ #{} cancelled.", rfqId);
 
         // Optionally, notify vendors whose bids might be pending
@@ -207,6 +292,8 @@ public class RFQServiceImpl implements RFQService {
         bid.setStatus(VendorBidStatus.SUBMITTED);
 
         vendorBidRepository.save(bid);
+        
+        // No more PO generation here. One PO per RFQ.
         log.info("Bid submitted by {} for RFQ #{}", supplier.getCompanyName(), rfqId);
     }
 
@@ -233,27 +320,25 @@ public class RFQServiceImpl implements RFQService {
             throw new BusinessRuleException("RFQ is no longer open");
         }
 
-        // 1. Accept the winning bid
-        bid.setStatus(VendorBidStatus.WON);
+        // 1. Update the existing PO linked to the RFQ with the awarded bid details first
+        // This ensures the supplier is set before status transitions trigger notifications
+        poGeneratorService.awardPo(rfq.getId(), bidId, staffId);
 
-        // 2. Mark other bids as LOST
-        List<VendorBid> otherBids = vendorBidRepository.findByRfqId(rfq.getId());
-        for (VendorBid other : otherBids) {
-            if (!other.getId().equals(bidId)) {
-                other.setStatus(VendorBidStatus.LOST);
+        // 2. Reject other bids for this RFQ
+        List<VendorBid> allBids = vendorBidRepository.findByRfqId(rfq.getId());
+        for (VendorBid alternative : allBids) {
+            if (!alternative.getId().equals(bidId) && alternative.getStatus() == VendorBidStatus.SUBMITTED) {
+                bidStateMachineService.transition(alternative.getId(), VendorBidStatus.LOST, staffId, "Another bid was preferred");
             }
         }
 
-        // 3. Close the RFQ
-        rfq.setStatus(RfqStatus.CLOSED);
+        // 3. Accept the winning bid via state machine (triggers PO status change to SENT)
+        bidStateMachineService.transition(bidId, VendorBidStatus.WON, staffId, "Awarded via Management Console");
 
-        // 4. Trigger PO Generation (US-13.3)
-        poGeneratorService.createFromBid(bidId, staffId);
+        // 4. Update RFQ status to AWARDED via state machine
+        stateMachineService.transition(rfq.getId(), RfqStatus.AWARDED, staffId, "Awarded to " + bid.getSupplier().getCompanyName());
 
-        log.info("Bid awarded to {} for RFQ {}. PO generated.", bid.getSupplier().getCompanyName(), rfq.getId());
-
-        rfqRepository.save(rfq);
-        vendorBidRepository.saveAll(otherBids);
+        log.info("Bid awarded to {} for RFQ {}. PO updated.", bid.getSupplier().getCompanyName(), rfq.getId());
     }
 
     private RFQResponse mapToResponse(RFQ rfq) {
@@ -264,7 +349,9 @@ public class RFQServiceImpl implements RFQService {
             rfq.getRequiredQty(),
             rfq.getStatus(),
             rfq.getDesiredDeliveryDate(),
-            rfq.getBidDeadline()
+            rfq.getBidDeadline(),
+            false,
+            null
         );
     }
 

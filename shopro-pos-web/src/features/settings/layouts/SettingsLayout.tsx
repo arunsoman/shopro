@@ -19,7 +19,7 @@ export function SettingsLayout() {
     return (
         <div className="flex h-screen bg-background text-foreground overflow-hidden">
             {/* Sidebar */}
-            <aside className="w-16 lg:w-64 flex-shrink-0 bg-surface border-r border-border flex flex-col transition-all duration-300 items-center lg:items-stretch">
+            <aside className="w-16 lg:w-64 border-r nav-panel-bg px-3 lg:px-4 py-6 transition-all duration-300 shrink-0 flex flex-col items-center lg:items-stretch">
                 <div className="p-6 border-b border-border w-full hidden lg:block">
                     <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center">
@@ -54,7 +54,7 @@ export function SettingsLayout() {
             </aside>
 
             {/* Main Content */}
-            <main className="flex-1 min-w-0 overflow-auto relative">
+            <main className="flex-1 min-w-0 relative">
                 <div className="p-10 max-w-5xl mx-auto">
                     <Outlet />
                 </div>

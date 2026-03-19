@@ -1,4 +1,3 @@
-import { SupplierAuthProvider } from '@/features/auth/SupplierAuthContext';
 import { SupplierPortalLayout } from './SupplierPortalLayout';
 import { NotificationProvider } from '@/features/notifications/contexts/NotificationContext';
 
@@ -17,8 +16,6 @@ function SupplierNotificationWrapper() {
 
 export default function SupplierAuthenticatedLayout() {
     return (
-        <SupplierAuthProvider>
-            <SupplierNotificationWrapper />
-        </SupplierAuthProvider>
+        <SupplierNotificationWrapper />
     );
 }

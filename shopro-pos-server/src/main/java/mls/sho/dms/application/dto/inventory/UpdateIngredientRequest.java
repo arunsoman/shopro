@@ -26,5 +26,7 @@ public record UpdateIngredientRequest(
     String category,
     List<UUID> bidSupplierPool,
     Set<String> allergens,
-    UUID supplierId
+    UUID supplierId,
+    Integer bidClosingDays,
+    Integer expectedArrivalDays
 ) {}

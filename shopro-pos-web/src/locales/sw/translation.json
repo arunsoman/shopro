@@ -579,7 +579,8 @@
       "statuses": {
         "OPEN": "Wazi",
         "CLOSED": "Imefungwa",
-        "CANCELLED": "Imefutwa"
+        "CANCELLED": "Imefutwa",
+        "AWARDED": "Imetunukiwa"
       }
     },
     "proposals": {

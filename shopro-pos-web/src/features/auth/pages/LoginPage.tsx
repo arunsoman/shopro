@@ -99,28 +99,28 @@ export function LoginPage() {
     };
 
     return (
-        <div className="min-h-screen bg-[#f8f5ff] dark:bg-[#180B33] font-['Manrope'] text-slate-900 dark:text-slate-100 flex flex-col overflow-x-hidden">
+        <div className="min-h-screen bg-background font-['Manrope'] text-foreground flex flex-col overflow-x-hidden">
             {/* Top Navigation Bar */}
             <nav className="flex items-center justify-between px-6 md:px-10 py-6">
                 <div className="flex items-center gap-3">
                     {/* Inline SVG logo — no external dependency */}
                     <svg className="h-9 w-9" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <rect width="36" height="36" rx="10" fill="#005bad"/>
+                        <rect width="36" height="36" rx="10" fill="hsl(var(--primary))"/>
                         <path d="M18 8C12.477 8 8 12.477 8 18C8 23.523 12.477 28 18 28C23.523 28 28 23.523 28 18C28 12.477 23.523 8 18 8ZM18 11C21.866 11 25 14.134 25 18C25 21.866 21.866 25 18 25C14.134 25 11 21.866 11 18C11 14.134 14.134 11 18 11ZM15 15.5C15 14.672 15.672 14 16.5 14H19.5C20.328 14 21 14.672 21 15.5C21 16.328 20.328 17 19.5 17H16.5C15.672 17 15 16.328 15 15.5ZM15 20.5C15 19.672 15.672 19 16.5 19H19.5C20.328 19 21 19.672 21 20.5C21 21.328 20.328 22 19.5 22H16.5C15.672 22 15 21.328 15 20.5Z" fill="white"/>
                     </svg>
-                    <span className="font-extrabold text-2xl tracking-tight text-slate-800 dark:text-slate-100">Shopro</span>
+                    <span className="font-extrabold text-2xl tracking-tight text-foreground">Shopro</span>
                 </div>
                 <div className="flex items-center gap-6">
                     <LanguageSelector />
                     <div className="hidden sm:flex gap-6">
-                        <button className="text-slate-500 dark:text-slate-400 font-semibold hover:text-primary transition-colors">{t('common.help')}</button>
-                        <button className="text-slate-500 dark:text-slate-400 font-semibold hover:text-primary transition-colors">{t('common.support')}</button>
+                        <button className="text-muted-foreground font-semibold hover:text-primary transition-colors">{t('common.help')}</button>
+                        <button className="text-muted-foreground font-semibold hover:text-primary transition-colors">{t('common.support')}</button>
                     </div>
                     <div className="flex items-center gap-3">
-                        <button className="p-2 text-slate-400 hover:text-primary hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-all">
+                        <button className="p-2 text-muted-foreground hover:text-primary hover:bg-muted rounded-full transition-all">
                             <Settings className="w-5 h-5" />
                         </button>
-                        <button className="p-2 text-slate-400 hover:text-error hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-all">
+                        <button className="p-2 text-muted-foreground hover:text-error hover:bg-muted rounded-full transition-all">
                             <LogOut className="w-5 h-5" />
                         </button>
                     </div>
@@ -132,12 +132,12 @@ export function LoginPage() {
                 <div className="w-full max-w-lg flex flex-col items-center">
                     {/* Login Header */}
                     <div className="text-center mb-8 animate-fade-up">
-                        <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-2">{t('auth.welcome')}</h1>
-                        <p className="text-slate-500 dark:text-slate-400 text-lg">{t('auth.enterPin')}</p>
+                        <h1 className="text-4xl font-extrabold tracking-tight text-foreground mb-2">{t('auth.welcome')}</h1>
+                        <p className="text-muted-foreground text-lg">{t('auth.enterPin')}</p>
                     </div>
 
                     {/* PIN Display */}
-                    <div className="flex gap-5 mb-10 bg-slate-100/50 dark:bg-slate-800/50 p-6 rounded-2xl animate-scale-in">
+                    <div className="flex gap-5 mb-10 bg-muted/30 p-6 rounded-2xl animate-scale-in">
                         {[0, 1, 2, 3].map((i) => (
                             <div
                                 key={i}

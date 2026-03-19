@@ -86,8 +86,8 @@ export const PriceProposalsList: React.FC = () => {
             return (
                 <Card>
                     <CardContent className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                        <Tag className="h-12 w-12 mb-4 opacity-20" />
-                        <p>{isHistory ? t('inventory.proposals.noHistory') : t('inventory.proposals.noPending')}</p>
+                        <Tag className="h-12 w-12 mb-4 opacity-40 shrink-0" />
+                        <p className="font-medium text-foreground">{isHistory ? t('inventory.proposals.noHistory') : t('inventory.proposals.noPending')}</p>
                     </CardContent>
                 </Card>
             );
@@ -121,7 +121,7 @@ export const PriceProposalsList: React.FC = () => {
                                             <div className="flex items-center gap-2">
                                                 <span className="font-bold">{t('common.currencySymbol')}{proposal.proposedPrice.toFixed(2)}</span>
                                                 {isLower && (
-                                                    <Badge variant="secondary" className="bg-green-100 text-green-800 hover:bg-green-100 border-green-200">
+                                                    <Badge variant="outline" className="bg-success/10 text-success border-success/20">
                                                         {t('inventory.proposals.savings')}
                                                     </Badge>
                                                 )}
@@ -138,7 +138,7 @@ export const PriceProposalsList: React.FC = () => {
                                                             {t(`inventory.po.statuses.${proposal.generatedPoStatus}`)}
                                                         </Badge>
                                                     ) : (
-                                                        <Badge variant={proposal.status === 'ACCEPTED' ? 'success' : 'destructive'} className={proposal.status === 'ACCEPTED' ? 'bg-green-100 text-green-800' : ''}>
+                                                        <Badge variant={proposal.status === 'ACCEPTED' ? 'success' : 'destructive'} className={proposal.status === 'ACCEPTED' ? 'bg-success/10 text-success border-success/20' : ''}>
                                                             {t(`inventory.proposals.statuses.${proposal.status}`)}
                                                         </Badge>
                                                     )}
@@ -156,10 +156,10 @@ export const PriceProposalsList: React.FC = () => {
                                                 </div>
                                             ) : (
                                                 <div className="flex justify-end gap-2">
-                                                    <Button size="sm" variant="outline" className="text-red-500 hover:bg-red-50" onClick={() => handleRejectClick(proposal.id)}>
-                                                        <X className="h-4 w-4 mr-1" />
-                                                        {t('common.reject')}
-                                                    </Button>
+                                                     <Button size="sm" variant="outline" className="text-error border-error/20 hover:bg-error/10 hover:text-error" onClick={() => handleRejectClick(proposal.id)}>
+                                                         <X className="h-4 w-4 mr-1" />
+                                                         {t('common.reject')}
+                                                     </Button>
                                                     <Button size="sm" onClick={() => handleAccept(proposal.id, proposal.ingredientName)}>
                                                         <Check className="h-4 w-4 mr-1" />
                                                         {t('common.accept')}

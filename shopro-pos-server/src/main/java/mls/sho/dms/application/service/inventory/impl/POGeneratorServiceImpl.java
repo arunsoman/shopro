@@ -9,6 +9,7 @@ import mls.sho.dms.repository.inventory.*;
 import mls.sho.dms.repository.staff.StaffRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.ArrayList;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -25,6 +26,70 @@ public class POGeneratorServiceImpl implements POGeneratorService {
     private final VendorBidRepository bidRepository;
     private final VendorPriceProposalRepository proposalRepository;
     private final StaffRepository staffRepository;
+    private final RFQRepository rfqRepository;
+
+    private static final UUID SYSTEM_ACTOR_ID = UUID.fromString("00000000-0000-0000-0000-000000000000");
+
+    @Override
+    @Transactional
+    public PurchaseOrder createFromRfq(UUID rfqId, UUID staffId) {
+        // Enforce 1:1 since DB constraint is limited by partitioning
+        if (poRepository.findByRfqId(rfqId).isPresent()) {
+            return poRepository.findByRfqId(rfqId).get();
+        }
+
+        RFQ rfq = rfqRepository.findById(rfqId)
+                .orElseThrow(() -> new IllegalArgumentException("RFQ not found: " + rfqId));
+
+        StaffMember staff = staffId != null ? staffRepository.findById(staffId).orElse(null) : null;
+
+        PurchaseOrder po = new PurchaseOrder();
+        po.setRfq(rfq);
+        po.setGeneratedBy(staff);
+        po.setStatus(PurchaseOrderStatus.DRAFT);
+        po.setExpectedDeliveryDate(rfq.getDesiredDeliveryDate());
+
+        PurchaseOrderLine line = new PurchaseOrderLine();
+        line.setPurchaseOrder(po);
+        line.setIngredient(rfq.getIngredient());
+        line.setOrderedQty(rfq.getRequiredQty());
+        line.setUnitCost(rfq.getIngredient().getCostPerUnit()); // Initial estimate
+        po.setLines(new ArrayList<>(java.util.List.of(line)));
+
+        po.setTotalValue(line.getOrderedQty().multiply(line.getUnitCost()));
+
+        return poRepository.save(po);
+    }
+
+    @Override
+    @Transactional
+    public PurchaseOrder awardPo(UUID rfqId, UUID bidId, UUID staffId) {
+        PurchaseOrder po = poRepository.findByRfqId(rfqId)
+                .orElseThrow(() -> new IllegalArgumentException("No PO found for RFQ: " + rfqId));
+
+        VendorBid bid = bidRepository.findById(bidId)
+                .orElseThrow(() -> new IllegalArgumentException("Bid not found: " + bidId));
+
+        StaffMember staff = staffId != null ? staffRepository.findById(staffId).orElse(null) : null;
+
+        po.setSupplier(bid.getSupplier());
+        po.setSourceBidId(bidId);
+        po.setExpectedDeliveryDate(bid.getDeliveryDate());
+        
+        // Update lines with bid price/qty
+        if (!po.getLines().isEmpty()) {
+            PurchaseOrderLine line = po.getLines().get(0);
+            line.setUnitCost(bid.getUnitPrice());
+            line.setOrderedQty(bid.getQuantityAvailable().min(po.getRfq().getRequiredQty()));
+            po.setTotalValue(line.getOrderedQty().multiply(line.getUnitCost()));
+        }
+
+        if (po.getRfq().getStatus() != RfqStatus.AWARDED) {
+            po.getRfq().setStatus(RfqStatus.AWARDED);
+        }
+
+        return poRepository.save(po);
+    }
 
     @Override
     @Transactional
@@ -32,12 +97,11 @@ public class POGeneratorServiceImpl implements POGeneratorService {
         VendorBid bid = bidRepository.findById(bidId)
                 .orElseThrow(() -> new IllegalArgumentException("Bid not found: " + bidId));
 
-        StaffMember staff = staffRepository.findById(staffId)
-                .orElseThrow(() -> new IllegalArgumentException("Staff not found: " + staffId));
+        StaffMember staff = staffId != null ? staffRepository.findById(staffId).orElse(null) : null;
 
         PurchaseOrder po = new PurchaseOrder();
         po.setSupplier(bid.getSupplier());
-        po.setGeneratedBy(staff);
+        po.setGeneratedBy(staff); // null for system-generated POs (e.g. auto-awards)
         po.setStatus(PurchaseOrderStatus.DRAFT);
         po.setSourceBidId(bidId);
         po.setExpectedDeliveryDate(bid.getDeliveryDate());
@@ -108,7 +172,15 @@ public class POGeneratorServiceImpl implements POGeneratorService {
         PurchaseOrder po = new PurchaseOrder();
         po.setSupplier(ingredient.getSupplier());
         po.setStatus(PurchaseOrderStatus.DRAFT); // Start as DRAFT, can be auto-sent by a separate policy
-        po.setExpectedDeliveryDate(LocalDate.now().plusDays(ingredient.getSupplier().getLeadTimeDays()));
+        
+        // Use ingredient-specific timeframe (Y days) if set (>0), else fall back to supplier lead time
+        int arrivalDays = ingredient.getExpectedArrivalDays() > 0 
+            ? ingredient.getExpectedArrivalDays() 
+            : ingredient.getSupplier().getLeadTimeDays();
+        po.setExpectedDeliveryDate(LocalDate.now().plusDays(arrivalDays));
+        
+        // Set system actor as generator for automated POs
+        staffRepository.findById(SYSTEM_ACTOR_ID).ifPresent(po::setGeneratedBy);
         
         PurchaseOrderLine line = new PurchaseOrderLine();
         line.setPurchaseOrder(po);

@@ -19,7 +19,7 @@ export function CrmLayout() {
 
     return (
         <div className="flex min-h-screen w-full bg-background">
-            <aside className="w-16 lg:w-64 border-r bg-surface px-3 lg:px-4 py-6 transition-all duration-300 shrink-0 flex flex-col items-center lg:items-stretch">
+            <aside className="w-16 lg:w-64 border-r nav-panel-bg px-3 lg:px-4 py-6 transition-all duration-300 shrink-0 flex flex-col items-center lg:items-stretch">
                 <h2 className="mb-6 px-2 text-lg font-semibold tracking-tight hidden lg:block truncate">{t('crm.title')}</h2>
                 <nav className="space-y-1 w-full text-center">
                     {navItems.map((item) => (
@@ -38,7 +38,7 @@ export function CrmLayout() {
                 </nav>
             </aside>
 
-            <main className="flex-1 overflow-auto">
+            <main className="flex-1">
                 <Outlet />
             </main>
         </div>

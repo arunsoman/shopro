@@ -13,6 +13,13 @@ import { useAuth } from '@/lib/auth/AuthContext';
 import { usePurchaseOrders, useMatchInvoice } from '../hooks/usePO';
 import { useTranslation } from 'react-i18next';
 import InventorySkeleton from '../components/InventorySkeletons';
+import { 
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { HelpCircle } from 'lucide-react';
 
 export const ThreeWayMatchPanel: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -136,7 +143,17 @@ export const ThreeWayMatchPanel: React.FC = () => {
                     </div>
                 </div>
                 {po.status === 'RECEIVED' && (
-                    <Button variant="outline" className="gap-2">
+                    <Button 
+                        variant="outline" 
+                        className="gap-2"
+                        onClick={() => {
+                            if (po.invoiceFileId) {
+                                window.open(`/api/v1/documents/${po.invoiceFileId}`, '_blank');
+                            } else {
+                                toast.error("No invoice document found for this PO");
+                            }
+                        }}
+                    >
                         <Download className="h-4 w-4" />
                         {t('inventory.matching.downloadInvoice')}
                     </Button>
@@ -161,7 +178,22 @@ export const ThreeWayMatchPanel: React.FC = () => {
                                         <TableHead>{t('inventory.matching.poCost')}</TableHead>
                                         <TableHead className="w-32 text-right">{t('inventory.matching.invQty')}</TableHead>
                                         <TableHead className="w-32 text-right">{t('inventory.matching.invPrice', { symbol: t('common.currencySymbol') })}</TableHead>
-                                        <TableHead className="w-24 text-right pr-6">{t('inventory.matching.extended', { symbol: t('common.currencySymbol') })}</TableHead>
+                                        <TableHead className="w-32 text-right pr-6">
+                                            <div className="flex items-center justify-end gap-1">
+                                                {t('inventory.matching.extended', { symbol: t('common.currencySymbol') })}
+                                                <TooltipProvider>
+                                                    <Tooltip>
+                                                        <TooltipTrigger>
+                                                            <HelpCircle className="h-3 w-3 text-slate-400" />
+                                                        </TooltipTrigger>
+                                                        <TooltipContent className="bg-slate-900 text-white border-none text-[10px] p-2">
+                                                            <p>Extended Price = Unit Price × Quantity</p>
+                                                            <p className="opacity-70 mt-1">Total line value before taxes/shipping.</p>
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                </TooltipProvider>
+                                            </div>
+                                        </TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>

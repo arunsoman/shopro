@@ -3,6 +3,7 @@ package mls.sho.dms.application.service.inventory.job;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import mls.sho.dms.application.service.inventory.AlertService;
+import mls.sho.dms.application.service.inventory.BidStateMachineService;
 import mls.sho.dms.application.service.inventory.POGeneratorService;
 import mls.sho.dms.entity.inventory.*;
 import mls.sho.dms.entity.staff.StaffMember;
@@ -33,6 +34,7 @@ public class BidScoringJob {
     private final StaffRepository staffMemberRepository;
     private final AlertService alertService;
     private final POGeneratorService poGeneratorService;
+    private final BidStateMachineService bidStateMachineService;
 
     // Configurable weights (US-13.3)
     private static final double PRICE_WEIGHT = 0.50;
@@ -171,12 +173,12 @@ public class BidScoringJob {
     private void awardBid(RFQ rfq, VendorBid winningBid, List<VendorBid> allBids) {
         log.info("Awarding RFQ #{} to Bid #{} from Supplier {}", rfq.getId(), winningBid.getId(), winningBid.getSupplier().getCompanyName());
 
-        // Update bid statuses
+        // Update bid statuses via state machine
         for (VendorBid bid : allBids) {
             if (bid.getId().equals(winningBid.getId())) {
-                bid.setStatus(VendorBidStatus.WON);
+                bidStateMachineService.transition(bid.getId(), VendorBidStatus.WON, null, "Auto-awarded by scoring system");
             } else {
-                bid.setStatus(VendorBidStatus.LOST);
+                bidStateMachineService.transition(bid.getId(), VendorBidStatus.LOST, null, "Auto-scored: Another bid had higher rank");
                 // Alert losing vendor
                 String vendorEmail = bid.getSupplier().getContactEmail();
                 if (vendorEmail != null) {
@@ -188,13 +190,14 @@ public class BidScoringJob {
                 }
             }
         }
-        vendorBidRepository.saveAll(allBids);
 
-        rfq.setStatus(RfqStatus.CLOSED);
-        rfqRepository.save(rfq);
-
-        // Generate DRAFT Purchase Order
-        createDraftPurchaseOrder(rfq, winningBid);
+        // Alert Manager
+        alertService.sendNotification(
+            "Manager", 
+            "Bid Awarded & PO Dispatched: " + rfq.getIngredient().getName(), 
+            "Bid scoring complete for " + rfq.getIngredient().getName() + ". Winning vendor: " + 
+            winningBid.getSupplier().getCompanyName() + " at $" + winningBid.getUnitPrice() + "/unit. PO SENT to supplier."
+        );
     }
 
     private void createDraftPurchaseOrder(RFQ rfq, VendorBid winningBid) {

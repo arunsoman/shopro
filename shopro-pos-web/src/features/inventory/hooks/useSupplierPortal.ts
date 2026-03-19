@@ -71,7 +71,7 @@ export const useSubmitPortalBid = (rfqId: string) => {
             });
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['supplier-portal-rfqs'] });
+            queryClient.invalidateQueries({ queryKey: ['supplier-rfqs'] });
             queryClient.invalidateQueries({ queryKey: ['supplier-dashboard'] });
         }
     });
@@ -120,9 +120,37 @@ export const useCounterOffer = () => {
             const { data } = await apiClient.post(`${API_BASE}/pos/${id}/counter-offer?userId=${userId}`, request);
             return data;
         },
-        onSuccess: (_, variables) => {
+        onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['supplier-pos'] });
-            queryClient.invalidateQueries({ queryKey: ['purchase-orders', variables.id] });
+            queryClient.invalidateQueries({ queryKey: ['supplier-dashboard'] });
+        }
+    });
+};
+
+export const useAcknowledgeOrder = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async ({ id, userId }: { id: string, userId: string }) => {
+            const { data } = await apiClient.post(`${API_BASE}/pos/${id}/acknowledge?userId=${userId}`);
+            return data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['supplier-pos'] });
+            queryClient.invalidateQueries({ queryKey: ['supplier-dashboard'] });
+        }
+    });
+};
+
+export const useShipOrder = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async ({ id, userId, request }: { id: string, userId: string, request: any }) => {
+            const { data } = await apiClient.post(`${API_BASE}/pos/${id}/ship?userId=${userId}`, request);
+            return data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['supplier-pos'] });
+            queryClient.invalidateQueries({ queryKey: ['supplier-dashboard'] });
         }
     });
 };

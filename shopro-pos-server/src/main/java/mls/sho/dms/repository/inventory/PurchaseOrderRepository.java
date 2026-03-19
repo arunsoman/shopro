@@ -17,4 +17,8 @@ public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, UU
 
     @org.springframework.data.jpa.repository.Query("SELECT po FROM PurchaseOrder po JOIN po.lines pol WHERE pol.ingredient.id = :ingredientId AND po.status NOT IN :completedStatuses ORDER BY po.createdAt DESC")
     java.util.List<PurchaseOrder> findActiveOrdersByIngredientId(java.util.UUID ingredientId, java.util.Collection<PurchaseOrderStatus> completedStatuses);
+
+    java.util.Optional<PurchaseOrder> findByRfqId(java.util.UUID rfqId);
+
+    java.util.List<PurchaseOrder> findByStatusAndSentAtBefore(PurchaseOrderStatus status, java.time.Instant sentAt);
 }

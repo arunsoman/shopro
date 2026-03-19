@@ -48,7 +48,11 @@
     "defaultVendor": "Direct Vendor",
     "none": "None",
     "na": "N/A",
-    "supplier": "Supplier"
+    "supplier": "Supplier",
+    "paginationLabel": "Showing {{start}} to {{end}} of {{total}}",
+    "previous": "Previous",
+    "pageOf": "Page {{current}} of {{total}}",
+    "next": "Next"
   },
   "auth": {
     "login": "Login",
@@ -247,6 +251,7 @@
       "error": "Failed to log batch production"
     },
     "thresholds": {
+      "sectionTitle": "Inventory Thresholds",
       "editTitle": "Edit {{name}}",
       "editDesc": "Configure stock alerts and reorder points",
       "reorderPoint": "Reorder Point",
@@ -260,6 +265,42 @@
       "autoReplenishHint": "Automatically generate POs at reorder point",
       "success": "Thresholds for {{name}} updated successfully",
       "error": "Failed to update thresholds"
+    },
+    "restocking": {
+      "strategyTitle": "Restocking Strategy",
+      "strategyDesc": "Configure how this ingredient is automatically replenished.",
+      "mode": "Restocking Mode",
+      "selectMode": "Select replenishment mode",
+      "selectSupplier": "Select primary supplier",
+      "supplierPool": "Supplier Pool",
+      "bidClosingDays": "Bid Deadline (Days)",
+      "expectedArrivalDays": "Expected Delivery (Days)",
+      "daysAfterInitiation": "days after initiation",
+      "daysAfterPo": "days after bid/PO",
+      "modes": {
+        "manual": "Manual",
+        "auto": "Direct Sourcing",
+        "bid": "Automated Bidding"
+      },
+      "alerts": {
+        "title": "Restocking Alerts",
+        "desc": "Stalled or failed automated replenishment attempts requiring manual intervention.",
+        "stalledPos": "Stalled Purchase Orders",
+        "stalledPosDesc": "Sent but not acknowledged by suppliers within 24h.",
+        "failedBids": "Failed Bidding Cycles",
+        "failedBidsDesc": "RFQs that failed to receive bids by the deadline.",
+        "activeAlerts": "Active Alerts",
+        "noAlerts": "No active restocking alerts. System is operating normally.",
+        "type": "Type",
+        "ingredient": "Ingredient",
+        "supplierPool": "Supplier / Pool",
+        "stalledSince": "Stalled Since",
+        "status": "Status",
+        "actionRequired": "Action Required",
+        "retryBidding": "Retry Bidding",
+        "call": "Call",
+        "chat": "Chat"
+      }
     },
     "recipes": {
       "builderTitle": "Recipe Builder: {{name}}",
@@ -317,7 +358,10 @@
         "waste": "Waste (MTD)",
         "posTrend": "+2 since last week",
         "valueTrend": "+1.2% from last month",
-        "wasteTrend": "-0.4% from goal"
+        "wasteTrend": "-0.4% from goal",
+        "restockAlerts": "Restock Alerts",
+        "alertsAction": "Action required immediately",
+        "alertsNone": "No issues detected"
       },
       "tabs": {
         "overview": "Stock Overview",
@@ -377,7 +421,9 @@
         "SUBMITTED": "Submitted",
         "WON": "Won",
         "LOST": "Lost",
-        "REJECTED": "Rejected"
+        "REJECTED": "Rejected",
+        "ACKNOWLEDGED": "Acknowledged",
+        "UNACKED": "Unacknowledged"
       }
     },
     "registry": {
@@ -609,7 +655,24 @@
       "statuses": {
         "OPEN": "Open",
         "CLOSED": "Closed",
-        "CANCELLED": "Cancelled"
+        "CANCELLED": "Cancelled",
+        "AWARDED": "Awarded"
+      },
+      "createBid": {
+        "title": "Create Bid",
+        "ingredients": "Ingredients",
+        "inviteSuppliers": "Invite Suppliers",
+        "bidEndDate": "Bid End Date",
+        "expectedDelivery": "Expected Delivery Date",
+        "addIngredient": "Add Ingredient",
+        "loadDaily": "Load Daily Perishables",
+        "noIngredients": "No ingredients found",
+        "selectSuppliers": "Select Suppliers to Invite",
+        "sameForAll": "Same for all ingredients",
+        "individualDates": "Individual Delivery Dates",
+        "deadlinePlaceholder": "Select bidding deadline...",
+        "success": "Bid created successfully",
+        "error": "Failed to create bid"
       }
     },
     "proposals": {
@@ -757,6 +820,32 @@
       },
       "sku": "SKU: {{value}}",
       "na": "N/A"
+    },
+    "matching": {
+      "title": "3-Way Invoice Match",
+      "badge": "FINANCE",
+      "desc": "Auditing PO #{{id}} against Vendor Invoice and Goods Receipt.",
+      "downloadInvoice": "Download Invoice",
+      "entryTitle": "Invoice Line Entry",
+      "entryDesc": "Verify quantities and prices as they appear on the vendor's physical invoice.",
+      "poCost": "PO Cost",
+      "invQty": "Inv Qty",
+      "invPrice": "Inv Price ({{symbol}})",
+      "extended": "Extended ({{symbol}})",
+      "orderedQty": "Ordered",
+      "summaryTitle": "Match Summary",
+      "invoiceNumber": "Invoice Number",
+      "invoiceNumberPlaceholder": "e.g. INV-2026-991",
+      "subtotal": "Subtotal",
+      "taxShipping": "Tax / Shipping",
+      "invoiceTotal": "Invoice Total",
+      "toleranceExceeded": "Variance Alert: Tolerance Exceeded",
+      "withinTolerance": "Perfect Match: Within Tolerance",
+      "varianceHint": "Variance of {{pct}}% detected against planned {{planned}}. {{consequence}}",
+      "reviewConsequence": "This will trigger a Discrepancy Review.",
+      "approvalConsequence": "This will proceed to automated approval.",
+      "submitReview": "Submit for Review",
+      "runMatch": "Finalize Match"
     }
   },
   "crm": {

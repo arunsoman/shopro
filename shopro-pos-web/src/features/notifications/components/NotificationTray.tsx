@@ -24,7 +24,7 @@ export function NotificationBadge({ user, onClick }: { user?: NotificationUser; 
             {unreadCount > 0 && (
                 <Badge
                     variant="destructive"
-                    className="absolute top-1.5 right-1.5 h-4.5 min-w-[18px] px-1 flex items-center justify-center text-[10px] font-black border-2 border-[#180B33] shadow-[0_0_10px_rgba(var(--destructive),0.4)] animate-in zoom-in duration-300"
+                    className="absolute top-1.5 right-1.5 h-4.5 min-w-[18px] px-1 flex items-center justify-center text-[10px] font-black border-2 border-background shadow-[0_0_10px_rgba(var(--destructive),0.4)] animate-in zoom-in duration-300"
                 >
                     {unreadCount > 99 ? '99+' : unreadCount}
                 </Badge>
@@ -91,11 +91,11 @@ export function NotificationTray({ open, onClose, user }: { open: boolean; onClo
                                             )}>
                                                 {n.title}
                                             </p>
-                                            <span className="text-[10px] text-muted-foreground/60 font-medium whitespace-nowrap">
+                                            <span className="text-[10px] text-muted-foreground font-medium whitespace-nowrap">
                                                 {formatDistanceToNow(new Date(n.createdAt), { addSuffix: false })} {t('notifications.timeSuffix')}
                                             </span>
                                         </div>
-                                        <p className="text-[11px] leading-relaxed text-muted-foreground line-clamp-2 pr-6">
+                                        <p className="text-[11px] leading-relaxed text-muted-foreground/90 line-clamp-2 pr-6">
                                             {n.message}
                                         </p>
                                         

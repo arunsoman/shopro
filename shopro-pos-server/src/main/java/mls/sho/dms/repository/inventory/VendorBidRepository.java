@@ -13,9 +13,15 @@ public interface VendorBidRepository extends JpaRepository<VendorBid, UUID> {
 
     List<VendorBid> findByRfqId(UUID rfqId);
 
+    List<VendorBid> findBySupplierIdAndRfqIdIn(UUID supplierId, java.util.Collection<UUID> rfqIds);
+
     long countBySupplierIdAndStatus(UUID supplierId, mls.sho.dms.entity.inventory.VendorBidStatus status);
 
     long countBySupplierIdAndStatusAndCreatedAtAfter(UUID supplierId, mls.sho.dms.entity.inventory.VendorBidStatus status, java.time.Instant date);
 
     long countBySupplierIdAndCreatedAtAfter(UUID supplierId, java.time.Instant date);
+
+
+    @org.springframework.data.jpa.repository.Query("SELECT b FROM VendorBid b WHERE b.status = 'WON' AND b.awardedAt < :cutoffTime")
+    List<VendorBid> findWonBidsAwardedBefore(java.time.Instant cutoffTime);
 }

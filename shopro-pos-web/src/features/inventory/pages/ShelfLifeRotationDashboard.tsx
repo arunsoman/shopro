@@ -39,7 +39,12 @@ export const ShelfLifeRotationDashboard: React.FC = () => {
         return <div className="p-8 text-center animate-pulse">{t('common.loading')}</div>;
     }
 
-    const COLORS = ['#ef4444', '#f59e0b', '#10b981', '#3b82f6'];
+    const COLORS = [
+        'hsl(var(--error))',
+        'hsl(var(--warning))',
+        'hsl(var(--success))',
+        'hsl(var(--primary))'
+    ];
 
     return (
         <div className="p-6 space-y-6 max-w-7xl mx-auto">

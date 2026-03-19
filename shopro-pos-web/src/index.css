@@ -291,6 +291,35 @@
         var(--primary-soft) 0%,
         var(--surface) 100%);
   }
+
+  /* ── Shopro Premium Navigation Backgrounds ───────────────── */
+  
+  /* The main navigation panel background — dynamic by theme */
+  .nav-panel-bg {
+    background: linear-gradient(135deg, 
+      var(--surface) 0%, 
+      var(--surface-2) 100%
+    );
+    position: relative;
+    overflow: hidden;
+    box-shadow: 4px 0 24px -12px color-mix(in srgb, var(--primary) 8%, transparent);
+  }
+
+  .nav-panel-bg::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 1px;
+    height: 100%;
+    background: linear-gradient(to bottom, 
+      transparent, 
+      var(--border) 15%, 
+      var(--border) 85%, 
+      transparent
+    );
+    opacity: 0.5;
+  }
 }
 
 /* ── 4. Component-level reusables ──────────────────────────── */
@@ -372,6 +401,19 @@
   .nav-active {
     color: var(--primary);
     background: var(--primary-soft);
+    position: relative;
+    box-shadow: 0 4px 12px -4px color-mix(in srgb, var(--primary) 20%, transparent);
+  }
+
+  .nav-active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 20%;
+    height: 60%;
+    width: 3px;
+    background: var(--primary);
+    border-radius: 0 4px 4px 0;
   }
 
   /* Sidebar divider */

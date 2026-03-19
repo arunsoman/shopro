@@ -9,7 +9,17 @@ import java.util.UUID;
 public interface POGeneratorService {
 
     /**
-     * Creates a DRAFT PO from an awarded VendorBid.
+     * Creates a DRAFT PO from an RFQ. No supplier assigned yet.
+     */
+    PurchaseOrder createFromRfq(UUID rfqId, UUID staffId);
+
+    /**
+     * Awards an existing PO (linked to an RFQ) to a winning VendorBid.
+     */
+    PurchaseOrder awardPo(UUID rfqId, UUID bidId, UUID staffId);
+
+    /**
+     * Creates a DRAFT PO from an awarded VendorBid (Legacy/Direct path).
      */
     PurchaseOrder createFromBid(UUID bidId, UUID staffId);
 

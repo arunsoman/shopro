@@ -2,6 +2,7 @@ package mls.sho.dms.application.controller.inventory;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import mls.sho.dms.application.dto.inventory.CreateBidRequest;
 import mls.sho.dms.application.dto.inventory.CreateRFQRequest;
 import mls.sho.dms.application.dto.inventory.RFQResponse;
 import mls.sho.dms.application.dto.inventory.VendorBidRequest;
@@ -25,6 +26,12 @@ public class RFQController {
     @ResponseStatus(HttpStatus.CREATED)
     public RFQResponse createRfq(@RequestBody @Valid CreateRFQRequest request) {
         return rfqService.createRfq(request);
+    }
+
+    @PostMapping("/bid")
+    @ResponseStatus(HttpStatus.CREATED)
+    public void createBid(@RequestBody @Valid CreateBidRequest request) {
+        rfqService.createBid(request);
     }
 
     @GetMapping
@@ -54,7 +61,11 @@ public class RFQController {
     }
 
     @PostMapping("/bids/{bidId}/award")
-    public void awardBid(@PathVariable UUID bidId, @RequestParam UUID staffId) {
-        rfqService.awardBid(bidId, staffId);
+    public void awardBid(
+            @PathVariable UUID bidId,
+            @RequestParam(required = false) UUID staffId) {
+        // Default to system actor when staffId is not provided (dev/demo mode)
+        UUID actor = staffId != null ? staffId : UUID.fromString("00000000-0000-0000-0000-000000000000");
+        rfqService.awardBid(bidId, actor);
     }
 }
