@@ -224,6 +224,12 @@ class OrderNotifier extends Notifier<OrderState> {
       String errorMessage = e.message ?? e.toString();
       if (data is Map && data.containsKey('message')) {
         errorMessage = data['message'];
+
+        // Intercept missing tax rule error for staff users (provide helpful context)
+        if (errorMessage.contains('No applicable tax rule found for item')) {
+          errorMessage = 'Could not add to cart because no tax rules could be found. '
+              'Please inform the admin user.';
+        }
       }
       state = state.copyWith(isLoading: false, error: errorMessage);
     } catch (e, stackTrace) {

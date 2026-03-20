@@ -1,0 +1,428 @@
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Building2, 
+  MapPin, 
+  FileText, 
+  CreditCard, 
+  CheckCircle2, 
+  Upload,
+  ArrowRight,
+  ArrowLeft,
+  Search,
+  Plus,
+  X,
+  Globe
+} from 'lucide-react';
+import { cn } from '../../lib/utils';
+import { AuroraBackground } from '../../components/ui/aurora-background';
+import { ShoproInput } from '../../components/ui/shopro-input';
+import { GlowingBorder, NeonEdges } from '../../components/ui/neon-button';
+
+// --- DNA PRIMITIVES ---
+const SPRING = { type: 'spring', stiffness: 300, damping: 30 } as const;
+const EASE_OUT_CSS = [0, 0, 0.2, 1] as const;
+
+// --- SHARED COMPONENTS ---
+// ... (omitting local GlowingBorder and NeonEdges as they are now imported)
+
+interface WizardStep {
+  id: string;
+  title: string;
+  description?: string;
+  content: React.ReactNode;
+}
+
+function Wizard({ steps, currentStep, onStepChange, onComplete }: { 
+  steps: WizardStep[]; 
+  currentStep: number;
+  onStepChange: (step: number) => void;
+  onComplete: () => void;
+}) {
+  return (
+    <div className="flex flex-col gap-8">
+      {/* Step Indicators */}
+      <div className="flex items-center justify-between px-4">
+        {steps.map((step, i) => {
+          const isActive = i === currentStep;
+          const isDone = i < currentStep;
+          return (
+            <React.Fragment key={step.id}>
+              <div className="flex flex-col items-center gap-2">
+                <div className={cn(
+                  "relative w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-500",
+                  isActive ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 ring-4 ring-blue-500/20" : 
+                  isDone ? "bg-green-500 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-400"
+                )}>
+                  {isActive && (
+                    <motion.div 
+                      layoutId="step-glow"
+                      className="absolute -inset-1 rounded-full border border-blue-500/50"
+                      initial={false}
+                      transition={SPRING}
+                    />
+                  )}
+                  {isDone ? <CheckCircle2 className="w-5 h-5" /> : i + 1}
+                </div>
+                <span className={cn(
+                  "text-xs font-medium hidden md:block",
+                  isActive ? "text-slate-900 dark:text-slate-100" : "text-slate-400"
+                )}>
+                  {step.title}
+                </span>
+              </div>
+              {i < steps.length - 1 && (
+                <div className={cn(
+                  "flex-1 h-px mt-5 transition-colors duration-500",
+                  isDone ? "bg-green-500" : "bg-slate-200 dark:bg-slate-800"
+                )} />
+              )}
+            </React.Fragment>
+          );
+        })}
+      </div>
+
+      {/* Step Content */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={currentStep}
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -20 }}
+          transition={{ duration: 0.4, ease: EASE_OUT_CSS }}
+          className="min-h-[400px] bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-2xl border border-slate-200 dark:border-slate-800 p-8 shadow-sm relative group overflow-hidden"
+        >
+          <GlowingBorder />
+          <div className="mb-6">
+            <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">{steps[currentStep].title}</h2>
+            {steps[currentStep].description && (
+              <p className="text-sm text-slate-500 mt-1">{steps[currentStep].description}</p>
+            )}
+          </div>
+          {steps[currentStep].content}
+        </motion.div>
+      </AnimatePresence>
+
+      {/* Actions */}
+      <div className="flex items-center justify-between">
+        <button
+          onClick={() => onStepChange(currentStep - 1)}
+          disabled={currentStep === 0}
+          className={cn(
+            "group relative px-6 py-2.5 rounded-xl text-sm font-semibold transition-all",
+            "border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900",
+            "hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400",
+            "disabled:opacity-0 disabled:pointer-events-none"
+          )}
+        >
+          <NeonEdges />
+          <span className="flex items-center gap-2"><ArrowLeft className="w-4 h-4" /> Previous</span>
+        </button>
+
+        <button
+          onClick={() => currentStep === steps.length - 1 ? onComplete() : onStepChange(currentStep + 1)}
+          className={cn(
+            "group relative px-8 py-2.5 rounded-xl text-sm font-bold transition-all",
+            "bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-500/20"
+          )}
+        >
+          <NeonEdges color="violet" />
+          <span className="flex items-center gap-2">
+            {currentStep === steps.length - 1 ? 'Submit Application' : 'Continue'}
+            <ArrowRight className="w-4 h-4" />
+          </span>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// --- MAIN PAGE COMPONENT ---
+
+export default function SupplierRegistration() {
+  const [currentStep, setCurrentStep] = useState(0);
+  const [formData, setFormData] = useState(() => {
+    const saved = localStorage.getItem('supplier_onboarding_draft');
+    return saved ? JSON.parse(saved) : {
+      businessName: '',
+      tradeName: '',
+      taxId: '',
+      registrationNumber: '',
+      address: '',
+      city: '',
+      country: '',
+      categories: [],
+      documents: [],
+      bankName: '',
+      accountNumber: '',
+      iban: '',
+      swift: '',
+      currency: 'USD'
+    };
+  });
+
+  useEffect(() => {
+    localStorage.setItem('supplier_onboarding_draft', JSON.stringify(formData));
+  }, [formData]);
+
+  const updateField = (field: string, value: any) => {
+    setFormData((prev: any) => ({ ...prev, [field]: value }));
+  };
+
+  const steps: WizardStep[] = [
+    {
+      id: 'business',
+      title: 'Business Information',
+      description: 'Enter your legal business details and registration info.',
+      content: (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <ShoproInput 
+            label="Legal Business Name"
+            value={formData.businessName}
+            onChange={e => updateField('businessName', e.target.value)}
+            placeholder="e.g. Acme Corp Ltd."
+            required
+          />
+          <ShoproInput 
+            label="Trade Name / Brand"
+            value={formData.tradeName}
+            onChange={e => updateField('tradeName', e.target.value)}
+            placeholder="e.g. Acme Fresh"
+            required
+          />
+          <ShoproInput 
+            label="VAT / Tax ID"
+            value={formData.taxId}
+            onChange={e => updateField('taxId', e.target.value)}
+            placeholder="Tax Identification Number"
+            required
+          />
+          <div className="space-y-2">
+            <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Primary Industry</label>
+            <div className="group relative">
+              <GlowingBorder spread={20} borderWidth={1} />
+              <NeonEdges />
+              <select 
+                className="w-full h-12 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none transition-all appearance-none relative z-10"
+              >
+                <option>Food & Beverage</option>
+                <option>Packaging</option>
+                <option>Equipment</option>
+                <option>Services</option>
+              </select>
+            </div>
+          </div>
+          <div className="md:col-span-2 space-y-2">
+            <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Registered Address</label>
+            <div className="group relative">
+              <GlowingBorder spread={20} borderWidth={1} />
+              <NeonEdges />
+              <textarea 
+                value={formData.address}
+                onChange={e => updateField('address', e.target.value)}
+                className="w-full bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none transition-all resize-none h-24 relative z-10"
+                placeholder="Building, Street, Landmark..."
+                required
+              />
+            </div>
+          </div>
+        </div>
+      )
+    },
+    {
+      id: 'categories',
+      title: 'Categories & Products',
+      description: 'Select the categories you supply to help Shopro categorize your products.',
+      content: (
+        <div className="space-y-6">
+          <div className="p-6 bg-blue-50 dark:bg-blue-900/10 rounded-2xl border border-blue-100 dark:border-blue-900/30 flex items-start gap-4">
+            <div className="p-2 bg-blue-500 text-white rounded-lg"><Globe className="w-5 h-5" /></div>
+            <div>
+              <h4 className="text-sm font-bold text-blue-900 dark:text-blue-100">Marketplace Visibility</h4>
+              <p className="text-xs text-blue-700 dark:text-blue-400 mt-1">Selecting accurate categories ensures your products are available for relevant Shopro fulfillments.</p>
+            </div>
+          </div>
+          
+          <div className="space-y-4">
+            <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Product Categories</label>
+            <div className="relative group">
+              <div className="absolute inset-y-0 left-4 flex items-center text-slate-400 z-20 pointer-events-none"><Search className="w-4 h-4" /></div>
+              <ShoproInput 
+                placeholder="Search categories (e.g. Organic Vegetables, Dairy...)"
+                className="pl-12"
+              />
+            </div>
+            
+            <div className="flex flex-wrap gap-2 mt-4">
+              {['Fresh Produce', 'Dairy & Eggs', 'Meat & Poultry', 'Dry Goods', 'Beverages'].map(cat => (
+                <button 
+                  key={cat}
+                  onClick={() => {
+                    const next = formData.categories.includes(cat) 
+                      ? formData.categories.filter((c: string) => c !== cat)
+                      : [...formData.categories, cat];
+                    updateField('categories', next);
+                  }}
+                  className={cn(
+                    "px-4 py-2 rounded-full text-xs font-bold transition-all border",
+                    formData.categories.includes(cat)
+                      ? "bg-blue-600 border-blue-600 text-white"
+                      : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-blue-400"
+                  )}
+                >
+                  {cat}
+                </button>
+              ))}
+              <button className="px-4 py-2 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 border border-dashed border-slate-300 dark:border-slate-700 flex items-center gap-1">
+                <Plus className="w-3 h-3" /> Other
+              </button>
+            </div>
+          </div>
+        </div>
+      )
+    },
+    {
+      id: 'documents',
+      title: 'Document Upload',
+      description: 'Upload necessary compliance documents for verification.',
+      content: (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[
+              { id: 'license', label: 'Trade License', desc: 'Valid commercial license copy' },
+              { id: 'tax', label: 'Tax Certificate', desc: 'VAT/Tax registration document' },
+              { id: 'id', label: 'Authorized Signatory ID', desc: 'Passport or National ID' },
+              { id: 'bank', label: 'Bank Confirmation', desc: 'Cancelled check or bank letter' }
+            ].map(doc => (
+              <div key={doc.id} className="group relative p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 flex items-center justify-between group cursor-pointer hover:border-blue-500 transition-all overflow-hidden shadow-sm">
+                <GlowingBorder spread={20} borderWidth={1} />
+                <NeonEdges />
+                <div className="flex items-center gap-4 relative z-10">
+                  <div className="w-10 h-10 rounded-lg bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-slate-400 group-hover:text-blue-500 transition-colors">
+                    <Upload className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h5 className="text-sm font-bold text-slate-900 dark:text-slate-100">{doc.label}</h5>
+                    <p className="text-[10px] text-slate-500">{doc.desc}</p>
+                  </div>
+                </div>
+                <div className="w-6 h-6 rounded-full border-2 border-slate-200 dark:border-slate-800 relative z-10" />
+              </div>
+            ))}
+          </div>
+          
+          <div className="group relative p-12 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl flex flex-col items-center justify-center text-center bg-white/30 dark:bg-slate-900/10 overflow-hidden">
+            <GlowingBorder spread={40} borderWidth={1} />
+            <div className="relative z-10">
+              <div className="w-16 h-16 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-500 mb-4 mx-auto">
+                <FileText className="w-8 h-8" />
+              </div>
+              <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100">Drag & Drop Documents</h4>
+              <p className="text-xs text-slate-500 mt-1 max-w-[200px]">PDF, PNG, JPG up to 10MB per file</p>
+              <button className="mt-4 px-6 py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-bold rounded-lg transition-transform active:scale-95">
+                Browse Files
+              </button>
+            </div>
+          </div>
+        </div>
+      )
+    },
+    {
+      id: 'financial',
+      title: 'Settlement Details',
+      description: 'Configure how you want to receive payments from Shopro.',
+      content: (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <ShoproInput 
+              label="Bank Name"
+              value={formData.bankName}
+              onChange={e => updateField('bankName', e.target.value)}
+              placeholder="e.g. Global Trust Bank"
+              required
+            />
+            <div className="space-y-2">
+              <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Currency</label>
+              <div className="group relative">
+                <GlowingBorder spread={20} borderWidth={1} />
+                <NeonEdges />
+                <select 
+                  value={formData.currency}
+                  onChange={e => updateField('currency', e.target.value)}
+                  className="w-full h-12 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none transition-all appearance-none relative z-10"
+                >
+                  <option value="USD">USD - US Dollar</option>
+                  <option value="EUR">EUR - Euro</option>
+                  <option value="AED">AED - UAE Dirham</option>
+                  <option value="GBP">GBP - British Pound</option>
+                </select>
+              </div>
+            </div>
+            <ShoproInput 
+              label="Account Number"
+              value={formData.accountNumber}
+              onChange={e => updateField('accountNumber', e.target.value)}
+              required
+            />
+            <ShoproInput 
+              label="SWIFT / BIC Code"
+              value={formData.swift}
+              onChange={e => updateField('swift', e.target.value)}
+              required
+            />
+            <div className="md:col-span-2">
+              <ShoproInput 
+                label="IBAN"
+                value={formData.iban}
+                onChange={e => updateField('iban', e.target.value)}
+                className="font-mono uppercase"
+                placeholder="International Bank Account Number"
+                required
+              />
+            </div>
+          </div>
+          
+          <div className="p-4 bg-amber-50 dark:bg-amber-900/10 rounded-xl border border-amber-100 dark:border-amber-900/30 flex gap-3">
+            <CheckCircle2 className="w-5 h-5 text-amber-500 shrink-0" />
+            <p className="text-[11px] text-amber-800 dark:text-amber-400">
+              By submitting, you agree that settlements will be processed via Shopro's secure payment gateway subject to a 2.5% marketplace fee.
+            </p>
+          </div>
+        </div>
+      )
+    }
+  ];
+
+  const handleComplete = () => {
+    // Navigate to localized "Thank You / Progress" page or dashboard
+    console.log('Application Submitted', formData);
+    window.location.href = '/supplier/dashboard'; // For now
+  };
+
+  return (
+    <AuroraBackground showRadialGradient className="min-h-screen py-12 px-4 overflow-y-auto block">
+      <div className="w-full min-w-[400px] max-w-5xl mx-auto relative z-10 flex flex-col py-8">
+        <div className="text-center mb-12 w-full max-w-3xl mx-auto shrink-0 px-4">
+          <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center text-white mb-6 shadow-xl shadow-blue-500/20 mx-auto">
+            <Building2 className="w-8 h-8" />
+          </div>
+          <h1 className="text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-4">Supplier Onboarding</h1>
+          <p className="text-slate-500 dark:text-slate-400 mt-4 block w-full max-w-2xl mx-auto text-lg leading-relaxed whitespace-normal">Join the Shopro Marketplace and start your partnership with Shopro today.</p>
+        </div>
+
+        <div className="w-full">
+          <Wizard 
+            steps={steps} 
+            currentStep={currentStep} 
+            onStepChange={setCurrentStep}
+            onComplete={handleComplete}
+          />
+        </div>
+
+        <div className="mt-12 text-center text-xs text-slate-500">
+          Already have an account? <a href="/login/supplier" className="text-blue-500 font-bold hover:underline">Login here</a>
+        </div>
+      </div>
+    </AuroraBackground>
+  );
+}

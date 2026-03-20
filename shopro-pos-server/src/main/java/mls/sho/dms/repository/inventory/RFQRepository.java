@@ -10,7 +10,7 @@ import java.util.UUID;
 
 @Repository
 public interface RFQRepository extends JpaRepository<RFQ, UUID> {
-    List<RFQ> findByStatus(RfqStatus status);
+    java.util.List<RFQ> findByStatus(mls.sho.dms.entity.inventory.RfqStatus status);
 
     @org.springframework.data.jpa.repository.Query("SELECT COUNT(r) FROM RFQ r WHERE r.ingredient.id IN :ingredientIds AND r.status = :status")
     int countActiveRfqsByIngredientIds(List<UUID> ingredientIds, RfqStatus status);

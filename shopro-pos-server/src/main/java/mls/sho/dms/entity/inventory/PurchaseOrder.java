@@ -45,6 +45,19 @@ public class PurchaseOrder extends BaseEntity {
     @Column(name = "order_type", nullable = false, length = 20)
     private OrderType orderType = OrderType.STANDARD;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "po_type", length = 30)
+    private POType poType = POType.INTERNAL_PROCUREMENT;
+
+    @Column(name = "related_po_id")
+    private UUID relatedPoId;
+
+    @Column(name = "platform_tx_id")
+    private UUID platformTxId;
+
+    @Column(name = "restaurant_id")
+    private UUID restaurantId;
+
     @Column(name = "total_value", nullable = false, precision = 12, scale = 4)
     private java.math.BigDecimal totalValue = java.math.BigDecimal.ZERO;
 
@@ -125,6 +138,13 @@ private RFQ rfq;
     public List<PurchaseOrderLine> getLines() { return lines; }
     public void setLines(List<PurchaseOrderLine> lines) { this.lines = lines; }
 
+    public void calculateTotalValue() {
+        this.totalValue = lines.stream()
+            .filter(line -> line.getUnitCost() != null && line.getOrderedQty() != null)
+            .map(line -> line.getUnitCost().multiply(line.getOrderedQty()))
+            .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
+    }
+
     public String getTrackingNumber() { return trackingNumber; }
     public void setTrackingNumber(String trackingNumber) { this.trackingNumber = trackingNumber; }
     public UUID getInvoiceFileId() { return invoiceFileId; }
@@ -151,4 +171,17 @@ private RFQ rfq;
 
     public RFQ getRfq() { return rfq; }
     public void setRfq(RFQ rfq) { this.rfq = rfq; }
+
+    public OrderType getOrderType() { return orderType; }
+    public void setOrderType(OrderType orderType) { this.orderType = orderType; }
+
+    public POType getPoType() { return poType; }
+    public void setPoType(POType poType) { this.poType = poType; }
+    public UUID getRelatedPoId() { return relatedPoId; }
+    public void setRelatedPoId(UUID relatedPoId) { this.relatedPoId = relatedPoId; }
+    public UUID getPlatformTxId() { return platformTxId; }
+    public void setPlatformTxId(UUID platformTxId) { this.platformTxId = platformTxId; }
+
+    public UUID getRestaurantId() { return restaurantId; }
+    public void setRestaurantId(UUID restaurantId) { this.restaurantId = restaurantId; }
 }

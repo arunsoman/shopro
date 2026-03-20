@@ -78,7 +78,7 @@ class RFQServiceImplRefactorTest {
     void submitBid_ShouldNotCallGenerator() {
         // Arrange
         VendorBidRequest request = new VendorBidRequest(
-            BigDecimal.TEN, BigDecimal.TEN, LocalDate.now(), "Notes", "NET30"
+            supplierId, BigDecimal.TEN, BigDecimal.TEN, LocalDate.now(), "Notes", "NET30"
         );
 
         RFQ rfq = new RFQ();
@@ -91,7 +91,7 @@ class RFQServiceImplRefactorTest {
         when(vendorBidRepository.save(any(VendorBid.class))).thenAnswer(i -> i.getArgument(0));
 
         // Act
-        rfqService.submitBid(rfqId, supplierId, request);
+        rfqService.submitBid(rfqId, request);
 
         // Assert
         verify(vendorBidRepository, atLeastOnce()).save(any(VendorBid.class));

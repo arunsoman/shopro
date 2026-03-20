@@ -5,6 +5,7 @@ import mls.sho.dms.entity.core.BaseEntity;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.UUID;
 
 /**
  * Request For Quotation generated automatically when autoReplenish ingredients breach reorder thresholds.
@@ -36,6 +37,9 @@ public class RFQ extends BaseEntity {
     @Column(name = "bid_deadline", nullable = false)
     private Instant bidDeadline;
 
+    @Column(name = "restaurant_id")
+    private UUID restaurantId;
+
     public RawIngredient getIngredient() { return ingredient; }
     public void setIngredient(RawIngredient ingredient) { this.ingredient = ingredient; }
     public BigDecimal getRequiredQty() { return requiredQty; }
@@ -46,4 +50,7 @@ public class RFQ extends BaseEntity {
     public void setDesiredDeliveryDate(java.time.LocalDate desiredDeliveryDate) { this.desiredDeliveryDate = desiredDeliveryDate; }
     public Instant getBidDeadline() { return bidDeadline; }
     public void setBidDeadline(Instant bidDeadline) { this.bidDeadline = bidDeadline; }
+
+    public UUID getRestaurantId() { return restaurantId; }
+    public void setRestaurantId(UUID restaurantId) { this.restaurantId = restaurantId; }
 }
