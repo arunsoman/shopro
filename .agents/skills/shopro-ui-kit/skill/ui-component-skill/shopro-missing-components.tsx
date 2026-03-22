@@ -168,15 +168,15 @@ function NeonEdges({ active = false, color = "blue" }: { active?: boolean; color
 
 // ─── STATUS BADGE (shared across all components) ─────────────────────────────
 const STATUS_MAP = {
-  new:       "bg-blue-50   dark:bg-blue-950/40  text-blue-700   dark:text-blue-300   border-blue-200   dark:border-blue-800",
-  cooking:   "bg-amber-50  dark:bg-amber-950/40 text-amber-700  dark:text-amber-300  border-amber-200  dark:border-amber-800",
-  ready:     "bg-green-50  dark:bg-green-950/40 text-green-700  dark:text-green-300  border-green-200  dark:border-green-800",
-  captured:  "bg-violet-50 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-800",
+  new: "bg-blue-50   dark:bg-blue-950/40  text-blue-700   dark:text-blue-300   border-blue-200   dark:border-blue-800",
+  cooking: "bg-amber-50  dark:bg-amber-950/40 text-amber-700  dark:text-amber-300  border-amber-200  dark:border-amber-800",
+  ready: "bg-green-50  dark:bg-green-950/40 text-green-700  dark:text-green-300  border-green-200  dark:border-green-800",
+  captured: "bg-violet-50 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-800",
   disbursed: "bg-teal-50   dark:bg-teal-950/40  text-teal-700   dark:text-teal-300   border-teal-200   dark:border-teal-800",
-  refunded:  "bg-rose-50   dark:bg-rose-950/40  text-rose-700   dark:text-rose-300   border-rose-200   dark:border-rose-800",
-  pending:   "bg-slate-50  dark:bg-slate-800     text-slate-600  dark:text-slate-300  border-slate-200  dark:border-slate-700",
-  active:    "bg-green-50  dark:bg-green-950/40 text-green-700  dark:text-green-300  border-green-200  dark:border-green-800",
-  inactive:  "bg-slate-50  dark:bg-slate-800     text-slate-500  dark:text-slate-400  border-slate-200  dark:border-slate-700",
+  refunded: "bg-rose-50   dark:bg-rose-950/40  text-rose-700   dark:text-rose-300   border-rose-200   dark:border-rose-800",
+  pending: "bg-slate-50  dark:bg-slate-800     text-slate-600  dark:text-slate-300  border-slate-200  dark:border-slate-700",
+  active: "bg-green-50  dark:bg-green-950/40 text-green-700  dark:text-green-300  border-green-200  dark:border-green-800",
+  inactive: "bg-slate-50  dark:bg-slate-800     text-slate-500  dark:text-slate-400  border-slate-200  dark:border-slate-700",
 };
 
 export function StatusBadge({ status, label }: { status: keyof typeof STATUS_MAP; label?: string }) {
@@ -217,8 +217,8 @@ export interface SidebarNavProps {
 }
 
 const ROLE_COLORS = {
-  buyer:    { bg: "bg-blue-500",   ring: "ring-blue-400/30",   text: "text-blue-600 dark:text-blue-400",   label: "Buyer"    },
-  seller:   { bg: "bg-teal-500",   ring: "ring-teal-400/30",   text: "text-teal-600 dark:text-teal-400",   label: "Seller"   },
+  buyer: { bg: "bg-blue-500", ring: "ring-blue-400/30", text: "text-blue-600 dark:text-blue-400", label: "Buyer" },
+  seller: { bg: "bg-teal-500", ring: "ring-teal-400/30", text: "text-teal-600 dark:text-teal-400", label: "Seller" },
   platform: { bg: "bg-violet-500", ring: "ring-violet-400/30", text: "text-violet-600 dark:text-violet-400", label: "Platform" },
 };
 
@@ -501,8 +501,8 @@ export function Wizard({ steps, onComplete, onStepChange, className }: WizardPro
                   isActive
                     ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 ring-2 ring-offset-2 ring-slate-900 dark:ring-white"
                     : isDone
-                    ? "bg-green-500 text-white"
-                    : "bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 ring-1 ring-slate-200 dark:ring-slate-700"
+                      ? "bg-green-500 text-white"
+                      : "bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 ring-1 ring-slate-200 dark:ring-slate-700"
                 )}>
                   {/* Counter-rotate ring — OrbitalLoader DNA */}
                   {isActive && (
@@ -638,9 +638,9 @@ export function OrderTimeline({
             >
               <div className={cn(
                 "relative w-10 h-10 rounded-full flex items-center justify-center transition-all duration-500",
-                step.status === "done"   && "bg-green-500 text-white",
+                step.status === "done" && "bg-green-500 text-white",
                 step.status === "active" && "bg-slate-900 dark:bg-white text-white dark:text-slate-900 ring-2 ring-offset-2 ring-slate-900 dark:ring-white",
-                step.status === "error"  && "bg-rose-500 text-white",
+                step.status === "error" && "bg-rose-500 text-white",
                 step.status === "pending" && "bg-slate-100 dark:bg-slate-800 text-slate-300 dark:text-slate-600 ring-1 ring-slate-200 dark:ring-slate-700"
               )}>
                 {step.status === "active" && (
@@ -694,9 +694,9 @@ export function OrderTimeline({
           <div className="flex flex-col items-center">
             <div className={cn(
               "relative w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-all duration-500",
-              step.status === "done"   && "bg-green-500 text-white",
+              step.status === "done" && "bg-green-500 text-white",
               step.status === "active" && "bg-slate-900 dark:bg-white text-white dark:text-slate-900 ring-2 ring-offset-2 ring-slate-900 dark:ring-white",
-              step.status === "error"  && "bg-rose-500 text-white",
+              step.status === "error" && "bg-rose-500 text-white",
               step.status === "pending" && "bg-slate-100 dark:bg-slate-800 text-slate-300 ring-1 ring-slate-200 dark:ring-slate-700"
             )}>
               {step.status === "active" && (
@@ -774,11 +774,11 @@ export interface StatCard {
 
 const STAT_COLORS = {
   default: { icon: "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400", delta: "" },
-  blue:    { icon: "bg-blue-50   dark:bg-blue-950/40  text-blue-600   dark:text-blue-400",   delta: "" },
-  green:   { icon: "bg-green-50  dark:bg-green-950/40 text-green-600  dark:text-green-400",  delta: "" },
-  violet:  { icon: "bg-violet-50 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400", delta: "" },
-  amber:   { icon: "bg-amber-50  dark:bg-amber-950/40 text-amber-600  dark:text-amber-400",  delta: "" },
-  rose:    { icon: "bg-rose-50   dark:bg-rose-950/40  text-rose-600   dark:text-rose-400",   delta: "" },
+  blue: { icon: "bg-blue-50   dark:bg-blue-950/40  text-blue-600   dark:text-blue-400", delta: "" },
+  green: { icon: "bg-green-50  dark:bg-green-950/40 text-green-600  dark:text-green-400", delta: "" },
+  violet: { icon: "bg-violet-50 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400", delta: "" },
+  amber: { icon: "bg-amber-50  dark:bg-amber-950/40 text-amber-600  dark:text-amber-400", delta: "" },
+  rose: { icon: "bg-rose-50   dark:bg-rose-950/40  text-rose-600   dark:text-rose-400", delta: "" },
 };
 
 export function StatCardGrid({ cards, columns = 4, className }: { cards: StatCard[]; columns?: 2 | 3 | 4; className?: string }) {
@@ -849,7 +849,7 @@ export interface ModalProps {
 }
 
 export function Modal({ open, onClose, title, description, children, footer, size = "md", variant = "default" }: ModalProps) {
-  const sizeClass = { sm: "max-w-sm", md: "max-w-md", lg: "max-w-2xl" };
+  const sizeClass = { sm: "max-w-sm", md: "", lg: "max-w-2xl" };
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
@@ -1224,18 +1224,18 @@ export function NotificationDrawer({
   className?: string;
 }) {
   const TYPE_ICONS: Record<Notification["type"], ReactNode> = {
-    order:    <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" strokeLinecap="round" /></svg>,
-    payment:  <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20" strokeLinecap="round"/></svg>,
-    dispute:  <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" strokeLinecap="round" /></svg>,
-    shipment: <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 17H3a2 2 0 01-2-2V5a2 2 0 012-2h11a2 2 0 012 2v3m-1 9v2a2 2 0 002 2 2 2 0 002-2v-2m-4 0h4"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="17.5" cy="17.5" r="1.5"/></svg>,
-    system:   <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01" strokeLinecap="round"/></svg>,
+    order: <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" strokeLinecap="round" /></svg>,
+    payment: <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="5" width="20" height="14" rx="2" /><path d="M2 10h20" strokeLinecap="round" /></svg>,
+    dispute: <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" strokeLinecap="round" /></svg>,
+    shipment: <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 17H3a2 2 0 01-2-2V5a2 2 0 012-2h11a2 2 0 012 2v3m-1 9v2a2 2 0 002 2 2 2 0 002-2v-2m-4 0h4" /><circle cx="7.5" cy="17.5" r="1.5" /><circle cx="17.5" cy="17.5" r="1.5" /></svg>,
+    system: <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><path d="M12 8v4m0 4h.01" strokeLinecap="round" /></svg>,
   };
   const TYPE_COLOR: Record<Notification["type"], string> = {
-    order:    "bg-blue-50   dark:bg-blue-950/40  text-blue-600   dark:text-blue-400",
-    payment:  "bg-green-50  dark:bg-green-950/40 text-green-600  dark:text-green-400",
-    dispute:  "bg-rose-50   dark:bg-rose-950/40  text-rose-600   dark:text-rose-400",
+    order: "bg-blue-50   dark:bg-blue-950/40  text-blue-600   dark:text-blue-400",
+    payment: "bg-green-50  dark:bg-green-950/40 text-green-600  dark:text-green-400",
+    dispute: "bg-rose-50   dark:bg-rose-950/40  text-rose-600   dark:text-rose-400",
     shipment: "bg-amber-50  dark:bg-amber-950/40 text-amber-600  dark:text-amber-400",
-    system:   "bg-slate-100 dark:bg-slate-800     text-slate-600  dark:text-slate-400",
+    system: "bg-slate-100 dark:bg-slate-800     text-slate-600  dark:text-slate-400",
   };
   const unread = notifications.filter((n) => !n.read).length;
 
@@ -1703,8 +1703,8 @@ export interface DisputeProps {
 }
 
 const ROLE_BUBBLE: Record<DisputeRole, { bg: string; text: string; label: string }> = {
-  buyer:    { bg: "bg-blue-50   dark:bg-blue-950/40",   text: "text-blue-700   dark:text-blue-300",   label: "Buyer"    },
-  seller:   { bg: "bg-teal-50   dark:bg-teal-950/40",   text: "text-teal-700   dark:text-teal-300",   label: "Seller"   },
+  buyer: { bg: "bg-blue-50   dark:bg-blue-950/40", text: "text-blue-700   dark:text-blue-300", label: "Buyer" },
+  seller: { bg: "bg-teal-50   dark:bg-teal-950/40", text: "text-teal-700   dark:text-teal-300", label: "Seller" },
   platform: { bg: "bg-violet-50 dark:bg-violet-950/40", text: "text-violet-700 dark:text-violet-300", label: "Platform" },
 };
 
@@ -1722,10 +1722,10 @@ export function DisputeThread({ disputeId, subject, status, messages, currentRol
   };
 
   const statusMap = {
-    open:         { label: "Open",          status: "new"      as keyof typeof STATUS_MAP },
-    under_review: { label: "Under Review",  status: "captured" as keyof typeof STATUS_MAP },
-    resolved:     { label: "Resolved",      status: "disbursed" as keyof typeof STATUS_MAP },
-    closed:       { label: "Closed",        status: "pending"  as keyof typeof STATUS_MAP },
+    open: { label: "Open", status: "new" as keyof typeof STATUS_MAP },
+    under_review: { label: "Under Review", status: "captured" as keyof typeof STATUS_MAP },
+    resolved: { label: "Resolved", status: "disbursed" as keyof typeof STATUS_MAP },
+    closed: { label: "Closed", status: "pending" as keyof typeof STATUS_MAP },
   };
 
   return (
@@ -1791,7 +1791,7 @@ export function DisputeThread({ disputeId, subject, status, messages, currentRol
                     <div className="flex flex-wrap gap-1.5 mt-1">
                       {msg.attachments.map((a, ai) => (
                         <span key={ai} className="text-[10px] px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center gap-1">
-                          <svg viewBox="0 0 16 16" className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 2h8l2 2v10H3V2z" strokeLinejoin="round"/></svg>
+                          <svg viewBox="0 0 16 16" className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 2h8l2 2v10H3V2z" strokeLinejoin="round" /></svg>
                           {a.name}
                         </span>
                       ))}

@@ -3,10 +3,12 @@ import { GlowingSearch } from "@/components/ui/glowing-search";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { NotificationDrawer, type Notification } from "@/components/ui/notification-drawer";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
+import { useNotifications } from "@/hooks/useNotifications";
 import { OrbitalLoader } from "@/components/ui/orbital-loader";
 import { OperatorSidebar } from "@/components/ui/operator-sidebar";
 import { RestaurantBreadcrumb } from "@/components/ui/restaurant-breadcrumb";
 import CinematicThemeSwitcher from "@/components/ui/cinematic-theme-switcher";
+import { NeonEdges } from "@/components/ui/neon-button";
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
@@ -20,24 +22,34 @@ const OPERATOR_ROLES = [
 export function OperatorShell({ children }: { children: React.ReactNode }) {
   const [isNotificationsOpen, setIsNotificationsOpen] = React.useState(false);
   const [currentRole, setCurrentRole] = React.useState(OPERATOR_ROLES[0]);
-  const [notifications, setNotifications] = React.useState<Notification[]>([
-    { id: "1", type: "system", title: "System Update", body: "Platform v1.2 is live with enhanced tax engine.", timestamp: "10m ago", read: false },
-    { id: "2", type: "payment", title: "Payout Pending", body: "Supplier #402 requires payout approval for ₹1.2L.", timestamp: "2h ago", read: false },
-    { id: "3", type: "dispute", title: "New Dispute", body: "Order #8822 flagged by Restaurant 'The Oven'.", timestamp: "5h ago", read: false },
-  ]);
+  
+  // Use the live notifications hook
+  const userId = "ADMIN-001"; // In a real app, get from auth context
+  const { 
+    notifications: liveNotifications, 
+    unreadCount, 
+    markRead, 
+    dismiss 
+  } = useNotifications(userId);
   
   const location = useLocation();
   const navigate = useNavigate();
 
-  const unreadCount = notifications.filter(n => !n.read).length;
-
   const handleMarkRead = (id: string) => {
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+    markRead(id);
   };
 
   const handleMarkAllRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    // Implement if needed
   };
+
+  // Auth guard: Redirect to /operator/login if no token is found
+  React.useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token && location.pathname !== "/operator/login") {
+      navigate("/operator/login");
+    }
+  }, [location.pathname, navigate]);
 
   // Dynamic breadcrumb logic
   const getBreadcrumbs = () => {
@@ -103,13 +115,13 @@ export function OperatorShell({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <div className="flex h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 overflow-hidden font-sans">
+    <div className="flex h-screen bg-(--sp-bg-0) text-(--sp-text-1) overflow-hidden font-sans">
       {/* Sidebar DNA */}
       <OperatorSidebar />
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Header DNA */}
-        <header className="h-16 px-6 flex items-center justify-between border-b border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl z-30">
+        <header className="h-16 px-6 flex items-center justify-between border-b border-(--sp-border) bg-(--sp-bg-1)/50 backdrop-blur-xl z-30">
           <div className="flex items-center gap-6">
             <RestaurantBreadcrumb items={getBreadcrumbs()} />
             <GlowingSearch 
@@ -136,24 +148,25 @@ export function OperatorShell({ children }: { children: React.ReactNode }) {
                 </svg>
               </TooltipIconButton>
               {unreadCount > 0 && (
-                <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-white dark:ring-slate-900" />
+                <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-brand-destructive ring-2 ring-card animate-pulse" />
               )}
             </div>
 
-            <div className="h-8 w-px bg-slate-200 dark:bg-slate-800 mx-1" />
+            <div className="h-8 w-px bg-(--sp-border) mx-1" />
             
             <CinematicThemeSwitcher />
 
-            <div className="h-8 w-px bg-slate-200 dark:bg-slate-800 mx-1" />
+            <div className="h-8 w-px bg-(--sp-border) mx-1" />
 
             <Popover>
               <PopoverTrigger asChild>
-                <button className="flex items-center gap-2 pl-2 pr-1 py-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-                  <div className="flex flex-col items-end hidden sm:flex">
+                <button className="group relative flex items-center gap-2 pl-2 pr-1 py-1 rounded-full hover:bg-primary/5 transition-all overflow-hidden">
+                  <NeonEdges />
+                  <div className="flex flex-col items-end hidden sm:flex relative z-10">
                     <span className="text-xs font-bold leading-none">Admin User</span>
                     <span className="text-[10px] text-muted-foreground uppercase tracking-wider mt-0.5">{currentRole.label}</span>
                   </div>
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold border-2 border-white dark:border-slate-800 shadow-sm">
+                  <div className="w-8 h-8 rounded-full bg-linear-to-br from-primary to-secondary flex items-center justify-center text-white text-xs font-bold border-2 border-card shadow-sm shadow-primary/20 relative z-10">
                     {currentRole.icon}
                   </div>
                 </button>
@@ -196,10 +209,12 @@ export function OperatorShell({ children }: { children: React.ReactNode }) {
         </header>
 
         {/* Main Content Area */}
-        <main className="flex-1 overflow-y-auto custom-scrollbar p-6 relative">
-          <React.Suspense fallback={<div className="flex h-full items-center justify-center"><OrbitalLoader message="Loading workspace..." /></div>}>
-            {children}
-          </React.Suspense>
+        <main className="flex-1 overflow-y-auto custom-scrollbar relative">
+          <div className="max-w-[1280px] mx-auto px-8 py-10">
+            <React.Suspense fallback={<div className="flex h-full items-center justify-center"><OrbitalLoader message="Loading workspace..." /></div>}>
+              {children}
+            </React.Suspense>
+          </div>
         </main>
       </div>
 
@@ -207,7 +222,7 @@ export function OperatorShell({ children }: { children: React.ReactNode }) {
       <NotificationDrawer
         open={isNotificationsOpen}
         onClose={() => setIsNotificationsOpen(false)}
-        notifications={notifications}
+        notifications={liveNotifications as any}
         onMarkAllRead={handleMarkAllRead}
         onMarkRead={handleMarkRead}
       />

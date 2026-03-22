@@ -1,241 +1,202 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React from "react";
 import { motion } from "framer-motion";
-import { 
-  TrendingUp, 
-  Package, 
-  FileCheck, 
-  CircleDollarSign, 
-  Calendar, 
-  MessageSquare, 
-  ArrowUpRight, 
-  ChevronRight,
-  Search,
-  Filter,
-  MoreVertical,
-  Bell,
-  Clock
-} from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { VerificationBanner } from "@/components/supplier/VerificationBanner";
-import type { VerificationStatus } from "@/components/supplier/VerificationBanner";
-import { SupplierKPICards } from "@/components/supplier/SupplierKPICards";
-import type { SupplierKPI } from "@/components/supplier/SupplierKPICards";
-import { StatusBadge } from "@/components/ui/status-badge";
-import { GlowingBorder } from "@/components/ui/neon-button";
+import { useQuery } from "@tanstack/react-query";
+import api from "@/api";
+import { 
+  BarChart3, 
+  ShoppingBag, 
+  Activity, 
+  TrendingUp, 
+  Clock, 
+  Zap, 
+  ArrowUpRight, 
+  Package, 
+  Bell,
+  RefreshCw,
+  Target,
+  Truck,
+  ShieldCheck,
+  ChevronRight,
+  AlertCircle
+} from "lucide-react";
+import { SecureOverlay } from "@/components/SecureOverlay";
 
 /**
- * SD-00 — Supplier Dashboard
- * Purpose: Supplier performance and order overview.
- * DNA: Green accent, growth charts, active bid tiles.
+ * S-03 — Supplier Dashboard
+ * Purpose: Global metrics and performance overview for suppliers.
  */
 
-const PERFORMANCE_DATA: SupplierKPI[] = [
-  { label: "Revenue (MTD)", value: "$142,500", growth: "8.2%", icon: CircleDollarSign, color: "green", targetRoute: "/supplier/finance" },
-  { label: "Active Orders", value: "28", growth: "12%", icon: Package, color: "blue", targetRoute: "/supplier/orders" },
-  { label: "Open Bids", value: "12", growth: "4 Closing", icon: FileCheck, color: "violet", targetRoute: "/supplier/bids" },
-  { label: "Fulfillment Rate", value: "99.4%", growth: "0.2%", icon: TrendingUp, color: "orange" },
-];
-
-const ACTIVE_BIDS = [
-  { id: 1, title: "Fresh Produce Q4 - Shopro Marketplace", buyer: "Shopro Marketplace", totalItems: 12, deadline: "2h 15m", status: "high_priority" },
-  { id: 2, title: "Organic Dairy Supply - Shopro Marketplace", buyer: "Shopro Marketplace", totalItems: 8, deadline: "Tomorrow", status: "active" },
-  { id: 3, title: "Premium Seafood Weekly - Shopro Marketplace", buyer: "Shopro Marketplace", totalItems: 5, deadline: "3 days", status: "active" },
-];
-
 export default function SupplierDashboard() {
-  const navigate = useNavigate();
-  const [status, setStatus] = useState<VerificationStatus>("PENDING");
-  const [isLoaded, setIsLoaded] = useState(false);
+  const { data: stats, isLoading: isStatsLoading } = useQuery({
+    queryKey: ["supplier-dashboard-stats"],
+    queryFn: async () => {
+      const resp = await api.get("/api/supplier/dashboard/stats");
+      return resp.data;
+    }
+  });
 
-  useEffect(() => {
-    setIsLoaded(true);
-    // Simulate a status change after 5 seconds for demo
-    const timer = setTimeout(() => {
-      // setStatus("VERIFIED"); 
-    }, 5000);
-    return () => clearTimeout(timer);
-  }, []);
+  const { data: activity = [], isLoading: isActivityLoading } = useQuery({
+    queryKey: ["supplier-dashboard-activity"],
+    queryFn: async () => {
+      const resp = await api.get("/api/supplier/dashboard/activity");
+      return resp.data;
+    }
+  });
+
+  const { data: performance } = useQuery({
+    queryKey: ["supplier-dashboard-performance"],
+    queryFn: async () => {
+      const resp = await api.get("/api/supplier/dashboard/performance");
+      return resp.data;
+    }
+  });
 
   return (
-    <div className="space-y-8 pb-12">
-      {/* Search & Alerts Header */}
-      <div className="flex items-center justify-between gap-4 mb-2">
-        <div className="relative flex-1 max-w-md group">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-green-500 transition-colors" size={16} />
-          <input 
-            type="text" 
-            placeholder="Search orders, bids, or SKU..."
-            className="w-full h-10 pl-10 pr-4 bg-slate-100 dark:bg-slate-900/50 border-none rounded-xl text-sm focus:ring-2 focus:ring-green-500/20 transition-all"
-          />
-        </div>
-        <div className="flex items-center gap-3">
-          <button className="relative p-2 bg-white dark:bg-slate-900 rounded-xl ring-1 ring-slate-200 dark:ring-slate-800 hover:ring-green-500/50 transition-all">
-            <Bell size={18} className="text-slate-600 dark:text-slate-400" />
-            <span className="absolute top-2 right-2 w-2 h-2 bg-green-500 rounded-full ring-2 ring-white dark:ring-slate-900" />
-          </button>
-          <button className="p-2 bg-white dark:bg-slate-900 rounded-xl ring-1 ring-slate-200 dark:ring-slate-800">
-            <Filter size={18} className="text-slate-600 dark:text-slate-400" />
-          </button>
-        </div>
-      </div>
-
-      {/* Verification Status */}
-      <VerificationBanner 
-        status={status} 
-        rejectedDocs={["GST Certificate", "PAN Card"]}
-        onRefresh={() => setStatus("PENDING")}
-      />
-
-      {/* Welcome Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div>
-          <motion.h1 
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="text-4xl font-bold tracking-tight text-slate-900 dark:text-white"
-          >
-            Welcome, <span className="text-green-600">Global Foods</span>
-          </motion.h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-2 flex items-center gap-2">
-            Region: North America Operations
-            <span className="h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-700" />
-            ID: SP-772910
+    <SecureOverlay>
+    <div className="max-w-[1600px] mx-auto space-y-12 animate-in fade-in duration-1000 font-black italic uppercase leading-none pb-24">
+      {/* Platform Header */}
+      <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-12 border-b-8 border-slate-100 dark:border-slate-800 pb-12 font-black italic leading-none shadow-inner">
+        <div className="space-y-6">
+          <h1 className="text-4xl md:text-7xl font-black tracking-tighter italic uppercase leading-none shadow-text mt-4 text-slate-900 dark:text-white">
+             Nexus <span className="text-indigo-500">Command.X</span>
+          </h1>
+          <p className="text-slate-500 font-black italic text-xl tracking-wide opacity-60 leading-none flex items-center gap-4">
+             <Target className="w-8 h-8 text-indigo-500 animate-pulse" />
+             Global supply chain metrics and performance overview alpha.
           </p>
         </div>
-
-        <div className="flex items-center gap-3">
-          <button className="h-11 px-6 bg-white dark:bg-slate-900 rounded-2xl text-sm font-bold ring-1 ring-slate-200 dark:ring-slate-800 flex items-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all shadow-sm">
-            <Calendar size={16} />
-            Pickups
-          </button>
-          <button className="h-11 px-6 bg-green-600 text-white rounded-2xl font-bold text-sm hover:bg-green-700 transition-all shadow-lg shadow-green-500/20 flex items-center gap-2">
-             <TrendingUp size={16} />
-             Reports
+        
+        <div className="flex items-center gap-6 font-black italic uppercase tracking-[0.4em] leading-none">
+          <div className="flex items-center gap-4 bg-white dark:bg-slate-950 px-8 py-5 rounded-[1.5rem] border-4 border-slate-50 dark:border-slate-800 shadow-xl shadow-inner">
+             <div className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse shadow-4xl shadow-emerald-500/20" />
+             <span className="text-[10px] font-black tracking-[0.2em] italic text-slate-900 dark:text-white">NODE_ACTIVE.SIGN</span>
+          </div>
+          <button className="w-20 h-20 rounded-[1.5rem] bg-slate-950 dark:bg-white text-white dark:text-slate-900 flex items-center justify-center border-4 border-slate-50 dark:border-slate-800 hover:scale-110 transition-all shadow-4xl shadow-inner">
+             <Zap size={32} />
           </button>
         </div>
+      </header>
+
+      {/* KPI Matrix */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 font-black italic uppercase leading-none">
+         {[
+           { label: "Monthly_Revenue.X", val: stats?.monthlyRevenue ? `₹${(stats.monthlyRevenue / 100000).toFixed(1)}L` : "₹0.0L", icon: TrendingUp, color: "indigo" },
+           { label: "Active_Orders.SIGN", val: stats?.activeOrders || 0, icon: Package, color: "emerald" },
+           { label: "Fulfillment_Rate.FORCE", val: `${stats?.fulfillmentRate || 0}%`, icon: Zap, color: "amber" },
+           { label: "Quotations_Pending.X", val: stats?.pendingQuotations || 0, icon: Clock, color: "rose" },
+         ].map((kpi, i) => (
+           <div key={i} className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-3xl rounded-[3rem] border-4 border-slate-100 dark:border-slate-800 p-10 shadow-4xl flex items-center justify-between group relative overflow-hidden shadow-inner">
+              <div className="space-y-4">
+                 <div className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 opacity-60 italic leading-none">{kpi.label}</div>
+                 <div className="text-5xl font-black italic tracking-tighter text-slate-900 dark:text-white leading-none shadow-text tabular-nums">{kpi.val}</div>
+              </div>
+              <div className={cn("w-20 h-20 rounded-[1.5rem] flex items-center justify-center border-4 transition-all group-hover:scale-110 shadow-4xl", 
+                 kpi.color === 'indigo' ? 'bg-indigo-600 border-indigo-400 text-white shadow-indigo-500/20' : 
+                 kpi.color === 'emerald' ? 'bg-emerald-500 border-emerald-400 text-white shadow-emerald-500/20' : 
+                 kpi.color === 'rose' ? 'bg-rose-600 border-rose-400 text-white shadow-rose-500/20' : 
+                 'bg-amber-500 border-amber-300 text-white shadow-amber-500/20')}>
+                 <kpi.icon size={32} />
+              </div>
+           </div>
+         ))}
       </div>
 
-      {/* KPI Section */}
-      <SupplierKPICards cards={PERFORMANCE_DATA} onCardClick={(route) => route && navigate(route)} />
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 font-black italic uppercase leading-none">
+         {/* Live Ledger / Audit Log */}
+         <div className="lg:col-span-8 space-y-8">
+            <div className="flex items-center justify-between px-8 bg-slate-50/50 dark:bg-slate-950/20 py-6 rounded-[2rem] border-4 border-slate-100 dark:border-slate-800/60 shadow-text">
+               <h2 className="text-3xl font-black italic text-slate-900 dark:text-white flex items-center gap-6 tracking-tight">
+                  <Activity size={32} className="text-indigo-500 animate-pulse" /> Live System Audit.X
+               </h2>
+               <button className="text-[11px] font-black text-indigo-500 hover:text-indigo-600 tracking-[0.4em] italic uppercase transition-all flex items-center gap-4">
+                  FULL_LEDGER.FORCE <ChevronRight size={20} />
+               </button>
+            </div>
+            
+            <div className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-3xl rounded-[4rem] border-4 border-slate-100 dark:border-slate-800 p-1 shadow-4xl shadow-inner min-h-[500px] overflow-hidden">
+               {isActivityLoading ? (
+                  <div className="p-40 flex flex-col items-center justify-center space-y-12 opacity-40">
+                      <RefreshCw className="w-20 h-20 text-indigo-500 animate-spin" />
+                      <p className="text-[12px] tracking-[0.6em] font-black uppercase italic italic">SYNCING_WITH_REGISTRY.X...</p>
+                  </div>
+               ) : (
+                  <div className="divide-y-8 divide-slate-100 dark:divide-slate-800/60">
+                     {activity.map((log: any) => (
+                        <div key={log.id} className="p-10 hover:bg-white dark:hover:bg-slate-950/50 transition-all flex items-center justify-between gap-12 group/row cursor-crosshair">
+                           <div className="flex items-center gap-8 min-w-0">
+                              <div className={cn("w-16 h-16 rounded-[1.25rem] flex items-center justify-center shadow-4xl border-4 transition-all group-hover/row:scale-110", 
+                                 log.type === 'ORDER' ? 'bg-indigo-600 text-white border-indigo-400 shadow-indigo-500/20' : 
+                                 log.type === 'BID' ? 'bg-emerald-500 text-white border-emerald-400 shadow-emerald-500/20' : 
+                                 log.type === 'FINANCE' ? 'bg-slate-950 text-white dark:bg-white dark:text-slate-900 border-slate-700 dark:border-slate-300 shadow-4xl' : 
+                                 'bg-rose-600 text-white border-rose-400 shadow-rose-500/20')}>
+                                 {log.type === 'ORDER' ? <ShoppingBag size={28} /> : log.type === 'BID' ? <Zap size={28} /> : log.type === 'FINANCE' ? <ShieldCheck size={28} /> : <AlertCircle size={28} />}
+                              </div>
+                              <div className="min-w-0 space-y-2">
+                                 <p className="text-2xl font-black italic tracking-tight text-slate-900 dark:text-white uppercase leading-none shadow-text group-hover/row:text-indigo-500 transition-colors">{log.event}</p>
+                                 <div className="flex items-center gap-4 text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] italic opacity-60 leading-none">
+                                    <Clock size={14} className="text-indigo-500" /> {log.time} • {log.type}_NODE.X
+                                 </div>
+                              </div>
+                           </div>
+                           <ArrowUpRight size={32} className="text-slate-200 dark:text-slate-800 group-hover/row:text-indigo-500 transition-all group-hover/row:translate-x-2 group-hover/row:-translate-y-2 shrink-0 shadow-text" />
+                        </div>
+                     ))}
+                  </div>
+               )}
+            </div>
+         </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Active Bids Tiles (2/3 width) */}
-        <div className="lg:col-span-2 space-y-4">
-          <div className="flex items-center justify-between px-2">
-            <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              Active Bid Invitations
-              <span className="text-xs font-medium px-2 py-0.5 bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400 rounded-full">
-                3 New
-              </span>
+         {/* Efficiency & Compliance */}
+         <div className="lg:col-span-4 space-y-8">
+            <h2 className="text-3xl font-black italic text-slate-900 dark:text-white flex items-center gap-6 px-10 tracking-tight shadow-text">
+               <BarChart3 size={32} className="text-indigo-500" /> Performance.X
             </h2>
-            <button className="text-sm font-bold text-green-600 hover:text-green-500 transition-colors uppercase tracking-wider">View All</button>
-          </div>
-          
-          <div className="space-y-4">
-            {ACTIVE_BIDS.map((bid, i) => (
-              <motion.div 
-                key={bid.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 + (i * 0.1) }}
-                className="group relative overflow-hidden rounded-3xl"
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-green-500/0 via-green-500/0 to-green-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                <div className="relative bg-white dark:bg-slate-950 p-6 ring-1 ring-slate-200 dark:ring-slate-800 shadow-sm flex items-center justify-between gap-6 transition-all group-hover:ring-green-500/30 group-hover:shadow-md">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-lg font-bold text-slate-900 dark:text-white truncate">{bid.title}</h3>
-                      {bid.status === "high_priority" && (
-                        <span className="px-2 py-0.5 bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400 text-[10px] font-bold rounded-lg animate-pulse">
-                          CLOSING SOON
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-1">
-                      <span className="text-xs text-slate-500 font-medium">Buyer: <span className="text-slate-700 dark:text-slate-300">{bid.buyer}</span></span>
-                      <span className="text-xs text-slate-500 font-medium">Items: <span className="text-slate-700 dark:text-slate-300">{bid.totalItems} Required</span></span>
-                      <span className={cn(
-                        "text-xs font-bold flex items-center gap-1.5",
-                        bid.status === "high_priority" ? "text-amber-600 dark:text-amber-400" : "text-green-600 dark:text-green-400"
-                      )}>
-                        <Clock size={12} /> Ends {bid.deadline}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 shrink-0">
-                    <button className="px-5 py-2.5 bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 rounded-xl font-bold text-xs hover:bg-slate-200 dark:hover:bg-slate-800 transition-all">
-                      Details
-                    </button>
-                    <button className="px-6 py-2.5 bg-green-600 text-white rounded-xl font-bold text-xs ring-1 ring-green-500/20 hover:scale-105 hover:bg-green-700 active:scale-95 transition-all shadow-lg shadow-green-500/10">
-                      Submit Bid
-                    </button>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-
-        {/* Fulfillment Feed (1/3 width) */}
-        <div className="space-y-4">
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white px-2">Pending Fulfillment</h2>
-          <div className="relative overflow-hidden bg-white/50 dark:bg-slate-950/50 backdrop-blur-xl rounded-[2.5rem] ring-1 ring-slate-200 dark:ring-slate-800 p-8 shadow-sm">
-            <div className="space-y-8">
-              {[
-                { id: "PO-9921", time: "10:00 AM", dest: "Shopro Fulfillment (North)", progress: 65, status: "captured" },
-                { id: "PO-9924", time: "02:30 PM", dest: "Shopro Fulfillment (Central)", progress: 30, status: "raised" },
-                { id: "PO-9928", time: "Tomorrow", dest: "Shopro Fulfillment (Main)", progress: 0, status: "pending" },
-              ].map((order, i) => (
-                <div key={order.id} className="flex items-start gap-5 group cursor-pointer">
-                  <div className="relative mt-1">
-                    <div className="w-1.5 h-12 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
-                      <motion.div 
-                        initial={{ height: 0 }}
-                        animate={{ height: `${order.progress}%` }}
-                        transition={{ delay: 0.6 + (i * 0.1), duration: 1 }}
-                        className="w-full bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.3)]" 
-                      />
-                    </div>
-                    {order.progress === 100 && (
-                      <div className="absolute -bottom-1 -left-1 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-white dark:border-slate-950" />
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-2 mb-1">
-                       <p className="text-sm font-bold text-slate-900 dark:text-white truncate group-hover:text-green-600 transition-colors">
-                         {order.id} — <span className="text-slate-400 group-hover:text-green-500/50 transition-colors">{order.time}</span>
-                       </p>
-                       <StatusBadge status={order.status as any} />
-                    </div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium truncate">Dest: {order.dest}</p>
-                  </div>
-                  <ChevronRight size={16} className="text-slate-300 group-hover:text-green-500 transition-colors self-center" />
-                </div>
-              ))}
-            </div>
-
-            <button className="w-full mt-10 py-3 rounded-2xl border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-500 hover:text-green-600 hover:border-green-500/30 transition-all uppercase tracking-widest">
-              Manage Logistics
-            </button>
-
-            {/* Identity Isolation Branding */}
-            <div className="mt-8 p-5 bg-gradient-to-br from-green-600 to-green-800 rounded-3xl text-white shadow-xl shadow-green-900/20 relative overflow-hidden group">
-               <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
-                 <FileCheck size={80} />
+            <div className="bg-slate-950 rounded-[4rem] p-12 border-b-[1.5rem] border-indigo-600 shadow-4xl shadow-inner space-y-12 relative overflow-hidden group">
+               <div className="absolute top-[-20%] right-[-10%] w-[400px] h-[400px] bg-indigo-600/10 rounded-full blur-[100px] pointer-events-none group-hover:scale-150 transition-transform duration-[4000ms]" />
+               
+               <div className="relative z-10 space-y-10">
+                  {[
+                     { name: "Fulfillment_Accuracy.SIGN", val: performance?.fulfillment || 0, color: "indigo" },
+                     { name: "On-Time_Dispatch.NODE", val: performance?.onTimeDelivery || 0, color: "emerald" },
+                     { name: "Quality_Index.FLUX", val: performance?.qualityIndex || 0, color: "rose" },
+                  ].map((sys) => (
+                     <div key={sys.name} className="space-y-5 group/stat">
+                        <div className="flex items-center justify-between uppercase">
+                           <span className="text-[11px] font-black text-slate-400 tracking-[0.4em] group-hover/stat:text-white transition-colors italic leading-none">{sys.name}</span>
+                           <span className={cn("text-2xl font-black italic tracking-tighter tabular-nums leading-none shadow-text", 
+                              sys.color === 'indigo' ? 'text-indigo-500' : sys.color === 'emerald' ? 'text-emerald-500' : 'text-rose-500')}>{sys.val}%</span>
+                        </div>
+                        <div className="h-4 w-full bg-white/5 rounded-full border-2 border-white/5 overflow-hidden shadow-inner flex items-center p-1">
+                           <motion.div 
+                             initial={{ width: 0 }}
+                             animate={{ width: `${sys.val}%` }}
+                             className={cn("h-full rounded-full shadow-4xl", 
+                                sys.color === 'indigo' ? 'bg-indigo-600 shadow-indigo-500/30' : 
+                                sys.color === 'emerald' ? 'bg-emerald-500 shadow-emerald-500/30' : 'bg-rose-600 shadow-rose-500/30')}
+                           />
+                        </div>
+                     </div>
+                  ))}
                </div>
-               <div className="relative z-10">
-                 <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-1 opacity-80">Identity Isolation Active</p>
-                 <p className="text-xs font-medium leading-relaxed opacity-90">
-                   You are operating as a <span className="font-bold underline decoration-green-400">Verified Partner</span>. All client endpoints are generalized to Shopro for privacy and security.
-                 </p>
+
+               <div className="pt-12 border-t-4 border-white/5 space-y-8 relative z-10 font-black italic shadow-inner">
+                  <div className="flex items-start gap-6 font-black italic">
+                    <ShieldCheck size={32} className="text-amber-500 animate-pulse shrink-0 shadow-text" />
+                    <p className="text-[11px] text-slate-400 font-black tracking-[0.2em] leading-relaxed italic uppercase opacity-60">
+                      Integrity check completed 3m ago. All encryption keys are rotated and secure delta.
+                    </p>
+                  </div>
+                  <button className="w-full h-20 bg-white/5 hover:bg-white/10 border-4 border-white/5 text-white rounded-[2rem] text-[10px] font-black uppercase tracking-[0.5em] transition-all hover:scale-105 active:scale-95 italic shadow-4xl">
+                    INFRASTRUCTURE_DETAILS.FORCE
+                  </button>
                </div>
             </div>
-          </div>
-        </div>
+         </div>
       </div>
     </div>
+    </SecureOverlay>
   );
 }

@@ -6,6 +6,13 @@ import { NeonEdges } from "@/components/ui/neon-button";
 import { useLocation, Link } from "react-router-dom";
 import { ChevronDown, ChevronRight } from "lucide-react";
 
+import { 
+  Tooltip, 
+  TooltipContent, 
+  TooltipProvider, 
+  TooltipTrigger 
+} from "@/components/ui/tooltip-icon-button";
+
 /**
  * OperatorSidebar
  * Adapted from: SidebarNav (shopro-missing-components.tsx)
@@ -23,6 +30,7 @@ interface NavItem {
   id: string;
   label: string;
   icon: string;
+  intent: string;
   href?: string;
   badge?: number;
   subItems?: NavSubItem[];
@@ -45,11 +53,12 @@ export function OperatorSidebar({
   };
 
   const NAV_ITEMS: NavItem[] = [
-    { id: "dashboard", label: "Dashboard", icon: "🏠", href: "/operator/dashboard" },
+    { id: "dashboard", label: "Dashboard", icon: "🏠", intent: "Overview of system pulse and key metrics", href: "/operator/dashboard" },
     { 
       id: "orders", 
       label: "Orders", 
       icon: "📦", 
+      intent: "Manage global order flow and PO lifecycles",
       subItems: [
         { label: "Global Flux", href: "/operator/orders" },
         { label: "PO Inbox", href: "/operator/po/inbox" },
@@ -61,6 +70,7 @@ export function OperatorSidebar({
       id: "bids", 
       label: "Bid Engine", 
       icon: "⚖️", 
+      intent: "Monitor active reverse-auctions and bid awards",
       badge: 5,
       subItems: [
         { label: "New Bid", href: "/operator/bids/new" },
@@ -71,18 +81,21 @@ export function OperatorSidebar({
       id: "auto-po", 
       label: "Auto-PO", 
       icon: "🤖", 
+      intent: "Configure automated purchase routines",
       href: "/operator/auto-po" 
     },
     { 
       id: "restaurants", 
       label: "Restaurants", 
       icon: "🏪", 
+      intent: "Manage restaurant profiles and licensing",
       href: "/operator/restaurants" 
     },
     { 
       id: "suppliers", 
       label: "Suppliers", 
       icon: "🚚", 
+      intent: "Vet and manage logistical suppliers",
       href: "/operator/suppliers",
       subItems: [
         { label: "Directory", href: "/operator/suppliers" },
@@ -93,6 +106,7 @@ export function OperatorSidebar({
       id: "finance", 
       label: "Finance", 
       icon: "💰",
+      intent: "Ledger management, payouts and tax treasury",
       subItems: [
         { label: "Settlements", href: "/operator/settlement-logs" },
         { label: "Payout Vault", href: "/operator/payouts" },
@@ -106,6 +120,7 @@ export function OperatorSidebar({
       id: "analytics", 
       label: "Analytics", 
       icon: "📊",
+      intent: "Deep insights into marketplace demand and revenue",
       subItems: [
         { label: "Revenue Pulse", href: "/operator/revenue" },
         { label: "Sourcing Wizard", href: "/operator/sourcing-wizard" },
@@ -116,6 +131,7 @@ export function OperatorSidebar({
       id: "catalog", 
       label: "Catalog", 
       icon: "📖", 
+      intent: "Manage master SKUs and universal taxonomy",
       subItems: [
         { label: "Master SKUs", href: "/operator/products" },
         { label: "Taxonomy", href: "/operator/categories" },
@@ -125,6 +141,7 @@ export function OperatorSidebar({
       id: "strategy", 
       label: "Strategy", 
       icon: "🎯", 
+      intent: "Campaign management and pricing optimization",
       subItems: [
         { label: "Pricing Rules", href: "/operator/pricing-rules" },
         { label: "Promo Vault", href: "/operator/discounts" },
@@ -135,6 +152,7 @@ export function OperatorSidebar({
       id: "administration", 
       label: "Administration", 
       icon: "⚙️", 
+      intent: "Control system users, roles, and audit trails",
       subItems: [
         { label: "Users", href: "/operator/users" },
         { label: "User Roles", href: "/operator/roles" },
@@ -142,6 +160,7 @@ export function OperatorSidebar({
         { label: "System Health", href: "/operator/system-health" },
         { label: "API Keys", href: "/operator/api-keys" },
         { label: "Webhooks", href: "/operator/webhooks" },
+        { label: "Notification Hub", href: "/operator/administration/notifications" },
         { label: "Marketplace Config", href: "/operator/marketplace-settings" },
       ]
     },
@@ -149,6 +168,7 @@ export function OperatorSidebar({
       id: "automation", 
       label: "Automation", 
       icon: "🤖", 
+      intent: "Workflow orchestration and schedule logic",
       subItems: [
         { label: "Orchestration Logic", href: "/operator/automation-logic" },
         { label: "Workflow Schedules", href: "/operator/automation-schedules" },
@@ -158,6 +178,7 @@ export function OperatorSidebar({
   ];
 
   return (
+    <TooltipProvider>
     <motion.aside
       animate={{ width: isCollapsed ? 80 : 280 }}
       transition={SPRING}
@@ -185,12 +206,19 @@ export function OperatorSidebar({
             </motion.div>
           )}
         </AnimatePresence>
-        <button 
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className="p-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-400"
-        >
-          {isCollapsed ? <ChevronRight size={18} /> : <ChevronRight size={18} className="rotate-180" />}
-        </button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button 
+              onClick={() => setIsCollapsed(!isCollapsed)}
+              className="p-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-400"
+            >
+              {isCollapsed ? <ChevronRight size={18} /> : <ChevronRight size={18} className="rotate-180" />}
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="right">
+            {isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+          </TooltipContent>
+        </Tooltip>
       </div>
 
       <nav className="flex-1 px-3 space-y-1 overflow-y-auto custom-scrollbar overflow-x-hidden">
@@ -205,21 +233,31 @@ export function OperatorSidebar({
                 <Link
                   to={item.href}
                   className={cn(
-                    "group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200",
+                    "group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-300",
                     isActive 
-                      ? "bg-indigo-50 dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm ring-1 ring-indigo-100 dark:ring-slate-700" 
-                      : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                      ? "bg-primary/5 dark:bg-primary/10 text-primary shadow-[0_0_20px_rgba(99,102,241,0.1)] ring-1 ring-primary/20" 
+                      : "text-muted-foreground hover:text-primary hover:bg-primary/5"
                   )}
                 >
                   <AnimatePresence>
                     {isActive && (
-                      <div className="absolute inset-0 opacity-20 pointer-events-none">
-                        <GlowingBorder spread={40} />
+                      <div className="absolute inset-0 opacity-40 pointer-events-none">
+                        <GlowingBorder spread={50} />
                       </div>
                     )}
                   </AnimatePresence>
                   
-                  <span className="text-xl flex-shrink-0">{item.icon}</span>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="text-xl shrink-0">{item.icon}</span>
+                    </TooltipTrigger>
+                    <TooltipContent side="right">
+                      <div className="space-y-1">
+                        <p className="font-bold">{item.label}</p>
+                        <p className="text-xs opacity-70">{item.intent}</p>
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
                   
                   {!isCollapsed && (
                     <span className="text-sm font-semibold truncate">{item.label}</span>
@@ -244,7 +282,17 @@ export function OperatorSidebar({
                         : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50"
                     )}
                   >
-                    <span className="text-xl flex-shrink-0">{item.icon}</span>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="text-xl shrink-0">{item.icon}</span>
+                      </TooltipTrigger>
+                      <TooltipContent side="right">
+                        <div className="space-y-1">
+                          <p className="font-bold">{item.label}</p>
+                          <p className="text-xs opacity-70">{item.intent}</p>
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
                     {!isCollapsed && (
                       <>
                         <span className="text-sm truncate">{item.label}</span>
@@ -299,7 +347,7 @@ export function OperatorSidebar({
 
       <div className={cn("p-4 mt-auto border-t border-slate-200 dark:border-slate-800", isCollapsed && "items-center")}>
         <div className="p-3 bg-white dark:bg-slate-950 rounded-2xl ring-1 ring-slate-200 dark:ring-slate-800 flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800 flex-shrink-0" />
+          <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800 shrink-0" />
           {!isCollapsed && (
             <div className="min-w-0">
               <p className="text-xs font-bold text-slate-900 dark:text-white truncate">Admin User</p>
@@ -309,5 +357,6 @@ export function OperatorSidebar({
         </div>
       </div>
     </motion.aside>
+    </TooltipProvider>
   );
 }

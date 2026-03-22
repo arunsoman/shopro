@@ -109,18 +109,18 @@ function NeonEdges({ active = false, color = "blue" }: { active?: boolean; color
 
 /** Semantic status colour map — used by StatusBadge + all tables */
 const STATUS_MAP = {
-  new:       "bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800",
-  cooking:   "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800",
-  ready:     "bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800",
-  captured:  "bg-violet-50 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-800",
+  new: "bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800",
+  cooking: "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800",
+  ready: "bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800",
+  captured: "bg-violet-50 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-800",
   disbursed: "bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 border-teal-200 dark:border-teal-800",
-  refunded:  "bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800",
-  pending:   "bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700",
-  active:    "bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800",
-  inactive:  "bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700",
-  Active:    "bg-green-100 text-green-700",
-  Inactive:  "bg-gray-200 text-gray-700",
-  Pending:   "bg-yellow-100 text-yellow-700",
+  refunded: "bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800",
+  pending: "bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700",
+  active: "bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800",
+  inactive: "bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700",
+  Active: "bg-green-100 text-green-700",
+  Inactive: "bg-gray-200 text-gray-700",
+  Pending: "bg-yellow-100 text-yellow-700",
 } as const;
 
 export function StatusBadge({ status, label }: { status: keyof typeof STATUS_MAP; label?: string }) {
@@ -184,18 +184,20 @@ GlowingEffect.displayName = "GlowingEffect";
 // ─────────────────────────────────────────────────────────────────────────────
 const buttonVariants = cva(
   "relative group border text-foreground mx-auto text-center rounded-full overflow-hidden",
-  { variants: {
-    variant: {
-      default: "bg-blue-500/5 hover:bg-blue-500/0 border-blue-500/20",
-      solid:   "bg-blue-500 hover:bg-blue-600 text-white border-transparent hover:border-foreground/50 transition-all duration-200",
-      ghost:   "border-transparent bg-transparent hover:border-zinc-600 hover:bg-white/10",
-    },
-    size: {
-      default: "px-7 py-1.5",
-      sm:      "px-4 py-0.5",
-      lg:      "px-10 py-2.5",
-    },
-  }, defaultVariants: { variant: "default", size: "default" } }
+  {
+    variants: {
+      variant: {
+        default: "bg-blue-500/5 hover:bg-blue-500/0 border-blue-500/20",
+        solid: "bg-blue-500 hover:bg-blue-600 text-white border-transparent hover:border-foreground/50 transition-all duration-200",
+        ghost: "border-transparent bg-transparent hover:border-zinc-600 hover:bg-white/10",
+      },
+      size: {
+        default: "px-7 py-1.5",
+        sm: "px-4 py-0.5",
+        lg: "px-10 py-2.5",
+      },
+    }, defaultVariants: { variant: "default", size: "default" }
+  }
 );
 export interface NeonButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof buttonVariants> { neon?: boolean }
 export const NeonButton = forwardRef<HTMLButtonElement, NeonButtonProps>(({ className, neon = true, size, variant, children, ...props }, ref) => (
@@ -369,8 +371,8 @@ export const NeonCheckbox: React.FC<NeonCheckboxProps> = ({ label, className = "
   const isChecked = isControlled ? controlledChecked : internalChecked;
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => { if (!isControlled) setInternalChecked(e.target.checked); onChange?.(e); };
   const neonStyles = { "--primary": "#00ffaa", "--primary-dark": "#00cc88", "--primary-light": "#88ffdd", "--size": "30px" } as React.CSSProperties;
-  const PARTICLE_X = ["25px","-25px","25px","-25px","35px","-35px","0px","0px","20px","-20px","30px","-30px"];
-  const PARTICLE_Y = ["-25px","-25px","25px","25px","0px","0px","35px","-35px","-30px","30px","20px","-20px"];
+  const PARTICLE_X = ["25px", "-25px", "25px", "-25px", "35px", "-35px", "0px", "0px", "20px", "-20px", "30px", "-30px"];
+  const PARTICLE_Y = ["-25px", "-25px", "25px", "25px", "0px", "0px", "35px", "-35px", "-30px", "30px", "20px", "-20px"];
   return (
     <label className={`relative inline-block w-[var(--size)] h-[var(--size)] cursor-pointer ${className}`} style={neonStyles}>
       <input type="checkbox" className="hidden" checked={isChecked as boolean} onChange={handleChange} {...props} />
@@ -381,7 +383,7 @@ export const NeonCheckbox: React.FC<NeonCheckboxProps> = ({ label, className = "
           </div>
           <div className={`absolute -inset-0.5 rounded-md bg-[var(--primary)] blur-md transition-opacity duration-400 ${isChecked ? "opacity-20" : "opacity-0"}`} />
           <div className="absolute inset-0 rounded overflow-hidden">
-            {[0,1,2,3].map((i) => <span key={i} className={`absolute w-10 h-px bg-[var(--primary)] transition-opacity duration-400 ${isChecked ? "opacity-100" : "opacity-0"} ${i===0?"top-0 left-[-100%] animate-[borderFlow1_2s_linear_infinite]":i===1?"top-[-100%] right-0 w-px h-10 animate-[borderFlow2_2s_linear_infinite]":i===2?"bottom-0 right-[-100%] animate-[borderFlow3_2s_linear_infinite]":"bottom-[-100%] left-0 w-px h-10 animate-[borderFlow4_2s_linear_infinite]"}`} />)}
+            {[0, 1, 2, 3].map((i) => <span key={i} className={`absolute w-10 h-px bg-[var(--primary)] transition-opacity duration-400 ${isChecked ? "opacity-100" : "opacity-0"} ${i === 0 ? "top-0 left-[-100%] animate-[borderFlow1_2s_linear_infinite]" : i === 1 ? "top-[-100%] right-0 w-px h-10 animate-[borderFlow2_2s_linear_infinite]" : i === 2 ? "bottom-0 right-[-100%] animate-[borderFlow3_2s_linear_infinite]" : "bottom-[-100%] left-0 w-px h-10 animate-[borderFlow4_2s_linear_infinite]"}`} />)}
           </div>
         </div>
         <div className="absolute inset-0">
@@ -389,10 +391,10 @@ export const NeonCheckbox: React.FC<NeonCheckboxProps> = ({ label, className = "
             {[...Array(12)].map((_, i) => <span key={i} className={`absolute w-1 h-1 bg-[var(--primary)] rounded-full pointer-events-none top-1/2 left-1/2 shadow-[0_0_6px_var(--primary)] ${isChecked ? "animate-[particleExplosion_0.6s_ease-out_forwards]" : "opacity-0"}`} style={{ "--x": PARTICLE_X[i], "--y": PARTICLE_Y[i] } as React.CSSProperties} />)}
           </div>
           <div className="absolute -inset-5 pointer-events-none">
-            {[0,1,2].map((i) => <div key={i} className={`absolute inset-0 rounded-full border border-[var(--primary)] scale-0 ${isChecked ? "animate-[ringPulse_0.6s_ease-out_forwards]" : "opacity-0"}`} style={{ animationDelay: `${i*0.1}s` }} />)}
+            {[0, 1, 2].map((i) => <div key={i} className={`absolute inset-0 rounded-full border border-[var(--primary)] scale-0 ${isChecked ? "animate-[ringPulse_0.6s_ease-out_forwards]" : "opacity-0"}`} style={{ animationDelay: `${i * 0.1}s` }} />)}
           </div>
           <div className="absolute inset-0">
-            {[0,1,2,3].map((i) => <span key={i} className={`absolute w-5 h-px bg-gradient-to-r from-[var(--primary)] to-transparent top-1/2 left-1/2 ${isChecked ? "animate-[sparkFlash_0.6s_ease-out_forwards]" : "opacity-0"}`} style={{ "--r": `${i*90}deg` } as React.CSSProperties} />)}
+            {[0, 1, 2, 3].map((i) => <span key={i} className={`absolute w-5 h-px bg-gradient-to-r from-[var(--primary)] to-transparent top-1/2 left-1/2 ${isChecked ? "animate-[sparkFlash_0.6s_ease-out_forwards]" : "opacity-0"}`} style={{ "--r": `${i * 90}deg` } as React.CSSProperties} />)}
           </div>
         </div>
       </div>
@@ -420,7 +422,7 @@ import { Portal } from "@ark-ui/react/portal";
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, X as XIcon, Eye, EyeOff, Check, Loader } from "lucide-react";
 
 export const ShoproDatePicker = () => (
-  <div className="w-full max-w-md mx-auto p-4">
+  <div className="w-full  mx-auto p-4">
     <DatePicker.Root>
       <DatePicker.Label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Select Date</DatePicker.Label>
       <DatePicker.Control className={cn("group relative flex items-center gap-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 shadow-sm focus-within:ring-2 focus-within:ring-ring overflow-hidden")}>
@@ -508,7 +510,7 @@ export function SmartCombobox({ id, className, label, placeholder = "Search…",
   useEffect(() => { let cancelled = false; if (!onQuery) { setRemoteOptions(null); return; } setLoading(true); onQuery(debouncedQuery).then((res) => { if (!cancelled) setRemoteOptions(res || []); }).finally(() => { if (!cancelled) setLoading(false); }); return () => { cancelled = true; }; }, [onQuery, debouncedQuery]);
   const baseOptions = onQuery ? remoteOptions ?? [] : optionsProp;
   const filtered = useMemo(() => { if (onQuery) return baseOptions; const q = normalize(debouncedQuery); if (!q) return baseOptions; return baseOptions.filter((o) => normalize(o.label).includes(q)); }, [baseOptions, debouncedQuery, onQuery]);
-  const options = useMemo(() => { const copy = [...filtered]; copy.sort((a, b) => { const g = (a.group||"").localeCompare(b.group||""); return g !== 0 ? g : a.label.localeCompare(b.label); }); return copy; }, [filtered]);
+  const options = useMemo(() => { const copy = [...filtered]; copy.sort((a, b) => { const g = (a.group || "").localeCompare(b.group || ""); return g !== 0 ? g : a.label.localeCompare(b.label); }); return copy; }, [filtered]);
   const [activeIndex, setActiveIndex] = useState(0);
   const showCreate = !!onCreate && debouncedQuery.trim().length > 0 && !options.some((o) => normalize(o.label) === normalize(debouncedQuery));
   const useVirtual = options.length > virtualizeThreshold;
@@ -554,24 +556,26 @@ export function SmartCombobox({ id, className, label, placeholder = "Search…",
         <GlowingBorder spread={30} borderWidth={1} />
         <NeonEdges />
         {isMultiple && internalValue.length > 0 && <div className="flex flex-wrap items-center gap-1">{internalValue.map((id) => { const opt = baseOptions.find((o) => o.id === id); if (!opt) return null; return <span key={id} className="inline-flex items-center gap-1 rounded bg-[hsl(var(--secondary))] px-2 py-0.5 text-xs text-[hsl(var(--secondary-foreground))]">{opt.icon && <span className="size-3.5">{opt.icon}</span>}{opt.label}<button type="button" aria-label={`Remove ${opt.label}`} onClick={(e) => { e.stopPropagation(); removeChip(id); }} className="ml-1 grid size-4 place-items-center rounded hover:bg-black/10 dark:hover:bg-white/10"><svg viewBox="0 0 20 20" className="size-3"><path d="M6 6l8 8M14 6l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg></button></span>; })}</div>}
-        <input ref={inputRef} id={inputId} role="combobox" aria-controls={listboxId} aria-expanded={open} aria-autocomplete="list" aria-activedescendant={open ? activeDescId : undefined} aria-disabled={disabled||undefined} placeholder={placeholder} disabled={disabled} className="peer flex-1 bg-transparent outline-none placeholder:text-[hsl(var(--muted-foreground))] text-[hsl(var(--foreground))]" value={query} onChange={(e) => { setQuery(e.target.value); if (!open) setOpen(true); }} onKeyDown={onKeyDown} />
+        <input ref={inputRef} id={inputId} role="combobox" aria-controls={listboxId} aria-expanded={open} aria-autocomplete="list" aria-activedescendant={open ? activeDescId : undefined} aria-disabled={disabled || undefined} placeholder={placeholder} disabled={disabled} className="peer flex-1 bg-transparent outline-none placeholder:text-[hsl(var(--muted-foreground))] text-[hsl(var(--foreground))]" value={query} onChange={(e) => { setQuery(e.target.value); if (!open) setOpen(true); }} onKeyDown={onKeyDown} />
         <div className="ml-auto flex items-center gap-1">
           {clearable && ((isMultiple && internalValue.length > 0) || (!isMultiple && singleValue)) && <button type="button" onClick={(e) => { e.stopPropagation(); clearAll(); }} className="rounded p-1 text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))]" aria-label="Clear selection"><svg viewBox="0 0 20 20" className="size-4"><path d="M6 6l8 8M14 6l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg></button>}
-          <button type="button" aria-label={open?"Close":"Open"} onClick={(e) => { e.stopPropagation(); setOpen(!open); }} className="rounded p-1 text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))]"><svg viewBox="0 0 20 20" className={cx("size-4 transition-transform", open && "rotate-180")}><path d="M6 8l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg></button>
+          <button type="button" aria-label={open ? "Close" : "Open"} onClick={(e) => { e.stopPropagation(); setOpen(!open); }} className="rounded p-1 text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))]"><svg viewBox="0 0 20 20" className={cx("size-4 transition-transform", open && "rotate-180")}><path d="M6 8l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg></button>
         </div>
       </div>
       <div role="region" aria-live="polite" className="sr-only">{live}</div>
       {open && (
         <div className="absolute z-50 mt-1 w-full overflow-hidden rounded-md border border-[hsl(var(--border))] bg-[hsl(var(--popover))] shadow-lg animate-in fade-in-0 zoom-in-95" style={{ maxHeight }}>
           {header && <div className="border-b border-[hsl(var(--border))] p-2 text-xs text-[hsl(var(--muted-foreground))]">{header}</div>}
-          <div ref={listRef} id={listboxId} role="listbox" aria-multiselectable={isMultiple||undefined} className="overflow-auto" style={{ maxHeight }} onScroll={(e) => { if (!useVirtual) return; setScrollTop(e.currentTarget.scrollTop); }}>
-            {showCreate && <div role="option" id={activeIndex===0?activeDescId:undefined} aria-selected={activeIndex===0} data-idx={0} onMouseEnter={() => setActiveIndex(0)} onMouseDown={(e) => e.preventDefault()} onClick={() => handleCreate(debouncedQuery)} className={cx("flex cursor-pointer items-center gap-2 px-2 text-[hsl(var(--foreground))]", activeIndex===0?"bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))]":"hover:bg-[hsl(var(--accent))]/60")} style={{ height: itemHeight }}><span className="inline-flex size-5 items-center justify-center rounded bg-[hsl(var(--secondary))] text-[hsl(var(--secondary-foreground))]">+</span>{getCreateLabel(debouncedQuery)}</div>}
+          <div ref={listRef} id={listboxId} role="listbox" aria-multiselectable={isMultiple || undefined} className="overflow-auto" style={{ maxHeight }} onScroll={(e) => { if (!useVirtual) return; setScrollTop(e.currentTarget.scrollTop); }}>
+            {showCreate && <div role="option" id={activeIndex === 0 ? activeDescId : undefined} aria-selected={activeIndex === 0} data-idx={0} onMouseEnter={() => setActiveIndex(0)} onMouseDown={(e) => e.preventDefault()} onClick={() => handleCreate(debouncedQuery)} className={cx("flex cursor-pointer items-center gap-2 px-2 text-[hsl(var(--foreground))]", activeIndex === 0 ? "bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))]" : "hover:bg-[hsl(var(--accent))]/60")} style={{ height: itemHeight }}><span className="inline-flex size-5 items-center justify-center rounded bg-[hsl(var(--secondary))] text-[hsl(var(--secondary-foreground))]">+</span>{getCreateLabel(debouncedQuery)}</div>}
             {useVirtual && pTop > 0 ? <div style={{ height: pTop }} /> : null}
             {[...groups.entries()].map(([group, items]) => (
               <div key={group} role="group" aria-label={group}>
                 {group !== "Other" && <div className="sticky top-0 z-10 bg-[hsl(var(--popover))] px-2 py-1 text-[10px] uppercase tracking-wider text-[hsl(var(--muted-foreground))]">{group}</div>}
-                {items.map((opt) => { const idx = options.indexOf(opt) + (showCreate ? 1 : 0); const active = idx === activeIndex; const selected = isSelected(opt.id); const row = <div key={opt.id} role="option" id={active?activeDescId:undefined} aria-selected={selected} data-idx={idx} onMouseEnter={() => setActiveIndex(idx)} onMouseDown={(e) => e.preventDefault()} onClick={() => toggleOption(opt)} className={cx("flex cursor-pointer items-center justify-between gap-2 px-2 text-[hsl(var(--foreground))]", active?"bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))]":"hover:bg-[hsl(var(--accent))]/60")} style={{ height: itemHeight }}><div className="flex min-w-0 items-center gap-2">{opt.icon && <span className="size-5 shrink-0">{opt.icon}</span>}<span className="truncate">{opt.label}</span></div><div className="ml-2 flex items-center gap-2">{opt.meta && <span className={cx("text-xs", active?"opacity-80":"text-[hsl(var(--muted-foreground))]")}>{opt.meta}</span>}{selected && <svg viewBox="0 0 20 20" className="size-4 shrink-0"><path d="M5 10l3 3 7-7" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>}</div></div>;
-                  return renderOption ? <div key={opt.id} role="option" id={active?activeDescId:undefined} aria-selected={selected} data-idx={idx} onMouseEnter={() => setActiveIndex(idx)} onMouseDown={(e) => e.preventDefault()} onClick={() => toggleOption(opt)} className={cx("flex cursor-pointer items-center px-2", active?"bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))]":"hover:bg-[hsl(var(--accent))]/60")} style={{ height: itemHeight }}>{renderOption(opt, { active, selected })}</div> : row; })}
+                {items.map((opt) => {
+                  const idx = options.indexOf(opt) + (showCreate ? 1 : 0); const active = idx === activeIndex; const selected = isSelected(opt.id); const row = <div key={opt.id} role="option" id={active ? activeDescId : undefined} aria-selected={selected} data-idx={idx} onMouseEnter={() => setActiveIndex(idx)} onMouseDown={(e) => e.preventDefault()} onClick={() => toggleOption(opt)} className={cx("flex cursor-pointer items-center justify-between gap-2 px-2 text-[hsl(var(--foreground))]", active ? "bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))]" : "hover:bg-[hsl(var(--accent))]/60")} style={{ height: itemHeight }}><div className="flex min-w-0 items-center gap-2">{opt.icon && <span className="size-5 shrink-0">{opt.icon}</span>}<span className="truncate">{opt.label}</span></div><div className="ml-2 flex items-center gap-2">{opt.meta && <span className={cx("text-xs", active ? "opacity-80" : "text-[hsl(var(--muted-foreground))]")}>{opt.meta}</span>}{selected && <svg viewBox="0 0 20 20" className="size-4 shrink-0"><path d="M5 10l3 3 7-7" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>}</div></div>;
+                  return renderOption ? <div key={opt.id} role="option" id={active ? activeDescId : undefined} aria-selected={selected} data-idx={idx} onMouseEnter={() => setActiveIndex(idx)} onMouseDown={(e) => e.preventDefault()} onClick={() => toggleOption(opt)} className={cx("flex cursor-pointer items-center px-2", active ? "bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))]" : "hover:bg-[hsl(var(--accent))]/60")} style={{ height: itemHeight }}>{renderOption(opt, { active, selected })}</div> : row;
+                })}
               </div>
             ))}
             {useVirtual && pBottom > 0 ? <div style={{ height: pBottom }} /> : null}
@@ -590,16 +594,16 @@ export function SmartCombobox({ id, className, label, placeholder = "Search…",
 // top100Films, dual state, blur delay — all preserved. GlowingBorder + NeonEdges added.
 // ─────────────────────────────────────────────────────────────────────────────
 const top100Films = [
-  { label: "The Shawshank Redemption", year: 1994 },{ label: "The Godfather", year: 1972 },
-  { label: "The Dark Knight", year: 2008 },{ label: "Schindler's List", year: 1993 },
-  { label: "Pulp Fiction", year: 1994 },{ label: "The Lord of the Rings: The Return of the King", year: 2003 },
-  { label: "Fight Club", year: 1999 },{ label: "Inception", year: 2010 },
-  { label: "Goodfellas", year: 1990 },{ label: "The Matrix", year: 1999 },
-  { label: "Interstellar", year: 2014 },{ label: "Forrest Gump", year: 1994 },
-  { label: "City of God", year: 2002 },{ label: "Spirited Away", year: 2001 },
-  { label: "Saving Private Ryan", year: 1998 },{ label: "Gladiator", year: 2000 },
-  { label: "The Prestige", year: 2006 },{ label: "Memento", year: 2000 },
-  { label: "Django Unchained", year: 2012 },{ label: "The Silence of the Lambs", year: 1991 },
+  { label: "The Shawshank Redemption", year: 1994 }, { label: "The Godfather", year: 1972 },
+  { label: "The Dark Knight", year: 2008 }, { label: "Schindler's List", year: 1993 },
+  { label: "Pulp Fiction", year: 1994 }, { label: "The Lord of the Rings: The Return of the King", year: 2003 },
+  { label: "Fight Club", year: 1999 }, { label: "Inception", year: 2010 },
+  { label: "Goodfellas", year: 1990 }, { label: "The Matrix", year: 1999 },
+  { label: "Interstellar", year: 2014 }, { label: "Forrest Gump", year: 1994 },
+  { label: "City of God", year: 2002 }, { label: "Spirited Away", year: 2001 },
+  { label: "Saving Private Ryan", year: 1998 }, { label: "Gladiator", year: 2000 },
+  { label: "The Prestige", year: 2006 }, { label: "Memento", year: 2000 },
+  { label: "Django Unchained", year: 2012 }, { label: "The Silence of the Lambs", year: 1991 },
 ];
 export function ComboBox() {
   const [isOpen, setIsOpen] = useState(false); const [selectedValue, setSelectedValue] = useState(""); const [inputValue, setInputValue] = useState("");
@@ -740,7 +744,7 @@ const spacing = { page: { header: "px-4 sm:px-6 lg:px-8 py-4", sidebar: "px-2 sm
 const parseDateLike = (v?: string) => { if (!v) return 0; const ts = Date.parse(v); return Number.isNaN(ts) ? 0 : ts; };
 const clamp = (n: number, min: number, max: number) => Math.min(Math.max(n, min), max);
 const readLS = <T,>(key: string, fallback: T): T => { try { const raw = localStorage.getItem(key); return raw ? (JSON.parse(raw) as T) : fallback; } catch { return fallback; } };
-const writeLS = <T,>(key: string, value: T) => { try { localStorage.setItem(key, JSON.stringify(value)); } catch {} };
+const writeLS = <T,>(key: string, value: T) => { try { localStorage.setItem(key, JSON.stringify(value)); } catch { } };
 
 const PmIcons = {
   Dots: (p: React.SVGProps<SVGSVGElement>) => <svg viewBox="0 0 24 24" aria-hidden="true" {...p}><circle cx="12" cy="5" r="1" /><circle cx="12" cy="12" r="1" /><circle cx="12" cy="19" r="1" /></svg>,
@@ -750,11 +754,11 @@ const PmIcons = {
   Search: (p: React.SVGProps<SVGSVGElement>) => <svg viewBox="0 0 24 24" aria-hidden="true" {...p}><circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" fill="none" /><path d="m20 20-3.5-3.5" stroke="currentColor" strokeWidth="2" /></svg>,
   Theme: (p: React.SVGProps<SVGSVGElement>) => <svg viewBox="0 0 24 24" aria-hidden="true" {...p}><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" strokeWidth="2" fill="none" /></svg>,
   Plus: (p: React.SVGProps<SVGSVGElement>) => <svg viewBox="0 0 24 24" aria-hidden="true" {...p}><path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="3" /></svg>,
-  Trash: (p: React.SVGProps<SVGSVGElement>) => <svg viewBox="0 0 24 24" aria-hidden="true" {...p}><path d="M3 6h18M8 6V4h8v2m-1 0v14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V6" stroke="currentColor" strokeWidth="2" fill="none"/></svg>,
+  Trash: (p: React.SVGProps<SVGSVGElement>) => <svg viewBox="0 0 24 24" aria-hidden="true" {...p}><path d="M3 6h18M8 6V4h8v2m-1 0v14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V6" stroke="currentColor" strokeWidth="2" fill="none" /></svg>,
   Home: (p: React.SVGProps<SVGSVGElement>) => <svg viewBox="0 0 24 24" aria-hidden="true" {...p}><path d="M3 10.5 12 3l9 7.5V21a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1v-10.5z" stroke="currentColor" strokeWidth="2" fill="none" /></svg>,
   Chart: (p: React.SVGProps<SVGSVGElement>) => <svg viewBox="0 0 24 24" aria-hidden="true" {...p}><path d="M4 19V5M10 19V9M16 19V3M22 19H2" stroke="currentColor" strokeWidth="2" fill="none" /></svg>,
   Calendar: (p: React.SVGProps<SVGSVGElement>) => <svg viewBox="0 0 24 24" aria-hidden="true" {...p}><path d="M7 2v4M17 2v4M3 8h18M5 6h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z" stroke="currentColor" strokeWidth="2" fill="none" /></svg>,
-  Settings: (p: React.SVGProps<SVGSVGElement>) => <svg viewBox="0 0 24 24" aria-hidden="true" {...p}><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z" stroke="currentColor" strokeWidth="2" fill="none"/><path d="M19.4 15a1.8 1.8 0 0 0 .36 1.98l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.8 1.8 0 0 0 15 19.4a1.8 1.8 0 0 0-1 .33 1.8 1.8 0 0 0-.82 1.51V21.5a2 2 0 1 1-4 0v-.26A1.8 1.8 0 0 0 7 19.4a1.8 1.8 0 0 0-1.98-.36l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.8 1.8 0 0 0 4.6 15a1.8 1.8 0 0 0-.33-1 1.8 1.8 0 0 0-1.51-.82H2.5a2 2 0 1 1 0-4h.26A1.8 1.8 0 0 0 4.6 7a1.8 1.8 0 0 0-.36-1.98l-.06-.06A2 2 0 1 1 7.01 2.13l.06.06A1.8 1.8 0 0 0 9 4.6c.34 0 .67-.11 1-.33.46-.31.77-.82.82-1.38V2.5a2 2 0 1 1 4 0v.26c.05.56.36 1.07.82 1.38.33.22.66.33 1 .33a1.8 1.8 0 0 0 1.98-.36l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.8 1.8 0 0 0 19.4 9c0 .34.11.67.33 1 .31.46.82.77 1.38.82h.39a2 2 0 1 1 0 4h-.39c-.56.05-1.07.36-1.38.82-.22.33-.33.66-.33 1z" stroke="currentColor" strokeWidth="1.5" fill="none"/></svg>,
+  Settings: (p: React.SVGProps<SVGSVGElement>) => <svg viewBox="0 0 24 24" aria-hidden="true" {...p}><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z" stroke="currentColor" strokeWidth="2" fill="none" /><path d="M19.4 15a1.8 1.8 0 0 0 .36 1.98l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.8 1.8 0 0 0 15 19.4a1.8 1.8 0 0 0-1 .33 1.8 1.8 0 0 0-.82 1.51V21.5a2 2 0 1 1-4 0v-.26A1.8 1.8 0 0 0 7 19.4a1.8 1.8 0 0 0-1.98-.36l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.8 1.8 0 0 0 4.6 15a1.8 1.8 0 0 0-.33-1 1.8 1.8 0 0 0-1.51-.82H2.5a2 2 0 1 1 0-4h.26A1.8 1.8 0 0 0 4.6 7a1.8 1.8 0 0 0-.36-1.98l-.06-.06A2 2 0 1 1 7.01 2.13l.06.06A1.8 1.8 0 0 0 9 4.6c.34 0 .67-.11 1-.33.46-.31.77-.82.82-1.38V2.5a2 2 0 1 1 4 0v.26c.05.56.36 1.07.82 1.38.33.22.66.33 1 .33a1.8 1.8 0 0 0 1.98-.36l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.8 1.8 0 0 0 19.4 9c0 .34.11.67.33 1 .31.46.82.77 1.38.82h.39a2 2 0 1 1 0 4h-.39c-.56.05-1.07.36-1.38.82-.22.33-.33.66-.33 1z" stroke="currentColor" strokeWidth="1.5" fill="none" /></svg>,
   Close: (p: React.SVGProps<SVGSVGElement>) => <svg viewBox="0 0 24 24" aria-hidden="true" {...p}><path d="M6 6l12 12M6 18L18 6" stroke="currentColor" strokeWidth="2" /></svg>,
   Logo: (p: React.SVGProps<SVGSVGElement>) => <svg viewBox="0 0 24 24" aria-hidden="true" {...p}><path d="M4 7h16M7 12h10M10 17h4" stroke="currentColor" strokeWidth="2" fill="none" /></svg>,
   Chat: (p: React.SVGProps<SVGSVGElement>) => <svg viewBox="0 0 24 24" aria-hidden="true" {...p}><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7A8.4 8.4 0 0 1 4 11.5 8.5 8.5 0 0 1 12.5 3 8.5 8.5 0 0 1 21 11.5Z" stroke="currentColor" strokeWidth="2" fill="none" /></svg>,
@@ -764,7 +768,7 @@ const PmIcons = {
 
 export function ProjectDashboard({
   title = "Portfolio", user = { name: "You", avatarUrl: "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=96&q=80&auto=format&fit=crop" },
-  sidebarLinks = [{ id: "home", label: "Home", active: true },{ id: "charts", label: "Charts" },{ id: "calendar", label: "Calendar" },{ id: "settings", label: "Settings" }],
+  sidebarLinks = [{ id: "home", label: "Home", active: true }, { id: "charts", label: "Charts" }, { id: "calendar", label: "Calendar" }, { id: "settings", label: "Settings" }],
   stats, projects, messages = [], view, defaultView = "grid", onViewChange, searchQuery, defaultSearchQuery = "", onSearchQueryChange,
   showSearch = true, searchPlaceholder = "Search", messagesOpen, defaultMessagesOpen = false, onMessagesOpenChange,
   sortBy, defaultSortBy = "date", sortDir, defaultSortDir = "desc", onSortChange, statusFilter, defaultStatusFilter = "all", onStatusFilterChange,
@@ -774,7 +778,7 @@ export function ProjectDashboard({
   persistKey, className = "", loading = false, emptyProjectsLabel = "No projects match your search.", emptyMessagesLabel = "No messages yet.",
 }: ProjectDashboardProps) {
   const lsKey = persistKey ? (k: string) => `pd:${persistKey}:${k}` : null;
-  const [internalView, setInternalView] = useState<"grid"|"list">(lsKey ? readLS(lsKey("view"), defaultView) : defaultView);
+  const [internalView, setInternalView] = useState<"grid" | "list">(lsKey ? readLS(lsKey("view"), defaultView) : defaultView);
   const viewMode = view ?? internalView;
   const [internalQuery, setInternalQuery] = useState(lsKey ? readLS(lsKey("query"), defaultSearchQuery) : defaultSearchQuery);
   const query = searchQuery ?? internalQuery;
@@ -783,20 +787,20 @@ export function ProjectDashboard({
   const [internalSortBy, setInternalSortBy] = useState<SortBy>(lsKey ? readLS(lsKey("sortBy"), defaultSortBy) : defaultSortBy);
   const [internalSortDir, setInternalSortDir] = useState<SortDir>(lsKey ? readLS(lsKey("sortDir"), defaultSortDir) : defaultSortDir);
   const activeSortBy = sortBy ?? internalSortBy; const activeSortDir = sortDir ?? internalSortDir;
-  const [internalStatusFilter, setInternalStatusFilter] = useState<ProjectStatus|"all">(lsKey ? readLS(lsKey("statusFilter"), defaultStatusFilter) : defaultStatusFilter);
+  const [internalStatusFilter, setInternalStatusFilter] = useState<ProjectStatus | "all">(lsKey ? readLS(lsKey("statusFilter"), defaultStatusFilter) : defaultStatusFilter);
   const activeStatusFilter = statusFilter ?? internalStatusFilter;
   const [page, setPage] = useState(lsKey ? readLS(lsKey("page"), initialPage) : initialPage);
   const [localProjects, setLocalProjects] = useState<Project[]>(projects);
   useEffect(() => { if (onProjectUpdate || onProjectsReorder) return; setLocalProjects(projects); }, [projects, onProjectUpdate, onProjectsReorder]);
   const dataProjects = onProjectUpdate || onProjectsReorder ? projects : localProjects;
   const searchInputId = useId(); const statusSelectId = useId();
-  const computedStats: Stat[] = useMemo(() => { if (stats) return stats; const total = dataProjects.length; const byStatus = dataProjects.reduce((acc, p) => { acc[p.status ?? "inProgress"]++; return acc; }, { inProgress: 0, upcoming: 0, completed: 0, paused: 0 } as Record<ProjectStatus, number>); return [{ id: "inProgress", label: "In Progress", value: byStatus.inProgress },{ id: "upcoming", label: "Upcoming", value: byStatus.upcoming },{ id: "completed", label: "Completed", value: byStatus.completed },{ id: "total", label: "Total Projects", value: total }]; }, [stats, dataProjects]);
-  const orderMap = useMemo(() => { const map = new Map<string,number>(); dataProjects.forEach((p, i) => map.set(p.id, i)); return map; }, [dataProjects]);
+  const computedStats: Stat[] = useMemo(() => { if (stats) return stats; const total = dataProjects.length; const byStatus = dataProjects.reduce((acc, p) => { acc[p.status ?? "inProgress"]++; return acc; }, { inProgress: 0, upcoming: 0, completed: 0, paused: 0 } as Record<ProjectStatus, number>); return [{ id: "inProgress", label: "In Progress", value: byStatus.inProgress }, { id: "upcoming", label: "Upcoming", value: byStatus.upcoming }, { id: "completed", label: "Completed", value: byStatus.completed }, { id: "total", label: "Total Projects", value: total }]; }, [stats, dataProjects]);
+  const orderMap = useMemo(() => { const map = new Map<string, number>(); dataProjects.forEach((p, i) => map.set(p.id, i)); return map; }, [dataProjects]);
   const preparedProjects = useMemo(() => {
     const q = query.trim().toLowerCase(); let list = dataProjects.slice();
     if (activeStatusFilter !== "all") list = list.filter((p) => (p.status ?? "inProgress") === activeStatusFilter);
     if (q) list = list.filter((p) => p.name.toLowerCase().includes(q) || (p.subtitle?.toLowerCase().includes(q) ?? false));
-    list.sort((a, b) => { let cmp = 0; switch (activeSortBy) { case "manual": cmp = (orderMap.get(a.id)! - orderMap.get(b.id)!); break; case "date": cmp = parseDateLike(a.date) - parseDateLike(b.date); break; case "name": cmp = a.name.localeCompare(b.name); break; case "progress": cmp = (a.progress??0)-(b.progress??0); break; } return activeSortBy === "manual" ? cmp : activeSortDir === "asc" ? cmp : -cmp; });
+    list.sort((a, b) => { let cmp = 0; switch (activeSortBy) { case "manual": cmp = (orderMap.get(a.id)! - orderMap.get(b.id)!); break; case "date": cmp = parseDateLike(a.date) - parseDateLike(b.date); break; case "name": cmp = a.name.localeCompare(b.name); break; case "progress": cmp = (a.progress ?? 0) - (b.progress ?? 0); break; } return activeSortBy === "manual" ? cmp : activeSortDir === "asc" ? cmp : -cmp; });
     return list;
   }, [dataProjects, query, activeSortBy, activeSortDir, activeStatusFilter, orderMap]);
   const totalPages = virtualizeList ? 1 : Math.max(1, Math.ceil(preparedProjects.length / pageSize));
@@ -808,11 +812,11 @@ export function ProjectDashboard({
   const applyTheme = useCallback((mode: ThemeMode) => { const root = document.documentElement; const prefersDark = window.matchMedia?.("(prefers-color-scheme: dark)")?.matches; root.classList.toggle("dark", mode === "dark" || (mode === "system" && prefersDark)); }, []);
   useEffect(() => { applyTheme(activeTheme); if (lsKey) writeLS(lsKey("theme"), activeTheme); }, [activeTheme, applyTheme, lsKey]);
   const toggleTheme = () => { if (onToggleTheme) return onToggleTheme(); const next: ThemeMode = activeTheme === "dark" ? "light" : activeTheme === "light" ? "system" : "dark"; if (theme === undefined) setInternalTheme(next); onThemeChange?.(next); };
-  const [editingId, setEditingId] = useState<string|null>(null); const [editDraft, setEditDraft] = useState<Project|null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null); const [editDraft, setEditDraft] = useState<Project | null>(null);
   const [createOpen, setCreateOpen] = useState(false); const [createDraft, setCreateDraft] = useState<Project>({ id: "", name: "", subtitle: "", date: "", progress: 0, status: "inProgress", accentColor: "#6366f1", participants: [] });
-  const [detailProject, setDetailProject] = useState<Project|null>(null); const [dragId, setDragId] = useState<string|null>(null);
+  const [detailProject, setDetailProject] = useState<Project | null>(null); const [dragId, setDragId] = useState<string | null>(null);
   const [reorderMode, setReorderMode] = useState(false); const [liveMsg, setLiveMsg] = useState("");
-  const scrollRef = useRef<HTMLDivElement|null>(null); const messagesPanelRef = useRef<HTMLDivElement|null>(null);
+  const scrollRef = useRef<HTMLDivElement | null>(null); const messagesPanelRef = useRef<HTMLDivElement | null>(null);
   const [scrollTop2, setScrollTop2] = useState(0);
   const onScroll = useCallback(() => { setScrollTop2(scrollRef.current?.scrollTop ?? 0); }, []);
   useEffect(() => { if (!virtualizeList) return; const el = scrollRef.current; if (!el) return; el.addEventListener("scroll", onScroll, { passive: true }); return () => el.removeEventListener("scroll", onScroll); }, [virtualizeList, onScroll]);
@@ -821,8 +825,8 @@ export function ProjectDashboard({
   const endI = virtualizeList && viewMode === "list" ? Math.min(pagedProjects.length, Math.ceil((scrollTop2 + viewportH) / itemH) + overscan2) : pagedProjects.length;
   const visibleProjects = virtualizeList && viewMode === "list" ? pagedProjects.slice(startI, endI) : pagedProjects;
   const before2 = startI * itemH; const after2 = Math.max(0, (pagedProjects.length - endI) * itemH);
-  const [localStarred, setLocalStarred] = useState<Record<string,boolean>>({});
-  useEffect(() => { const seed: Record<string,boolean> = {}; messages.forEach((m) => (seed[m.id] = !!m.starred)); setLocalStarred(seed); }, [messages]);
+  const [localStarred, setLocalStarred] = useState<Record<string, boolean>>({});
+  useEffect(() => { const seed: Record<string, boolean> = {}; messages.forEach((m) => (seed[m.id] = !!m.starred)); setLocalStarred(seed); }, [messages]);
   const isStarred = (m: Message) => m.starred ?? localStarred[m.id] ?? false;
   const toggleStar = (m: Message) => { const next = !isStarred(m); if (onMessageStarChange) { onMessageStarChange(m.id, next); } else { setLocalStarred((s) => ({ ...s, [m.id]: next })); } };
   useEffect(() => { if (lsKey) writeLS(lsKey("view"), viewMode); }, [lsKey, viewMode]);
@@ -834,10 +838,10 @@ export function ProjectDashboard({
   useEffect(() => { const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") { if (isMessagesOpen) setIsMessagesOpen2(false); if (reorderMode) setReorderMode(false); } }; window.addEventListener("keydown", onKey); return () => window.removeEventListener("keydown", onKey); }, [isMessagesOpen, reorderMode]);
   useEffect(() => { if (!isMessagesOpen) return; const root = messagesPanelRef.current; if (!root) return; const focusables = root.querySelectorAll<HTMLElement>('button,[href],input,select,textarea,[tabindex]:not([tabindex="-1"])'); const first = focusables[0]; first?.focus(); const handleKeyDown = (e: KeyboardEvent) => { if (e.key !== "Tab" || !focusables.length) return; const last = focusables[focusables.length - 1]; if (e.shiftKey) { if (document.activeElement === first) { (last as HTMLElement).focus(); e.preventDefault(); } } else { if (document.activeElement === last) { (first as HTMLElement).focus(); e.preventDefault(); } } }; root.addEventListener("keydown", handleKeyDown); return () => root.removeEventListener("keydown", handleKeyDown); }, [isMessagesOpen]);
   const setIsMessagesOpen2 = (open: boolean) => { if (messagesOpen === undefined) setInternalMsgOpen(open); onMessagesOpenChange?.(open); };
-  const setView = (next: "grid"|"list") => { if (view === undefined) setInternalView(next); onViewChange?.(next); };
+  const setView = (next: "grid" | "list") => { if (view === undefined) setInternalView(next); onViewChange?.(next); };
   const setSearch = (q: string) => { if (searchQuery === undefined) setInternalQuery(q); onSearchQueryChange?.(q); };
   const setSort = (by: SortBy, dir: SortDir) => { if (sortBy === undefined) setInternalSortBy(by); if (sortDir === undefined) setInternalSortDir(dir); onSortChange?.(by, dir); };
-  const setStatusFilter2 = (status: ProjectStatus|"all") => { if (statusFilter === undefined) setInternalStatusFilter(status); onStatusFilterChange?.(status); };
+  const setStatusFilter2 = (status: ProjectStatus | "all") => { if (statusFilter === undefined) setInternalStatusFilter(status); onStatusFilterChange?.(status); };
   const goToPage = (p: number) => { setPage(p); onPageChange?.(p); };
   const startEdit = (p: Project) => { setEditingId(p.id); setEditDraft({ ...p }); };
   const cancelEdit = () => { setEditingId(null); setEditDraft(null); };
@@ -886,7 +890,7 @@ export function ProjectDashboard({
         {/* Sidebar */}
         <aside className={cn("hidden sm:flex flex-col items-center border-r border-slate-200 dark:border-slate-700", spacing.page.sidebar, spacing.gap.sm)}>
           {sidebarLinks.map((l) => (
-            <a key={l.id} href={l.href||"#"} className={cn("group relative size-11 inline-flex items-center justify-center rounded-lg transition-all ring-1 ring-slate-200 dark:ring-slate-700 overflow-hidden", l.active ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900" : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700")} aria-current={l.active?"page":undefined} title={l.label}>
+            <a key={l.id} href={l.href || "#"} className={cn("group relative size-11 inline-flex items-center justify-center rounded-lg transition-all ring-1 ring-slate-200 dark:ring-slate-700 overflow-hidden", l.active ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900" : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700")} aria-current={l.active ? "page" : undefined} title={l.label}>
               <GlowingBorder spread={20} borderWidth={1} />
               {!l.active && <NeonEdges />}
               {l.icon ?? getNavIcon(l.id)}<span className="sr-only">{l.label}</span>
@@ -906,7 +910,7 @@ export function ProjectDashboard({
               ))}
             </div>
             <div className={cn("flex items-center", spacing.gap.xs)}>
-              <select id={statusSelectId} value={activeStatusFilter} onChange={(e) => setStatusFilter2(e.target.value as ProjectStatus|"all")} className={cn("group relative rounded-lg ring-1 ring-slate-200 dark:ring-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200", spacing.button.sm)}>
+              <select id={statusSelectId} value={activeStatusFilter} onChange={(e) => setStatusFilter2(e.target.value as ProjectStatus | "all")} className={cn("group relative rounded-lg ring-1 ring-slate-200 dark:ring-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200", spacing.button.sm)}>
                 <option value="all">All</option><option value="inProgress">In progress</option><option value="upcoming">Upcoming</option><option value="completed">Completed</option><option value="paused">Paused</option>
               </select>
               <select value={activeSortBy} onChange={(e) => setSort(e.target.value as SortBy, activeSortDir)} className={cn("rounded-lg ring-1 ring-slate-200 dark:ring-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200", spacing.button.sm)}>
@@ -915,7 +919,7 @@ export function ProjectDashboard({
               {activeSortBy !== "manual" && <button className={cn(pBtn("p-2"))} aria-label={`Sort direction: ${activeSortDir}`} onClick={() => setSort(activeSortBy, activeSortDir === "asc" ? "desc" : "asc")}><NeonEdges /><PmIcons.Arrow className={cn("size-4", activeSortDir === "asc" && "rotate-180")} /></button>}
               <button className={cn("p-2 rounded-lg ring-1 transition-colors overflow-hidden", reorderMode ? "bg-indigo-100 dark:bg-indigo-900/50 ring-indigo-300 dark:ring-indigo-700" : "ring-slate-200 dark:ring-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700")} title="Reorder" aria-pressed={reorderMode} onClick={() => { setReorderMode(!reorderMode); if (!reorderMode && !canReorder) announce("Switch to Manual sort, clear search, and show All to enable reordering."); else announce(reorderMode ? "Reorder mode off." : "Reorder mode on."); }} disabled={!canReorder}>⇅</button>
               <div className="inline-flex rounded-lg ring-1 ring-slate-200 dark:ring-slate-700">
-                {(["list","grid"] as const).map((v) => (
+                {(["list", "grid"] as const).map((v) => (
                   <button key={v} onClick={() => setView(v)} className={cn("group relative p-2 transition-colors overflow-hidden", v === "list" ? "rounded-l-lg" : "rounded-r-lg", viewMode === v ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900" : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700")} title={`${v} view`} aria-pressed={viewMode === v}>
                     <NeonEdges />
                     {v === "list" ? <PmIcons.List className="size-5" /> : <PmIcons.Grid className="size-5" />}
@@ -955,8 +959,8 @@ export function ProjectDashboard({
                     </div>
                   ) : (
                     <form className={cn("relative mt-3 grid gap-2", viewMode === "list" ? "w-full grid-cols-2" : "grid-cols-1")} onSubmit={(e) => { e.preventDefault(); saveEdit(); }}>
-                      <input className={cn("rounded-lg ring-1 ring-slate-200 dark:ring-slate-700 bg-white dark:bg-slate-900/40", spacing.button.sm)} value={editDraft?.name??""} onChange={(e) => setEditDraft((d) => ({ ...(d as Project), name: e.target.value }))} placeholder="Project name" required />
-                      <input className={cn("rounded-lg ring-1 ring-slate-200 dark:ring-slate-700 bg-white dark:bg-slate-900/40", spacing.button.sm)} value={editDraft?.subtitle??""} onChange={(e) => setEditDraft((d) => ({ ...(d as Project), subtitle: e.target.value }))} placeholder="Subtitle" />
+                      <input className={cn("rounded-lg ring-1 ring-slate-200 dark:ring-slate-700 bg-white dark:bg-slate-900/40", spacing.button.sm)} value={editDraft?.name ?? ""} onChange={(e) => setEditDraft((d) => ({ ...(d as Project), name: e.target.value }))} placeholder="Project name" required />
+                      <input className={cn("rounded-lg ring-1 ring-slate-200 dark:ring-slate-700 bg-white dark:bg-slate-900/40", spacing.button.sm)} value={editDraft?.subtitle ?? ""} onChange={(e) => setEditDraft((d) => ({ ...(d as Project), subtitle: e.target.value }))} placeholder="Subtitle" />
                       <div className={cn("col-span-full flex items-center", spacing.gap.xs, "mt-2")}>
                         <button type="submit" className={cn("group relative rounded-lg bg-indigo-600 text-white hover:bg-indigo-500 overflow-hidden", spacing.button.sm)}><NeonEdges color="violet" />Save</button>
                         <button type="button" onClick={cancelEdit} className={cn("rounded-lg ring-1 ring-slate-300 dark:ring-slate-700", spacing.button.sm)}>Cancel</button>
@@ -965,14 +969,14 @@ export function ProjectDashboard({
                   )}
                   {!isEditing && (
                     <div className={cn("relative mt-4", viewMode === "list" ? "w-48" : "w-full")}>
-                      <div className="flex items-center justify-between mb-1"><span className="text-xs font-medium text-slate-600 dark:text-slate-300">Progress</span><span className="text-xs text-slate-500 dark:text-slate-400">{p.progress??0}%</span></div>
-                      <div className="h-2 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden"><div className="h-2 rounded-full transition-all duration-300" style={{ width: `${Math.min(Math.max(p.progress??0,0),100)}%`, backgroundColor: accent }} /></div>
+                      <div className="flex items-center justify-between mb-1"><span className="text-xs font-medium text-slate-600 dark:text-slate-300">Progress</span><span className="text-xs text-slate-500 dark:text-slate-400">{p.progress ?? 0}%</span></div>
+                      <div className="h-2 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden"><div className="h-2 rounded-full transition-all duration-300" style={{ width: `${Math.min(Math.max(p.progress ?? 0, 0), 100)}%`, backgroundColor: accent }} /></div>
                     </div>
                   )}
                   {!isEditing && (
                     <div className={cn("relative mt-4 flex items-center justify-between", viewMode === "list" ? "w-full" : "")}>
                       <div className="flex -space-x-2">
-                        {(p.participants??[]).slice(0,3).map((url, i) => <img key={i} src={url} alt="" className="size-8 rounded-full ring-2 ring-white dark:ring-slate-800 object-cover" />)}
+                        {(p.participants ?? []).slice(0, 3).map((url, i) => <img key={i} src={url} alt="" className="size-8 rounded-full ring-2 ring-white dark:ring-slate-800 object-cover" />)}
                         <button className="size-8 inline-flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-700 ring-2 ring-white dark:ring-slate-800 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors" style={{ color: accent }} onClick={(e) => { e.stopPropagation(); startEdit(p); }} disabled={reorderMode}><PmIcons.Plus className="size-3" /></button>
                       </div>
                       <div className={cn("flex items-center", spacing.gap.xs)}>
@@ -991,8 +995,8 @@ export function ProjectDashboard({
             <div className={cn("flex items-center justify-between mt-6 pt-4 border-t border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300")}>
               <span>Page {currentPage} of {totalPages}</span>
               <div className={cn("inline-flex items-center", spacing.gap.xs)}>
-                <button className={cn(pBtn("disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"), spacing.button.sm)} onClick={() => goToPage(currentPage-1)} disabled={currentPage<=1}><NeonEdges />Previous</button>
-                <button className={cn(pBtn("disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"), spacing.button.sm)} onClick={() => goToPage(currentPage+1)} disabled={currentPage>=totalPages}><NeonEdges />Next</button>
+                <button className={cn(pBtn("disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"), spacing.button.sm)} onClick={() => goToPage(currentPage - 1)} disabled={currentPage <= 1}><NeonEdges />Previous</button>
+                <button className={cn(pBtn("disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"), spacing.button.sm)} onClick={() => goToPage(currentPage + 1)} disabled={currentPage >= totalPages}><NeonEdges />Next</button>
               </div>
             </div>
           )}
@@ -1030,7 +1034,7 @@ export function ProjectDashboard({
       {allowCreate && createOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Create project">
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setCreateOpen(false)} />
-          <div className={cn("group relative w-full max-w-md rounded-xl bg-white dark:bg-slate-900 ring-1 ring-slate-200 dark:ring-slate-700 shadow-xl overflow-hidden", spacing.card.base)}>
+          <div className={cn("group relative w-full  rounded-xl bg-white dark:bg-slate-900 ring-1 ring-slate-200 dark:ring-slate-700 shadow-xl overflow-hidden", spacing.card.base)}>
             <GlowingBorder spread={60} borderWidth={1} />
             <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">New Project</h2>
             <form className="space-y-3" onSubmit={submitCreate}>
@@ -1040,7 +1044,7 @@ export function ProjectDashboard({
               <select className={cn("w-full rounded-lg ring-1 ring-slate-200 dark:ring-slate-700 bg-white dark:bg-slate-800", spacing.button.sm)} value={createDraft.status} onChange={(e) => setCreateDraft((d) => ({ ...d, status: e.target.value as ProjectStatus }))}>
                 <option value="inProgress">In progress</option><option value="upcoming">Upcoming</option><option value="completed">Completed</option><option value="paused">Paused</option>
               </select>
-              <label className="block"><span className="text-sm text-slate-600 dark:text-slate-300 mb-1 block">Progress: {createDraft.progress??0}%</span><input type="range" min={0} max={100} className="w-full" value={createDraft.progress??0} onChange={(e) => setCreateDraft((d) => ({ ...d, progress: Number(e.target.value) }))} /></label>
+              <label className="block"><span className="text-sm text-slate-600 dark:text-slate-300 mb-1 block">Progress: {createDraft.progress ?? 0}%</span><input type="range" min={0} max={100} className="w-full" value={createDraft.progress ?? 0} onChange={(e) => setCreateDraft((d) => ({ ...d, progress: Number(e.target.value) }))} /></label>
               <div className={cn("flex items-center pt-4", spacing.gap.xs)}>
                 <button className={cn("group relative rounded-lg bg-indigo-600 text-white hover:bg-indigo-500 transition-colors overflow-hidden", spacing.button.md)} type="submit"><NeonEdges color="violet" />Create Project</button>
                 <button type="button" className={cn("rounded-lg ring-1 ring-slate-300 dark:ring-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors", spacing.button.md)} onClick={() => setCreateOpen(false)}>Cancel</button>
@@ -1058,15 +1062,15 @@ export function ProjectDashboard({
             <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{detailProject.name}</h2>
             {detailProject.subtitle && <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{detailProject.subtitle}</p>}
             <div className="mt-6 space-y-3">
-              {[{ label: "Date", value: detailProject.date || "Not set" },{ label: "Status", value: detailProject.status || "In progress" }].map(({ label, value }) => (
+              {[{ label: "Date", value: detailProject.date || "Not set" }, { label: "Status", value: detailProject.status || "In progress" }].map(({ label, value }) => (
                 <div key={label} className="flex items-center justify-between py-2 border-b border-slate-200 dark:border-slate-700">
                   <span className="text-sm text-slate-600 dark:text-slate-300">{label}</span>
                   <span className="text-sm font-medium text-slate-900 dark:text-slate-100">{value}</span>
                 </div>
               ))}
               <div className="py-2 border-b border-slate-200 dark:border-slate-700">
-                <div className="flex items-center justify-between mb-2"><span className="text-sm text-slate-600 dark:text-slate-300">Progress</span><span className="text-sm font-medium text-slate-900 dark:text-slate-100">{detailProject.progress??0}%</span></div>
-                <div className="h-2 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden"><div className="h-2 rounded-full transition-all" style={{ width: `${detailProject.progress??0}%`, backgroundColor: detailProject.accentColor||"#6366f1" }} /></div>
+                <div className="flex items-center justify-between mb-2"><span className="text-sm text-slate-600 dark:text-slate-300">Progress</span><span className="text-sm font-medium text-slate-900 dark:text-slate-100">{detailProject.progress ?? 0}%</span></div>
+                <div className="h-2 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden"><div className="h-2 rounded-full transition-all" style={{ width: `${detailProject.progress ?? 0}%`, backgroundColor: detailProject.accentColor || "#6366f1" }} /></div>
               </div>
               {detailProject.participants && detailProject.participants.length > 0 && (
                 <div className="py-2"><span className="text-sm text-slate-600 dark:text-slate-300 block mb-2">Participants</span><div className="flex -space-x-2">{detailProject.participants.map((url, i) => <img key={i} src={url} alt="" className="size-10 rounded-full ring-2 ring-white dark:ring-slate-900 object-cover" />)}</div></div>
@@ -1133,10 +1137,10 @@ const PASSWORD_REQUIREMENTS = [
   { regex: /[A-Z]/, text: "At least 1 uppercase letter" },
   { regex: /[!-\/:-@[-`{-~]/, text: "At least 1 special characters" },
 ] as const;
-type StrengthScore = 0|1|2|3|4|5;
+type StrengthScore = 0 | 1 | 2 | 3 | 4 | 5;
 const STRENGTH_CONFIG = {
-  colors: { 0:"bg-border", 1:"bg-red-500", 2:"bg-orange-500", 3:"bg-amber-500", 4:"bg-amber-700", 5:"bg-emerald-500" } satisfies Record<StrengthScore,string>,
-  texts: { 0:"Enter a password", 1:"Weak password", 2:"Medium password!", 3:"Strong password!!", 4:"Very Strong password!!!" } satisfies Record<Exclude<StrengthScore,5>,string>,
+  colors: { 0: "bg-border", 1: "bg-red-500", 2: "bg-orange-500", 3: "bg-amber-500", 4: "bg-amber-700", 5: "bg-emerald-500" } satisfies Record<StrengthScore, string>,
+  texts: { 0: "Enter a password", 1: "Weak password", 2: "Medium password!", 3: "Strong password!!", 4: "Very Strong password!!!" } satisfies Record<Exclude<StrengthScore, 5>, string>,
 };
 
 export function PasswordInput() {
@@ -1195,7 +1199,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 type Product = { id: string; name: string; category: string; price: number; stock: number; brand: string; model: string; weight: string; color: string; sku: string; };
-const generateDummyData = (): Product[] => Array.from({ length: 40 }, (_, i) => ({ id: `P-${i+1}`, name: `Product ${i+1}`, category: ["Electronics","Clothing","Books","Home"][i%4], price: parseFloat((Math.random()*500).toFixed(2)), stock: Math.floor(Math.random()*100), brand: ["Sony","Samsung","Apple","Dell"][i%4], model: `Model-${1000+i}`, weight: `${Math.floor(Math.random()*5)+1} kg`, color: ["Black","White","Gray"][i%3], sku: `SKU-${Math.floor(100000+Math.random()*900000)}` }));
+const generateDummyData = (): Product[] => Array.from({ length: 40 }, (_, i) => ({ id: `P-${i + 1}`, name: `Product ${i + 1}`, category: ["Electronics", "Clothing", "Books", "Home"][i % 4], price: parseFloat((Math.random() * 500).toFixed(2)), stock: Math.floor(Math.random() * 100), brand: ["Sony", "Samsung", "Apple", "Dell"][i % 4], model: `Model-${1000 + i}`, weight: `${Math.floor(Math.random() * 5) + 1} kg`, color: ["Black", "White", "Gray"][i % 3], sku: `SKU-${Math.floor(100000 + Math.random() * 900000)}` }));
 const productColumns: ColumnDef<Product>[] = [
   { accessorKey: "id", header: "ID" }, { accessorKey: "name", header: "Name" }, { accessorKey: "category", header: "Category" },
   { accessorKey: "brand", header: "Brand" }, { accessorKey: "model", header: "Model" }, { accessorKey: "color", header: "Color" },
@@ -1262,11 +1266,11 @@ export function ProductTable() {
 // GlowingBorder on container.
 // ─────────────────────────────────────────────────────────────────────────────
 const contributors = [
-  { id:"1", name:"Aarav Mehta", email:"aarav@ruixen.dev", location:"Bangalore, India", status:"Active", balance:"₹45,000" },
-  { id:"2", name:"Elena Torres", email:"elena.t@ruixen.dev", location:"Barcelona, Spain", status:"Active", balance:"₹22,000" },
-  { id:"3", name:"Kenji Nakamura", email:"kenji.n@ruixen.dev", location:"Tokyo, Japan", status:"Inactive", balance:"₹0" },
-  { id:"4", name:"Leila Ahmed", email:"leila.a@ruixen.dev", location:"Cairo, Egypt", status:"Pending", balance:"₹10,000" },
-  { id:"5", name:"Ryan Smith", email:"ryan.s@ruixen.dev", location:"Toronto, Canada", status:"Active", balance:"₹31,500" },
+  { id: "1", name: "Aarav Mehta", email: "aarav@ruixen.dev", location: "Bangalore, India", status: "Active", balance: "₹45,000" },
+  { id: "2", name: "Elena Torres", email: "elena.t@ruixen.dev", location: "Barcelona, Spain", status: "Active", balance: "₹22,000" },
+  { id: "3", name: "Kenji Nakamura", email: "kenji.n@ruixen.dev", location: "Tokyo, Japan", status: "Inactive", balance: "₹0" },
+  { id: "4", name: "Leila Ahmed", email: "leila.a@ruixen.dev", location: "Cairo, Egypt", status: "Pending", balance: "₹10,000" },
+  { id: "5", name: "Ryan Smith", email: "ryan.s@ruixen.dev", location: "Toronto, Canada", status: "Active", balance: "₹31,500" },
 ];
 
 export function ContributorsOverviewTable() {
@@ -1277,7 +1281,7 @@ export function ContributorsOverviewTable() {
       <Table className="table-fixed">
         <TableHeader>
           <TableRow className="group relative"><NeonEdges />
-            {["Name","Email","Location","Status","Payout"].map((h, i) => <TableHead key={h} className={cn("", h==="Payout"&&"text-right", h==="Name"&&"w-[180px]")}>{h}</TableHead>)}
+            {["Name", "Email", "Location", "Status", "Payout"].map((h, i) => <TableHead key={h} className={cn("", h === "Payout" && "text-right", h === "Name" && "w-[180px]")}>{h}</TableHead>)}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -1336,7 +1340,7 @@ PopoverContent.displayName = PopoverPrimitive.Content.displayName;
 // ─────────────────────────────────────────────────────────────────────────────
 import { Loader as LoaderIcon } from "lucide-react";
 
-function SpinnerIcon({ size = "sm" }: { size?: "xs"|"sm"|"md" }) {
+function SpinnerIcon({ size = "sm" }: { size?: "xs" | "sm" | "md" }) {
   const s = size === "xs" ? "w-4 h-4" : size === "sm" ? "w-5 h-5" : "w-6 h-6";
   return <div aria-label="Loading..." role="status"><LoaderIcon className={cn("animate-spin stroke-foreground", s)} /></div>;
 }
@@ -1351,7 +1355,7 @@ const InfoIcon = () => (
 );
 
 interface ToastSaveProps extends React.HTMLAttributes<HTMLDivElement> {
-  state: "initial"|"loading"|"success"; onReset?: () => void; onSave?: () => void;
+  state: "initial" | "loading" | "success"; onReset?: () => void; onSave?: () => void;
   loadingText?: string; successText?: string; initialText?: string; resetText?: string; saveText?: string;
 }
 
@@ -1398,7 +1402,7 @@ const switchCva = cva("peer inline-flex shrink-0 cursor-pointer items-center rou
   defaultVariants: { variant: "primary", size: "default" },
 });
 
-function playHapticFeedback(type: "heavy"|"light"|"none") {
+function playHapticFeedback(type: "heavy" | "light" | "none") {
   if (type === "none" || typeof window === "undefined") return;
   try {
     const AudioContext = window.AudioContext || (window as any).webkitAudioContext; if (!AudioContext) return;
@@ -1407,12 +1411,12 @@ function playHapticFeedback(type: "heavy"|"light"|"none") {
     const now = ctx.currentTime;
     if (type === "heavy") { osc.type = "triangle"; osc.frequency.setValueAtTime(180, now); osc.frequency.exponentialRampToValueAtTime(40, now + 0.15); gain.gain.setValueAtTime(0.4, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12); osc.start(now); osc.stop(now + 0.15); }
     else { osc.type = "sine"; osc.frequency.setValueAtTime(800, now); gain.gain.setValueAtTime(0.15, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08); osc.start(now); osc.stop(now + 0.08); }
-  } catch {}
+  } catch { }
 }
 
 export interface MD3SwitchProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "size">, VariantProps<typeof switchCva> {
   onCheckedChange?: (checked: boolean) => void; showIcons?: boolean;
-  checkedIcon?: ReactNode; uncheckedIcon?: ReactNode; haptic?: "heavy"|"light"|"none";
+  checkedIcon?: ReactNode; uncheckedIcon?: ReactNode; haptic?: "heavy" | "light" | "none";
 }
 
 export const MD3Switch = forwardRef<HTMLInputElement, MD3SwitchProps>(({ className, size, variant, checked, defaultChecked, onCheckedChange, showIcons = false, checkedIcon, uncheckedIcon, haptic = "none", style, disabled, ...props }, ref) => {
@@ -1469,7 +1473,7 @@ export const TooltipContent = forwardRef<
 ));
 TooltipContent.displayName = TooltipPrimitive.Content.displayName;
 
-export type TooltipIconButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & VariantProps<typeof buttonVariants> & { tooltip: string; side?: "top"|"bottom"|"left"|"right"; };
+export type TooltipIconButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & VariantProps<typeof buttonVariants> & { tooltip: string; side?: "top" | "bottom" | "left" | "right"; };
 export const TooltipIconButton = forwardRef<HTMLButtonElement, TooltipIconButtonProps>(({ children, tooltip, side = "bottom", className, ...rest }, ref) => (
   <TooltipProvider>
     <Tooltip>
@@ -1495,7 +1499,7 @@ const orbitalVariants = cva("flex gap-2 items-center justify-center", {
   variants: { messagePlacement: { bottom: "flex-col", top: "flex-col-reverse", right: "flex-row", left: "flex-row-reverse" } },
   defaultVariants: { messagePlacement: "bottom" },
 });
-export interface OrbitalLoaderProps { message?: string; messagePlacement?: "top"|"bottom"|"left"|"right"; }
+export interface OrbitalLoaderProps { message?: string; messagePlacement?: "top" | "bottom" | "left" | "right"; }
 export function OrbitalLoader({ className, message, messagePlacement, ...props }: ComponentProps<"div"> & OrbitalLoaderProps) {
   return (
     <div className={cn(orbitalVariants({ messagePlacement }))}>

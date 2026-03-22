@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { animate } from "framer-motion";
+import React, { useState } from "react";
+import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useQuery } from "@tanstack/react-query";
+import api from "@/api";
 import { 
   Clock, 
   Calendar, 
@@ -24,185 +25,138 @@ import {
   MoreVertical,
   History
 } from "lucide-react";
+import { SecureOverlay } from "@/components/SecureOverlay";
+import { IconTooltip } from "@/components/shared/IconTooltip";
 
-// ─── DNA PRIMITIVES ──────────────────────────────────────────────────────────
-const SPRING = { type: "spring" as const, stiffness: 500, damping: 30, mass: 1 };
-const GLOW_GRADIENT = `radial-gradient(circle, #dd7bbb 10%, #dd7bbb00 20%), radial-gradient(circle at 40% 40%, #d79f1e 5%, #d79f1e00 15%), radial-gradient(circle at 60% 60%, #5a922c 10%, #5a922c00 20%), radial-gradient(circle at 40% 60%, #4c7894 10%, #4c789400 20%), repeating-conic-gradient(from 236.84deg at 50% 50%, #dd7bbb 0%, #d79f1e calc(25% / 5), #5a922c calc(50% / 5), #4c7894 calc(75% / 5), #dd7bbb calc(100% / 5))`;
-
-function useGlowingBorder(disabled = false) {
-  const containerRef = useRef<HTMLElement>(null);
-  const lastPosition = useRef({ x: 0, y: 0 });
-  const rafRef = useRef<number>(0);
-  const handleMove = useCallback((e?: MouseEvent | { x: number; y: number }) => {
-    if (!containerRef.current || disabled) return;
-    if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    rafRef.current = requestAnimationFrame(() => {
-      const el = containerRef.current; if (!el) return;
-      const { left, top, width, height } = el.getBoundingClientRect();
-      const mx = e?.x ?? lastPosition.current.x;
-      const my = e?.y ?? lastPosition.current.y;
-      if (e) lastPosition.current = { x: mx, y: my };
-      const center = [left + width * 0.5, top + height * 0.5];
-      const dist = Math.hypot(mx - center[0], my - center[1]);
-      if (dist < 0.5 * Math.min(width, height) * 0.01) { el.style.setProperty("--active", "0"); return; }
-      const isActive = mx > left && mx < left + width && my > top && my < top + height;
-      el.style.setProperty("--active", isActive ? "1" : "0");
-      if (!isActive) return;
-      const cur = parseFloat(el.style.getPropertyValue("--start")) || 0;
-      const target = (180 * Math.atan2(my - center[1], mx - center[0])) / Math.PI + 90;
-      const diff = ((target - cur + 180) % 360) - 180;
-      animate(cur, cur + diff, { duration: 2, ease: [0.16, 1, 0.3, 1], onUpdate: (v) => el.style.setProperty("--start", String(v)) });
-    });
-  }, [disabled]);
-  useEffect(() => {
-    if (disabled) return;
-    const onScroll = () => handleMove();
-    const onMove = (e: PointerEvent) => handleMove(e);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    document.body.addEventListener("pointermove", onMove, { passive: true });
-    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); window.removeEventListener("scroll", onScroll); document.body.removeEventListener("pointermove", onMove); };
-  }, [handleMove, disabled]);
-  return containerRef;
+interface Schedule {
+  id: string;
+  task: string;
+  schedule: string;
+  lastRun: string;
+  nextRun: string;
+  status: string;
+  target?: string;
 }
-
-function GlowingBorder({ spread = 30, borderWidth = 1 }: { spread?: number; borderWidth?: number }) {
-  return (
-    <div style={{ "--spread": spread, "--start": "0", "--active": "0", "--glowingeffect-border-width": `${borderWidth}px`, "--repeating-conic-gradient-times": "5", "--gradient": GLOW_GRADIENT } as React.CSSProperties}
-      className="pointer-events-none absolute inset-0 rounded-[inherit]">
-      <div className={cn("glow rounded-[inherit]", 'after:content-[""] after:rounded-[inherit] after:absolute after:inset-[calc(-1*var(--glowingeffect-border-width))]', "after:[border:var(--glowingeffect-border-width)_solid_transparent]", "after:[background:var(--gradient)] after:[background-attachment:fixed]", "after:opacity-[var(--active)] after:transition-opacity after:duration-300", "after:[mask-clip:padding-box,border-box] after:[mask-composite:intersect]", "after:[mask-image:linear-gradient(#0000,#0000),conic-gradient(from_calc((var(--start)-var(--spread))*1deg),#00000000_0deg,#fff,#00000000_calc(var(--spread)*2deg))]")} />
-    </div>
-  );
-}
-
-function NeonEdges({ active = false, color = "blue" }: { active?: boolean; color?: "blue" | "violet" | "green" | "rose" | "amber" }) {
-  const via = color === "violet" ? "via-violet-500" : color === "green" ? "via-green-400" : color === "rose" ? "via-rose-500" : color === "amber" ? "via-amber-500" : "via-blue-500";
-  return (<>
-    <span className={cn("pointer-events-none absolute h-px inset-x-0 top-0 bg-gradient-to-r w-3/4 mx-auto from-transparent to-transparent transition-all duration-500 ease-in-out", via, active ? "opacity-100" : "opacity-0 group-hover:opacity-100 group-focus-within:opacity-100")} />
-    <span className={cn("pointer-events-none absolute inset-x-0 h-px -bottom-px bg-gradient-to-r w-3/4 mx-auto from-transparent to-transparent transition-opacity duration-500 ease-in-out", via, active ? "opacity-30" : "opacity-0 group-hover:opacity-30 group-focus-within:opacity-30")} />
-  </>);
-}
-
-// ─── PAGE COMPONENT ──────────────────────────────────────────────────────────
-
-const SCHEDULES = [
-  { id: "JOB-402", name: "Daily Settlement Cleave", cron: "00 00 * * *", lastRun: "12h ago", nextRun: "11h from now", target: "TreasuryEngine", status: "Active" },
-  { id: "JOB-118", name: "Low Performance Pruning", cron: "0 0 * * 0", lastRun: "6d ago", nextRun: "1d from now", target: "SupplierNexus", status: "Active" },
-  { id: "JOB-882", name: "Hourly Catalog Sync", cron: "0 * * * *", lastRun: "45m ago", nextRun: "15m from now", target: "UnifiedSku", status: "Active" },
-  { id: "JOB-045", name: "Audit Ledger Backup", cron: "30 02 * * *", lastRun: "22h ago", nextRun: "2h from now", target: "ForensicDrive", status: "Active" },
-];
 
 export default function WorkflowSchedules() {
-  const glowRef = useGlowingBorder();
+  const { data: schedules = [], isLoading } = useQuery<Schedule[]>({
+    queryKey: ["workflow-schedules"],
+    queryFn: async () => {
+      const resp = await api.get("/operator/automation/schedules");
+      return resp.data;
+    }
+  });
 
   return (
-    <div className="min-h-screen bg-transparent p-4 sm:p-8 font-black italic">
-      <div className="max-w-7xl mx-auto">
-        <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12 mt-4 font-black italic uppercase">
-          <div className="space-y-1 text-slate-900 dark:text-white">
-            <h1 className="text-4xl md:text-5xl tracking-tighter flex items-center gap-3 italic">
-               Temporal <span className="text-indigo-500">Registry</span>
-            </h1>
-            <p className="text-slate-500 flex items-center gap-2 text-sm font-medium italic leading-none">
-               <Timer className="w-4 h-4 text-indigo-500" />
-               Scheduled micro-tasks and periodic system resonance
-            </p>
+    <SecureOverlay>
+    <div className="max-w-[1280px] mx-auto space-y-8 animate-in fade-in duration-1000 pb-20">
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-(--sp-border) pb-8">
+        <div className="space-y-2">
+          <h1 className="text-[28px] font-medium tracking-tight text-(--sp-text-0)">
+             Temporal <span className="text-emerald-500 font-semibold">registry</span>
+          </h1>
+          <div className="flex items-center gap-3">
+             <Timer className="w-5 h-5 text-emerald-500" />
+             <p className="text-(--sp-text-3) text-[13px] font-medium">
+                Scheduled micro-tasks and periodic system resonance protocol.
+             </p>
           </div>
-          
-          <button className="group relative px-10 py-5 rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[10px] uppercase tracking-widest hover:scale-[1.02] transition-all overflow-hidden shadow-xl">
-             Schedule Job
-             <NeonEdges color="violet" />
-          </button>
-        </header>
-
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-           {/* Job Register */}
-           <div className="lg:col-span-12">
-              <div className="bg-white dark:bg-slate-900 rounded-[3.5rem] border border-slate-100 dark:border-slate-800 shadow-xl p-12 group relative overflow-hidden font-black italic">
-                 <GlowingBorder spread={80} borderWidth={1} />
-                 
-                 <div className="flex flex-col md:flex-row md:items-center justify-between mb-12 relative z-10 gap-6">
-                    <h3 className="text-3xl tracking-tighter uppercase leading-none italic">Recurring Operations</h3>
-                    <div className="flex gap-4 p-2 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-800">
-                       <div className="flex items-center gap-2 px-6 py-2 bg-white dark:bg-slate-900 rounded-xl text-[10px] uppercase tracking-widest text-indigo-500">
-                          <Activity className="w-4 h-4" /> 24h Cycles
-                       </div>
-                    </div>
-                 </div>
-
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10">
-                    {SCHEDULES.map(job => (
-                      <div key={job.id} className="p-10 bg-slate-50 dark:bg-slate-800/40 rounded-[3.5rem] border border-transparent hover:border-indigo-200 dark:hover:border-indigo-900/40 transition-all group/row cursor-pointer shadow-sm">
-                         <div className="flex flex-col gap-10">
-                            <div className="flex items-start justify-between">
-                               <div className="space-y-4">
-                                  <div className="flex items-center gap-2 text-[9px] text-indigo-500 font-bold uppercase tracking-[0.3em]">{job.id}</div>
-                                  <h4 className="text-3xl tracking-tighter uppercase leading-none italic">{job.name}</h4>
-                                  <div className="flex items-center gap-3 text-slate-400">
-                                     <FileCode className="w-5 h-5 opacity-40" />
-                                     <span className="text-sm font-mono tracking-tighter lowercase">{job.cron}</span>
-                                  </div>
-                               </div>
-                               <button className="p-3 bg-white dark:bg-slate-900 rounded-2xl shadow-lg border border-slate-50 dark:border-slate-800 hover:scale-110 transition-transform">
-                                  <Pause className="w-5 h-5 text-indigo-500" />
-                               </button>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-8 pt-8 border-t border-slate-100 dark:border-slate-800/40">
-                               <div>
-                                  <div className="text-[9px] text-slate-400 uppercase tracking-widest mb-3 opacity-60">Last Execution</div>
-                                  <div className="text-xl italic leading-none">{job.lastRun}</div>
-                               </div>
-                               <div>
-                                  <div className="text-[9px] text-slate-400 uppercase tracking-widest mb-3 opacity-60">Next Cycle</div>
-                                  <div className="text-xl italic leading-none text-indigo-500">{job.nextRun}</div>
-                               </div>
-                            </div>
-
-                            <div className="flex items-center justify-between text-[10px] uppercase font-black tracking-widest italic pt-6">
-                               <div className="flex items-center gap-2">
-                                  <Database className="w-4 h-4 text-slate-300" />
-                                  Target: <span className="text-slate-500">{job.target}</span>
-                               </div>
-                               <div className="flex items-center gap-2">
-                                  <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-                                  Active
-                               </div>
-                            </div>
-                         </div>
-                      </div>
-                    ))}
-                 </div>
-              </div>
-           </div>
-
-           {/* Metrics Grid */}
-           <div className="lg:col-span-12 grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="bg-slate-900 rounded-[3rem] p-10 text-white shadow-3xl relative overflow-hidden group font-black italic uppercase">
-                 <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-[80px]" />
-                 <h3 className="text-[10px] tracking-[0.2em] opacity-40 mb-10 leading-none">Cluster Concurrency</h3>
-                 <div className="text-7xl tracking-tighter mb-4 italic">64</div>
-                 <div className="flex items-center gap-2 text-[10px] opacity-40 tracking-widest">
-                    <Zap className="w-4 h-4 text-indigo-500" /> Parallel Job capacity
-                 </div>
-              </div>
-
-              <div className="md:col-span-2 bg-indigo-600 rounded-[3rem] p-12 text-white shadow-3xl relative overflow-hidden group font-black italic uppercase">
-                 <div className="absolute -bottom-20 -right-20 w-80 h-80 bg-white/10 rounded-full blur-[80px]" />
-                 <h3 className="text-[10px] tracking-[0.2em] opacity-40 mb-12 leading-none">Job Resonance (24h)</h3>
-                 <div className="flex items-end justify-between h-32 gap-3">
-                    {[12, 18, 45, 30, 85, 40, 60, 95, 30, 45, 20, 15, 60, 55, 30, 10].map((h, i) => (
-                      <div key={i} className="flex-1 bg-white/20 rounded-t-sm group-hover:bg-white/40 transition-colors" style={{ height: `${h}%` }} />
-                    ))}
-                 </div>
-                 <div className="flex justify-between mt-6 text-[9px] opacity-40 tracking-widest">
-                    <span>00:00</span>
-                    <span>Synchronous Peaks</span>
-                    <span>23:59</span>
-                 </div>
-              </div>
-           </div>
         </div>
-      </div>
+        
+        <button className="h-9 px-4 bg-(--sp-cyan) text-white rounded-md text-[11px] font-bold flex items-center gap-2 hover:opacity-90 transition-all shadow-sm uppercase tracking-wider">
+           <Plus size={16} /> Schedule job node
+        </button>
+      </header>
+
+      {isLoading ? (
+        <div className="py-20 flex flex-col items-center justify-center space-y-4 opacity-40">
+          <RefreshCw className="w-10 h-10 text-emerald-500 animate-spin" />
+          <p className="tracking-wider text-[11px] font-bold uppercase text-(--sp-text-3)">Syncing temporal nodes...</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          {/* Job Register */}
+          <div className="lg:col-span-12">
+            <div className="bg-(--sp-bg-2) rounded-md border border-(--sp-border) shadow-sm overflow-hidden">
+               <div className="p-6 border-b border-(--sp-border) flex items-center justify-between">
+                  <h3 className="text-[18px] font-medium text-(--sp-text-0)">Recurring operations</h3>
+                  <div className="flex items-center gap-2 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 text-emerald-600 text-[10px] font-bold uppercase">
+                     <Activity size={12} className="animate-pulse" /> 24h resonance
+                  </div>
+               </div>
+
+               <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
+                 {schedules.map(job => (
+                   <div key={job?.id} className="p-8 bg-(--sp-bg-1) rounded-md border border-(--sp-border) hover:border-emerald-500/30 transition-all group/row shadow-sm flex flex-col gap-8">
+                     <div className="flex items-start justify-between">
+                       <div className="space-y-4 overflow-hidden">
+                         <div className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider opacity-60">{job?.id} Protocol</div>
+                         <h4 className="text-[20px] font-semibold tracking-tight text-(--sp-text-0) uppercase truncate">{job?.task}</h4>
+                         <div className="flex items-center gap-2 text-(--sp-text-3)">
+                           <FileCode size={16} className="text-emerald-500 opacity-60" />
+                           <span className="text-[12px] font-medium tracking-wider uppercase tabular-nums">{job?.schedule}</span>
+                         </div>
+                       </div>
+                       <button className="h-10 w-10 bg-white rounded-md shadow-sm border border-(--sp-border) hover:border-emerald-500/30 transition-all flex items-center justify-center text-emerald-600">
+                         <Pause size={20} />
+                       </button>
+                     </div>
+
+                     <div className="grid grid-cols-2 gap-6 pt-6 border-t border-(--sp-border)/50">
+                       <div>
+                         <div className="text-[10px] text-(--sp-text-3) uppercase tracking-wider mb-2 opacity-40">Last execution</div>
+                         <div className="text-[18px] font-semibold tabular-nums text-(--sp-text-1)">{job?.lastRun}</div>
+                       </div>
+                       <div>
+                         <div className="text-[10px] text-(--sp-text-3) uppercase tracking-wider mb-2 opacity-40">Next cycle</div>
+                         <div className="text-[18px] font-semibold tabular-nums text-emerald-600">{job?.nextRun}</div>
+                       </div>
+                     </div>
+
+                     <div className="flex items-center justify-between pt-6 mt-auto">
+                       <div className="flex items-center gap-2 opacity-60">
+                         <Database size={14} className="text-(--sp-text-3)" />
+                         <span className="text-[11px] text-(--sp-text-2) font-medium">Target: {job?.target || "SYSTEM_KERN"}</span>
+                       </div>
+                       <div className="flex items-center gap-2 px-2 py-0.5 rounded bg-emerald-50 border border-emerald-100 text-emerald-600 text-[10px] font-bold uppercase shadow-sm">
+                         <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-sm" />
+                         Active flux
+                       </div>
+                     </div>
+                   </div>
+                 ))}
+               </div>
+            </div>
+          </div>
+
+          {/* Metrics Grid */}
+          <div className="lg:col-span-12 grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="bg-slate-900 rounded-md p-8 text-white shadow-md relative overflow-hidden group border-b-4 border-emerald-500/20">
+               <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-2xl" />
+               <h3 className="text-[10px] font-bold uppercase tracking-wider opacity-40 mb-10 leading-none">Cluster concurrency alpha</h3>
+               <div className="text-[72px] font-semibold tracking-tighter mb-4 tabular-nums text-emerald-400">64</div>
+               <div className="flex items-center gap-2 text-[10px] font-bold opacity-40 tracking-wider uppercase">
+                  <Zap size={14} className="text-emerald-400 animate-pulse" /> Parallel job capacity
+               </div>
+            </div>
+
+            <div className="md:col-span-2 bg-(--sp-bg-2) rounded-md border border-(--sp-border) p-8 shadow-sm group relative overflow-hidden flex flex-col">
+               <h3 className="text-[11px] font-bold uppercase tracking-wider text-(--sp-text-3) mb-10 opacity-60">Job resonance index (24h)</h3>
+               <div className="flex items-end justify-between h-32 gap-1.5">
+                 {[12, 18, 45, 30, 85, 40, 60, 95, 30, 45, 20, 15, 60, 55, 30, 10].map((h, i) => (
+                   <div key={i} className="flex-1 bg-(--sp-bg-1) rounded-t-sm group-hover:bg-emerald-500/20 transition-all duration-700 shadow-sm" style={{ height: `${h}%` }} />
+                 ))}
+               </div>
+               <div className="flex justify-between mt-8 text-[9px] font-bold uppercase text-(--sp-text-3) tracking-wider opacity-40">
+                 <span>00:00 START</span>
+                 <span className="text-(--sp-text-1) opacity-80 decoration-emerald-500/30 underline underline-offset-4 decoration-2">Synchronous peaks detected</span>
+                 <span>23:59 EOD</span>
+               </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
+    </SecureOverlay>
   );
 }

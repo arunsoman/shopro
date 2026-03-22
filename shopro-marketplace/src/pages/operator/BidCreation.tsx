@@ -1,11 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { GlowingBorder } from "@/components/ui/neon-button";
-import { ArrowLeft, Gavel, Users, Settings, Package, ChevronRight, Info, Plus, Trash2, RefreshCw } from "lucide-react";
+import { ArrowLeft, Gavel, Users, Settings, Package, ChevronRight, Info, Plus, Trash2, RefreshCw, Database, Star, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import api from "@/api";
+import { SecureOverlay } from "@/components/SecureOverlay";
+import { IconTooltip } from "@/components/shared/IconTooltip";
 
 /**
  * OP-07 — Bid Event Creation
@@ -13,33 +16,62 @@ import { useNavigate } from "react-router-dom";
  * DNA: Stepper-based wizard, product tag cloud, supplier invitation list.
  */
 
-const STEPS = [
-  { id: 1, title: "Items & Specs", icon: Package },
-  { id: 2, title: "Bid Settings", icon: Settings },
-  { id: 3, title: "Invite Suppliers", icon: Users },
-];
+interface Product {
+  id: string;
+  name: string;
+  categoryName: string;
+  unit: string;
+}
 
-const MOCK_PRODUCT_MASTER = [
-  { id: "P-001", name: "Premium Avocado", category: "Produce", unit: "Case" },
-  { id: "P-002", name: "Organic Kale", category: "Produce", unit: "kg" },
-  { id: "P-003", name: "Whole Milk (1L)", category: "Dairy", unit: "Pack" },
-  { id: "P-004", name: "Imperial Basmati", category: "Grains", unit: "5kg Bag" },
-  { id: "P-005", name: "Fresh Salmon Fillet", category: "Seafood", unit: "kg" },
+interface SelectedItem {
+  id: string;
+  name: string;
+  qty: number;
+  unit: string;
+}
+
+const STEPS = [
+  { id: 1, title: "Items & spec", icon: Package },
+  { id: 2, title: "Bid matrix", icon: Settings },
+  { id: 3, title: "Invite nodes", icon: Users },
 ];
 
 export default function BidCreation() {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
-  const [selectedItems, setSelectedItems] = useState([
-    { id: "P-001", name: "Premium Avocado", qty: 24, unit: "Case" },
-    { id: "P-002", name: "Organic Kale", qty: 15, unit: "kg" },
-  ]);
+  const [selectedItems, setSelectedItems] = useState<SelectedItem[]>([]);
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
   const [deadline, setDeadline] = useState("");
-  const [isLaunching, setIsLaunching] = useState(false);
+  const [urgency, setUrgency] = useState("NORMAL");
 
-  const addItem = (product: typeof MOCK_PRODUCT_MASTER[0]) => {
+  const { data: products = [] } = useQuery<Product[]>({
+    queryKey: ["operator-products-minimal-bidding"],
+    queryFn: async () => {
+      const resp = await api.get("/operator/products");
+      return resp.data?.map((p: any) => ({
+        id: p?.id || "---",
+        name: p?.name || "Unknown Product",
+        categoryName: p?.categoryName || "General",
+        unit: p?.unit || "UNIT"
+      })) || [];
+    }
+  });
+
+  const launchMutation = useMutation({
+    mutationFn: async (data: any) => {
+      return api.post("/operator/bids", data);
+    },
+    onSuccess: (resp) => {
+      if (resp?.data?.id) {
+        navigate(`/operator/bids/${resp.data.id}`);
+      }
+    }
+  });
+
+  const addItem = (product: Product) => {
     if (selectedItems.find(item => item.id === product.id)) return;
-    setSelectedItems([...selectedItems, { ...product, qty: 10 }]);
+    setSelectedItems([...selectedItems, { id: product.id, name: product.name, qty: 10, unit: product.unit }]);
   };
 
   const removeItem = (id: string) => {
@@ -47,49 +79,65 @@ export default function BidCreation() {
   };
 
   const handleLaunch = () => {
-    setIsLaunching(true);
-    setTimeout(() => {
-      navigate("/operator/bids/BID-9901");
-    }, 2000);
+      launchMutation.mutate({
+          title: title || "New bid event node",
+          description: description,
+          deadline: deadline ? new Date(deadline).toISOString() : new Date(Date.now() + 86400000 * 3).toISOString(),
+          urgency: urgency,
+          items: selectedItems.map(si => ({
+              productName: si?.name,
+              quantity: si?.qty,
+              unit: si?.unit
+          }))
+      });
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-700">
+    <SecureOverlay>
+    <div className="max-w-[1280px] mx-auto space-y-8 animate-in fade-in duration-1000 pb-20">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="space-y-1">
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-(--sp-border) pb-8">
+        <div className="space-y-2">
           <button 
             onClick={() => navigate("/operator/po/inbox")}
-            className="flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-violet-500 transition-colors uppercase tracking-widest mb-2"
+            className="flex items-center gap-2 text-[11px] font-bold text-(--sp-text-3) hover:text-(--sp-cyan) transition-all uppercase tracking-wider opacity-60"
           >
-            <ArrowLeft size={14} /> Back to Dashboard
+            <ArrowLeft size={14} />
+            Back to hub matrix
           </button>
-          <h1 className="text-3xl font-bold tracking-tight">Launch Bid Event</h1>
-          <p className="text-slate-500 text-sm">Create a competitive RFQ for marketplace fulfillment.</p>
+          <h1 className="text-[28px] font-medium tracking-tight text-(--sp-text-0)">Launch bid event</h1>
+          <p className="text-(--sp-text-3) font-medium text-[13px] flex items-center gap-3">
+             <Gavel className="w-5 h-5 text-(--sp-cyan)" />
+             Create a competitive RFQ for marketplace fulfillment.
+          </p>
         </div>
         
-        {/* Step Indicator DNA */}
-        <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 p-2 rounded-2xl">
+        {/* Step Indicator */}
+        <div className="flex items-center gap-4 bg-(--sp-bg-1) p-2.5 rounded-md border border-(--sp-border) shadow-sm">
           {STEPS.map((step) => (
-            <div 
-              key={step.id}
-              className={cn(
-                "w-10 h-10 rounded-xl flex items-center justify-center transition-all",
-                currentStep === step.id 
-                  ? "bg-violet-600 text-white shadow-lg" 
-                  : currentStep > step.id 
-                    ? "bg-green-500/20 text-green-500" 
-                    : "text-slate-400"
-              )}
-            >
-              <step.icon size={18} />
+            <div key={step.id} className="flex items-center gap-2">
+              <div 
+                className={cn(
+                  "w-10 h-10 rounded-md flex items-center justify-center transition-all border shadow-sm",
+                  currentStep === step.id 
+                    ? "bg-(--sp-cyan) text-white border-(--sp-cyan)" 
+                    : currentStep > step.id 
+                      ? "bg-emerald-500 text-white border-emerald-400" 
+                      : "bg-(--sp-bg-2) text-(--sp-text-3) border-(--sp-border) opacity-40"
+                )}
+              >
+                <IconTooltip label={step.title}>
+                  <step.icon size={18} />
+                </IconTooltip>
+              </div>
+              {step.id < 3 && <div className="w-4 h-0.5 bg-(--sp-border)" />}
             </div>
           ))}
         </div>
-      </div>
+      </header>
 
-      {/* Wizard Content Container */}
-      <div className="bg-white dark:bg-slate-900/50 backdrop-blur-xl rounded-[2.5rem] ring-1 ring-slate-200 dark:ring-slate-800 shadow-sm p-8 min-h-[500px] flex flex-col">
+      {/* Wizard Content */}
+      <div className="bg-(--sp-bg-2) rounded-md border border-(--sp-border) shadow-sm p-10 min-h-[500px] flex flex-col">
         <AnimatePresence mode="wait">
           {currentStep === 1 && (
             <motion.div 
@@ -97,58 +145,73 @@ export default function BidCreation() {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              className="space-y-8 flex-1"
+              className="space-y-10 flex-1"
             >
               <div className="space-y-4">
-                <h2 className="text-xl font-bold">What are we bidding for?</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                   {selectedItems.map((item, i) => (
+                 <label className="text-[11px] font-bold text-(--sp-text-3) uppercase tracking-wider opacity-60">Event identifier</label>
+                 <input 
+                    type="text" 
+                    placeholder="e.g. Q2 Produce consolidation..."
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    className="w-full h-12 px-6 bg-(--sp-bg-1) rounded-md outline-none border border-(--sp-border) focus:border-(--sp-cyan)/50 transition-all text-[18px] font-semibold text-(--sp-text-0) shadow-inner placeholder:opacity-30"
+                 />
+              </div>
+
+              <div className="space-y-8">
+                <h2 className="text-[11px] font-bold text-(--sp-text-3) uppercase tracking-wider opacity-60 flex items-center gap-2">
+                    <Package className="text-(--sp-cyan) w-4 h-4" />
+                    Merchandise payload matrix
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                   {selectedItems?.map((item, i) => (
                      <motion.div 
                        layout
-                       key={item.id} 
-                       className="p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl ring-1 ring-slate-100 dark:ring-slate-700 flex items-center justify-between group"
+                       key={item?.id} 
+                       className="p-6 bg-(--sp-bg-1) rounded-md border border-(--sp-border) flex items-center justify-between group hover:border-(--sp-cyan)/30 transition-all shadow-sm"
                      >
-                       <div>
-                         <p className="text-sm font-bold">{item.name}</p>
-                         <div className="flex items-center gap-2 mt-1">
+                       <div className="min-w-0 flex-1 space-y-3">
+                         <p className="text-[14px] font-bold text-(--sp-text-0) truncate uppercase tracking-tight">{item?.name}</p>
+                         <div className="flex items-center gap-4">
                             <input 
                               type="number" 
-                              value={item.qty} 
+                              value={item?.qty} 
                               onChange={(e) => {
                                 const newItems = [...selectedItems];
                                 newItems[i].qty = parseInt(e.target.value) || 0;
                                 setSelectedItems(newItems);
                               }}
-                              className="w-12 bg-transparent text-[10px] font-black text-violet-500 outline-none"
+                              className="w-20 bg-(--sp-bg-2) px-3 py-1.5 rounded border border-(--sp-border) text-[13px] font-bold text-(--sp-cyan) outline-none shadow-inner"
                             />
-                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{item.unit}</p>
+                            <p className="text-[10px] text-(--sp-text-3) font-bold uppercase tracking-wider opacity-60">{item?.unit || "UNIT"}</p>
                          </div>
                        </div>
                        <button 
-                         onClick={() => removeItem(item.id)}
-                         className="text-slate-300 hover:text-rose-500 transition-colors"
+                         onClick={() => removeItem(item?.id)}
+                         className="w-10 h-10 rounded-md text-(--sp-text-3) hover:text-rose-500 hover:bg-rose-50 transition-all flex items-center justify-center border border-transparent hover:border-rose-100"
                         >
-                         <Trash2 size={16} />
+                          <Trash2 size={18} />
                        </button>
                      </motion.div>
                    ))}
                    
                    <div className="relative group/add">
-                      <button className="w-full p-4 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl text-slate-400 hover:text-violet-500 hover:border-violet-500/50 transition-all flex items-center justify-center gap-2">
-                          <Plus size={16} className="group-hover/add:scale-110 transition-transform" />
-                          <span className="text-xs font-bold uppercase tracking-widest">Add Item</span>
+                      <button className="w-full h-[104px] border border-dashed border-(--sp-border) rounded-md text-(--sp-text-3) hover:text-(--sp-cyan) hover:border-(--sp-cyan)/50 hover:bg-(--sp-bg-1) transition-all flex flex-col items-center justify-center gap-2 group/btn shadow-inner">
+                          <Plus size={24} className="group-hover/btn:scale-110 transition-transform" />
+                          <span className="text-[10px] font-bold uppercase tracking-wider opacity-60">Add merchandise</span>
                       </button>
                       
-                      {/* Quick Add Dropdown DNA */}
-                      <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl ring-1 ring-slate-200 dark:ring-slate-800 p-2 z-50 opacity-0 pointer-events-none group-hover/add:opacity-100 group-hover/add:pointer-events-auto transition-all scale-95 group-hover/add:scale-100">
-                        {MOCK_PRODUCT_MASTER.filter(p => !selectedItems.find(si => si.id === p.id)).map(product => (
+                      <div className="absolute top-full left-0 right-0 mt-3 bg-(--sp-bg-2) rounded-md shadow-xl border border-(--sp-border) p-4 z-50 opacity-0 pointer-events-none group-hover/add:opacity-100 group-hover/add:pointer-events-auto transition-all scale-95 group-hover/add:scale-100 max-h-[300px] overflow-y-auto">
+                        {products?.length === 0 ? (
+                             <p className="p-8 text-center text-[12px] text-(--sp-text-3) opacity-60 font-medium">No products found.</p>
+                        ) : products?.filter(p => !selectedItems?.find(si => si?.id === p?.id))?.map(product => (
                           <button 
-                            key={product.id}
+                            key={product?.id}
                             onClick={() => addItem(product)}
-                            className="w-full text-left p-3 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl flex items-center justify-between"
+                            className="w-full text-left px-4 py-3 hover:bg-(--sp-cyan) hover:text-white rounded-md flex items-center justify-between group/p transition-all text-[13px] font-semibold text-(--sp-text-1) mb-1 uppercase tracking-tight"
                           >
-                            <span className="text-[10px] font-bold uppercase tracking-tight">{product.name}</span>
-                            <Plus size={10} className="text-slate-400" />
+                            <span>{product?.name}</span>
+                            <Plus size={14} className="opacity-40 group-hover/p:opacity-100" />
                           </button>
                         ))}
                       </div>
@@ -156,16 +219,18 @@ export default function BidCreation() {
                 </div>
               </div>
 
-              <div className="p-6 rounded-3xl bg-violet-50 dark:bg-violet-900/20 ring-1 ring-violet-500/20 space-y-3">
-                 <div className="flex items-center gap-2 text-violet-600 dark:text-violet-400">
-                    <Info size={18} />
-                    <h3 className="text-sm font-bold uppercase tracking-widest">Quality Specs</h3>
-                 </div>
-                 <textarea 
-                   placeholder="Describe quality requirements, certifications, and delivery constraints..."
-                   className="w-full h-32 bg-transparent outline-none text-sm placeholder:text-violet-500/30 text-slate-700 dark:text-slate-300"
-                 />
-              </div>
+              <div className="p-8 rounded-md bg-(--sp-bg-1) border border-(--sp-border) space-y-6 shadow-inner">
+                  <div className="flex items-center gap-3 text-(--sp-cyan)">
+                      <Info size={18} />
+                      <h3 className="text-[10px] font-bold uppercase tracking-wider">Additional specifications</h3>
+                  </div>
+                  <textarea 
+                    placeholder="Describe quality standards, logistics constraints, and compliance requirements..."
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    className="w-full h-32 bg-transparent outline-none text-[14px] text-(--sp-text-1) font-medium placeholder:text-(--sp-text-3)/30 leading-relaxed resize-none"
+                  />
+               </div>
             </motion.div>
           )}
 
@@ -175,18 +240,21 @@ export default function BidCreation() {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              className="space-y-8 flex-1"
+              className="space-y-10 flex-1"
             >
-              <h2 className="text-xl font-bold">Configure Bidding Rules</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Bid Deadline</label>
-                  <div className="flex gap-2">
+              <h2 className="text-[11px] font-bold text-(--sp-text-3) uppercase tracking-wider opacity-60 flex items-center gap-2">
+                  <Settings className="text-(--sp-cyan) w-4 h-4" />
+                  Bidding protocol configuration
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                <div className="space-y-4">
+                  <label className="text-[11px] font-bold text-(--sp-text-3) uppercase tracking-wider opacity-60">Terminal deadline</label>
+                  <div className="flex gap-4">
                     <input 
                       type="datetime-local" 
                       value={deadline}
                       onChange={(e) => setDeadline(e.target.value)}
-                      className="flex-1 h-12 px-4 bg-slate-50 dark:bg-slate-800 rounded-xl outline-none ring-1 ring-slate-200 dark:ring-slate-700 focus:ring-violet-500 transition-all text-sm font-bold" 
+                      className="flex-1 h-12 px-6 bg-(--sp-bg-1) border border-(--sp-border) rounded-md outline-none focus:border-(--sp-cyan)/50 transition-all text-[14px] font-medium text-(--sp-text-0) shadow-inner" 
                     />
                     <button 
                       onClick={() => {
@@ -194,32 +262,38 @@ export default function BidCreation() {
                         date.setDate(date.getDate() + 3);
                         setDeadline(date.toISOString().slice(0, 16));
                       }}
-                      className="px-4 bg-slate-100 dark:bg-slate-800 rounded-xl text-[10px] font-black hover:bg-violet-500 hover:text-white transition-all uppercase tracking-widest"
+                      className="h-12 px-6 bg-(--sp-bg-2) border border-(--sp-border) rounded-md text-[10px] font-bold hover:bg-(--sp-bg-1) transition-all uppercase tracking-wider text-(--sp-text-1) shadow-sm"
                     >
-                      +3D
+                      +3 Days
                     </button>
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Price Transparency</label>
-                  <select className="w-full h-12 px-4 bg-slate-100 dark:bg-slate-800 rounded-xl outline-none ring-1 ring-slate-200 dark:ring-slate-700 font-bold text-sm">
-                    <option>Blind Bidding (Highly Recommended)</option>
-                    <option>Open Bidding (Visible Ranks)</option>
+                <div className="space-y-4">
+                  <label className="text-[11px] font-bold text-(--sp-text-3) uppercase tracking-wider opacity-60">Urgency matrix</label>
+                  <select 
+                    value={urgency}
+                    onChange={(e) => setUrgency(e.target.value)}
+                    className="w-full h-12 px-6 bg-(--sp-bg-1) border border-(--sp-border) rounded-md outline-none text-[14px] font-semibold text-(--sp-text-0) appearance-none cursor-pointer focus:border-(--sp-cyan)/50 transition-all shadow-inner"
+                  >
+                    <option value="NORMAL">Normal priority</option>
+                    <option value="HIGH">High acceleration</option>
+                    <option value="CRITICAL">Critical protocol</option>
                   </select>
                 </div>
               </div>
 
-              <div className="space-y-4">
-                 <h3 className="text-sm font-bold uppercase tracking-widest text-slate-500">Auto-Award Logic</h3>
-                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-8">
+                 <h3 className="text-[11px] font-bold uppercase tracking-wider text-(--sp-text-3) opacity-60">Auto-award logic</h3>
+                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                    {[
-                     { label: "Lowest Price", desc: "Select absolute cheapest" },
-                     { label: "Balanced", desc: "Cheapest with 4.5+ star rating" },
-                     { label: "Manual", desc: "Operator reviews all quotes" },
+                     { label: "Lowest price", desc: "Cheapest absolute fulfillment", icon: Star },
+                     { label: "Equity balanced", desc: "4.8+ rating weighted hub", icon: ShieldCheck },
+                     { label: "Manual audit", desc: "Operator reviews all streams", icon: Users },
                    ].map((logic) => (
-                     <div key={logic.label} className="p-4 rounded-2xl ring-1 ring-slate-200 dark:ring-slate-800 hover:ring-violet-500 transition-all cursor-pointer group">
-                        <p className="text-sm font-bold group-hover:text-violet-500 transition-colors">{logic.label}</p>
-                        <p className="text-[10px] text-slate-400 mt-1">{logic.desc}</p>
+                     <div key={logic.label} className="p-8 rounded-md bg-(--sp-bg-1) border border-(--sp-border) hover:border-(--sp-cyan)/50 transition-all cursor-pointer group shadow-sm">
+                        <logic.icon className="w-8 h-8 text-(--sp-text-3) group-hover:text-(--sp-cyan) transition-all mb-6 opacity-40 group-hover:opacity-100" />
+                        <p className="text-[15px] font-bold text-(--sp-text-0) group-hover:text-(--sp-cyan) transition-colors uppercase tracking-tight">{logic.label}</p>
+                        <p className="text-[12px] text-(--sp-text-3) font-medium mt-3 leading-relaxed opacity-60">{logic.desc}</p>
                      </div>
                    ))}
                  </div>
@@ -233,72 +307,75 @@ export default function BidCreation() {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              className="space-y-8 flex-1"
+              className="space-y-10 flex-1"
             >
-              <h2 className="text-xl font-bold">Select Candidates</h2>
-              <div className="space-y-3">
+              <h2 className="text-[11px] font-bold text-(--sp-text-3) uppercase tracking-wider opacity-60 flex items-center gap-2">
+                  <Users className="text-(--sp-cyan) w-4 h-4" />
+                  Candidate handshake registry
+              </h2>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {[
-                  { name: "Golden Harvest", rating: 4.8, category: "Produce", location: "Bangalore" },
-                  { name: "Fresh Express", rating: 4.2, category: "Produce", location: "Mysore" },
-                  { name: "Nature's Basket B2B", rating: 4.9, category: "Premium", location: "Bangalore" },
+                  { name: "Golden harvest hub", rating: 4.8, category: "Produce", location: "Bangalore Node" },
+                  { name: "Fresh express delta", rating: 4.2, category: "Produce", location: "Mysore Point" },
+                  { name: "Nature's basket B2B", rating: 4.9, category: "Premium", location: "Bangalore Core" },
+                  { name: "Organic root alpha", rating: 4.5, category: "Organic", location: "Coimbatore Site" },
                 ].map((s) => (
-                  <div key={s.name} className="p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl ring-1 ring-slate-100 dark:ring-slate-700 flex items-center justify-between">
+                  <div key={s.name} className="p-6 bg-(--sp-bg-1) rounded-md border border-(--sp-border) flex items-center justify-between shadow-sm hover:border-(--sp-cyan)/30 transition-all group">
                     <div className="flex items-center gap-4">
-                       <div className="w-10 h-10 rounded-full bg-violet-500/10 text-violet-500 flex items-center justify-center font-bold">
+                       <div className="w-12 h-12 rounded-md bg-(--sp-cyan)/10 text-(--sp-cyan) border border-(--sp-cyan)/20 flex items-center justify-center font-bold text-[18px] shadow-sm uppercase">
                          {s.name[0]}
                        </div>
-                       <div>
-                         <p className="text-sm font-bold">{s.name}</p>
-                         <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{s.rating} ★ • {s.location}</p>
+                       <div className="space-y-1">
+                         <p className="text-[14px] font-bold text-(--sp-text-0) uppercase tracking-tight">{s.name}</p>
+                         <p className="text-[12px] text-(--sp-text-3) font-semibold opacity-60 uppercase tracking-wider">{s.rating} ★ • {s.location}</p>
                        </div>
                     </div>
-                    <input type="checkbox" defaultChecked className="w-5 h-5 accent-violet-500" />
+                    <input type="checkbox" defaultChecked className="w-5 h-5 accent-(--sp-cyan) rounded cursor-pointer border-(--sp-border) shadow-inner" />
                   </div>
                 ))}
               </div>
               
-              <button className="w-full h-12 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl text-slate-400 text-[10px] font-bold uppercase tracking-widest hover:text-violet-500 transition-colors">
-                Broadcast to all Premium Produce Suppliers
+              <button className="w-full py-10 border border-dashed border-(--sp-border) rounded-md text-(--sp-text-3) text-[10px] font-bold uppercase tracking-wider hover:text-(--sp-cyan) hover:border-(--sp-cyan)/50 hover:bg-(--sp-bg-1) transition-all shadow-inner">
+                <Plus className="w-6 h-6 mx-auto mb-3 opacity-40 font-bold" />
+                Broadcast to all regional hubs
               </button>
             </motion.div>
           )}
         </AnimatePresence>
 
         {/* Action Bar */}
-        <div className="mt-auto pt-8 flex items-center justify-between border-t border-slate-100 dark:border-slate-800">
+        <div className="mt-10 pt-10 flex items-center justify-between border-t border-(--sp-border)/50">
           <button 
             onClick={() => currentStep > 1 && setCurrentStep(currentStep - 1)}
             disabled={currentStep === 1}
-            className="h-12 px-6 rounded-2xl font-bold text-xs text-slate-500 hover:text-slate-900 transition-all disabled:opacity-30 disabled:pointer-events-none"
+            className="h-9 px-6 rounded-md font-bold text-[11px] text-(--sp-text-3) hover:text-(--sp-cyan) transition-all disabled:opacity-30 disabled:pointer-events-none uppercase tracking-wider border border-transparent"
           >
-            PREVIOUS STEP
+            Back
           </button>
           
           {currentStep < 3 ? (
             <button 
               onClick={() => setCurrentStep(currentStep + 1)}
-              className="h-12 px-8 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl font-bold text-xs flex items-center gap-2 hover:scale-105 transition-all shadow-lg"
+              className="h-9 px-6 bg-(--sp-bg-1) text-(--sp-text-1) border border-(--sp-border) rounded-md font-bold text-[11px] flex items-center gap-2 hover:bg-(--sp-bg-0) transition-all uppercase tracking-wider shadow-sm"
             >
-              NEXT STEP <ChevronRight size={16} />
+              Continue <ChevronRight size={14} />
             </button>
           ) : (
-            <div className="relative group">
-              <GlowingBorder spread={40} />
-              <button 
-                onClick={handleLaunch}
-                disabled={isLaunching}
-                className="relative z-10 h-12 px-8 bg-violet-600 text-white rounded-2xl font-black text-xs flex items-center gap-2 hover:scale-105 transition-all shadow-lg active:scale-95 disabled:opacity-50"
-              >
-                {isLaunching ? (
-                  <>LAUNCHING CRYPTOGRAPHIC BID... <RefreshCw className="animate-spin" size={18} /></>
-                ) : (
-                  <>LAUNCH BID EVENT <Gavel size={18} /></>
-                )}
-              </button>
-            </div>
+            <button 
+              onClick={handleLaunch}
+              disabled={launchMutation.isPending}
+              className="h-9 px-8 bg-(--sp-cyan) text-white rounded-md font-bold text-[11px] flex items-center gap-2 hover:opacity-90 transition-all shadow-md tracking-wider uppercase border border-cyan-400"
+            >
+              {launchMutation.isPending ? (
+                <>Propagating signal... <RefreshCw className="animate-spin" size={16} /></>
+              ) : (
+                <>Launch bid event <Gavel size={16} /></>
+              )}
+            </button>
           )}
         </div>
       </div>
     </div>
+    </SecureOverlay>
   );
 }

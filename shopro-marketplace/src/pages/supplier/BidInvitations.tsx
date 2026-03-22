@@ -1,54 +1,58 @@
 "use client";
 
 import React from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
+import { useQuery } from "@tanstack/react-query";
+import api from "@/api";
 import { 
   FileText, 
   Clock, 
   ArrowRight, 
-  Info, 
   Search, 
   Filter, 
   ChevronRight,
   TrendingUp,
-  Package
+  Package,
+  Zap,
+  RefreshCw,
+  Target
 } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { GlowingBorder, NeonEdges } from "@/components/ui/neon-button";
+import { SecureOverlay } from "@/components/SecureOverlay";
 import { StatusBadge } from "@/components/ui/status-badge";
 import QuoteSubmissionModal from "@/components/supplier/QuoteSubmissionModal";
 
-const ACTIVE_INVITATIONS = [
-  { 
-    id: "B-2201", 
-    title: "Organic Winter Greens Selection", 
-    category: "Fresh Produce", 
-    deadline: "4h 20m", 
-    items: [
-      { id: "1", name: "Baby Spinach", requestedQty: "50", unit: "kg" },
-      { id: "2", name: "Kale (Curly)", requestedQty: "30", unit: "kg" },
-      { id: "3", name: "Arugula", requestedQty: "20", unit: "kg" },
-    ], 
-    urgency: "HIGH",
-    shoproTag: "Shopro Marketplace"
-  },
-  { 
-    id: "B-2205", 
-    title: "Weekly Dairy Prime Bundle", 
-    category: "Dairy & Eggs", 
-    deadline: "1d 2h", 
-    items: [
-      { id: "4", name: "Whole Milk 1L", requestedQty: "200", unit: "units" },
-      { id: "5", name: "Unsalted Butter 500g", requestedQty: "50", unit: "units" },
-    ], 
-    urgency: "NORMAL",
-    shoproTag: "Shopro Marketplace"
-  },
-];
+/**
+ * S-04 — Bid Invitations
+ * Purpose: Open opportunities from the Shopro Marketplace for suppliers.
+ */
+
+interface BidInvitation {
+  id: string;
+  title: string;
+  category: string;
+  deadline: string;
+  status: string;
+  targetVolume: number;
+}
 
 export default function BidInvitations() {
+  const [searchQuery, setSearchQuery] = React.useState("");
   const [selectedBid, setSelectedBid] = React.useState<any>(null);
   const [isModalOpen, setIsModalOpen] = React.useState(false);
+
+  const { data: invitations = [], isLoading } = useQuery<BidInvitation[]>({
+    queryKey: ["supplier-bid-invitations"],
+    queryFn: async () => {
+      const resp = await api.get("/api/supplier/bids/invitations");
+      return resp.data;
+    }
+  });
+
+  const filteredBids = invitations.filter(inv => 
+    inv.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    inv.id.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const handleOpenBid = (bid: any) => {
     setSelectedBid(bid);
@@ -56,101 +60,114 @@ export default function BidInvitations() {
   };
 
   return (
-    <div className="space-y-8 pb-12">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Bid Invitations</h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-1">Open opportunities from the Shopro Marketplace.</p>
+    <SecureOverlay>
+    <div className="max-w-[1600px] mx-auto space-y-12 animate-in fade-in duration-1000 font-black italic uppercase leading-none pb-24 text-slate-900 dark:text-white">
+      {/* Header */}
+      <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-12 border-b-8 border-slate-100 dark:border-slate-800 pb-12 font-black italic leading-none shadow-inner">
+        <div className="space-y-6">
+          <h1 className="text-4xl md:text-7xl font-black tracking-tighter italic uppercase leading-none shadow-text mt-4">
+             Bidding <span className="text-indigo-500">Nexus.X</span>
+          </h1>
+          <p className="text-slate-500 font-black italic text-xl tracking-wide opacity-60 leading-none flex items-center gap-4">
+             <Target className="w-8 h-8 text-indigo-500 animate-pulse" />
+             Open restock invitations from the Shopro Marketplace nodes.
+          </p>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="relative group">
-            <GlowingBorder spread={20} />
-            <input 
+        
+        <div className="flex items-center gap-6 font-black italic uppercase tracking-[0.4em] leading-none">
+          <div className="flex items-center gap-6 bg-white dark:bg-slate-950 px-8 py-5 rounded-[1.5rem] border-4 border-slate-50 dark:border-slate-800 shadow-xl shadow-inner">
+             <Search size={24} className="text-slate-400" />
+             <input 
                type="text" 
-               placeholder="Search invitations..." 
-               className="h-11 w-64 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl pl-10 pr-4 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all relative z-10"
-            />
-            <Search className="absolute left-3.5 top-3.5 w-4 h-4 text-slate-400 z-20" />
+               placeholder="SEARCH_BIDS.NODE..." 
+               value={searchQuery}
+               onChange={(e) => setSearchQuery(e.target.value)}
+               className="bg-transparent border-none outline-none text-[11px] w-64 tracking-[0.4em] font-black italic uppercase" 
+             />
           </div>
-          <button className="h-11 px-4 bg-slate-100 dark:bg-slate-800 rounded-xl text-sm font-medium flex items-center gap-2 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
-            <Filter className="w-4 h-4" /> Filters
+          <button className="h-20 w-20 bg-slate-950 dark:bg-white text-white dark:text-slate-900 rounded-[1.5rem] flex items-center justify-center border-4 border-slate-50 dark:border-slate-800 hover:scale-110 transition-all shadow-4xl shadow-inner">
+             <Filter size={32} />
           </button>
         </div>
-      </div>
+      </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {ACTIVE_INVITATIONS.map((invitation, i) => (
+      {/* Grid View */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 font-black italic uppercase leading-none">
+        {isLoading ? (
+            <div className="lg:col-span-2 p-40 flex flex-col items-center justify-center space-y-12 opacity-40">
+                <RefreshCw className="w-20 h-20 text-indigo-500 animate-spin" />
+                <p className="text-[12px] tracking-[0.6em] font-black italic">SCANNING_MARKET_FLUX.X...</p>
+            </div>
+        ) : filteredBids.map((bid, i) => (
           <motion.div
-            key={invitation.id}
-            initial={{ opacity: 0, y: 15 }}
+            key={bid.id}
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.1 }}
-            className="group relative bg-white dark:bg-slate-950/50 backdrop-blur-xl rounded-[2rem] p-6 ring-1 ring-slate-200 dark:ring-slate-800 hover:ring-blue-500/50 transition-all cursor-pointer shadow-sm overflow-hidden flex flex-col justify-between"
+            className="group relative bg-white/50 dark:bg-slate-900/50 backdrop-blur-3xl rounded-[3rem] p-10 border-4 border-slate-100 dark:border-slate-800 hover:border-indigo-500 transition-all cursor-crosshair shadow-4xl overflow-hidden shadow-inner"
           >
-            <GlowingBorder spread={50} />
-            
-            <div className="relative z-10 space-y-4">
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 flex items-center justify-center">
-                    <FileText className="w-5 h-5" />
+            <div className="relative z-10 space-y-8">
+               <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-6">
+                     <div className="w-16 h-16 rounded-[1.25rem] bg-indigo-600 text-white flex items-center justify-center shadow-4xl border-4 border-indigo-400 transition-all group-hover:scale-110">
+                        <FileText size={32} />
+                     </div>
+                     <div className="space-y-2">
+                        <div className="text-[10px] font-black tracking-[0.4em] text-slate-400 opacity-60 leading-none">{bid.id}</div>
+                        <div className="text-[10px] font-black text-indigo-500 tracking-[0.3em] leading-none">{bid.category}</div>
+                     </div>
                   </div>
-                  <div>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{invitation.id}</p>
-                    <p className="text-[10px] font-bold text-blue-500 uppercase">{invitation.category}</p>
+                  <StatusBadge 
+                    status={bid.status === "CLOSING_SOON" ? "RAISED" : "PENDING"} 
+                    label={bid.status} 
+                  />
+               </div>
+
+               <div className="space-y-4">
+                  <h3 className="text-3xl font-black italic tracking-tighter text-slate-900 dark:text-white group-hover:text-indigo-500 transition-colors shadow-text">
+                     {bid.title}
+                  </h3>
+                  <div className="flex items-center gap-8 py-4 border-y-4 border-slate-50 dark:border-slate-800 shadow-inner">
+                     <div className="flex items-center gap-3 text-xs font-black tracking-widest text-slate-500">
+                        <Package size={18} className="text-indigo-500" /> {bid.targetVolume.toLocaleString()} UNIT_FLUX
+                     </div>
+                     <div className="flex items-center gap-3 text-xs font-black tracking-widest text-amber-500 bg-amber-500/5 px-4 py-2 rounded-xl">
+                        <Clock size={18} /> CLOSES_{bid.deadline.split('T')[0]}
+                     </div>
                   </div>
-                </div>
-                <StatusBadge 
-                  status={invitation.urgency === "HIGH" ? "RAISED" : "PENDING"} 
-                  label={invitation.urgency === "HIGH" ? "URGENT" : "OPEN"} 
-                />
-              </div>
+               </div>
 
-              <div>
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-blue-500 transition-colors leading-tight">
-                  {invitation.title}
-                </h3>
-                <div className="flex items-center gap-4 mt-2">
-                   <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
-                      <Package className="w-3.5 h-3.5" /> {invitation.items.length} line items
-                   </div>
-                   <div className="flex items-center gap-1.5 text-xs text-amber-500 font-bold bg-amber-50 dark:bg-amber-900/20 px-2 py-0.5 rounded-full">
-                      <Clock className="w-3.5 h-3.5" /> Closes in {invitation.deadline}
-                   </div>
-                </div>
-              </div>
-
-              <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                   <div className="w-5 h-5 rounded-full bg-slate-900 dark:bg-white flex items-center justify-center text-[8px] font-bold text-white dark:text-slate-900">S</div>
-                   <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">{invitation.shoproTag}</span>
-                </div>
-                <button 
-                  onClick={(e) => { e.stopPropagation(); handleOpenBid(invitation); }}
-                  className="relative px-5 py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl text-xs font-bold flex items-center gap-2 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-lg active:scale-95 overflow-hidden"
-                >
-                   <NeonEdges color="blue" />
-                   Review & Bid <ArrowRight className="w-3.5 h-3.5" />
-                </button>
-              </div>
+               <div className="flex items-center justify-between pt-4">
+                  <div className="flex items-center gap-4">
+                     <div className="w-8 h-8 rounded-full bg-slate-900 dark:bg-white flex items-center justify-center text-[10px] font-black text-white dark:text-slate-900 shadow-4xl italic">S</div>
+                     <span className="text-[10px] font-black text-slate-400 tracking-[0.3em] italic opacity-60">SHOPRO_MARKETPLACE.NODE</span>
+                  </div>
+                  <button 
+                    onClick={() => handleOpenBid(bid)}
+                    className="h-16 px-8 bg-slate-950 dark:bg-white text-white dark:text-slate-900 rounded-[1.25rem] text-[10px] font-black flex items-center gap-4 hover:shadow-4xl hover:scale-110 active:scale-95 transition-all shadow-xl group/btn border-4 border-indigo-500 italic"
+                  >
+                     REVIEW_&_BID.FORCE <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-2 transition-transform" />
+                  </button>
+               </div>
             </div>
           </motion.div>
         ))}
       </div>
 
-      <div className="p-8 bg-blue-50 dark:bg-blue-900/10 rounded-3xl border border-blue-100 dark:border-blue-900/30 flex flex-col md:flex-row items-center gap-6 relative overflow-hidden group">
-         <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl pointer-events-none" />
-         <div className="w-16 h-16 rounded-2xl bg-white dark:bg-slate-900 shadow-sm flex items-center justify-center text-blue-500 shrink-0 relative z-10">
-            <TrendingUp className="w-8 h-8" />
+      {/* Market Intelligence Alert */}
+      <div className="p-12 bg-indigo-600 rounded-[4rem] border-b-[1.5rem] border-indigo-800 shadow-4xl flex flex-col lg:flex-row items-center gap-12 relative overflow-hidden group shadow-inner">
+         <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-[120px] pointer-events-none group-hover:scale-125 transition-transform duration-[5000ms]" />
+         <div className="w-24 h-24 rounded-[2rem] bg-white/10 backdrop-blur-3xl border-4 border-white/10 shadow-4xl flex items-center justify-center text-white shrink-0 relative z-10 transition-all group-hover:rotate-12">
+            <TrendingUp size={48} />
          </div>
-         <div className="flex-1 text-center md:text-left relative z-10">
-            <h4 className="text-xl font-bold text-blue-900 dark:text-blue-100">Market Intelligence Dashboard</h4>
-            <p className="text-sm text-blue-700 dark:text-blue-400 mt-1 max-w-2xl">
-              Understand supply gaps and demand trends in your categories. Awarded bids increased by 15% for suppliers using intelligence tools.
+         <div className="flex-1 text-center lg:text-left relative z-10 space-y-4">
+            <h4 className="text-4xl font-black italic tracking-tighter text-white uppercase shadow-text">Market Intelligence.CORE</h4>
+            <p className="text-xl text-indigo-100 font-black italic opacity-80 leading-relaxed uppercase tracking-wide">
+              Understand supply gaps and demand trends in your categories. Awarded bids increased by 15% for suppliers using intelligence tools alpha.
             </p>
          </div>
-         <button className="px-6 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-blue-500/20 hover:bg-blue-500 transition-all active:scale-95 relative z-10">
-            View Analysis
+         <button className="h-20 px-12 bg-white text-slate-900 rounded-[2rem] text-[11px] font-black uppercase tracking-[0.5em] shadow-4xl transition-all hover:scale-110 active:scale-95 relative z-10 border-4 border-indigo-400 italic">
+            LAUNCH_ANALYSIS.FORCE
          </button>
       </div>
 
@@ -160,5 +177,6 @@ export default function BidInvitations() {
         bidData={selectedBid}
       />
     </div>
+    </SecureOverlay>
   );
 }

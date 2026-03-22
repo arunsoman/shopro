@@ -1,10 +1,15 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { Search, Plus, Filter, FileText, ArrowLeft, CheckCircle2, AlertTriangle, ExternalLink, Mail, Phone, MapPin, Calendar, Clock, Lock, Download, MoreHorizontal, ShieldCheck, TrendingUp, BarChart3, History } from "lucide-react";
+import { Search, Plus, Filter, FileText, ArrowLeft, CheckCircle2, AlertTriangle, ExternalLink, Mail, Phone, MapPin, Calendar, Clock, Lock, Download, MoreHorizontal, ShieldCheck, TrendingUp, BarChart3, History, RefreshCw, Database } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate, useParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import api from "@/api";
+import { SecureOverlay } from "@/components/SecureOverlay";
+import { IconTooltip } from "@/components/shared/IconTooltip";
 
 /**
  * OP-10/11 — Supplier Detail & Performance
@@ -14,136 +19,135 @@ import { useNavigate, useParams } from "react-router-dom";
 export default function SupplierDetail() {
   const navigate = useNavigate();
   const { id } = useParams();
-  const [status, setStatus] = useState("UNDER_REVIEW");
-  const [isVerifying, setIsVerifying] = useState(false);
-  
-  const [docs, setDocs] = useState([
-    { id: "doc-1", name: "GST Certificate", size: "1.2 MB", date: "Mar 15, 2024", verified: true },
-    { id: "doc-2", name: "FSSAI License", size: "2.5 MB", date: "Mar 18, 2024", verified: true },
-    { id: "doc-3", name: "Bank Cancelled Cheque", size: "0.8 MB", date: "Mar 14, 2024", verified: false },
-    { id: "doc-4", name: "Pan Card", size: "0.5 MB", date: "Mar 12, 2024", verified: true },
-  ]);
 
-  const toggleVerify = (docId: string) => {
-    setDocs(prev => prev.map(d => d.id === docId ? { ...d, verified: !d.verified } : d));
-  };
+  const { data: supplier, isLoading } = useQuery({
+    queryKey: ["operator-supplier-detail", id],
+    queryFn: async () => {
+      const resp = await api.get(`/operator/relationships/suppliers/${id}`);
+      return resp.data;
+    }
+  });
 
-  const handleApprove = () => {
-    setIsVerifying(true);
-    setTimeout(() => {
-      setStatus("ACTIVE");
-      setIsVerifying(false);
-    }, 1500);
-  };
+  if (isLoading) {
+      return (
+          <div className="h-screen flex flex-col items-center justify-center space-y-6">
+              <RefreshCw className="w-12 h-12 text-(--sp-cyan) animate-spin" />
+              <p className="text-(--sp-text-3) text-[13px] font-medium">Mapping supplier node...</p>
+          </div>
+      );
+  }
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-700 pb-24">
+    <SecureOverlay>
+    <div className="max-w-[1280px] mx-auto space-y-8 animate-in fade-in duration-1000 pb-20">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-slate-100 dark:border-slate-800 pb-8">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-(--sp-border) pb-8">
         <div className="space-y-4">
           <button 
             onClick={() => navigate("/operator/suppliers")}
-            className="flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-violet-500 transition-colors uppercase tracking-widest"
+            className="flex items-center gap-2 text-[11px] font-bold text-(--sp-text-3) hover:text-(--sp-cyan) transition-all uppercase tracking-wider"
           >
-            <ArrowLeft size={14} /> Global Directory
+            <ArrowLeft size={14} /> Global directory matrix
           </button>
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-3xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 text-2xl font-black shadow-sm ring-1 ring-slate-200 dark:ring-slate-700">
-              GH
+          <div className="flex items-center gap-6">
+            <div className="w-16 h-16 rounded-md bg-(--sp-bg-1) flex items-center justify-center text-(--sp-text-3) text-[24px] font-bold border border-(--sp-border)">
+              {supplier?.name.substring(0, 2).toUpperCase()}
             </div>
-            <div>
-              <div className="flex items-center gap-3 mb-1">
-                <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Golden Harvest Spices</h1>
-                <StatusBadge status={status as any} />
+            <div className="space-y-1">
+              <div className="flex items-center gap-4">
+                <h1 className="text-[28px] font-medium tracking-tight text-(--sp-text-0)">{supplier?.name}</h1>
+                <StatusBadge status="ACTIVE" />
               </div>
-              <p className="text-slate-500 font-medium flex items-center gap-2 text-sm">
-                <MapPin size={14} /> Bangalore, Karnataka • <span className="text-slate-900 dark:text-white font-bold uppercase tracking-tighter text-[10px] bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">GST: 29AABCXXXX1ZJ</span>
-                <span className="text-slate-300">|</span>
-                <span className="text-violet-500 font-bold uppercase tracking-widest text-[10px]">ID: {id || "SUP-001"}</span>
-              </p>
+              <div className="flex items-center gap-3 text-[12px] text-(--sp-text-3) font-medium">
+                <span className="flex items-center gap-1.5"><MapPin size={14} className="text-(--sp-cyan)" /> {supplier?.fullAddress}</span>
+                <span className="text-(--sp-border)">|</span>
+                <span className="bg-(--sp-bg-1) px-2 py-0.5 rounded border border-(--sp-border) text-[11px] font-bold text-(--sp-text-2) uppercase">GST: 29AABCXXXX1ZJ</span>
+                <span className="text-(--sp-border)">|</span>
+                <span className="text-(--sp-cyan)/80 font-mono">ID: {id}</span>
+              </div>
             </div>
           </div>
         </div>
 
         <div className="flex items-center gap-3">
-          <button className="h-10 px-4 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 font-bold text-xs flex items-center gap-2 hover:bg-slate-200 transition-all">
-            <Mail size={14} /> MESSAGE VENDOR
+          <button className="h-9 px-4 rounded-md bg-(--sp-bg-1) border border-(--sp-border) text-(--sp-text-1) font-bold text-[11px] flex items-center gap-2 hover:bg-(--sp-bg-0) transition-all shadow-sm uppercase tracking-wider">
+            <Mail size={16} /> Message vendor
           </button>
-          <button className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-400 hover:text-slate-600 transition-colors">
+          <button className="w-9 h-9 rounded-md border border-(--sp-border) text-(--sp-text-3) hover:text-(--sp-cyan) transition-all flex items-center justify-center bg-(--sp-bg-1)">
             <MoreHorizontal size={20} />
           </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Left Column: Business Profile */}
-        <div className="lg:col-span-2 space-y-8">
-          <div className="bg-white dark:bg-slate-900/50 backdrop-blur-xl rounded-[2.5rem] p-8 ring-1 ring-slate-200 dark:ring-slate-800 shadow-sm space-y-8">
-            <h2 className="text-xl font-bold flex items-center gap-2 uppercase tracking-tighter text-slate-900 dark:text-white">
-              <ShieldCheck className="text-violet-500" size={20} /> Business Credentials
+        <div className="lg:col-span-8 space-y-8">
+          <div className="bg-(--sp-bg-2) rounded-md p-8 border border-(--sp-border) shadow-sm space-y-8">
+            <h2 className="text-[18px] font-medium flex items-center gap-3 text-(--sp-text-0)">
+              <ShieldCheck className="text-(--sp-cyan) w-5 h-5" /> Business credentials
             </h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                {[
                  { label: "Entity Type", value: "Private Limited", icon: FileText },
-                 { label: "Date of Incorp.", value: "Oct 12, 2018", icon: Calendar },
+                 { label: "Date of Incorporation", value: "Oct 12, 2018", icon: Calendar },
                  { label: "Annual Turnover", value: "₹4.5 Crores", icon: CheckCircle2 },
-                 { label: "Warehouse Capacity", value: "12,000 sq.ft", icon: Lock },
+                 { label: "Warehouse Capacity", value: "12,000 SQ.FT", icon: Lock },
                ].map((item) => (
-                 <div key={item.label} className="flex items-start gap-3">
-                   <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-400">
-                     <item.icon size={16} />
+                 <div key={item.label} className="flex items-start gap-4">
+                   <div className="w-10 h-10 rounded-md bg-(--sp-bg-1) flex items-center justify-center text-(--sp-text-3) border border-(--sp-border)">
+                     <item.icon size={18} />
                    </div>
-                   <div>
-                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{item.label}</p>
-                     <p className="text-sm font-bold text-slate-900 dark:text-white">{item.value}</p>
+                   <div className="space-y-0.5">
+                     <p className="text-[10px] text-(--sp-text-3) font-bold uppercase tracking-wider">{item.label}</p>
+                     <p className="text-[15px] font-semibold text-(--sp-text-1)">{item.value}</p>
                    </div>
                  </div>
                ))}
             </div>
 
-            <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
-               <h3 className="text-sm font-bold uppercase tracking-widest text-slate-400">Owner Information</h3>
-               <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 flex items-center justify-between">
-                 <div className="flex items-center gap-4">
-                   <div className="w-10 h-10 rounded-full bg-violet-100 dark:bg-violet-900/30 text-violet-500 flex items-center justify-center font-bold">KS</div>
-                   <div>
-                     <p className="text-sm font-bold">Karan Sharma</p>
-                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Managing Director</p>
+            <div className="space-y-4 pt-8 border-t border-(--sp-border)">
+               <h3 className="text-[10px] font-bold uppercase tracking-wider text-(--sp-text-3)">Owner information</h3>
+               <div className="p-4 rounded-md bg-(--sp-bg-1) border border-(--sp-border) flex items-center justify-between">
+                 <div className="flex items-center gap-3">
+                   <div className="w-10 h-10 rounded-md bg-(--sp-cyan)/10 text-(--sp-cyan) border border-(--sp-cyan)/20 flex items-center justify-center font-bold text-[14px]">KS</div>
+                   <div className="space-y-0.5">
+                     <p className="text-[14px] font-semibold text-(--sp-text-0)">Karan Sharma</p>
+                     <p className="text-[11px] text-(--sp-text-3) font-medium">Managing Director</p>
                    </div>
                  </div>
-                 <div className="flex items-center gap-4">
-                    <button className="text-slate-400 hover:text-violet-500 transition-colors"><Phone size={16} /></button>
-                    <button className="text-slate-400 hover:text-violet-500 transition-colors"><Mail size={16} /></button>
+                 <div className="flex items-center gap-2">
+                    <button className="w-8 h-8 rounded-md text-(--sp-text-3) hover:text-(--sp-cyan) transition-all border border-(--sp-border) flex items-center justify-center bg-(--sp-bg-2)"><Phone size={14} /></button>
+                    <button className="w-8 h-8 rounded-md text-(--sp-text-3) hover:text-(--sp-cyan) transition-all border border-(--sp-border) flex items-center justify-center bg-(--sp-bg-2)"><Mail size={14} /></button>
                  </div>
                </div>
             </div>
           </div>
 
-          {/* Performance Micro-Health (OP-11) */}
+          {/* Performance Health */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
              {[
-               { label: "Fulfillment Rate", value: "98.2%", trend: "+1.2%", color: "text-green-500", icon: CheckCircle2 },
-               { label: "Avg. Lead Time", value: "4.2 Days", trend: "-0.5d", color: "text-blue-500", icon: Clock },
-               { label: "Damage/Return", value: "0.4%", trend: "-0.1%", color: "text-violet-500", icon: TrendingUp },
+               { label: "Fulfillment Rate", value: supplier?.performance?.fulfillment || "98.2%", trend: "+1.2%", color: "text-emerald-500", icon: CheckCircle2 },
+               { label: "Avg Lead Time", value: "4.2 Days", trend: "-0.5d", color: "text-blue-500", icon: Clock },
+               { label: "Accuracy Index", value: supplier?.performance?.accuracy || "99%", trend: "+0.1%", color: "text-(--sp-cyan)", icon: TrendingUp },
              ].map((stat) => (
-               <div key={stat.label} className="bg-white dark:bg-slate-900/50 backdrop-blur-xl rounded-3xl p-6 ring-1 ring-slate-200 dark:ring-slate-800 shadow-sm">
-                 <div className="flex items-center justify-between mb-4">
-                   <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-400">
+                <div key={stat.label} className="bg-(--sp-bg-2) rounded-md p-6 border border-(--sp-border) shadow-sm hover:border-(--sp-cyan)/30 transition-all">
+                 <div className="flex items-center justify-between mb-6">
+                   <div className="w-9 h-9 rounded-md bg-(--sp-bg-1) text-(--sp-text-3) border border-(--sp-border) flex items-center justify-center">
                      <stat.icon size={18} />
                    </div>
-                   <span className={cn("text-[10px] font-black px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800", stat.color)}>
+                   <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded border border-(--sp-border) bg-(--sp-bg-2)", stat.color)}>
                      {stat.trend}
                    </span>
                  </div>
-                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{stat.label}</p>
-                 <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">{stat.value}</p>
+                 <p className="text-[11px] text-(--sp-text-3) font-bold uppercase tracking-wider">{stat.label}</p>
+                 <p className="text-[24px] font-semibold text-(--sp-text-0) mt-2 tracking-tight tabular-nums">{stat.value}</p>
                  
-                 <div className="mt-4 h-8 flex items-end gap-1">
+                 <div className="mt-6 h-10 flex items-end gap-1">
                     {[40, 70, 45, 90, 65, 80, 50, 85].map((h, i) => (
-                      <div key={i} className="flex-1 bg-slate-100 dark:bg-slate-800 rounded-sm group relative">
+                      <div key={i} className="flex-1 bg-(--sp-bg-1) rounded-sm relative h-full">
                         <div 
-                          className={cn("absolute bottom-0 left-0 right-0 rounded-sm transition-all duration-1000", i === 7 ? "bg-violet-500" : "bg-slate-300 dark:bg-slate-600")} 
+                          className={cn("absolute bottom-0 left-0 right-0 rounded-sm transition-all duration-1000", i === 7 ? "bg-(--sp-cyan)" : "bg-(--sp-cyan)/20")} 
                           style={{ height: `${h}%` }} 
                         />
                       </div>
@@ -152,106 +156,53 @@ export default function SupplierDetail() {
                </div>
              ))}
           </div>
-
-          <div className="space-y-4">
-            <h2 className="text-xl font-bold uppercase tracking-tighter px-4 text-slate-900 dark:text-white flex items-center justify-between">
-              KYC Documents
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{docs.filter(d => d.verified).length}/{docs.length} Verified</span>
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-               {docs.map((doc) => (
-                 <div key={doc.id} className={cn(
-                   "p-5 bg-white dark:bg-slate-900 rounded-3xl ring-1 transition-all flex items-center justify-between group",
-                   doc.verified ? "ring-slate-200 dark:ring-slate-800" : "ring-amber-500/50 bg-amber-500/5"
-                 )}>
-                    <div className="flex items-center gap-3">
-                       <div className={cn(
-                         "p-2 rounded-xl transition-colors",
-                         doc.verified ? "bg-violet-50 dark:bg-violet-900/20 text-violet-500" : "bg-amber-100 dark:bg-amber-900/30 text-amber-500"
-                       )}>
-                         <FileText size={20} />
-                       </div>
-                       <div>
-                         <p className="text-sm font-bold text-slate-900 dark:text-white">{doc.name}</p>
-                         <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{doc.size} • {doc.date}</p>
-                       </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                       <button 
-                        onClick={() => toggleVerify(doc.id)}
-                        className={cn(
-                          "p-2 rounded-lg transition-all",
-                          doc.verified ? "text-green-500 hover:bg-green-50" : "text-amber-500 hover:bg-amber-50"
-                        )}
-                       >
-                         {doc.verified ? <CheckCircle2 size={18} /> : <AlertTriangle size={18} />}
-                       </button>
-                       <button className="p-2 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-400 hover:text-slate-900 transition-colors">
-                         <Download size={16} />
-                       </button>
-                    </div>
-                 </div>
-               ))}
-            </div>
-          </div>
         </div>
 
         {/* Right Column: Decisions & Audit */}
-        <div className="space-y-8">
-           <div className="bg-slate-900 rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden group">
-            <div className="absolute inset-0 bg-gradient-to-br from-violet-600/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+        <div className="lg:col-span-4 space-y-8">
+           <div className="bg-(--sp-cyan) rounded-md p-8 shadow-sm relative overflow-hidden group">
+            <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-all duration-500" />
             
-            <h2 className="text-lg font-bold flex items-center gap-2 uppercase tracking-tighter mb-6 text-white/50 relative z-10">
-               Vetting Action
+            <h2 className="text-[11px] font-bold flex items-center gap-2 uppercase tracking-wider mb-8 text-white/60 relative z-10">
+               <ShieldCheck size={16} className="text-white/80" /> Vetting action matrix
             </h2>
-            <div className="space-y-6 relative z-10">
-              <div className="space-y-2">
-                <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Decision Status</p>
-                <div className={cn(
-                  "flex items-center gap-2 font-black text-xs",
-                  status === "ACTIVE" ? "text-green-400" : "text-amber-500"
-                )}>
-                  {status === "ACTIVE" ? <CheckCircle2 size={16} /> : <Clock size={16} />}
-                  {status === "ACTIVE" ? "VENDOR APPROVED" : "PENDING REVIEW (SLA: 2h remaining)"}
+            <div className="space-y-8 relative z-10">
+              <div className="flex flex-col items-center gap-4 text-center">
+                <div className="w-14 h-14 rounded-md bg-white/10 border border-white/20 text-white flex items-center justify-center">
+                  <Clock size={28} />
+                </div>
+                <div>
+                   <p className="text-[14px] font-semibold text-white tracking-tight">Pending Review</p>
+                   <p className="text-[11px] text-white/60 font-medium">SLA: 2H Delta • Assigned: Admin Alpha</p>
                 </div>
               </div>
 
-              <div className="space-y-3">
-                 <button 
-                  disabled={status === "ACTIVE" || isVerifying}
-                  onClick={handleApprove}
-                  className="w-full h-12 bg-white text-slate-900 rounded-2xl font-black text-xs uppercase tracking-widest hover:scale-105 transition-all shadow-xl disabled:opacity-50 disabled:hover:scale-100 flex items-center justify-center gap-2"
-                 >
-                   {isVerifying ? "PROCESSING..." : "APPROVE SUPPLIER"}
+              <div className="space-y-3 pt-6 border-t border-white/10">
+                 <button className="w-full h-10 bg-white text-(--sp-cyan) rounded-md font-bold text-[11px] uppercase tracking-wider hover:opacity-90 transition-all shadow-sm flex items-center justify-center gap-2">
+                   Approve supplier <CheckCircle2 size={16} className="text-emerald-500" />
                  </button>
-                 <button 
-                  disabled={status === "ACTIVE" || isVerifying}
-                  className="w-full h-12 bg-slate-800 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-700 transition-all disabled:opacity-50"
-                 >
-                   REJECT & NOTIFY
+                 <button className="w-full h-10 bg-rose-500 text-white border border-rose-400/20 rounded-md font-bold text-[11px] uppercase tracking-wider hover:bg-rose-600 transition-all shadow-sm">
+                   Reject partner
                  </button>
-                 <button 
-                  disabled={status === "ACTIVE" || isVerifying}
-                  className="w-full h-12 border border-white/10 text-white/60 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-white/5 transition-all disabled:opacity-50"
-                 >
-                   REQUEST CLARIFICATION
+                 <button className="w-full h-10 bg-transparent border border-white/20 text-white rounded-md font-bold text-[11px] uppercase tracking-wider hover:bg-white/5 transition-all opacity-80">
+                   Request clarification
                  </button>
               </div>
             </div>
           </div>
 
-          <div className="bg-white dark:bg-slate-900/50 backdrop-blur-xl rounded-[2.5rem] p-8 ring-1 ring-slate-200 dark:ring-slate-800 shadow-sm">
-             <h3 className="text-sm font-bold uppercase tracking-widest mb-6 text-slate-900 dark:text-white">Verification Audit</h3>
+          <div className="bg-(--sp-bg-2) rounded-md p-8 border border-(--sp-border) shadow-sm">
+             <h3 className="text-[11px] font-bold uppercase tracking-wider mb-6 text-(--sp-text-3) border-b border-(--sp-border) pb-4">Verification Audit Log</h3>
              <div className="space-y-6">
                {[
-                 { type: "DOC_VERIFIED", text: "FSSAI License verified manually", time: "1h ago", user: "Arun S." },
-                 { type: "DOC_UPLOAD", text: "New GST Certificate uploaded", time: "2h ago", user: "Backend System" },
-                 { type: "APP_START", text: "Application submitted by vendor", time: "4h ago", user: "Golden Harvest" },
+                 { type: "DOC_VERIFIED", text: "FSSAI License verified manually", time: "1h ago", user: "Admin Alpha" },
+                 { type: "DOC_UPLOAD", text: "New GST Certificate uploaded", time: "2h ago", user: "System flux" },
+                 { type: "APP_START", text: "Application submitted", time: "4h ago", user: "Vendor Unit 1" },
                ].map((log, i) => (
-                 <div key={i} className="relative pl-6 border-l-2 border-slate-100 dark:border-slate-800 group">
-                    <div className="absolute -left-[5px] top-0 w-2 h-2 rounded-full bg-slate-300 group-hover:bg-violet-500 transition-colors" />
-                    <p className="text-xs font-bold text-slate-900 dark:text-white leading-tight">{log.text}</p>
-                    <p className="text-[10px] text-slate-400 font-bold mt-1 uppercase tracking-tighter">{log.time} • {log.user}</p>
+                 <div key={i} className="relative pl-6 border-l border-(--sp-border) group">
+                    <div className="absolute -left-[4.5px] top-0 w-2 h-2 rounded-full bg-(--sp-border) group-hover:bg-(--sp-cyan) transition-all border-2 border-(--sp-bg-2)" />
+                    <p className="text-[13px] font-medium text-(--sp-text-1) leading-tight">{log.text}</p>
+                    <p className="text-[10px] text-(--sp-text-3) mt-1 uppercase tracking-wider font-bold">{log.time} • {log.user}</p>
                  </div>
                ))}
              </div>
@@ -259,5 +210,6 @@ export default function SupplierDetail() {
         </div>
       </div>
     </div>
+    </SecureOverlay>
   );
 }

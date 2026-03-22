@@ -47,7 +47,7 @@ export const KdsRoutingSettings = () => {
                             <Plus className="w-4 h-4 mr-2" /> New Rule
                         </Button>
                     </DialogTrigger>
-                    <DialogContent className="bg-surface border-border text-foreground max-w-md">
+                    <DialogContent className="bg-surface border-border text-foreground ">
                         <DialogHeader>
                             <DialogTitle>Create Routing Rule</DialogTitle>
                         </DialogHeader>

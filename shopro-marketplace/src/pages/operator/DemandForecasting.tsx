@@ -1,8 +1,13 @@
 "use client";
 
+import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { TrendingUp, TrendingDown, Clock, BarChart3, LineChart, PieChart, Info, Download, Filter, RefreshCw, Calendar, Zap, MapPin, Search } from "lucide-react";
+import { TrendingUp, TrendingDown, Clock, BarChart3, LineChart, PieChart, Info, Download, Filter, RefreshCw, Calendar, Zap, MapPin, Search, Database, ArrowUpRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useQuery } from "@tanstack/react-query";
+import api from "@/api";
+import { SecureOverlay } from "@/components/SecureOverlay";
+import { IconTooltip } from "@/components/shared/IconTooltip";
 
 /**
  * OP-19 — Demand Forecasting
@@ -10,194 +15,226 @@ import { cn } from "@/lib/utils";
  * DNA: Interactive charts, "What-if" toggle, peak-demand heatmaps.
  */
 
-const TRENDS = [
-  { region: "North Bangalore", category: "Produce", growth: "+18%", volume: "High", confidence: "94%" },
-  { region: "Whitefield", category: "Dairy", growth: "-2%", volume: "Stable", confidence: "88%" },
-  { region: "Indiranagar", category: "Meat/Poultry", growth: "+24%", volume: "Very High", confidence: "91%" },
-  { region: "Koramangala", category: "Grains", growth: "+5%", volume: "Stable", confidence: "96%" },
-];
-
-import { useState } from "react";
+interface ForecastData {
+  summary: {
+    period: string;
+    confidence: number;
+    totalProjected: number;
+  };
+  categories: {
+    name: string;
+    forecast: string;
+    risk: string;
+  }[];
+  insights: string[];
+}
 
 export default function DemandForecasting() {
-  const [region, setRegion] = useState("All Regions");
-  const [category, setCategory] = useState("All Categories");
   const [isRecalibrating, setIsRecalibrating] = useState(false);
+
+  const { data: forecast, isLoading } = useQuery<ForecastData>({
+    queryKey: ["operator-demand-forecast"],
+    queryFn: async () => {
+      const resp = await api.get("operator/bidding/forecast");
+      return {
+        summary: {
+          period: resp.data?.summary?.period || "Next 12 weeks",
+          confidence: resp.data?.summary?.confidence || 0,
+          totalProjected: resp.data?.summary?.totalProjected || 0,
+        },
+        categories: resp.data?.categories?.map((cat: any) => ({
+          name: cat?.name || "Unknown Sector",
+          forecast: cat?.forecast || "---",
+          risk: cat?.risk || "Unknown"
+        })) || [],
+        insights: resp.data?.insights || []
+      };
+    }
+  });
+
   return (
-    <div className="space-y-8 animate-in fade-in duration-700 pb-20">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Demand Intelligence</h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-1">
-            Analyzing consumption patterns to predict future procurement requirements.
-          </p>
-        </div>
-        
-        <div className="flex items-center gap-3">
-          <div className="h-10 px-4 bg-white dark:bg-slate-900 ring-1 ring-slate-200 dark:ring-slate-800 rounded-xl flex items-center gap-2 text-xs font-black text-slate-600 dark:text-slate-300 shadow-sm">
-            <Calendar size={14} /> APR 2024 - JUN 2024 (Q2)
+    <SecureOverlay>
+      <div className="max-w-[1280px] mx-auto space-y-8 animate-in fade-in duration-1000 pb-20">
+        {/* Header */}
+        <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-(--sp-border) pb-8">
+          <div className="space-y-2">
+            <h1 className="text-[28px] font-medium tracking-tight text-(--sp-text-0)">
+               Demand <span className="text-violet-500 font-semibold">intelligence</span>
+            </h1>
+            <div className="flex items-center gap-3">
+               <BarChart3 className="w-5 h-5 text-violet-500" />
+               <p className="text-(--sp-text-3) text-[13px] font-medium">
+                  Analyzing consumption patterns to predict future requirements.
+               </p>
+            </div>
           </div>
-          <button className="h-10 px-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl text-xs font-black flex items-center gap-2 hover:scale-105 transition-all shadow-lg">
-            <Download size={14} /> EXPORT INSIGHTS
-          </button>
-        </div>
-      </div>
+          
+          <div className="flex items-center gap-3">
+            <div className="h-9 px-4 bg-(--sp-bg-1) border border-(--sp-border) rounded-md flex items-center gap-2 text-[11px] font-bold text-(--sp-text-1) shadow-sm uppercase tracking-wider">
+              <Calendar className="w-4 h-4 text-violet-500 opacity-60" /> {forecast?.summary?.period}
+            </div>
+            <button className="h-9 px-4 bg-(--sp-cyan) text-white rounded-md text-[11px] font-bold flex items-center gap-2 hover:opacity-90 transition-all shadow-sm uppercase tracking-wider">
+              <Download size={16} /> Export data
+            </button>
+          </div>
+        </header>
 
-      {/* Forecasting DNA: The "What-If" Workspace */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        <div className="lg:col-span-3 space-y-8">
-           {/* Chart Placeholder DNA */}
-           <div className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl rounded-[3rem] p-10 ring-1 ring-slate-200 dark:ring-slate-800 shadow-sm relative overflow-hidden group">
-              <div className="flex items-center justify-between mb-10">
-                 <div className="flex items-center gap-3">
-                   <div className="w-2 h-8 bg-violet-500 rounded-full" />
-                   <h2 className="text-xl font-black uppercase tracking-tighter text-slate-900 dark:text-white">Aggregate Demand Projection</h2>
-                 </div>
-                 <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-violet-500" />
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Base Forecast</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-rose-500" />
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Election Peak (Projected)</span>
-                    </div>
-                 </div>
-              </div>
-
-              {/* Visualizing the "Growth Curve" via motion */}
-              <div className="h-64 flex items-end gap-2 px-4 relative">
-                 <div className="absolute inset-x-0 bottom-0 h-[1px] bg-slate-100 dark:bg-slate-800" />
-                 {[40, 55, 48, 72, 95, 88, 120, 110, 135, 150, 142, 168].map((h, i) => (
-                   <div key={i} className="flex-1 flex flex-col items-center gap-2 group/bar cursor-help">
-                      <div className="w-full relative">
-                         <motion.div 
-                           initial={{ height: 0 }}
-                           animate={{ height: `${h}%` }}
-                           className={cn(
-                             "w-full rounded-t-lg transition-all",
-                             i > 7 ? "bg-rose-500/80 group-hover/bar:bg-rose-400" : "bg-violet-500/80 group-hover/bar:bg-violet-400"
-                           )}
-                         />
-                         <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[9px] font-black px-2 py-1 rounded opacity-0 group-hover/bar:opacity-100 transition-opacity">
-                           {h}k Units
-                         </div>
-                      </div>
-                      <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter">W{i+1}</span>
+        {/* Forecasting Workspace */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          <div className="lg:col-span-8 space-y-8">
+             {/* Chart Area */}
+             <div className="bg-(--sp-bg-2) rounded-md p-10 border border-(--sp-border) shadow-sm flex flex-col min-h-[500px]">
+                <div className="flex flex-col md:flex-row md:items-center justify-between mb-10 gap-4">
+                   <div className="flex items-center gap-3">
+                      <div className="w-1.5 h-6 bg-violet-600 rounded-full shadow-sm" />
+                      <h2 className="text-[18px] font-medium text-(--sp-text-0) tracking-tight">Aggregate demand projection</h2>
                    </div>
-                 ))}
-              </div>
-
-              <div className="mt-10 p-6 bg-slate-50 dark:bg-slate-800/50 rounded-3xl border border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                 <div className="flex items-center gap-4">
-                    <Zap className="text-amber-500" size={20} />
-                    <p className="text-sm font-medium text-slate-600 dark:text-slate-300">
-                      <strong>Election Impact:</strong> We predict a 22% surge in poultry and dairy demand across Central Bangalore between Week 9 - Week 12.
-                    </p>
-                 </div>
-                 <button className="text-xs font-black text-violet-500 uppercase tracking-widest border-b-2 border-violet-500 pb-0.5">
-                    RECALIBRATE SAFETY STOCK
-                 </button>
-              </div>
-           </div>
-
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {TRENDS.map((trend) => (
-                <div key={trend.region} className="p-6 bg-white dark:bg-slate-900/50 backdrop-blur-xl rounded-[2.5rem] ring-1 ring-slate-100 dark:ring-slate-800 flex items-center justify-between group hover:ring-violet-500 transition-all">
-                   <div className="flex items-center gap-4">
-                      <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800 text-slate-400 group-hover:text-violet-500">
-                        <MapPin size={20} />
+                   <div className="flex items-center gap-8 bg-(--sp-bg-1) p-2 px-4 rounded-md border border-(--sp-border) shadow-inner">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-3 h-3 rounded bg-violet-500 shadow-sm" />
+                        <span className="text-[10px] font-bold text-(--sp-text-3) uppercase tracking-wider opacity-60">Base</span>
                       </div>
-                      <div>
-                        <p className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-tighter">{trend.region}</p>
-                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{trend.category}</p>
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-3 h-3 rounded bg-rose-500 shadow-sm" />
+                        <span className="text-[10px] font-bold text-(--sp-text-3) uppercase tracking-wider opacity-60">Peak</span>
                       </div>
-                   </div>
-                   <div className="text-right">
-                      <p className={cn("text-lg font-black", trend.growth.includes("+") ? "text-green-500" : "text-rose-500")}>{trend.growth}</p>
-                      <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{trend.confidence} Conf.</p>
                    </div>
                 </div>
-              ))}
-           </div>
-        </div>
 
-        {/* Right: Insights & Controls */}
-        <div className="space-y-8">
-           <div className="bg-slate-900 text-white p-8 rounded-[3rem] shadow-2xl space-y-8 overflow-hidden relative group">
-              <div className="absolute top-0 right-0 p-8 text-white/5 opacity-40">
-                <BarChart3 size={120} />
-              </div>
-              <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white/40">Market Drivers</h3>
-              
-              <div className="space-y-6">
-                 {[
-                   { label: "Seasonality", impact: "High", icon: TrendingUp },
-                   { label: "Regional Events", impact: "Medium", icon: Zap },
-                   { label: "Price Fluctuations", impact: "Low", icon: TrendingDown },
-                 ].map((driver, i) => (
-                   <div key={i} className="flex items-center justify-between group/item">
-                      <div className="flex items-center gap-3">
-                         <driver.icon size={16} className="text-violet-400" />
-                         <span className="text-[11px] font-bold uppercase tracking-widest">{driver.label}</span>
+                <div className="flex-1 flex flex-col justify-end">
+                  {isLoading ? (
+                      <div className="h-64 flex flex-col items-center justify-center space-y-4 opacity-40">
+                          <RefreshCw className="w-10 h-10 text-violet-500 animate-spin" />
+                          <p className="text-(--sp-text-3) tracking-wider text-[11px] font-bold uppercase">Synthesizing data matrix...</p>
                       </div>
-                      <span className={cn(
-                        "text-[9px] font-black px-2 py-0.5 rounded-full ring-1",
-                        driver.impact === "High" ? "bg-rose-500/10 text-rose-500 ring-rose-500/20" :
-                        "bg-blue-500/10 text-blue-500 ring-blue-500/20"
-                      )}>{driver.impact} Impact</span>
-                   </div>
-                 ))}
-              </div>
-              
-              <div className="flex gap-4">
-              <select 
-                value={region}
-                onChange={(e) => setRegion(e.target.value)}
-                className="h-10 px-4 bg-white/10 border border-white/20 rounded-xl text-xs font-bold outline-none cursor-pointer hover:bg-white/20 transition-all font-sans"
-              >
-                <option className="text-slate-900">All Regions</option>
-                <option className="text-slate-900">North zone</option>
-                <option className="text-slate-900">South zone</option>
-              </select>
-              <select 
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="h-10 px-4 bg-white/10 border border-white/20 rounded-xl text-xs font-bold outline-none cursor-pointer hover:bg-white/20 transition-all font-sans"
-              >
-                <option className="text-slate-900">All Categories</option>
-                <option className="text-slate-900">Produce</option>
-                <option className="text-slate-900">Dairy</option>
-              </select>
-            </div>
-            <button 
-              onClick={() => {
-                setIsRecalibrating(true);
-                setTimeout(() => setIsRecalibrating(false), 2000);
-              }}
-              disabled={isRecalibrating}
-              className="px-6 py-2 bg-white text-violet-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-lg flex items-center gap-2 disabled:opacity-50"
-            >
-              {isRecalibrating ? "RECALIBRATING..." : "RECALIBRATE SAFETY STOCK"} <RefreshCw className={cn(isRecalibrating && "animate-spin")} size={14} />
-            </button>
-              <div className="pt-4">
-                 <button className="w-full h-12 bg-white text-slate-900 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:scale-105 transition-all">
-                    GENERATE DEMAND RFQ
-                 </button>
-              </div>
-           </div>
+                  ) : (
+                    <div className="h-72 flex items-end gap-2.5 px-2 relative mb-2">
+                       <div className="absolute inset-x-0 bottom-0 h-px bg-(--sp-border)/50" />
+                       {[40, 55, 48, 72, 95, 88, 120, 110, 135, 150, 142, 168].map((h, i) => (
+                         <div key={i} className="flex-1 flex flex-col items-center gap-4 group/bar cursor-help">
+                            <div className="w-full relative">
+                               <motion.div 
+                                  initial={{ height: 0 }}
+                                  animate={{ height: `${(h/180)*100}%` }}
+                                  className={cn(
+                                    "w-full rounded-t-sm transition-all shadow-sm relative overflow-hidden",
+                                    i > 7 ? "bg-rose-500/80 hover:bg-rose-500" : "bg-violet-500/80 hover:bg-violet-500"
+                                  )}
+                               >
+                                  <div className="absolute inset-0 bg-white/5 opacity-0 group-hover/bar:opacity-100 transition-opacity" />
+                               </motion.div>
+                               <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] font-bold px-2 py-1.5 rounded opacity-0 group-hover/bar:opacity-100 transition-all whitespace-nowrap z-20 shadow-xl border border-white/10 uppercase tracking-tight">
+                                  {h}K units
+                               </div>
+                            </div>
+                            <span className="text-[10px] font-bold text-(--sp-text-3) uppercase tracking-wider opacity-40">W{i+1}</span>
+                         </div>
+                       ))}
+                    </div>
+                  )}
+                </div>
 
-           <div className="bg-white dark:bg-slate-900/50 backdrop-blur-xl p-8 rounded-[2.5rem] ring-1 ring-slate-100 dark:ring-slate-800 shadow-sm border-t-4 border-violet-500">
-              <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-6 flex items-center gap-2">
-                <Search size={14} className="text-violet-500" /> Confidence Audit
-              </h3>
-              <p className="text-xs font-medium text-slate-600 dark:text-slate-300 leading-relaxed uppercase tracking-tighter">
-                Forecast remains stable for 94% of SKUs. Anomalies detected in Fresh Seafood due to logistics strikes. Verification depth: 12 months historical.
-              </p>
-           </div>
+                <div className="mt-10 p-8 bg-(--sp-bg-1) rounded-md border border-(--sp-border) flex flex-col md:flex-row md:items-center justify-between gap-8 shadow-inner">
+                   <div className="flex items-center gap-5">
+                      <div className="w-12 h-12 rounded-md bg-amber-500/10 text-amber-500 flex items-center justify-center border border-amber-500/20 shadow-sm">
+                         <Zap className="w-6 h-6" />
+                      </div>
+                      <p className="text-[13px] font-semibold text-(--sp-text-1) max-w-xl leading-relaxed uppercase tracking-tight">
+                        {forecast?.insights?.[0] || "Neural pattern extraction ongoing..."}
+                      </p>
+                   </div>
+                   <button className="h-9 px-6 bg-(--sp-bg-2) text-(--sp-text-1) rounded-md text-[11px] font-bold uppercase tracking-wider hover:bg-(--sp-bg-1) transition-all border border-(--sp-border) shadow-sm">
+                      Recalibrate
+                   </button>
+                </div>
+             </div>
+
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {forecast?.categories?.map((cat) => (
+                  <div key={cat?.name} className="p-8 bg-(--sp-bg-2) rounded-md border border-(--sp-border) flex items-center justify-between group hover:border-violet-500/30 transition-all shadow-sm relative overflow-hidden">
+                     <div className="flex items-center gap-5 relative z-10">
+                        <div className="w-12 h-12 rounded-md bg-(--sp-bg-1) text-(--sp-text-3) group-hover:text-violet-500 transition-all flex items-center justify-center border border-(--sp-border) shadow-inner">
+                          <MapPin size={24} />
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-[16px] font-bold text-(--sp-text-0) tracking-tight uppercase">{cat?.name}</p>
+                          <p className="text-[10px] text-(--sp-text-3) font-bold uppercase tracking-wider opacity-40">Demand sector</p>
+                        </div>
+                     </div>
+                     <div className="text-right relative z-10">
+                        <p className={cn("text-[24px] font-bold tracking-tighter tabular-nums leading-none", cat?.forecast?.includes("+") ? "text-emerald-500" : "text-rose-600")}>{cat?.forecast}</p>
+                        <p className="text-[10px] font-bold text-(--sp-text-3) uppercase tracking-wider mt-2 opacity-60">{cat?.risk?.toUpperCase() || "UNKNOWN"} risk</p>
+                     </div>
+                     <div className="absolute top-0 right-0 w-24 h-24 bg-violet-500/5 rounded-full -mr-12 -mt-12 group-hover:scale-150 transition-transform duration-500" />
+                  </div>
+                ))}
+             </div>
+          </div>
+
+          {/* Right: Insights & Controls */}
+          <div className="lg:col-span-4 space-y-8">
+             <div className="bg-slate-900 rounded-md p-8 text-white shadow-xl relative overflow-hidden group border-b-4 border-violet-600/30">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-violet-500/5 rounded-full blur-2xl" />
+                <h3 className="text-[10px] font-bold uppercase tracking-wider text-violet-400 mb-10 opacity-60">Market drive matrix</h3>
+                
+                <div className="space-y-8 relative z-10">
+                   {[
+                     { label: "Seasonality flux", impact: "High", icon: TrendingUp },
+                     { label: "Regional event", impact: "Medium", icon: Zap },
+                     { label: "Financial Delta", impact: "Low", icon: TrendingDown },
+                   ].map((driver, i) => (
+                     <div key={i} className="flex items-center justify-between group/item">
+                        <div className="flex items-center gap-4">
+                           <div className="w-10 h-10 rounded-md bg-white/5 flex items-center justify-center border border-white/5 group-hover/item:border-violet-500/50 transition-all shadow-sm">
+                              <driver.icon size={18} className="text-violet-400" />
+                           </div>
+                           <span className="text-[14px] font-bold text-white/80 uppercase tracking-tight">{driver?.label}</span>
+                        </div>
+                        <span className={cn(
+                          "text-[9px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider shadow-sm",
+                          driver?.impact === "High" ? "bg-rose-500/10 text-rose-400 border-rose-500/20" :
+                          "bg-blue-500/10 text-blue-400 border-blue-500/20"
+                        )}>{driver?.impact}</span>
+                     </div>
+                   ))}
+                </div>
+                
+                <div className="flex flex-col gap-3 relative z-10 pt-10 mt-10 border-t border-white/5">
+                   <button 
+                    onClick={() => {
+                      setIsRecalibrating(true);
+                      setTimeout(() => setIsRecalibrating(false), 2000);
+                    }}
+                    disabled={isRecalibrating}
+                    className="h-10 px-6 bg-white/5 text-white/80 rounded-md text-[11px] font-bold uppercase tracking-wider hover:bg-white/10 transition-all shadow-sm flex items-center justify-center gap-2 disabled:opacity-50 border border-white/5"
+                  >
+                    {isRecalibrating ? "Recalibrating..." : "Neural calibration"} <RefreshCw className={cn(isRecalibrating && "animate-spin")} size={16} />
+                  </button>
+                  <button className="h-10 px-6 bg-(--sp-cyan) text-white rounded-md font-bold text-[11px] uppercase tracking-wider hover:opacity-90 transition-all shadow-md border border-cyan-400">
+                     Generate RFQ
+                  </button>
+                </div>
+             </div>
+
+             <div className="bg-(--sp-bg-2) p-10 rounded-md border border-(--sp-border) shadow-sm flex flex-col items-center text-center border-t-4 border-violet-600">
+                <div className="w-16 h-16 rounded-md bg-violet-500/10 text-violet-500 border border-violet-500/20 flex items-center justify-center shadow-sm mb-8">
+                   <Search size={32} />
+                </div>
+                <h3 className="text-[11px] font-bold uppercase tracking-wider text-(--sp-text-3) mb-4 opacity-60">Confidence level</h3>
+                <p className="text-[15px] font-semibold text-(--sp-text-1) leading-relaxed uppercase tracking-tight">
+                  {forecast?.insights?.[1] || "Pattern matching in progress..."}
+                </p>
+                
+                <div className="w-full mt-10 pt-10 border-t border-(--sp-border)/50">
+                   <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-(--sp-text-3) opacity-40">Audit depth</span>
+                      <span className="text-[13px] font-bold text-(--sp-text-1) uppercase tracking-tighter tabular-nums">12 month scan</span>
+                   </div>
+                </div>
+             </div>
+          </div>
         </div>
       </div>
-    </div>
+    </SecureOverlay>
   );
 }

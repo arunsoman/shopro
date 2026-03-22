@@ -28,7 +28,7 @@ export const CreateStaffModal: React.FC<Props> = ({ isOpen, onClose }) => {
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className="sm:">
                 <DialogHeader>
                     <DialogTitle>{t('staff.createStaff.title')}</DialogTitle>
                 </DialogHeader>

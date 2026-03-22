@@ -1,4 +1,6 @@
 import { cn } from "@/lib/utils";
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "./tooltip-icon-button";
+import { NeonEdges } from "./neon-button";
 
 interface SocialLoginsProps {
   className?: string;
@@ -23,30 +25,42 @@ export function SocialLogins({ className, onSelect }: SocialLoginsProps) {
   ];
 
   return (
-    <div className={cn("space-y-4", className)}>
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t border-slate-200 dark:border-slate-800" />
+    <TooltipProvider>
+      <div className={cn("space-y-4", className)}>
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t border-slate-200 dark:border-slate-800" />
+          </div>
+          <div className="relative flex justify-center text-[10px] uppercase tracking-widest font-bold">
+            <span className="bg-white dark:bg-slate-900 px-2 text-slate-400">Or continue with</span>
+          </div>
         </div>
-        <div className="relative flex justify-center text-[10px] uppercase tracking-widest font-bold">
-          <span className="bg-white dark:bg-slate-900 px-2 text-slate-400">Or continue with</span>
-        </div>
-      </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        {providers.map((provider) => (
-          <button
-            key={provider.id}
-            onClick={() => onSelect?.(provider.id)}
-            className="flex items-center justify-center gap-2 h-11 rounded-xl ring-1 ring-slate-200 dark:ring-slate-800 hover:ring-violet-500 dark:hover:ring-violet-500 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all active:scale-95 group"
-          >
-            {provider.icon}
-            <span className="text-sm font-medium text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-200 transition-colors">
-              {provider.name}
-            </span>
-          </button>
-        ))}
+        <div className="grid grid-cols-2 gap-3">
+          {providers.map((provider) => (
+            <button
+              key={provider.id}
+              onClick={() => onSelect?.(provider.id)}
+              className="group relative flex items-center justify-center gap-2 h-11 rounded-xl ring-1 ring-border hover:ring-primary/50 hover:bg-primary/5 transition-all active:scale-95 overflow-hidden"
+            >
+              <NeonEdges />
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center justify-center">
+                    {provider.icon}
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  Login with {provider.name}
+                </TooltipContent>
+              </Tooltip>
+              <span className="text-sm font-medium text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-200 transition-colors">
+                {provider.name}
+              </span>
+            </button>
+          ))}
+        </div>
       </div>
-    </div>
+    </TooltipProvider>
   );
 }

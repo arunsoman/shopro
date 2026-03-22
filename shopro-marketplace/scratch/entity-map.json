@@ -1,0 +1,17 @@
+{
+  "entity": "Restaurant",
+  "fields": [
+    { "name": "name", "type": "String", "required": true, "editable": true },
+    { "name": "category", "type": "String", "required": true, "editable": true },
+    { "name": "city", "type": "String", "required": true, "editable": true },
+    { "name": "address", "type": "String", "required": false, "editable": true },
+    { "name": "contactPerson", "type": "String", "required": true, "editable": true },
+    { "name": "contactInfo", "type": "String", "required": true, "editable": true },
+    { "name": "verificationStatus", "type": "Enum", "required": true, "editable": true, "options": ["PENDING", "ACTIVE", "SUSPENDED"] }
+  ],
+  "api": {
+    "list": "/api/operator/restaurants",
+    "updateStatus": "/api/operator/restaurants/{id}/status",
+    "onboard": "/api/operator/onboarding/restaurant"
+  }
+}

@@ -1,9 +1,12 @@
 @import "tailwindcss";
 
 @theme {
-  /* Core Brand Tokens */
-  --color-brand-primary: #6366f1;
-  --color-brand-secondary: #8b5cf6;
+  /* Core Brand Tokens (from Design System v1.20) */
+  --color-brand-primary: #4fd1c5; /* Cyan Accent */
+  --color-brand-secondary: #48bb78; /* Teal Accent */
+  --color-brand-accent: #ecc94b; /* Yellow Accent */
+  --color-brand-success: #48bb78; /* Teal Accent */
+  --color-brand-destructive: #f56565; /* Coral Accent */
   
   --radius-sm: 8px;
   --radius-md: 12px;
@@ -14,6 +17,18 @@
   --spacing-md: 16px;
   --spacing-lg: 24px;
   --spacing-xl: 32px;
+
+  /* Typography Scale (rem based on 14px root) */
+  --text-2xs: 0.625rem;  /* ~9px */
+  --text-xs: 0.75rem;    /* ~10.5px */
+  --text-sm: 0.8125rem;  /* ~11.5px */
+  --text-base: 1rem;     /* 14px */
+  --text-md: 1.125rem;   /* ~16px */
+  --text-lg: 1.25rem;    /* ~17.5px */
+  --text-xl: 1.5rem;     /* 21px */
+  --text-2xl: 1.875rem;  /* ~26px */
+  --text-3xl: 2.25rem;   /* ~31.5px */
+  --text-4xl: 3rem;      /* 42px */
 
   /* Map traditional-style vars to Tailwind theme */
   --color-primary: var(--color-brand-primary);
@@ -33,55 +48,130 @@
   }
 }
 
+/* Dark Mode Variant for Tailwind v4 */
+@variant dark (&:where(.dark, .dark *));
+
 @layer base {
-  :root {
-    --brand-primary: #6366f1;
-    --brand-secondary: #8b5cf6;
-    --brand-gradient: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-secondary) 100%);
-    
-    --radius-sm: 8px;
-    --radius-md: 12px;
-    --radius-lg: 20px;
+  html {
+    font-size: 14px;
   }
 
-  /* next-themes uses .dark or [data-theme='dark'] */
-  :root, [data-theme='light'] {
-    --bg-app: #f8fafc;
-    --bg-card: rgba(255, 255, 255, 0.7);
-    --bg-sidebar: #ffffff;
-    --text-primary: #0f172a;
-    --text-secondary: #64748b;
-    --border-color: rgba(226, 232, 240, 0.8);
-    --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-    --glass-border: rgba(255, 255, 255, 0.4);
+  /* ── SHOPRO DARK (default) ──────────────────────────── */
+  :root,
+  [data-theme="dark"] {
+    --sp-bg-0:    #0d0f1a;
+    --sp-bg-1:    #121624;
+    --sp-bg-2:    #181d2e;
+    --sp-bg-3:    #1e2438;
+    --sp-bg-4:    #252b42;
+
+    --sp-text-0:  #e8f4ff;
+    --sp-text-1:  #8fa8c8;
+    --sp-text-2:  #4a6080;
+
+    --sp-cyan:         #38c8f0;
+    --sp-cyan-dim:     rgba(56,200,240,0.10);
+    --sp-cyan-border:  rgba(56,200,240,0.22);
+    --sp-cyan-hover:   rgba(100,210,255,0.18);
+
+    --sp-teal:         #22d4a0;
+    --sp-teal-dim:     rgba(34,212,160,0.10);
+    --sp-teal-border:  rgba(34,212,160,0.22);
+
+    --sp-coral:        #f2614a;
+    --sp-coral-dim:    rgba(242,97,74,0.10);
+    --sp-coral-border: rgba(242,97,74,0.22);
+
+    --sp-amber:        #f5a623;
+    --sp-amber-dim:    rgba(245,166,35,0.10);
+    --sp-amber-border: rgba(245,166,35,0.22);
+
+    --sp-border:       rgba(255,255,255,0.07);
+    --sp-border-hover: rgba(100,210,255,0.18);
+    --sp-border-strong:rgba(255,255,255,0.13);
+
+    /* Legacy mapping */
+    --bg-app: var(--sp-bg-0);
+    --bg-card: var(--sp-bg-2);
+    --bg-sidebar: var(--sp-bg-1);
+    --text-primary: var(--sp-text-0);
+    --text-secondary: var(--sp-text-1);
+    --border-color: var(--sp-border);
   }
 
-  .dark, [data-theme='dark'] {
-    --bg-app: #0f172a;
-    --bg-card: rgba(30, 41, 59, 0.7);
-    --bg-sidebar: #111827;
-    --text-primary: #f1f5f9;
-    --text-secondary: #94a3b8;
-    --border-color: rgba(51, 65, 85, 0.5);
-    --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
-    --glass-border: rgba(255, 255, 255, 0.1);
+  /* ── SHOPRO LIGHT (Option A) ─────────────────────────── */
+  [data-theme="light"] {
+    --sp-bg-0:    #f4f6fa;
+    --sp-bg-1:    #eaeef6;
+    --sp-bg-2:    #ffffff;
+    --sp-bg-3:    #eaeef6;
+    --sp-bg-4:    #d8dde8;
+
+    --sp-text-0:  #0a0f1e;
+    --sp-text-1:  #3a4a66;
+    --sp-text-2:  #6e80a0;
+
+    --sp-cyan:         #0066b3;
+    --sp-cyan-dim:     rgba(0,102,179,0.08);
+    --sp-cyan-border:  rgba(0,102,179,0.22);
+    --sp-cyan-hover:   rgba(0,102,179,0.14);
+
+    --sp-teal:         #007a55;
+    --sp-teal-dim:     rgba(0,122,85,0.08);
+    --sp-teal-border:  rgba(0,122,85,0.22);
+
+    --sp-coral:        #c8320e;
+    --sp-coral-dim:    rgba(200,50,14,0.08);
+    --sp-coral-border: rgba(200,50,14,0.20);
+
+    --sp-amber:        #b35c00;
+    --sp-amber-dim:    rgba(179,92,0,0.08);
+    --sp-amber-border: rgba(179,92,0,0.22);
+
+    --sp-border:       rgba(15,30,80,0.09);
+    --sp-border-hover: rgba(0,102,179,0.28);
+    --sp-border-strong:rgba(15,30,80,0.18);
+
+    /* Legacy mapping */
+    --bg-app: var(--sp-bg-0);
+    --bg-card: var(--sp-bg-2);
+    --bg-sidebar: var(--sp-bg-1);
+    --text-primary: var(--sp-text-0);
+    --text-secondary: var(--sp-text-1);
+    --border-color: var(--sp-border);
   }
 
   body {
     @apply antialiased;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background-color: var(--bg-app);
-    color: var(--text-primary);
-    transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    background-color: var(--sp-bg-0);
+    color: var(--sp-text-0);
+    transition: background-color 0.2s ease, color 0.2s ease;
+    line-height: 1.5;
   }
-}
 
-@layer base {
+  h1, h2, h3, h4, h5, h6 {
+    color: var(--text-primary);
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
   * {
     @apply border-border;
     box-sizing: border-box;
     margin: 0;
     padding: 0;
+  }
+
+  /* Shopro DNA: Field Glow */
+  input:focus, textarea:focus, select:focus {
+    outline: none;
+    @apply ring-2 ring-primary/20 border-primary shadow-[0_0_15px_rgba(99,102,241,0.2)];
+    transition: all var(--transition-base);
+  }
+
+  .dark input:focus, .dark textarea:focus, .dark select:focus {
+    @apply ring-2 ring-primary/40 border-primary shadow-[0_0_20px_rgba(99,102,241,0.4)];
   }
 }
 
@@ -105,10 +195,34 @@
   padding: var(--spacing-lg);
   border-radius: var(--radius-md);
   transition: transform var(--transition-fast);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
 }
 
 .card:hover {
   transform: translateY(-4px);
+}
+
+/* Shopro DNA: Neon Borders */
+.neon-border-primary {
+  @apply border-primary shadow-[0_0_10px_rgba(99,102,241,0.5)];
+}
+
+.neon-border-secondary {
+  @apply border-secondary shadow-[0_0_10px_rgba(139,92,246,0.5)];
+}
+
+.neon-glow {
+  filter: drop-shadow(0 0 8px var(--color-primary));
+}
+
+@keyframes neon-pulse {
+  0%, 100% { opacity: 0.8; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.05); }
+}
+
+.animate-neon {
+  animation: neon-pulse 2s infinite ease-in-out;
 }
 
 @keyframes shimmer {

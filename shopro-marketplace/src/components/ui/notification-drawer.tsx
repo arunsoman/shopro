@@ -7,7 +7,8 @@
  * Destination:   /src/components/ui/notification-drawer.tsx
  */
 
-import React, { ReactNode } from "react";
+import React from "react";
+import type { ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { StatusBadge } from "./status-badge";
@@ -16,7 +17,7 @@ import { StatusBadge } from "./status-badge";
 // SHARED DNA PRIMITIVES
 // ─────────────────────────────────────────────────────────────────────────────
 const SPRING = { type: "spring" as const, stiffness: 500, damping: 30, mass: 1 };
-const EASE_OUT_CSS = "cubic-bezier(0.16, 1, 0.3, 1)";
+const EASE_OUT_CSS: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
 export function GlowingBorder({ spread = 40, borderWidth = 1, color = "rgba(100, 100, 255, 0.2)" }) {
   return (

@@ -53,7 +53,7 @@ export const VendorRFQPage: React.FC = () => {
 
     if (rfqError || !rfq) return (
         <div className="min-h-screen bg-muted/30 flex items-center justify-center p-4">
-            <Card className="max-w-md w-full text-center">
+            <Card className=" w-full text-center">
                 <CardContent className="pt-8 space-y-4">
                     <AlertCircle className="h-12 w-12 text-destructive mx-auto" />
                     <h2 className="text-xl font-bold">Invalid Quotation Link</h2>

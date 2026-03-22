@@ -12,7 +12,6 @@ import SupplierRegistration from './pages/auth/SupplierRegistration';
 // Phase 3: Portal Screens
 import RestaurantDashboard from './pages/restaurant/Dashboard';
 import Catalog from './pages/restaurant/Catalog';
-import BidComparison from './pages/restaurant/BidComparison';
 import OrderHistory from './pages/restaurant/OrderHistory';
 import POCreation from './pages/restaurant/POCreation';
 import PODetail from './pages/restaurant/PODetail';
@@ -66,6 +65,7 @@ import SourcingWizard from './pages/operator/SourcingWizard';
 import DemandForecasting from './pages/operator/DemandForecasting';
 import MarginOptimization from './pages/operator/MarginOptimization';
 import POOutbox from './pages/operator/POOutbox';
+import NotificationHub from './pages/operator/NotificationHub';
 import SupplierDashboard from './pages/supplier/Dashboard';
 import SupplierCatalog from './pages/supplier/Catalog';
 import BidInvitations from './pages/supplier/BidInvitations';
@@ -93,6 +93,7 @@ function App() {
           <RestaurantShell>
             <Routes>
               <Route path="dashboard" element={<RestaurantDashboard />} />
+              <Route path="catalog" element={<Catalog />} />
               <Route path="orders" element={<OrderHistory />} />
               <Route path="orders/new" element={<POCreation />} />
               <Route path="orders/:poId" element={<PODetail />} />
@@ -113,6 +114,7 @@ function App() {
         } />
 
         {/* Operator Portal */}
+        <Route path="/operator/login" element={<OperatorLogin />} />
         <Route path="/operator/*" element={
           <OperatorShell>
             <Routes>
@@ -123,7 +125,7 @@ function App() {
               <Route path="po/:poId/split" element={<POSplit />} />
               <Route path="po/:poId/sub-pos" element={<SubPOManagement />} />
               <Route path="bids/new" element={<BidCreation />} />
-              <Route path="bids/:bidId" element={<BidEvaluation />} />
+              <Route path="bids/:eventId" element={<BidEvaluation />} />
               <Route path="auto-po" element={<AutoPOAdmin />} />
               <Route path="restaurants" element={<RestaurantManagement />} />
               <Route path="suppliers/vetting" element={<SupplierVetting />} />
@@ -147,6 +149,7 @@ function App() {
               <Route path="automation-logic" element={<AutomationLogic />} />
               <Route path="automation-schedules" element={<WorkflowSchedules />} />
               <Route path="automation-log" element={<AutomationLog />} />
+              <Route path="administration/notifications" element={<NotificationHub />} />
               <Route path="users" element={<UserManagement />} />
               <Route path="ledger" element={<StatementOfAccounts />} />
               <Route path="reconciliation" element={<PaymentReconciliation />} />

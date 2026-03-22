@@ -6,11 +6,12 @@ import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover
 import { NotificationDrawer, type Notification } from "@/components/ui/notification-drawer";
 import CinematicThemeSwitcher from "@/components/ui/cinematic-theme-switcher";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
+import { NeonEdges } from "@/components/ui/neon-button";
 import { OrbitalLoader } from "@/components/ui/orbital-loader";
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, ShoppingBag } from "lucide-react";
 
 /**
  * SHELL-R — Restaurant App Shell
@@ -52,6 +53,7 @@ export function RestaurantShell({ children }: { children: React.ReactNode }) {
         activeId="dashboard" 
         items={[
           { id: "dashboard", label: "Dashboard", href: "/restaurant/dashboard", icon: <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" /></svg> },
+          { id: "catalog", label: "Marketplace", href: "/restaurant/catalog", icon: <ShoppingBag size={20} /> },
           { id: "orders", label: "Orders", href: "/restaurant/orders", icon: <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg> },
           { id: "inventory", label: "Inventory", href: "/restaurant/inventory", icon: <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg> },
           { id: "inventory-prediction", label: "Inventory Risks", href: "/restaurant/inventory-prediction", icon: <AlertTriangle size={20} /> },
@@ -70,7 +72,7 @@ export function RestaurantShell({ children }: { children: React.ReactNode }) {
             <GlowingSearch 
               placeholder="Search products, orders..." 
               className="hidden lg:flex"
-              onSearch={(q) => console.log("Restaurant Search:", q)}
+              onSearch={(q: string) => console.log("Restaurant Search:", q)}
             />
           </div>
 
@@ -87,7 +89,7 @@ export function RestaurantShell({ children }: { children: React.ReactNode }) {
                 </svg>
               </TooltipIconButton>
               {unreadCount > 0 && (
-                <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-blue-500 ring-2 ring-white dark:ring-slate-900" />
+                <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-brand-primary ring-2 ring-card animate-pulse shadow-[0_0_8px_rgba(99,102,241,0.5)]" />
               )}
             </div>
 
@@ -95,12 +97,13 @@ export function RestaurantShell({ children }: { children: React.ReactNode }) {
 
             <Popover>
               <PopoverTrigger asChild>
-                <button className="flex items-center gap-2 pl-2 pr-1 py-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-                  <div className="flex flex-col items-end hidden sm:flex">
+                <button className="group relative flex items-center gap-2 pl-2 pr-1 py-1 rounded-full hover:bg-primary/5 transition-all overflow-hidden">
+                  <NeonEdges />
+                  <div className="flex flex-col items-end hidden sm:flex relative z-10">
                     <span className="text-xs font-bold leading-none">The Italian Kitchen</span>
                     <span className="text-[10px] text-muted-foreground uppercase tracking-wider mt-0.5">Manager</span>
                   </div>
-                  <div className="w-8 h-8 rounded-full bg-violet-600 flex items-center justify-center text-white text-xs font-bold border-2 border-white dark:border-slate-800 shadow-sm">
+                  <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white text-xs font-bold border-2 border-card shadow-sm shadow-primary/20 relative z-10">
                     IK
                   </div>
                 </button>

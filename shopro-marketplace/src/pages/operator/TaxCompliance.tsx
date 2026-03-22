@@ -1,8 +1,13 @@
 "use client";
 
+import React from "react";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { Search, ShieldCheck, Download, Calculator, Landmark, PieChart } from "lucide-react";
+import { Search, ShieldCheck, Download, Calculator, Landmark, PieChart, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useQuery } from "@tanstack/react-query";
+import api from "@/api";
+import { SecureOverlay } from "@/components/SecureOverlay";
+import { IconTooltip } from "@/components/shared/IconTooltip";
 
 /**
  * OP-15 — Tax Compliance Dashboard
@@ -10,109 +15,130 @@ import { cn } from "@/lib/utils";
  * DNA: Calculation cards, due-date counters, export-ready data grids.
  */
 
-const TAX_RECORDS = [
-  { id: "TX-GST-88", month: "March 2024", type: "GST (Output)", amount: 485000, status: "PENDING", dueDate: "Apr 20" },
-  { id: "TX-TDS-45", month: "February 2024", type: "TDS (Section 194Q)", amount: 12400, status: "FILED", dueDate: "Mar 07" },
-  { id: "TX-TCS-21", month: "February 2024", type: "TCS (Vendor)", amount: 5500, status: "FILED", dueDate: "Mar 15" },
-];
+interface TaxRule {
+  id: string;
+  name: string;
+  rate: string;
+  status: string;
+}
 
 export default function TaxCompliance() {
+  const { data: taxRules = [], isLoading } = useQuery<TaxRule[]>({
+    queryKey: ["tax-rules"],
+    queryFn: async () => {
+      const resp = await api.get("/operator/finance/tax/rules");
+      return resp.data?.map((rule: any) => ({
+        id: rule?.id || "---",
+        name: rule?.name || "Unknown Component",
+        rate: rule?.rate || "0%",
+        status: rule?.status || "Inactive"
+      })) || [];
+    }
+  });
+
   return (
-    <div className="space-y-8 animate-in fade-in duration-700">
+    <SecureOverlay>
+    <div className="max-w-[1280px] mx-auto space-y-8 animate-in fade-in duration-1000 pb-20">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Tax & Compliance</h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-1">
-            Centralized oversight for statutory filings across the marketplace.
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-(--sp-border) pb-8">
+        <div className="space-y-2">
+          <h1 className="text-[28px] font-medium tracking-tight text-(--sp-text-0)">
+             Tax & <span className="text-(--sp-cyan) font-semibold">compliance</span>
+          </h1>
+          <p className="text-(--sp-text-3) text-[13px] font-medium">
+             Centralized oversight for statutory filings across the marketplace protocol.
           </p>
         </div>
         
         <div className="flex items-center gap-3">
-          <button className="h-10 px-4 bg-white dark:bg-slate-900 text-slate-600 dark:text-white rounded-xl text-xs font-black flex items-center gap-2 ring-1 ring-slate-200 dark:ring-slate-800 hover:bg-slate-50 transition-all shadow-sm">
-            <PieChart size={14} /> FILING HISTORY
+          <button className="h-9 px-4 bg-(--sp-bg-1) text-(--sp-text-1) rounded-md text-[11px] font-bold flex items-center gap-2 border border-(--sp-border) hover:bg-(--sp-bg-0) transition-all shadow-sm uppercase tracking-wider">
+            <PieChart size={16} /> Filing history
           </button>
-          <button className="h-10 px-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl text-xs font-black flex items-center gap-2 hover:scale-105 transition-all shadow-lg">
-            <Calculator size={14} /> RUN TAX CALC
+          <button className="h-9 px-4 bg-(--sp-cyan) text-white rounded-md text-[11px] font-bold flex items-center gap-2 hover:opacity-90 transition-all shadow-sm uppercase tracking-wider">
+            <Calculator size={16} /> Run tax calc
           </button>
         </div>
-      </div>
+      </header>
 
-      {/* Grid: Tax Stats DNA */}
+      {/* Grid: Tax Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {[
-          { label: "GST Payable", value: "₹4.85L", icon: Landmark, color: "blue", due: "12 Days" },
-          { label: "TDS Withheld", value: "₹12.4K", icon: ShieldCheck, color: "violet", due: "Filed" },
-          { label: "Tax Liability", value: "₹5.12L", icon: Calculator, color: "rose", due: "Total" },
-          { label: "Compliance Score", value: "99.8%", icon: PieChart, color: "green", due: "High" },
+          { label: "GST payable", value: "₹4.85L", icon: Landmark, color: "text-(--sp-cyan)", due: "12 Days" },
+          { label: "TDS withheld", value: "₹12.4K", icon: ShieldCheck, color: "text-(--sp-text-3)", due: "Filed" },
+          { label: "Tax liability", value: "₹5.12L", icon: Calculator, color: "text-rose-500", due: "Total" },
+          { label: "Compliance score", value: "99.8%", icon: PieChart, color: "text-emerald-500", due: "High" },
         ].map((stat) => (
-          <div key={stat.label} className="group bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl p-6 rounded-[2rem] ring-1 ring-slate-200 dark:ring-slate-800 shadow-sm hover:shadow-xl transition-all relative overflow-hidden">
-             <div className="flex justify-between items-center mb-4">
-               <div className={cn("p-2.5 rounded-xl", 
-                 stat.color === "blue" ? "bg-blue-500/10 text-blue-500" :
-                 stat.color === "violet" ? "bg-violet-500/10 text-violet-500" :
-                 stat.color === "rose" ? "bg-rose-500/10 text-rose-500" :
-                 "bg-green-500/10 text-green-500"
-               )}>
-                 <stat.icon size={18} />
-               </div>
-               <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{stat.due}</span>
+          <div key={stat.label} className="group bg-(--sp-bg-2) p-6 rounded-md border border-(--sp-border) shadow-sm hover:border-(--sp-cyan)/30 transition-all relative overflow-hidden">
+             <div className="flex justify-between items-center mb-6">
+                <div className={cn("w-10 h-10 rounded-md flex items-center justify-center border border-(--sp-border) bg-(--sp-bg-1) shadow-sm", stat.color)}>
+                  <stat.icon size={20} />
+                </div>
+                <span className="text-[10px] font-bold text-(--sp-text-3) uppercase tracking-wider border border-(--sp-border) px-2 py-0.5 rounded bg-(--sp-bg-1) shadow-sm">{stat.due}</span>
              </div>
-             <p className="text-2xl font-black text-slate-900 dark:text-white mb-1">{stat.value}</p>
-             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.1em]">{stat.label}</p>
+             <p className="text-[24px] font-semibold text-(--sp-text-0) mb-1 tracking-tight tabular-nums leading-none">{stat.value}</p>
+             <p className="text-[11px] text-(--sp-text-3) font-bold uppercase tracking-wider opacity-60">{stat.label}</p>
           </div>
         ))}
       </div>
 
-      {/* Table Section DNA */}
-      <div className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl rounded-[2.5rem] ring-1 ring-slate-200 dark:ring-slate-800 overflow-hidden shadow-sm">
-        <div className="p-8 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-           <h2 className="text-lg font-bold uppercase tracking-tighter text-slate-900 dark:text-white">Tax Liability Log</h2>
+      {/* Table Section */}
+      <div className="bg-(--sp-bg-2) rounded-md border border-(--sp-border) overflow-hidden shadow-sm">
+        <div className="p-6 border-b border-(--sp-border) flex flex-col md:flex-row md:items-center justify-between gap-6">
+           <h2 className="text-[18px] font-medium text-(--sp-text-0)">Tax liability registry</h2>
            <div className="flex items-center gap-3">
              <div className="relative group">
-               <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-violet-500 transition-colors" />
-               <input type="text" placeholder="Filter filing..." className="h-8 pl-8 pr-4 bg-slate-50 dark:bg-slate-800 rounded-lg text-[10px] font-bold outline-none ring-1 ring-slate-200 dark:ring-slate-700 focus:ring-violet-500 transition-all w-32" />
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-(--sp-text-3) group-focus-within:text-(--sp-cyan) transition-colors opacity-40" />
+                <input type="text" placeholder="Filter protocols..." className="h-9 pl-9 pr-4 bg-(--sp-bg-1) rounded-md text-[13px] outline-none border border-(--sp-border) focus:border-(--sp-cyan)/50 transition-all w-48 text-(--sp-text-1) placeholder:text-(--sp-text-3)/50" />
              </div>
-             <button className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 transition-colors">
-               <Download size={18} />
+             <button className="w-9 h-9 rounded-md bg-(--sp-bg-1) border border-(--sp-border) flex items-center justify-center text-(--sp-text-3) hover:text-(--sp-cyan) transition-all shadow-sm">
+                <Download size={16} />
              </button>
            </div>
         </div>
-
+        
+        {isLoading ? (
+             <div className="py-20 flex flex-col items-center justify-center space-y-4 opacity-40">
+                <RefreshCw className="w-10 h-10 text-(--sp-cyan) animate-spin" />
+                <p className="text-(--sp-text-3) tracking-wider text-[11px] font-bold uppercase">Scanning compliance nodes...</p>
+             </div>
+        ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
-              <tr className="bg-slate-50/50 dark:bg-slate-800/50 text-slate-500 uppercase text-[10px] font-bold tracking-widest">
-                <th className="p-6">Filing Period</th>
-                <th className="p-6">Tax Component</th>
-                <th className="p-6">Liability Amount</th>
-                <th className="p-6">Due Date</th>
-                <th className="p-6">Filing Status</th>
-                <th className="p-6 text-right">Actions</th>
+               <tr className="bg-(--sp-bg-1)/50 text-(--sp-text-3) border-b border-(--sp-border)">
+                <th className="px-8 py-4 text-[11px] font-bold uppercase tracking-wider">Compliance period</th>
+                <th className="px-8 py-4 text-[11px] font-bold uppercase tracking-wider">Tax component</th>
+                <th className="px-8 py-4 text-[11px] font-bold uppercase tracking-wider">Rate alpha</th>
+                <th className="px-8 py-4 text-[11px] font-bold uppercase tracking-wider">Filing status</th>
+                <th className="px-8 py-4 text-[11px] font-bold uppercase tracking-wider text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-bold">
-              {TAX_RECORDS.map((rec) => (
-                <tr key={rec.id} className="group hover:bg-white dark:hover:bg-slate-800/50 transition-colors">
-                  <td className="p-6 font-black text-sm text-slate-700 dark:text-slate-200">
-                    {rec.month}
-                    <p className="text-[9px] text-slate-400 uppercase tracking-tighter font-bold mt-0.5">{rec.id}</p>
+            <tbody className="divide-y divide-(--sp-border)">
+              {taxRules?.map((rec) => (
+                <tr key={rec?.id} className="group hover:bg-(--sp-bg-1)/50 transition-colors">
+                  <td className="px-8 py-6">
+                    <div className="text-[15px] font-semibold text-(--sp-text-1) tracking-tight uppercase">{rec?.name}</div>
+                    <p className="text-[11px] text-(--sp-text-3) font-bold uppercase tracking-wider opacity-40 mt-1">ID: {rec?.id}</p>
                   </td>
-                  <td className="p-6">
-                    <span className="text-[10px] text-slate-500 uppercase tracking-widest">{rec.type}</span>
+                  <td className="px-8 py-6">
+                    <span className="text-[11px] text-(--sp-text-3) font-bold uppercase tracking-wider opacity-60">Statutory protocol</span>
                   </td>
-                  <td className="p-6 text-sm font-black text-slate-900 dark:text-white">₹{rec.amount.toLocaleString()}</td>
-                  <td className="p-6 text-sm text-slate-500 font-medium">{rec.dueDate}</td>
-                  <td className="p-6">
-                    <StatusBadge status={rec.status as any} />
+                  <td className="px-8 py-6 text-[18px] font-semibold text-(--sp-text-0) tabular-nums tracking-tight">{rec?.rate}</td>
+                  <td className="px-8 py-6">
+                     <div className={cn(
+                       "inline-flex px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase border shadow-sm",
+                       rec?.status === 'Active' ? "bg-emerald-50 text-emerald-600 border-emerald-100" : "bg-(--sp-bg-1) text-(--sp-text-3) border-(--sp-border)"
+                     )}>
+                       {rec?.status}
+                     </div>
                   </td>
-                  <td className="p-6 text-right">
-                    <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button className="p-2.5 rounded-xl bg-violet-600 text-white font-black text-[9px] uppercase tracking-widest hover:scale-105 transition-all">
-                         FILE NOW
+                  <td className="px-8 py-6 text-right">
+                    <div className="flex items-center justify-end gap-3 transition-all opacity-0 group-hover:opacity-100">
+                      <button className="h-8 px-4 rounded-md bg-(--sp-cyan) text-white font-bold text-[11px] uppercase tracking-wider hover:opacity-90 transition-all shadow-sm">
+                         File now
                       </button>
-                      <button className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-400 hover:text-slate-900 transition-all">
-                         <Download size={16} />
+                      <button className="w-8 h-8 rounded-md border border-(--sp-border) text-(--sp-text-3) hover:text-(--sp-cyan) transition-all flex items-center justify-center bg-(--sp-bg-2) shadow-sm">
+                         <Download size={14} />
                       </button>
                     </div>
                   </td>
@@ -121,7 +147,9 @@ export default function TaxCompliance() {
             </tbody>
           </table>
         </div>
+        )}
       </div>
     </div>
+    </SecureOverlay>
   );
 }

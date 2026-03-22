@@ -2,10 +2,11 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 export interface CartItem {
-  productId: string;
+  itemId: string;
   productName: string;
   unit: string;
   quantity: number;
+  foodId?: number;
   image?: string;
   supplierId?: string;
   supplierName?: string;
@@ -14,8 +15,8 @@ export interface CartItem {
 interface CartState {
   items: CartItem[];
   addItem: (item: CartItem) => void;
-  removeItem: (productId: string) => void;
-  updateQuantity: (productId: string, quantity: number) => void;
+  removeItem: (itemId: string) => void;
+  updateQuantity: (itemId: string, quantity: number) => void;
   clearCart: () => void;
   getItemCount: () => number;
 }
@@ -27,12 +28,12 @@ export const useCart = create<CartState>()(
       
       addItem: (newItem) => {
         const { items } = get();
-        const existingItem = items.find((item) => item.productId === newItem.productId);
+        const existingItem = items.find((item) => item.itemId === newItem.itemId);
         
         if (existingItem) {
           set({
             items: items.map((item) =>
-              item.productId === newItem.productId
+              item.itemId === newItem.itemId
                 ? { ...item, quantity: item.quantity + newItem.quantity }
                 : item
             ),
@@ -42,21 +43,21 @@ export const useCart = create<CartState>()(
         }
       },
       
-      removeItem: (productId) => {
+      removeItem: (itemId) => {
         set({
-          items: get().items.filter((item) => item.productId !== productId),
+          items: get().items.filter((item) => item.itemId !== itemId),
         });
       },
       
-      updateQuantity: (productId, quantity) => {
+      updateQuantity: (itemId, quantity) => {
         if (quantity <= 0) {
-          get().removeItem(productId);
+          get().removeItem(itemId);
           return;
         }
         
         set({
           items: get().items.map((item) =>
-            item.productId === productId ? { ...item, quantity } : item
+            item.itemId === itemId ? { ...item, quantity } : item
           ),
         });
       },

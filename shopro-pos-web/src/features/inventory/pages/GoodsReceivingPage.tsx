@@ -18,17 +18,17 @@ export const GoodsReceivingPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const { session } = useAuth();
-    
+
     // We already fetch all POs in the management page, so we can just find it here
     const { data: pos, isLoading } = usePurchaseOrders();
     const po = pos?.find(p => p.id === id);
-    
+
     const receiveGoods = useReceiveGoods();
-    
+
     const [receivedQuantities, setReceivedQuantities] = useState<Record<string, number>>({});
     const [deliveryNote, setDeliveryNote] = useState('');
     const [notes, setNotes] = useState('');
-    
+
     // Initialize quantities with ordered quantities or 0
     useEffect(() => {
         if (po && po.items && Object.keys(receivedQuantities).length === 0) {
@@ -43,9 +43,9 @@ export const GoodsReceivingPage: React.FC = () => {
     if (isLoading) {
         return <InventorySkeleton variant="dashboard" />;
     }
-    
+
     if (!po) return <div className="p-8 text-error font-medium">{t('inventory.grn.poNotFound')}</div>;
-    
+
     if (po.status !== 'SHIPPED' && po.status !== 'PARTIALLY_RECEIVED') {
         return (
             <div className="p-8 max-w-3xl mx-auto">
@@ -53,7 +53,7 @@ export const GoodsReceivingPage: React.FC = () => {
                     <CardContent className="p-8 flex flex-col items-center justify-center text-center space-y-4">
                         <AlertCircle className="h-12 w-12 text-warning" />
                         <h2 className="text-xl font-bold text-foreground">{t('inventory.grn.cannotReceive')}</h2>
-                        <p className="text-muted-foreground font-medium max-w-md">{t('inventory.grn.statusRestriction', { status: po.status })}</p>
+                        <p className="text-muted-foreground font-medium ">{t('inventory.grn.statusRestriction', { status: po.status })}</p>
                         <Button variant="outline" onClick={() => navigate('/inventory/pos')} className="mt-4">{t('inventory.grn.backToPurchases')}</Button>
                     </CardContent>
                 </Card>
@@ -84,7 +84,7 @@ export const GoodsReceivingPage: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!session || !id) return;
-        
+
         try {
             await receiveGoods.mutateAsync({
                 id,
@@ -141,7 +141,7 @@ export const GoodsReceivingPage: React.FC = () => {
                                         const received = receivedQuantities[item.ingredientId] ?? item.orderedQty;
                                         const isShort = received < item.orderedQty;
                                         const isOver = received > item.orderedQty;
-                                        
+
                                         return (
                                             <TableRow key={item.id} className={isShort ? 'bg-warning/5' : ''}>
                                                 <TableCell>
@@ -158,8 +158,8 @@ export const GoodsReceivingPage: React.FC = () => {
                                                             </Badge>
                                                         )}
                                                         <div className="flex items-center gap-2 max-w-[140px]">
-                                                            <Input 
-                                                                type="number" 
+                                                            <Input
+                                                                type="number"
                                                                 value={received || ''}
                                                                 onChange={(e) => handleQuantityChange(item.ingredientId, e.target.value)}
                                                                 className={`text-right ${isShort ? 'border-warning/40 focus-visible:ring-warning' : ''}`}
@@ -195,12 +195,12 @@ export const GoodsReceivingPage: React.FC = () => {
                                     <p className="text-sm text-muted-foreground font-medium">{t('inventory.grn.tracking')} {po.trackingNumber || t('inventory.benchmarking.na')}</p>
                                 </div>
                             </div>
-                            
+
                             <form id="grn-form" onSubmit={handleSubmit} className="space-y-6 pt-2">
                                 <div className="space-y-2">
                                     <Label htmlFor="deliveryNote">{t('inventory.grn.deliveryNoteRef')}</Label>
-                                    <Input 
-                                        id="deliveryNote" 
+                                    <Input
+                                        id="deliveryNote"
                                         placeholder={t('inventory.grn.deliveryPlaceholder')}
                                         value={deliveryNote}
                                         onChange={(e) => setDeliveryNote(e.target.value)}
@@ -209,8 +209,8 @@ export const GoodsReceivingPage: React.FC = () => {
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="notes">{t('inventory.grn.receivingNotes')}</Label>
-                                    <textarea 
-                                        id="notes" 
+                                    <textarea
+                                        id="notes"
                                         className="h-24 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                                         placeholder={t('inventory.grn.notesPlaceholder')}
                                         value={notes}
@@ -221,10 +221,10 @@ export const GoodsReceivingPage: React.FC = () => {
                         </CardContent>
                     </Card>
 
-                    <Button 
+                    <Button
                         form="grn-form"
-                        type="submit" 
-                        size="lg" 
+                        type="submit"
+                        size="lg"
                         className={`w-full h-14 text-base font-bold shadow-lg transition-all ${hasDiscrepancy ? 'bg-warning hover:bg-warning/90 shadow-warning/20 text-warning-foreground' : 'bg-primary hover:bg-primary/90 shadow-primary/20 text-primary-foreground'}`}
                         disabled={receiveGoods.isPending}
                     >
@@ -235,7 +235,7 @@ export const GoodsReceivingPage: React.FC = () => {
                             </span>
                         )}
                     </Button>
-                    
+
                     {hasDiscrepancy && (
                         <p className="text-xs text-warning text-center px-4 font-bold animate-pulse">
                             {t('inventory.grn.discrepancyFlag')}

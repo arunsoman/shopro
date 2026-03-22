@@ -1,265 +1,332 @@
+"use client";
+
 import React, { useState, useMemo } from 'react';
-import { ShoppingCart, Search, Filter, Plus, Info, Check, Package, Leaf, Flame, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useCart } from '@/lib/store/cart-store';
 import { cn } from '@/lib/utils';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import api from '@/api';
+import { 
+  ShoppingCart, 
+  Search, 
+  Filter, 
+  Plus, 
+  Info, 
+  Check, 
+  Package, 
+  Leaf, 
+  Flame, 
+  Zap,
+  ShoppingBag,
+  Activity,
+  RefreshCw,
+  ChevronRight,
+  TrendingUp,
+  Box,
+  Globe,
+  Award,
+  ArrowRight,
+  X,
+  PlusCircle
+} from 'lucide-react';
+import { useCart } from '@/lib/store/cart-store';
 import { useNavigate } from 'react-router-dom';
+import { SecureOverlay } from "@/components/SecureOverlay";
 
-// --- DNA PRIMITIVES (Required by Shopro UI Kit) ---
-const SPRING = { type: "spring" as const, stiffness: 500, damping: 30, mass: 1 };
-const GLOW_GRADIENT = `radial-gradient(circle, #dd7bbb 10%, #dd7bbb00 20%), radial-gradient(circle at 40% 40%, #d79f1e 5%, #d79f1e00 15%), radial-gradient(circle at 60% 60%, #5a922c 10%, #5a922c00 20%), radial-gradient(circle at 40% 60%, #4c7894 10%, #4c789400 20%), repeating-conic-gradient(from 236.84deg at 50% 50%, #dd7bbb 0%, #d79f1e calc(25% / 5), #5a922c calc(50% / 5), #4c7894 calc(75% / 5), #dd7bbb calc(100% / 5))`;
+/**
+ * RC-01 — Buyer Catalog
+ * Purpose: Discover fresh ingredients and supplies for restaurant buyers.
+ */
 
-function GlowingBorder({ spread = 30, borderWidth = 1 }: { spread?: number; borderWidth?: number }) {
-  return (
-    <div style={{ "--spread": spread, "--start": "0", "--active": "0", "--glowingeffect-border-width": `${borderWidth}px`, "--repeating-conic-gradient-times": "5", "--gradient": GLOW_GRADIENT } as React.CSSProperties}
-      className="pointer-events-none absolute inset-0 rounded-[inherit]">
-      <div className={cn("glow rounded-[inherit]", 'after:content-[""] after:rounded-[inherit] after:absolute after:inset-[calc(-1*var(--glowingeffect-border-width))]', "after:[border:var(--glowingeffect-border-width)_solid_transparent]", "after:[background:var(--gradient)] after:[background-attachment:fixed]", "after:opacity-[var(--active)] after:transition-opacity after:duration-300", "after:[mask-clip:padding-box,border-box] after:[mask-composite:intersect]", "after:[mask-image:linear-gradient(#0000,#0000),conic-gradient(from_calc((var(--start)-var(--spread))*1deg),#00000000_0deg,#fff,#00000000_calc(var(--spread)*2deg))]")} />
-    </div>
-  );
+interface Category {
+  id: string;
+  name: string;
+  icon: string;
 }
 
-function NeonEdges({ active = false, color = "blue" }: { active?: boolean; color?: "blue" | "violet" | "green" }) {
-  const via = color === "violet" ? "via-violet-500" : color === "green" ? "via-green-400" : "via-blue-500";
-  return (<>
-    <span className={cn("pointer-events-none absolute h-px inset-x-0 top-0 bg-gradient-to-r w-3/4 mx-auto from-transparent to-transparent transition-all duration-500 ease-in-out", via, active ? "opacity-100" : "opacity-0 group-hover:opacity-100 group-focus-within:opacity-100")} />
-    <span className={cn("pointer-events-none absolute inset-x-0 h-px -bottom-px bg-gradient-to-r w-3/4 mx-auto from-transparent to-transparent transition-opacity duration-500 ease-in-out", via, active ? "opacity-30" : "opacity-0 group-hover:opacity-30 group-focus-within:opacity-30")} />
-  </>);
+interface InventoryItem {
+  id: string;
+  restaurantId: string;
+  foodId: number;
+  foodName: string;
+  foodGroup: string;
+  foodSubgroup: string;
+  quantity: number;
+  unit: string;
+  leadTime: number;
+  alertLevel: number;
+  reorderCount: number;
+  status: string;
+  productId?: string;
 }
 
-// --- MOCK DATA ---
-const CATEGORIES = [
-  { id: 'all', label: 'All Products' },
-  { id: 'fresh', label: 'Fresh Produce', icon: <Leaf className="w-4 h-4" /> },
-  { id: 'meat', label: 'Meat & Poultry', icon: <Flame className="w-4 h-4" /> },
-  { id: 'dry', label: 'Dry Goods', icon: <Package className="w-4 h-4" /> },
-  { id: 'beverages', label: 'Beverages', icon: <Zap className="w-4 h-4" /> },
-];
-
-const PRODUCTS = [
-  { id: 'p1', name: 'Fresh Organic Roma Tomatoes', category: 'fresh', unit: 'kg', stock: 'In Stock', supplier: 'GreenValley Farms', image: '🍅', tags: ['Organic', 'Fresh'] },
-  { id: 'p2', name: 'Premium Wagyu Beef Ribeye', category: 'meat', unit: 'kg', stock: 'Low Stock', supplier: 'Prime Cuts Co.', image: '🥩', tags: ['Premium', 'Halal'] },
-  { id: 'p3', name: 'Artisan Sourdough Flour', category: 'dry', unit: '5kg bag', stock: 'In Stock', supplier: 'Baker\'s Choice', image: '🌾', tags: ['Artisan'] },
-  { id: 'p4', name: 'Espresso Roast Coffee Beans', category: 'dry', unit: 'kg', stock: 'In Stock', supplier: 'RoastMasters', image: '☕', tags: ['Best Seller'] },
-  { id: 'p5', name: 'Extra Virgin Olive Oil', category: 'dry', unit: 'L', stock: 'In Stock', supplier: 'Mediterranean Gold', image: '🫒', tags: ['Imported'] },
-  { id: 'p6', name: 'Local Honey Crisp Apples', category: 'fresh', unit: 'kg', stock: 'In Stock', supplier: 'GreenValley Farms', image: '🍎', tags: ['Local'] },
-];
-
-// --- COMPONENTS ---
-
-const ProductCard = ({ product }: { product: typeof PRODUCTS[0] }) => {
-  const { addItem, items } = useCart();
-  const [isAdding, setIsAdding] = useState(false);
-  
-  const inCartCount = items.find(i => i.productId === product.id)?.quantity || 0;
-
-  const handleAddToCart = () => {
-    setIsAdding(true);
-    addItem({
-      productId: product.id,
-      productName: product.name,
-      unit: product.unit,
-      quantity: 1,
-      supplierName: product.supplier,
-      image: product.image
-    });
-    setTimeout(() => setIsAdding(false), 800);
-  };
-
-  return (
-    <motion.div 
-      layout
-      className={cn(
-        "group relative p-5 rounded-2xl overflow-hidden transition-all duration-300",
-        "border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900/50 backdrop-blur-sm",
-        "hover:shadow-2xl hover:-translate-y-1 will-change-transform"
-      )}
-    >
-      <GlowingBorder spread={40} borderWidth={1} />
-      
-      {/* Dot Pattern Overlay */}
-      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-[radial-gradient(circle_at_center,rgba(0,0,0,0.02)_1px,transparent_1px)] dark:bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[length:8px_8px] pointer-events-none" />
-
-      <div className="relative flex flex-col h-full">
-        {/* Header: Icon/Image + Status */}
-        <div className="flex items-start justify-between mb-4">
-          <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-3xl transition-transform duration-300 group-hover:scale-110">
-            {product.image}
-          </div>
-          <div className={cn(
-            "text-[10px] uppercase tracking-wider font-bold px-2 py-1 rounded-full border",
-            product.stock === 'In Stock' 
-              ? "bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20"
-              : "bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20"
-          )}>
-            {product.stock}
-          </div>
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 space-y-2">
-          <h3 className="font-semibold text-slate-900 dark:text-white leading-tight">
-            {product.name}
-          </h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            Supplied by <span className="text-slate-700 dark:text-slate-300 font-medium">{product.supplier}</span>
-          </p>
-          
-          <div className="flex flex-wrap gap-1.5 pt-1">
-            {product.tags.map(tag => (
-              <span key={tag} className="text-[10px] px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
-                #{tag}
-              </span>
-            ))}
-          </div>
-        </div>
-
-        <div className="mt-6 flex items-center justify-between">
-          <div>
-            <span className="text-sm font-medium text-slate-500 dark:text-slate-400">Unit: {product.unit}</span>
-          </div>
-
-          <button
-            onClick={handleAddToCart}
-            className={cn(
-              "group/btn relative flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300",
-              inCartCount > 0 
-                ? "bg-violet-600 text-white" 
-                : "bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900"
-            )}
-          >
-            <NeonEdges color={inCartCount > 0 ? "violet" : "blue"} />
-            <AnimatePresence mode="wait">
-              {isAdding ? (
-                <motion.div key="check" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} transition={SPRING}>
-                  <Check className="w-4 h-4" />
-                </motion.div>
-              ) : (
-                <motion.div key="plus" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} transition={SPRING} className="flex items-center gap-2">
-                  <Plus className="w-4 h-4" />
-                  <span>{inCartCount > 0 ? `${inCartCount} in Cart` : 'Add'}</span>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </button>
-        </div>
-      </div>
-    </motion.div>
-  );
+const ICON_MAP: Record<string, any> = {
+  ShoppingBag: <ShoppingBag className="w-5 h-5" />,
+  Activity: <Activity className="w-5 h-5" />,
+  Zap: <Zap className="w-5 h-5" />,
+  Package: <Package className="w-5 h-5" />,
 };
 
 export default function Catalog() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const { getItemCount } = useCart();
+  const { getItemCount, addItem } = useCart();
   const navigate = useNavigate();
+  
+  const { data: foodInventory, isLoading: foodLoading } = useQuery<InventoryItem[]>({
+    queryKey: ["buyer-food-inventory"],
+    queryFn: async () => {
+      const resp = await api.get("/buyer/inventory/foods");
+      return resp.data;
+    }
+  });
 
-  const filteredProducts = useMemo(() => {
-    return PRODUCTS.filter(p => {
-      const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                           p.supplier.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesCategory = selectedCategory === 'all' || p.category === selectedCategory;
+  const foodIds = useMemo(() => foodInventory?.map(i => i.foodId) || [], [foodInventory]);
+
+  const { data: prices } = useQuery<any[]>({
+    queryKey: ["food-prices", foodIds],
+    queryFn: async () => {
+      if (foodIds.length === 0) return [];
+      const resp = await api.post("/prices/bulk", { foodIds });
+      return resp.data;
+    },
+    enabled: foodIds.length > 0
+  });
+
+  const priceMap = useMemo(() => {
+    const map: Record<number, number> = {};
+    prices?.forEach(p => {
+        if (p.currentPrice) map[p.foodId] = p.currentPrice;
+    });
+    return map;
+  }, [prices]);
+
+  const filteredItems = useMemo(() => {
+    if (!foodInventory) return [];
+    return foodInventory.filter(item => {
+      const matchesSearch = item.foodName.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesCategory = selectedCategory === 'all' || item.foodGroup === selectedCategory;
       return matchesSearch && matchesCategory;
     });
-  }, [searchQuery, selectedCategory]);
+  }, [searchQuery, selectedCategory, foodInventory]);
+
+  const categories = useMemo(() => {
+    const groups = new Set<string>();
+    foodInventory?.forEach(i => groups.add(i.foodGroup));
+    return Array.from(groups).map(g => ({ id: g, name: g, icon: 'Package' }));
+  }, [foodInventory]);
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8 pb-32">
+    <SecureOverlay>
+    <div className="max-w-7xl mx-auto space-y-6 animate-in fade-in duration-500 pb-24 text-slate-900 dark:text-white">
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Product Catalog</h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-1">Discover fresh ingredients and supplies for your kitchen.</p>
+      <header className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 border-b border-slate-200 dark:border-slate-800 pb-8 transition-all">
+        <div className="space-y-3">
+          <h1 className="text-2xl md:text-4xl font-bold tracking-tight text-slate-900 dark:text-white uppercase italic">
+             Restaurant <span className="text-brand-primary font-extrabold">Catalog</span>
+          </h1>
+          <p className="text-slate-500 font-medium text-sm flex items-center gap-3">
+             <Globe className="w-5 h-5 text-brand-primary animate-bounce" />
+             Replenishment Catalog • Linked to On-Site Inventory
+          </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="relative group">
-            <GlowingBorder spread={20} />
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <input 
-              type="text"
-              placeholder="Search products..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-4 py-2.5 w-64 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-violet-500/20 transition-all"
-            />
+        <div className="flex items-center gap-4 w-full lg:w-auto">
+          <div className="relative group flex-1 lg:flex-none">
+             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-brand-primary transition-colors" />
+             <input 
+                type="text"
+                placeholder="Search inventory items..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="h-12 pl-12 pr-4 w-full lg:w-[320px] bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl font-medium text-sm focus:ring-4 focus:ring-brand-primary/20 outline-none transition-all shadow-sm"
+             />
           </div>
+          <button className="h-12 w-12 bg-slate-950 dark:bg-white text-white dark:text-slate-900 rounded-xl flex items-center justify-center border border-brand-primary/30 shadow-lg hover:rotate-12 transition-all">
+             <Filter size={20} />
+          </button>
         </div>
-      </div>
+      </header>
 
       {/* Category Pills */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
-        {CATEGORIES.map(cat => (
-          <button
-            key={cat.id}
-            onClick={() => setSelectedCategory(cat.id)}
-            className={cn(
-              "group relative flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all duration-300 border",
-              selectedCategory === cat.id
-                ? "bg-violet-600 text-white border-violet-500 shadow-lg shadow-violet-500/25"
-                : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700"
-            )}
-          >
-            <NeonEdges color={selectedCategory === cat.id ? "violet" : "blue"} />
-            {cat.icon}
-            {cat.label}
-          </button>
+      <div className="flex items-center gap-4 overflow-x-auto pb-4 scrollbar-hide no-scrollbar custom-scrollbar">
+        <button
+          onClick={() => setSelectedCategory('all')}
+          className={cn(
+            "flex items-center gap-3 px-6 py-3 rounded-2xl text-[10px] font-bold transition-all border-2 tracking-widest uppercase shadow-sm",
+            selectedCategory === 'all'
+              ? "bg-brand-primary text-slate-950 shadow-lg border-brand-primary scale-105"
+              : "bg-white dark:bg-slate-950 text-slate-400 border-slate-100 dark:border-slate-800 hover:text-slate-900 dark:hover:text-white"
+          )}
+        >
+          <Box size={16} /> All Inventory
+        </button>
+        {categories.map(cat => (
+            <button
+              key={cat.id}
+              onClick={() => setSelectedCategory(cat.id)}
+              className={cn(
+                "flex items-center gap-3 px-6 py-3 rounded-2xl text-[10px] font-bold transition-all border-2 tracking-widest uppercase shadow-sm whitespace-nowrap",
+                selectedCategory === cat.id
+                  ? "bg-brand-primary text-slate-950 shadow-lg border-brand-primary scale-105"
+                  : "bg-white dark:bg-slate-950 text-slate-400 border-slate-100 dark:border-slate-800 hover:text-slate-900 dark:hover:text-white"
+              )}
+            >
+              {ICON_MAP[cat.icon] || <Package size={16} />}
+              {cat.name}
+            </button>
         ))}
       </div>
 
-      {/* Product Grid */}
-      {filteredProducts.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Inventory Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+        {foodLoading ? (
+            [1,2,3,4,5,6].map(i => (
+                <div key={i} className="h-96 bg-white/50 dark:bg-slate-900/50 rounded-[3rem] border-4 border-slate-100 dark:border-slate-800 animate-pulse" />
+            ))
+        ) : filteredItems.length > 0 ? (
           <AnimatePresence mode="popLayout">
-            {filteredProducts.map(product => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </AnimatePresence>
-        </div>
-      ) : (
-        <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
-          <div className="w-20 h-20 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-4xl">
-            🔍
-          </div>
-          <div>
-            <h3 className="text-xl font-semibold text-slate-900 dark:text-white">No products found</h3>
-            <p className="text-slate-500 dark:text-slate-400">Try adjusting your filters or search query.</p>
-          </div>
-          <button 
-            onClick={() => { setSearchQuery(''); setSelectedCategory('all'); }}
-            className="text-violet-600 font-medium hover:underline"
-          >
-            Clear all filters
-          </button>
-        </div>
-      )}
+            {filteredItems.map((item, i) => {
+              const price = priceMap[item.foodId] || 0;
+              const isLowStock = item.status === 'LOW_STOCK' || item.quantity <= item.alertLevel;
+              
+              return (
+                <motion.div 
+                  key={item.id}
+                  layout
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ delay: i * 0.05 }}
+                  className="group relative bg-white/50 dark:bg-slate-900/40 backdrop-blur-xl p-8 rounded-[2.5rem] border-2 border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col justify-between transition-all hover:border-brand-primary overflow-hidden"
+                >
+                  <div className="absolute inset-0 bg-brand-primary/5 translate-y-full group-hover:translate-y-0 transition-transform duration-700" />
 
-      {/* Floating Cart FAB */}
+                  <div className="space-y-6 relative z-10">
+                    <div className="flex justify-between items-start">
+                        <div className="h-14 w-14 bg-slate-100 dark:bg-slate-950 rounded-2xl border border-slate-200 dark:border-slate-800 flex items-center justify-center text-2xl shadow-xl group-hover:rotate-6 transition-transform font-black text-brand-primary italic">
+                           {item.foodName.charAt(0)}
+                        </div>
+                        <div className={cn(
+                          "text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-xl border shadow-sm",
+                          !isLowStock 
+                            ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
+                            : "bg-rose-500/10 text-rose-500 border-rose-500/20 animate-pulse"
+                        )}>
+                          {!isLowStock ? 'Nominal Stock' : 'Urgent Replenish'}
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <h3 className="text-2xl font-black tracking-tighter text-slate-900 dark:text-white uppercase italic leading-none truncate">
+                           {item.foodName}
+                        </h3>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                           <Activity size={12} className="text-brand-primary" /> 
+                           {item.foodGroup} • {item.foodSubgroup}
+                        </p>
+                    </div>
+
+                    {/* Stock Meter */}
+                    <div className="space-y-3 pt-2">
+                        <div className="flex justify-between items-end text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                           <span>Current: {item.quantity} {item.unit}</span>
+                           <span className="opacity-60 italic">Threshold: {item.alertLevel}</span>
+                        </div>
+                        <div className="h-2 bg-slate-100 dark:bg-slate-950 rounded-full overflow-hidden border border-slate-200 dark:border-slate-800">
+                           <motion.div 
+                             initial={{ width: 0 }}
+                             animate={{ width: `${Math.min(100, (item.quantity / (item.alertLevel * 2)) * 100)}%` }}
+                             className={cn(
+                                "h-full rounded-full transition-all",
+                                isLowStock ? "bg-rose-500" : "bg-brand-primary"
+                             )}
+                           />
+                        </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-8 flex items-center justify-between relative z-10 pt-6 border-t-2 border-slate-100 dark:border-slate-800/60">
+                     <div className="space-y-1">
+                        <p className="text-[10px] font-bold text-slate-400 tracking-wider uppercase opacity-60">Estimated Unit Price</p>
+                        <h4 className="text-3xl font-black text-brand-primary tracking-tighter italic">
+                           ₹{price}<span className="text-xs text-slate-400 font-bold uppercase tracking-widest ml-1">/{item.unit}</span>
+                        </h4>
+                     </div>
+                     <button
+                        onClick={() => {
+                          addItem({
+                            itemId: item.id.toString(),
+                            productName: item.foodName,
+                            unit: item.unit,
+                            quantity: 1,
+                            foodId: item.foodId,
+                            supplierName: "Marketplace Fulfillment",
+                            image: item.foodName.charAt(0)
+                          });
+                        }}
+                        className={cn(
+                           "h-14 w-14 rounded-2xl flex items-center justify-center border shadow-2xl hover:scale-110 active:scale-90 transition-all group/btn",
+                           "bg-slate-950 dark:bg-white text-white dark:text-slate-900 border-brand-primary/50 hover:bg-brand-primary" 
+                        )}
+                     >
+                        <Plus size={28} className="group-hover/btn:rotate-90 transition-transform" />
+                     </button>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
+        ) : (
+          <div className="col-span-full py-24 flex flex-col items-center justify-center space-y-8 bg-white/50 dark:bg-slate-900/50 rounded-[4rem] border-4 border-dashed border-slate-200 dark:border-slate-800 shadow-2xl">
+              <div className="h-32 w-32 bg-slate-100 dark:bg-slate-950 rounded-full flex items-center justify-center text-6xl shadow-inner animate-pulse">
+                📦
+              </div>
+              <div className="text-center space-y-4">
+                <h3 className="text-4xl font-black tracking-tighter text-slate-900 dark:text-white uppercase italic">Inventory Empty</h3>
+                <p className="text-sm text-slate-400 font-bold uppercase tracking-[0.3em] opacity-80">Sync your stock to see replenishment items.</p>
+              </div>
+              <button 
+                onClick={() => navigate('/restaurant/inventory')}
+                className="h-14 px-12 bg-brand-primary text-slate-950 font-black rounded-3xl text-xs uppercase tracking-widest shadow-[0_0_30px_rgba(251,191,36,0.4)] hover:scale-105 active:scale-95 transition-all italic"
+              >
+                Go to Inventory
+              </button>
+          </div>
+        )}
+      </div>
+
+      {/* Unified Cart FAB */}
       <AnimatePresence>
         {getItemCount() > 0 && (
           <motion.div 
-            initial={{ y: 100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 100, opacity: 0 }}
-            className="fixed bottom-8 right-8 z-[100]"
+            initial={{ y: 200, scale: 0.5 }}
+            animate={{ y: 0, scale: 1 }}
+            exit={{ y: 200, scale: 0.5 }}
+            className="fixed bottom-12 right-12 z-150"
           >
             <button 
               onClick={() => navigate('/restaurant/orders/new')}
-              className="flex items-center gap-3 px-6 py-4 rounded-2xl bg-violet-600 text-white shadow-2xl shadow-violet-500/40 hover:scale-105 transition-transform"
+              className="h-20 px-8 bg-slate-950 text-white rounded-4xl shadow-[0_20px_60px_rgba(0,0,0,0.4)] border-2 border-brand-primary hover:scale-[1.05] active:scale-95 transition-all flex items-center gap-6 group overflow-hidden"
             >
-              <div className="relative">
-                <ShoppingCart className="w-6 h-6" />
-                <span className="absolute -top-2 -right-2 bg-white text-violet-600 text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-violet-600">
-                  {getItemCount()}
-                </span>
-              </div>
-              <div className="text-left">
-                <p className="text-[10px] uppercase tracking-wider font-bold opacity-80">View Order List</p>
-                <p className="text-lg font-bold">{getItemCount()} Items</p>
+              <div className="absolute inset-0 bg-brand-primary translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
+              <div className="relative z-10 flex items-center gap-6">
+                <div className="relative h-14 w-14 bg-white/10 rounded-2xl flex items-center justify-center shadow-lg group-hover:rotate-6 transition-transform">
+                    <ShoppingCart size={28} />
+                    <span className="absolute -top-3 -right-3 bg-rose-500 text-white text-[10px] font-black w-8 h-8 rounded-full flex items-center justify-center border-4 border-slate-950 shadow-2xl animate-bounce">
+                      {getItemCount()}
+                    </span>
+                </div>
+                <div className="text-left space-y-0.5">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-60 group-hover:text-slate-950 transition-colors">Review Order</p>
+                    <p className="text-2xl font-black group-hover:text-slate-950 transition-colors tracking-tighter italic uppercase">{getItemCount()} Items ready</p>
+                </div>
+                <ArrowRight size={28} className="text-brand-primary group-hover:text-slate-950 group-hover:translate-x-3 transition-all" />
               </div>
             </button>
           </motion.div>
         )}
       </AnimatePresence>
     </div>
+    </SecureOverlay>
   );
 }

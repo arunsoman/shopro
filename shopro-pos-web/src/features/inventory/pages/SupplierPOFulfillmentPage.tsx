@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { apiClient } from '@/lib/api/client';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { 
-    Package, 
-    Truck, 
-    FileText, 
-    CheckCircle2, 
-    ArrowLeft, 
-    Upload, 
+import {
+    Package,
+    Truck,
+    FileText,
+    CheckCircle2,
+    ArrowLeft,
+    Upload,
     Info,
     AlertCircle,
     Clock
@@ -17,18 +17,18 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { 
-    Dialog, 
-    DialogContent, 
-    DialogHeader, 
-    DialogTitle, 
-    DialogFooter 
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter
 } from '@/components/ui/dialog';
-import { 
-    useSupplierPortalPOs, 
-    useAcknowledgeOrder, 
-    useShipOrder, 
-    useCounterOffer 
+import {
+    useSupplierPortalPOs,
+    useAcknowledgeOrder,
+    useShipOrder,
+    useCounterOffer
 } from '../hooks/useSupplierPortal';
 import { useSupplierAuth } from '@/features/auth/SupplierAuthContext';
 import { format } from 'date-fns';
@@ -39,11 +39,11 @@ export const SupplierPOFulfillmentPage: React.FC = () => {
     const navigate = useNavigate();
     const { session } = useSupplierAuth();
     const { data: pos, isLoading } = useSupplierPortalPOs(session?.supplierId);
-    
+
     const acknowledgeMutation = useAcknowledgeOrder();
     const shipMutation = useShipOrder();
     const counterOfferMutation = useCounterOffer();
-    
+
     const [trackingNumber, setTrackingNumber] = useState('');
     const [deliveryNoteRef, setDeliveryNoteRef] = useState('');
     const [invoiceFile, setInvoiceFile] = useState<File | null>(null);
@@ -61,7 +61,7 @@ export const SupplierPOFulfillmentPage: React.FC = () => {
     if (isLoading) return <div className="p-8 text-center animate-pulse">Loading order details...</div>;
     if (!po) return (
         <div className="p-8 text-center">
-            <div className="max-w-md mx-auto p-4 bg-red-50 dark:bg-red-950/20 border border-red-100 dark:border-red-900/40 rounded-lg text-left">
+            <div className=" mx-auto p-4 bg-red-50 dark:bg-red-950/20 border border-red-100 dark:border-red-900/40 rounded-lg text-left">
                 <div className="flex items-center gap-2 mb-2">
                     <AlertCircle className="h-4 w-4 text-red-500" />
                     <span className="font-bold text-red-700 dark:text-red-400">Error</span>
@@ -93,10 +93,10 @@ export const SupplierPOFulfillmentPage: React.FC = () => {
         if (!session?.userId || isSubmitting) return;
         setIsSubmitting(true);
         try {
-            await counterOfferMutation.mutateAsync({ 
-                id: po.id, 
+            await counterOfferMutation.mutateAsync({
+                id: po.id,
                 userId: session.userId,
-                request: counterOfferData 
+                request: counterOfferData
             });
             toast.success("Counter-Offer Submitted", {
                 description: "The staff will review your changes and respond shortly.",
@@ -113,7 +113,7 @@ export const SupplierPOFulfillmentPage: React.FC = () => {
     const handleShip = async (e: React.FormEvent) => {
         e.preventDefault();
         if (isSubmitting) return;
-        
+
         if (!trackingNumber) {
             toast.error("Please enter a tracking number.");
             return;
@@ -122,21 +122,21 @@ export const SupplierPOFulfillmentPage: React.FC = () => {
             toast.error("Please upload a commercial invoice.");
             return;
         }
-        
+
         setIsSubmitting(true);
         try {
             // 1. Upload the file first
             const formData = new FormData();
             formData.append('file', invoiceFile);
-            
-            const uploadRes = await apiClient.post<{fileId: string}>('/documents/upload', formData, {
+
+            const uploadRes = await apiClient.post<{ fileId: string }>('/documents/upload', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }
             });
-            
+
             const fileId = uploadRes.data.fileId;
-            
+
             // 2. Submit shipment with the real fileId
             await shipMutation.mutateAsync({
                 id: po.id,
@@ -147,7 +147,7 @@ export const SupplierPOFulfillmentPage: React.FC = () => {
                     invoiceFileId: fileId
                 }
             });
-            
+
             toast.success("Order Shipped", {
                 description: "Fulfillment details and invoice have been sent to the restaurant.",
             });
@@ -239,7 +239,7 @@ export const SupplierPOFulfillmentPage: React.FC = () => {
                                             {po.status === 'REJECTED' ? 'Order Rejected' : 'Order Finalization in Progress'}
                                         </h3>
                                         <p className="text-sm text-amber-700/70 dark:text-amber-300/60 leading-relaxed max-w-2xl">
-                                            {po.status === 'REJECTED' 
+                                            {po.status === 'REJECTED'
                                                 ? "This Purchase Order has been rejected by the restaurant management and will not be fulfilled."
                                                 : "The restaurant is currently finalizing the official Purchase Order document and approval workflow. You will be able to acknowledge and ship this order once it is officially SENT to you."}
                                         </p>
@@ -260,13 +260,13 @@ export const SupplierPOFulfillmentPage: React.FC = () => {
                                         </p>
                                     </div>
                                     <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-                                        <Button 
+                                        <Button
                                             variant="outline"
                                             className="px-6 border-indigo-200 text-indigo-700 hover:bg-indigo-100/50"
                                             onClick={() => {
                                                 setCounterOfferData({
                                                     proposedPrice: po.totalValue / (po.items.length || 1),
-                                                    proposedQuantity: po.items.map(i => i.orderedQty).reduce((a,b) => a+b, 0),
+                                                    proposedQuantity: po.items.map(i => i.orderedQty).reduce((a, b) => a + b, 0),
                                                     reason: ''
                                                 });
                                                 setIsCounterDialogOpen(true);
@@ -274,7 +274,7 @@ export const SupplierPOFulfillmentPage: React.FC = () => {
                                         >
                                             Negotiate Changes
                                         </Button>
-                                        <Button 
+                                        <Button
                                             className="px-8 h-12 text-md font-bold shadow-indigo-200/50 bg-indigo-600 hover:bg-indigo-700"
                                             onClick={handleAcknowledge}
                                             disabled={acknowledgeMutation.isPending || isSubmitting}
@@ -303,9 +303,9 @@ export const SupplierPOFulfillmentPage: React.FC = () => {
                                             <Label htmlFor="tracking" className="text-sm font-semibold uppercase tracking-wider text-slate-500">
                                                 Tracking Number
                                             </Label>
-                                            <Input 
-                                                id="tracking" 
-                                                placeholder="e.g. FEDEX-4921-992" 
+                                            <Input
+                                                id="tracking"
+                                                placeholder="e.g. FEDEX-4921-992"
                                                 className="h-11 bg-slate-50 border-slate-200 focus:ring-indigo-500"
                                                 value={trackingNumber}
                                                 onChange={(e) => setTrackingNumber(e.target.value)}
@@ -317,9 +317,9 @@ export const SupplierPOFulfillmentPage: React.FC = () => {
                                             <Label htmlFor="delivery-note" className="text-sm font-semibold uppercase tracking-wider text-slate-500">
                                                 Delivery Note Ref (Optional)
                                             </Label>
-                                            <Input 
-                                                id="delivery-note" 
-                                                placeholder="e.g. DN-2024-X8" 
+                                            <Input
+                                                id="delivery-note"
+                                                placeholder="e.g. DN-2024-X8"
                                                 className="h-11 bg-slate-50 border-slate-200"
                                                 value={deliveryNoteRef}
                                                 onChange={(e) => setDeliveryNoteRef(e.target.value)}
@@ -329,14 +329,14 @@ export const SupplierPOFulfillmentPage: React.FC = () => {
 
                                     <div className="space-y-3">
                                         <Label className="text-sm font-semibold uppercase tracking-wider text-slate-500">Commercial Invoice (PDF)</Label>
-                                        <input 
-                                            type="file" 
-                                            accept=".pdf,image/*" 
-                                            className="hidden" 
-                                            ref={fileInputRef} 
+                                        <input
+                                            type="file"
+                                            accept=".pdf,image/*"
+                                            className="hidden"
+                                            ref={fileInputRef}
                                             onChange={(e) => setInvoiceFile(e.target.files?.[0] || null)}
                                         />
-                                        <div 
+                                        <div
                                             className={`border-2 border-dashed rounded-xl p-10 text-center transition-colors group cursor-pointer ${invoiceFile ? 'border-indigo-500 bg-indigo-50/50 dark:bg-indigo-900/20' : 'border-slate-200 dark:border-slate-800 hover:border-indigo-400'}`}
                                             onClick={() => fileInputRef.current?.click()}
                                         >
@@ -367,8 +367,8 @@ export const SupplierPOFulfillmentPage: React.FC = () => {
 
                                     <div className="flex items-center justify-end gap-4 pt-4">
                                         <Button type="button" variant="ghost" onClick={() => navigate(-1)}>Cancel</Button>
-                                        <Button 
-                                            type="submit" 
+                                        <Button
+                                            type="submit"
                                             className="px-10 h-11 text-md font-bold shadow-lg shadow-indigo-500/20"
                                             disabled={shipMutation.isPending || isSubmitting}
                                         >
@@ -408,7 +408,7 @@ export const SupplierPOFulfillmentPage: React.FC = () => {
                                     <div className="space-y-2 text-center md:text-left">
                                         <h3 className="text-xl font-bold text-emerald-900 dark:text-emerald-100">Order Fulfilled</h3>
                                         <p className="text-sm text-emerald-700/70 dark:text-emerald-300/60 leading-relaxed max-w-2xl">
-                                            This order has been received and processed by the restaurant. 
+                                            This order has been received and processed by the restaurant.
                                             {po.status === 'PAID' || po.status === 'CLOSED' ? " Payment has been settled." : " It is now in the payment processing queue."}
                                         </p>
                                     </div>
@@ -449,7 +449,7 @@ export const SupplierPOFulfillmentPage: React.FC = () => {
                         </CardHeader>
                         <CardContent className="p-6">
                             <div className="relative space-y-8 before:absolute before:left-[11px] before:top-2 before:h-[calc(100%-24px)] before:w-0.5 before:bg-slate-200 dark:before:bg-slate-800">
-                                
+
                                 {/* Step 1: Acknowledge */}
                                 <div className={`relative pl-10 ${['DRAFT', 'PENDING_APPROVAL', 'APPROVED'].includes(po.status) ? 'opacity-50' : ''}`}>
                                     <div className={`absolute left-0 top-0 h-6 w-6 rounded-full border-4 border-white dark:border-slate-900 flex items-center justify-center ${['DRAFT', 'PENDING_APPROVAL', 'APPROVED', 'SENT'].includes(po.status) ? (po.status === 'SENT' ? 'bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.3)]' : 'bg-slate-300 dark:bg-slate-700') : 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.3)]'}`}>
@@ -458,7 +458,7 @@ export const SupplierPOFulfillmentPage: React.FC = () => {
                                     <p className="text-sm font-bold">Acknowledge Order</p>
                                     <p className="text-xs text-slate-500 mt-1">Confirms you've seen the request.</p>
                                 </div>
-                                
+
                                 {/* Step 2: Ship & Invoice */}
                                 <div className={`relative pl-10 ${['DRAFT', 'PENDING_APPROVAL', 'APPROVED', 'SENT'].includes(po.status) ? 'opacity-50' : ''}`}>
                                     <div className={`absolute left-0 top-0 h-6 w-6 rounded-full border-4 border-white dark:border-slate-900 flex items-center justify-center ${['ACKNOWLEDGED'].includes(po.status) ? 'bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.3)]' : ['DRAFT', 'PENDING_APPROVAL', 'APPROVED', 'SENT'].includes(po.status) ? 'bg-slate-200 dark:bg-slate-800' : 'bg-emerald-500'}`}>
@@ -467,7 +467,7 @@ export const SupplierPOFulfillmentPage: React.FC = () => {
                                     <p className="text-sm font-bold">Ship & Invoice</p>
                                     <p className="text-xs text-slate-500 mt-1">Provide tracking and bill the restaurant.</p>
                                 </div>
-                                
+
                                 {/* Step 3: Payment Processing */}
                                 <div className={`relative pl-10 ${['DRAFT', 'PENDING_APPROVAL', 'APPROVED', 'SENT', 'ACKNOWLEDGED'].includes(po.status) ? 'opacity-50' : ''}`}>
                                     <div className={`absolute left-0 top-0 h-6 w-6 rounded-full border-4 border-white dark:border-slate-900 flex items-center justify-center ${['SHIPPED'].includes(po.status) ? 'bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.3)]' : ['RECEIVED', 'INVOICE_MATCHED', 'PAID', 'CLOSED'].includes(po.status) ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-slate-800'}`}>
@@ -493,12 +493,12 @@ export const SupplierPOFulfillmentPage: React.FC = () => {
                             <Info className="h-4 w-4 shrink-0" />
                             <p>Proposing changes will move the order to "Negotiation" status. The restaurant must approve these changes before you can ship.</p>
                         </div>
-                        
+
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label>Proposed Unit Cost (Avg)</Label>
-                                <Input 
-                                    type="number" 
+                                <Input
+                                    type="number"
                                     step="0.01"
                                     value={counterOfferData.proposedPrice}
                                     onChange={e => setCounterOfferData({ ...counterOfferData, proposedPrice: parseFloat(e.target.value) })}
@@ -506,8 +506,8 @@ export const SupplierPOFulfillmentPage: React.FC = () => {
                             </div>
                             <div className="space-y-2">
                                 <Label>Total Quantity</Label>
-                                <Input 
-                                    type="number" 
+                                <Input
+                                    type="number"
                                     value={counterOfferData.proposedQuantity}
                                     onChange={e => setCounterOfferData({ ...counterOfferData, proposedQuantity: parseInt(e.target.value) })}
                                 />
@@ -516,7 +516,7 @@ export const SupplierPOFulfillmentPage: React.FC = () => {
 
                         <div className="space-y-2">
                             <Label>Reason for Adjustment</Label>
-                            <textarea 
+                            <textarea
                                 placeholder="e.g. Current market price surge, Partial stock availability..."
                                 className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                 value={counterOfferData.reason || ''}
@@ -526,7 +526,7 @@ export const SupplierPOFulfillmentPage: React.FC = () => {
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setIsCounterDialogOpen(false)}>Cancel</Button>
-                        <Button 
+                        <Button
                             className="bg-indigo-600 text-white"
                             onClick={handleCounterOffer}
                             disabled={counterOfferMutation.isPending || isSubmitting || !counterOfferData.reason}

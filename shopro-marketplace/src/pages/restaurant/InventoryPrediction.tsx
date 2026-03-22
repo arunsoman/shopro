@@ -1,147 +1,160 @@
 "use client";
 
+import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { AlertTriangle, Clock, Package, ChevronRight, Info, Search, ArrowRight, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { 
+  TrendingUp, 
+  Brain, 
+  ChevronRight, 
+  Zap, 
+  Globe, 
+  Award, 
+  CircleDot, 
+  ArrowRight,
+  ShieldCheck,
+  Activity,
+  BarChart3,
+  Calendar,
+  Layers,
+  Sparkles
+} from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
+import api from "@/api";
+import { SecureOverlay } from "@/components/SecureOverlay";
 
-const INITIAL_INVENTORY = [
-  { id: "INV-01", item: "Premium Avocado", stock: 12, risk: "HIGH", daysLeft: 2, velocity: "UP" },
-  { id: "INV-02", item: "Organic Kale", stock: 45, risk: "MEDIUM", daysLeft: 5, velocity: "DOWN" },
-  { id: "INV-03", item: "Whole Milk (1L)", stock: 82, risk: "LOW", daysLeft: 12, velocity: "STABLE" },
-];
+/**
+ * RD-06 — Inventory Prediction
+ * Purpose: AI-driven stock movement analysis for buyers.
+ */
 
 export default function InventoryPrediction() {
-  const [inventory, setInventory] = useState(INITIAL_INVENTORY);
-  const [isRestocking, setIsRestocking] = useState<string | null>(null);
+  const navigate = useNavigate();
 
-  const handleRestock = (id: string) => {
-    setIsRestocking(id);
-    setTimeout(() => {
-      setInventory(prev => prev.filter(item => item.id !== id));
-      setIsRestocking(null);
-    }, 1500);
-  };
+  const { data: predictions, isLoading } = useQuery({
+    queryKey: ["buyer-inventory-predictions"],
+    queryFn: async () => {
+      const resp = await api.get("buyer/inventory/predictions");
+      return resp.data;
+    }
+  });
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-700">
+    <SecureOverlay>
+    <div className="max-w-7xl mx-auto space-y-6 animate-in fade-in duration-500 pb-24 text-slate-900 dark:text-white">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Inventory Risk Engine</h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-1">
-            Analyzing your restaurant's demand velocity and fulfillment lead times.
+      <header className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 border-b border-slate-200 dark:border-slate-800 pb-8 transition-all">
+        <div className="space-y-4">
+          <h1 className="text-2xl md:text-4xl font-bold tracking-tight text-slate-900 dark:text-white italic">
+             Stock <span className="text-brand-primary font-extrabold italic">Prediction</span>
+          </h1>
+          <p className="text-slate-500 font-medium text-sm flex items-center gap-3">
+             <Brain className="w-5 h-5 text-brand-primary animate-pulse" />
+             AI Analysis: Active • Predictive Reordering Sync
           </p>
         </div>
-        
-        <div className="flex items-center gap-3">
-          <button className="h-10 px-4 bg-white dark:bg-slate-900 text-slate-600 dark:text-white rounded-xl text-xs font-black flex items-center gap-2 ring-1 ring-slate-200 dark:ring-slate-800 hover:bg-slate-50 transition-all shadow-sm">
-            <Package size={14} /> RE-RUN ANALYSIS
-          </button>
-          <button className="h-10 px-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl text-xs font-black flex items-center gap-2 hover:scale-105 transition-all shadow-lg">
-            <AlertTriangle size={14} /> VIEW ALL RISKS
-          </button>
-        </div>
-      </div>
+      </header>
 
-      {/* Network Health */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-rose-600 p-8 rounded-[2.5rem] text-white shadow-xl shadow-rose-500/20 relative overflow-hidden group">
-           <div className="absolute top-0 right-0 p-8 text-rose-400 opacity-20 transform translate-x-4 -translate-y-4">
-             <AlertTriangle size={120} />
-           </div>
-           <p className="text-[10px] font-bold text-white/60 uppercase tracking-widest">Stockout Risks</p>
-           <p className="text-4xl font-black mt-1">{inventory.filter(item => item.risk === "HIGH").length} SKUs</p>
-           <p className="text-[10px] font-bold mt-4 uppercase tracking-[0.2em] flex items-center gap-2">
-             <Clock size={14} /> Est. Revenue Loss: ₹45,200
-           </p>
+      <main className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="lg:col-span-8 space-y-8">
+            {/* Predictive Chart Mockup */}
+            <div className="relative bg-white/10 dark:bg-slate-900/30 backdrop-blur-xl p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-lg space-y-6 overflow-hidden group">
+               <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-indigo-500/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-[100px] pointer-events-none" />
+               <div className="flex items-center justify-between relative z-10">
+                   <h2 className="text-xl font-bold tracking-tight flex items-center gap-4 italic uppercase"><Activity size={24} className="text-brand-primary" /> Consumption Forecast</h2>
+                   <div className="flex gap-2">
+                        {["7D", "30D", "90D"].map(d => (
+                            <button key={d} className="h-8 px-4 rounded-lg border border-slate-200 dark:border-slate-800 font-bold text-[10px] tracking-widest uppercase hover:border-indigo-500 transition-all italic">
+                                {d}
+                            </button>
+                        ))}
+                   </div>
+               </div>
+
+               <div className="h-[300px] w-full flex items-end justify-between gap-3 relative z-10 px-4">
+                  {[40, 60, 45, 80, 50, 90, 70, 85, 65, 95, 75, 100].map((h, i) => (
+                    <motion.div 
+                        key={i}
+                        initial={{ height: 0 }}
+                        animate={{ height: `${h}%` }}
+                        transition={{ duration: 1, delay: i * 0.05 }}
+                        className={cn(
+                            "flex-1 rounded-t-lg transition-all shadow-md",
+                            i > 8 ? "bg-brand-primary/40 shadow-brand-primary/20 border-dashed border-2 border-brand-primary" : "bg-slate-900 dark:bg-white"
+                        )}
+                    />
+                  ))}
+                  <div className="absolute top-1/2 left-0 right-0 h-px border-t border-dashed border-rose-500/30 pointer-events-none" />
+               </div>
+
+               <div className="flex justify-between items-center pt-6 text-sm font-bold tracking-widest opacity-40 relative z-10 uppercase italic">
+                  <span>Historical Data</span>
+                  <span className="text-indigo-600 opacity-100">AI Projection</span>
+               </div>
+            </div>
+
+            {/* Reorder Recommendation */}
+            <section className="bg-white/10 dark:bg-slate-900/30 backdrop-blur-xl p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-lg space-y-6">
+               <h2 className="text-xl font-bold tracking-tight flex items-center gap-4 italic uppercase"><Sparkles size={24} className="text-brand-primary" /> Recommended Reorders</h2>
+               
+               <div className="space-y-4">
+                    {predictions?.recommendedReorder.map((name: string, i: number) => (
+                        <div key={i} className="group relative bg-brand-primary p-6 rounded-2xl border border-brand-primary/50 shadow-lg flex items-center justify-between transition-all hover:scale-[1.02] text-slate-950 overflow-hidden">
+                           <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                           <div className="flex items-center gap-6 relative z-10">
+                                 <div className="h-12 w-12 bg-white/20 rounded-xl border border-white/40 flex items-center justify-center text-xl font-bold italic shadow-md">
+                                     <TrendingUp size={24} />
+                                 </div>
+                                 <div className="space-y-1">
+                                     <h3 className="text-xl font-bold italic tracking-tight uppercase shadow-sm">{name}</h3>
+                                     <p className="text-[10px] font-bold tracking-widest opacity-80 italic uppercase">Predicted Demand Spike</p>
+                                 </div>
+                           </div>
+                           <button className="h-10 px-6 bg-slate-950 text-white rounded-lg border border-slate-800 font-bold italic text-[10px] tracking-widest shadow-md hover:scale-110 active:scale-95 transition-all flex items-center gap-3 uppercase relative z-10">
+                                 Reorder Now
+                                 <ArrowRight size={14} />
+                           </button>
+                        </div>
+                    ))}
+               </div>
+            </section>
         </div>
 
-        <div className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl p-8 rounded-[2.5rem] ring-1 ring-slate-100 dark:ring-slate-800 shadow-sm border-l-4 border-blue-500">
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Fulfillment SLA</p>
-          <p className="text-3xl font-black text-slate-900 dark:text-white mt-2">92.4%</p>
-          <p className="text-[9px] font-bold text-slate-400 mt-4 uppercase tracking-widest flex items-center gap-2">
-            <TrendingUp size={12} className="text-green-500" /> +2.4% vs Previous Week
-          </p>
-        </div>
-
-        <div className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl p-8 rounded-[2.5rem] ring-1 ring-slate-100 dark:ring-slate-800 shadow-sm border-l-4 border-violet-500">
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Safety Stock level</p>
-          <p className="text-3xl font-black text-slate-900 dark:text-white mt-2">Optimal</p>
-          <p className="text-[9px] font-bold text-slate-400 mt-4 uppercase tracking-widest">Cross 482 Product Lines</p>
-        </div>
-      </div>
-
-      {/* Risk List */}
-      <div className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl rounded-[2.5rem] ring-1 ring-slate-200 dark:ring-slate-800 overflow-hidden shadow-sm">
-        <div className="p-8 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-           <h2 className="text-lg font-bold uppercase tracking-tighter text-slate-900 dark:text-white">Replenishment Priority</h2>
-           <div className="flex items-center gap-3">
-             <div className="relative">
-               <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-               <input type="text" placeholder="Search SKU..." className="h-8 pl-8 pr-4 bg-slate-50 dark:bg-slate-800 rounded-lg text-[10px] font-bold outline-none ring-1 ring-slate-200 dark:ring-slate-700 focus:ring-violet-500 transition-all" />
-             </div>
-             <button className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 transition-colors">
-               <Info size={18} />
-             </button>
-           </div>
-        </div>
-
-        <div className="p-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <AnimatePresence mode="popLayout">
-            {inventory.map((item) => (
-              <motion.div
-                key={item.id}
-                layout
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9, x: 50 }}
-                className="p-8 bg-white dark:bg-slate-900/50 backdrop-blur-xl rounded-[2.5rem] ring-1 ring-slate-100 dark:ring-slate-800 shadow-sm group hover:ring-violet-500/50 transition-all flex flex-col h-full"
-              >
-                <div className="flex justify-between items-start mb-6">
-                  <div className="flex items-center gap-4">
-                    <div className={cn(
-                      "p-3 rounded-2xl",
-                      item.risk === "HIGH" ? "bg-rose-500/10 text-rose-500" : 
-                      item.risk === "MEDIUM" ? "bg-amber-500/10 text-amber-500" :
-                      "bg-green-500/10 text-green-500"
-                    )}>
-                      <AlertTriangle size={24} />
+        <aside className="lg:col-span-4 space-y-6">
+            {/* Insights Module */}
+            <div className="bg-white/10 dark:bg-slate-900/30 backdrop-blur-xl p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-lg space-y-6 group overflow-hidden">
+                <h3 className="text-lg font-bold tracking-tight uppercase flex items-center gap-3 text-brand-primary italic"><BarChart3 size={20} /> Prediction Insights</h3>
+                
+                <div className="space-y-6">
+                   {[
+                       { label: "Confidence Score", val: "94.2%", color: "text-emerald-500" },
+                       { label: "Anomaly Detection", val: "None Detected", color: "text-indigo-600" },
+                       { label: "Data Points Analyzed", val: "1.2M", color: "text-slate-900 dark:text-white" },
+                   ].map((row, i) => (
+                    <div key={i} className="space-y-2">
+                        <div className="flex justify-between items-center text-[10px] font-bold tracking-widest opacity-60 uppercase italic">
+                            <span>{row.label}</span>
+                        </div>
+                         <div className={cn("text-lg font-bold tracking-tight uppercase italic", row.color)}>
+                            {row.val}
+                        </div>
                     </div>
-                    <div>
-                      <h3 className="text-base font-bold text-slate-900 dark:text-white">{item.item}</h3>
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{item.id}</p>
-                    </div>
-                  </div>
+                   ))}
                 </div>
 
-                <div className="flex-1 space-y-4">
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="text-slate-500">Current Stock</span>
-                    <span className="font-bold text-slate-900 dark:text-white">{item.stock} Units</span>
-                  </div>
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="text-slate-500">Predicted Stockout</span>
-                    <span className={cn("font-bold", item.daysLeft < 3 ? "text-rose-500" : "text-amber-500")}>In {item.daysLeft} days</span>
-                  </div>
+                <div className="pt-6 border-t border-slate-200 dark:border-slate-800 space-y-4">
+                    <p className="text-[10px] font-bold tracking-widest text-slate-400 leading-relaxed uppercase italic">
+                        Projections are based on supplier velocity and local demand trends. A 24-hour error margin may apply.
+                    </p>
+                    <button className="h-10 w-full bg-slate-950 dark:bg-white text-white dark:text-slate-900 rounded-lg border border-brand-primary/50 font-bold uppercase text-[10px] tracking-widest shadow-sm transition-all hover:bg-brand-primary hover:text-slate-900">
+                        View Detailed Analysis
+                    </button>
                 </div>
-
-                <button 
-                  onClick={() => handleRestock(item.id)}
-                  disabled={isRestocking === item.id}
-                  className="mt-6 w-full h-10 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-lg disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  {isRestocking === item.id ? (
-                    <>RE-STOCKING... <Clock className="animate-spin" size={14} /></>
-                  ) : (
-                    <>AUTO-RESTOCK <ArrowRight size={14} /></>
-                  )}
-                </button>
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </div>
-      </div>
+            </div>
+        </aside>
+      </main>
     </div>
+    </SecureOverlay>
   );
 }

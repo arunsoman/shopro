@@ -9,19 +9,20 @@ import {
 } from 'lucide-react';
 import { LiquidButton } from '../components/ui/liquid-glass-button';
 import { GlowingEffect } from '../components/ui/glowing-effect';
+import { IconTooltip } from '../components/shared/IconTooltip';
 
 const OperatorDashboardPage = () => {
   return (
-    <div className="space-y-10 pb-20 animate-in fade-in duration-700">
+    <div className="space-y-8 pb-20 animate-in fade-in duration-700">
       {/* Header */}
       <div className="flex justify-between items-end">
         <div>
-          <h1 className="text-4xl font-black tracking-tight text-slate-900 dark:text-white">Operator Dashboard</h1>
-          <p className="text-slate-500 dark:text-slate-400 font-medium mt-2">Real-time marketplace oversight and financial reconciliation.</p>
+          <h1 className="text-2xl font-black tracking-tight text-primary">Operator Dashboard</h1>
+          <p className="text-secondary font-medium mt-1 text-sm">Real-time marketplace oversight and financial reconciliation.</p>
         </div>
         <div className="flex gap-3">
-           <LiquidButton variant="outline" className="h-10">Export Report</LiquidButton>
-           <LiquidButton size="lg" className="h-10">Generate Audit</LiquidButton>
+           <LiquidButton variant="outline" className="h-9 text-sm">Export Report</LiquidButton>
+           <LiquidButton className="h-9 text-sm">Generate Audit</LiquidButton>
         </div>
       </div>
 
@@ -31,19 +32,19 @@ const OperatorDashboardPage = () => {
           title="Total Settled Volume" 
           value="$1,284,950.48" 
           trend="+12.4%" 
-          icon={<TrendingUp className="text-emerald-500" />}
+          icon={<IconTooltip label="Market volume health"><TrendingUp className="text-emerald-500 w-5 h-5" /></IconTooltip>}
           description="Gross volume settled this month"
         />
         <StatCard 
           title="Held in Escrow" 
           value="$342,100.00" 
-          icon={<ShieldCheck className="text-indigo-500" />}
+          icon={<IconTooltip label="Secured funds pool"><ShieldCheck className="text-indigo-500 w-5 h-5" /></IconTooltip>}
           description="Verified security & dispute pool"
         />
         <StatCard 
           title="Active Batches" 
           value="148" 
-          icon={<Truck className="text-amber-500" />}
+          icon={<IconTooltip label="Live logistics tracking"><Truck className="text-amber-500 w-5 h-5" /></IconTooltip>}
           description="67% Logistics complete"
           progress={67}
         />
@@ -53,7 +54,7 @@ const OperatorDashboardPage = () => {
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
         
         {/* Left Column: Transactions */}
-        <div className="xl:col-span-2 space-y-8">
+        <div className="xl:col-span-2 space-y-6">
           
           {/* Sales / Restaurant Side */}
           <Section header="Sales / Restaurant Side" linkText="View All Invoices">
@@ -100,15 +101,15 @@ const OperatorDashboardPage = () => {
           </Section>
 
           {/* Real-time Stream */}
-          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 overflow-hidden shadow-sm">
-            <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
-              <h3 className="font-bold text-lg">Activity Real-Time Stream</h3>
-              <Clock className="text-slate-400 w-5 h-5" />
+          <div className="bg-card rounded-xl border border-border overflow-hidden shadow-sm">
+            <div className="p-6 border-b border-border flex justify-between items-center">
+              <h3 className="font-bold text-md">Activity Real-Time Stream</h3>
+              <IconTooltip label="Real-time activity sync"><Clock className="text-secondary w-4 h-4" /></IconTooltip>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead>
-                  <tr className="bg-slate-50 dark:bg-slate-950/50 text-slate-500 uppercase text-[10px] font-black tracking-widest">
+                  <tr className="bg-slate-50 dark:bg-slate-950/20 text-secondary uppercase text-2xs font-black tracking-widest">
                     <th className="px-6 py-4">Time</th>
                     <th className="px-6 py-4">Activity</th>
                     <th className="px-6 py-4">Entity</th>
@@ -116,7 +117,7 @@ const OperatorDashboardPage = () => {
                     <th className="px-6 py-4">Risk</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
+                <tbody className="divide-y divide-border">
                   <ActivityRow time="1 min ago" activity="PO Verification Completed" entity="Gourmet Bistro" amount="$12,450" risk={0.02} color="green" />
                   <ActivityRow time="14 mins ago" activity="Supplier Dispute Initiated" entity="Ocean Fresh" amount="$18,900" risk={0.45} color="yellow" />
                   <ActivityRow time="32 mins ago" activity="Automatic Settlement Multi-sig" entity="Global Grains" amount="$45,000" risk={0.01} color="green" />
@@ -130,26 +131,26 @@ const OperatorDashboardPage = () => {
         {/* Right Column: Widgets */}
         <div className="space-y-8">
           {/* Chain of Custody */}
-          <div className="relative bg-slate-950 rounded-3xl overflow-hidden shadow-2xl flex flex-col h-full border border-slate-800">
+          <div className="relative bg-slate-950 rounded-xl overflow-hidden shadow-2xl flex flex-col h-full border border-slate-800">
             <GlowingEffect blur={0} borderWidth={2} spread={80} proximity={64} inactiveZone={0.01} />
             <div className="relative z-10">
-              <div className="p-8 bg-indigo-600">
+              <div className="p-6 bg-indigo-600">
                  <div className="flex justify-between items-center mb-6">
-                   <h3 className="text-white font-black text-lg">Chain of Custody</h3>
-                   <span className="bg-white/20 text-white text-[10px] font-bold px-3 py-1 rounded-full backdrop-blur-md">LIVE TRACKING</span>
+                   <h3 className="text-white font-black text-md">Chain of Custody</h3>
+                   <span className="bg-white/20 text-white text-2xs font-bold px-3 py-0.5 rounded-full backdrop-blur-md">LIVE TRACKING</span>
                  </div>
                  <div className="flex items-center gap-4 text-white/90">
-                   <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center backdrop-blur-md">
-                     <Truck className="w-6 h-6" />
+                   <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center backdrop-blur-md">
+                     <IconTooltip label="Active transit mode"><Truck className="w-5 h-5" /></IconTooltip>
                    </div>
                    <div>
-                     <p className="text-xs font-bold opacity-60">IN TRANSIT</p>
-                     <p className="font-bold text-lg leading-tight">Truck ID #4022</p>
+                     <p className="text-2xs font-bold opacity-60">IN TRANSIT</p>
+                     <p className="font-bold text-md leading-tight">Truck ID #4022</p>
                    </div>
                  </div>
               </div>
             </div>
-            <div className="p-8 flex-1 space-y-8">
+            <div className="p-6 flex-1 space-y-6">
               <TimelineItem 
                 title="Supplier Verified Packaging" 
                 time="10:45 AM" 
@@ -172,18 +173,18 @@ const OperatorDashboardPage = () => {
                 status="upcoming" 
               />
               
-              <div className="pt-4">
-                <LiquidButton className="w-full">View Full Audit Trail</LiquidButton>
+              <div className="pt-2">
+                <LiquidButton className="w-full h-10 text-sm">View Full Audit Trail</LiquidButton>
               </div>
             </div>
           </div>
 
-          <div className="bg-indigo-600 rounded-3xl p-8 text-white shadow-xl shadow-indigo-500/20 relative overflow-hidden group">
+          <div className="bg-indigo-600 rounded-xl p-6 text-white shadow-xl shadow-indigo-500/20 relative overflow-hidden group">
              <div className="absolute -right-4 -bottom-4 w-32 h-32 bg-white/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700" />
-             <AlertCircle className="w-8 h-8 mb-4 text-white/80" />
-             <h4 className="text-xl font-black mb-2 leading-tight">Maintenance Window</h4>
+             <IconTooltip label="System alert"><AlertCircle className="w-6 h-6 mb-4 text-white/80" /></IconTooltip>
+             <h4 className="text-lg font-black mb-2 leading-tight">Maintenance Window</h4>
              <p className="text-sm font-medium text-white/70 mb-6">Settlement engine scheduled for upgrade in 4 hours. All pending transactions will delay by ~15 mins.</p>
-             <LiquidButton className="w-full">Acknowledge</LiquidButton>
+             <LiquidButton className="w-full h-10 text-sm">Acknowledge</LiquidButton>
           </div>
         </div>
 
@@ -194,24 +195,24 @@ const OperatorDashboardPage = () => {
 
 // Sub-components
 const StatCard = ({ title, value, trend, icon, description, progress }: any) => (
-  <div className="relative group bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm transition-transform hover:scale-[1.02] cursor-default overflow-hidden">
+  <div className="relative group bg-card p-6 rounded-xl border border-border shadow-sm transition-transform hover:scale-[1.02] cursor-default overflow-hidden">
     <GlowingEffect blur={0} borderWidth={1.5} spread={60} proximity={64} inactiveZone={0.01} />
     <div className="relative z-10">
       <div className="flex justify-between items-start mb-6">
-        <div className="w-12 h-12 bg-slate-50 dark:bg-slate-800 rounded-2xl flex items-center justify-center">
+        <div className="w-10 h-10 bg-slate-50 dark:bg-slate-800/50 rounded-xl flex items-center justify-center">
           {icon}
         </div>
         {trend && (
-          <span className="text-emerald-500 font-black text-xs bg-emerald-50 dark:bg-emerald-500/10 px-2 py-1 rounded-lg">
+          <span className="text-emerald-500 font-black text-2xs bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 rounded-lg">
             {trend}
           </span>
         )}
       </div>
-      <h3 className="text-slate-500 dark:text-slate-400 text-xs font-black uppercase tracking-widest">{title}</h3>
-      <p className="text-3xl font-black mt-1 text-slate-900 dark:text-white tabular-nums">{value}</p>
-      <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-2 font-bold">{description}</p>
+      <h3 className="text-secondary text-2xs font-black uppercase tracking-widest">{title}</h3>
+      <p className="text-2xl font-black mt-1 text-primary tabular-nums">{value}</p>
+      <p className="text-2xs text-slate-400 dark:text-secondary mt-2 font-bold">{description}</p>
       {progress && (
-        <div className="mt-4 w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+        <div className="mt-4 w-full h-1.5 bg-slate-100 dark:bg-slate-800/50 rounded-full overflow-hidden">
           <div className="h-full bg-blue-600 rounded-full" style={{ width: `${progress}%` }} />
         </div>
       )}
@@ -222,8 +223,8 @@ const StatCard = ({ title, value, trend, icon, description, progress }: any) => 
 const Section = ({ header, linkText, children }: any) => (
   <div className="space-y-4">
     <div className="flex justify-between items-center">
-      <h3 className="font-black text-lg tracking-tight uppercase text-slate-400 dark:text-slate-600">{header}</h3>
-      <button className="text-xs font-black text-indigo-500 hover:text-indigo-600 transition-colors uppercase tracking-widest">{linkText} →</button>
+      <h3 className="font-black text-md tracking-tight uppercase text-slate-400 dark:text-slate-600">{header}</h3>
+      <button className="text-2xs font-black text-indigo-500 hover:text-indigo-600 transition-colors uppercase tracking-widest">{linkText} →</button>
     </div>
     {children}
   </div>
@@ -238,21 +239,25 @@ const TransactionCard = ({ name, id, amount, status, type, tag }: any) => {
   };
 
   return (
-    <div className="relative group bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm flex justify-between items-center overflow-hidden transition-all duration-300">
+    <div className="relative group bg-card p-5 rounded-xl border border-border shadow-sm flex justify-between items-center overflow-hidden transition-all duration-300">
       <GlowingEffect blur={0} borderWidth={1} spread={40} proximity={64} inactiveZone={0.01} />
       <div className="relative z-10 flex flex-1 justify-between items-center">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-slate-50 dark:bg-slate-800 rounded-xl flex items-center justify-center group-hover:bg-indigo-50 dark:group-hover:bg-indigo-500/10 transition-colors">
-            {type === 'restaurant' ? <Store className="w-5 h-5 text-indigo-500" /> : <Factory className="w-5 h-5 text-indigo-500" />}
+          <div className="w-10 h-10 bg-slate-50 dark:bg-slate-800/50 rounded-lg flex items-center justify-center group-hover:bg-indigo-50 dark:group-hover:bg-indigo-500/10 transition-colors">
+            {type === 'restaurant' ? (
+              <IconTooltip label="Restaurant profile"><Store className="w-5 h-5 text-indigo-500" /></IconTooltip>
+            ) : (
+              <IconTooltip label="Supplier profile"><Factory className="w-5 h-5 text-indigo-500" /></IconTooltip>
+            )}
           </div>
           <div>
-            <h4 className="font-bold text-slate-900 dark:text-white leading-none">{name}</h4>
-            <p className="text-xs text-slate-400 dark:text-slate-500 mt-1.5 font-bold">BATCH {id} • <span className="text-indigo-500">{tag}</span></p>
+            <h4 className="font-bold text-primary leading-none text-sm">{name}</h4>
+            <p className="text-2xs text-secondary mt-1.5 font-bold uppercase tracking-tight">BATCH {id} • <span className="text-indigo-500">{tag}</span></p>
           </div>
         </div>
         <div className="text-right flex flex-col items-end gap-2">
-          <p className="font-black text-lg tabular-nums">{amount}</p>
-          <span className={`text-[10px] font-black px-2 py-0.5 rounded-lg tracking-tight ${statusColors[status] || ''}`}>
+          <p className="font-black text-md tabular-nums">{amount}</p>
+          <span className={`text-2xs font-black px-2 py-0.5 rounded-lg tracking-tight ${statusColors[status] || ''}`}>
             {status}
           </span>
         </div>
@@ -263,14 +268,14 @@ const TransactionCard = ({ name, id, amount, status, type, tag }: any) => {
 
 const ActivityRow = ({ time, activity, entity, amount, risk, color }: any) => (
   <tr className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
-    <td className="px-6 py-4 text-xs font-bold text-slate-400 whitespace-nowrap">{time}</td>
-    <td className="px-6 py-4 text-sm font-bold text-slate-900 dark:text-slate-100">{activity}</td>
-    <td className="px-6 py-4 text-sm font-bold text-indigo-500">{entity}</td>
-    <td className="px-6 py-4 text-sm font-black tabular-nums">{amount}</td>
-    <td className="px-6 py-4">
+    <td className="px-6 py-3 text-xs font-bold text-slate-400 whitespace-nowrap">{time}</td>
+    <td className="px-6 py-3 text-sm font-bold text-primary">{activity}</td>
+    <td className="px-6 py-3 text-sm font-bold text-indigo-500">{entity}</td>
+    <td className="px-6 py-3 text-sm font-black tabular-nums">{amount}</td>
+    <td className="px-6 py-3">
       <div className="flex items-center gap-2">
         <div className={`w-2 h-2 rounded-full ${color === 'green' ? 'bg-emerald-500 shadow-lg shadow-emerald-500/50' : 'bg-amber-500 shadow-lg shadow-amber-500/50'}`} />
-        <span className="text-xs font-black">{risk}</span>
+        <span className="text-2xs font-black">{risk}</span>
       </div>
     </td>
   </tr>
@@ -281,15 +286,15 @@ const TimelineItem = ({ title, time, status, description }: any) => (
     {status !== 'upcoming' && (
       <div className="absolute left-[7px] top-6 bottom-[-24px] w-[2px] bg-slate-800" />
     )}
-    <div className={`w-4 h-4 rounded-full mt-1.5 z-10 
+    <div className={`w-4 h-4 rounded-full mt-1 z-10 
       ${status === 'completed' ? 'bg-indigo-500' : status === 'active' ? 'bg-indigo-500 ring-4 ring-indigo-500/20' : 'bg-slate-800'}
     `} />
-    <div className="pb-8 flex-1">
+    <div className="pb-6 flex-1">
       <div className="flex justify-between items-start mb-1">
         <h4 className={`text-sm font-bold ${status === 'upcoming' ? 'text-slate-500' : 'text-white'}`}>{title}</h4>
-        <span className="text-[10px] font-bold text-slate-500">{time}</span>
+        <span className="text-2xs font-bold text-slate-500">{time}</span>
       </div>
-      {description && <p className="text-xs text-slate-400 font-medium">{description}</p>}
+      {description && <p className="text-2xs text-slate-400 font-medium">{description}</p>}
     </div>
   </div>
 );

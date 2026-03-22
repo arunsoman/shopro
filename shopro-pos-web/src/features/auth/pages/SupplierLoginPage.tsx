@@ -30,7 +30,7 @@ export const SupplierLoginPage: React.FC = () => {
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 p-6">
-            <Card className="w-full max-w-md border-none shadow-2xl overflow-hidden">
+            <Card className="w-full  border-none shadow-2xl overflow-hidden">
                 <div className="h-2 bg-indigo-600" />
                 <CardHeader className="space-y-1 text-center pt-8">
                     <div className="mx-auto w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center mb-4">

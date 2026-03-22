@@ -5,10 +5,10 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
-import { 
-    Package, 
-    Calendar, 
-    DollarSign, 
+import {
+    Package,
+    Calendar,
+    DollarSign,
     ArrowRight,
     Search,
     FileText
@@ -52,7 +52,7 @@ export const SupplierPOListPage: React.FC = () => {
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="relative flex-1 max-w-md">
+                <div className="relative flex-1 ">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                     <input
                         type="text"
@@ -89,11 +89,11 @@ export const SupplierPOListPage: React.FC = () => {
                                 <div className={cn(
                                     "w-1 md:w-1.5",
                                     po.status === 'SENT' ? "bg-blue-500" :
-                                    po.status === 'ACKNOWLEDGED' ? "bg-indigo-500" :
-                                    po.status === 'SHIPPED' ? "bg-purple-500" :
-                                    po.status === 'RECEIVED' ? "bg-emerald-500" : "bg-slate-300"
+                                        po.status === 'ACKNOWLEDGED' ? "bg-indigo-500" :
+                                            po.status === 'SHIPPED' ? "bg-purple-500" :
+                                                po.status === 'RECEIVED' ? "bg-emerald-500" : "bg-slate-300"
                                 )} />
-                                
+
                                 <div className="flex-1 p-5 lg:p-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
                                     <div className="flex gap-4">
                                         <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-xl flex-shrink-0">
@@ -126,10 +126,10 @@ export const SupplierPOListPage: React.FC = () => {
                                                 {po.expectedDeliveryDate ? format(new Date(po.expectedDeliveryDate), 'MMM d, yyyy') : 'As Scheduled'}
                                             </p>
                                         </div>
-                                        
+
                                         <Button className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-600 dark:hover:bg-indigo-500 group/btn" asChild>
                                             <Link to={`/supplier/po/${po.id}`} className="gap-2">
-                                                { (po.status === 'SENT' || po.status === 'ACKNOWLEDGED') ? 'Manage Fulfillment' : 'View Details' }
+                                                {(po.status === 'SENT' || po.status === 'ACKNOWLEDGED') ? 'Manage Fulfillment' : 'View Details'}
                                                 <ArrowRight className="h-4 w-4 transition-transform group-hover/btn:translate-x-1" />
                                             </Link>
                                         </Button>
@@ -145,8 +145,8 @@ export const SupplierPOListPage: React.FC = () => {
                         <Package className="h-12 w-12 text-slate-200 mx-auto mb-4" />
                         <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">No purchase orders found</h3>
                         <p className="text-slate-500 max-w-xs mx-auto mt-2">
-                            {searchTerm || statusFilter !== 'ALL' 
-                                ? "Try adjusting your filters or search term to find what you're looking for." 
+                            {searchTerm || statusFilter !== 'ALL'
+                                ? "Try adjusting your filters or search term to find what you're looking for."
                                 : "You don't have any purchase orders yet. Active auctions and awards will appear here."}
                         </p>
                         {(searchTerm || statusFilter !== 'ALL') && (

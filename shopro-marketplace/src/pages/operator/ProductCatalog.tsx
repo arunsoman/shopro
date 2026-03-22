@@ -1,8 +1,12 @@
 "use client";
 
-import { StatusBadge } from "@/components/ui/status-badge";
-import { Search, Plus, Package, BookOpen, ExternalLink, Download, Info, Trash2, Edit3, BarChart3 } from "lucide-react";
+import React from "react";
+import { Search, Plus, Package, BookOpen, ExternalLink, Download, Info, Trash2, Edit3, BarChart3, TrendingUp, TrendingDown, RefreshCw, Database } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useQuery } from "@tanstack/react-query";
+import api from "@/api";
+import { SecureOverlay } from "@/components/SecureOverlay";
+import { IconTooltip } from "@/components/shared/IconTooltip";
 
 /**
  * OP-17 — Product Catalog Management
@@ -10,142 +14,163 @@ import { cn } from "@/lib/utils";
  * DNA: High-density list, category grouping, price indexing.
  */
 
-const PRODUCTS = [
-  { id: "SKU-901", name: "Premium Avocado", category: "Produce", suppliers: 12, avgPrice: 180, trend: "+4%", status: "ACTIVE" },
-  { id: "SKU-905", name: "Organic Kale", category: "Produce", suppliers: 8, avgPrice: 65, trend: "-2%", status: "ACTIVE" },
-  { id: "SKU-882", name: "Almond Milk (Unsweetened)", category: "Dairy", suppliers: 5, avgPrice: 210, trend: "Stable", status: "ACTIVE" },
-  { id: "SKU-774", name: "Cage-Free Eggs (Dozen)", category: "Dairy", suppliers: 15, avgPrice: 120, trend: "+12%", status: "REVIEW_NEEDED" },
-  { id: "SKU-661", name: "Whole Wheat Flour (5kg)", category: "Grains", suppliers: 4, avgPrice: 450, trend: "Stable", status: "ACTIVE" },
-];
+interface ProductCatalogItem {
+  id: string;
+  name: string;
+  sku: string;
+  price: number;
+  stock: number;
+  category: string;
+  status: string;
+}
 
 export default function ProductCatalog() {
+  const { data: products = [], isLoading } = useQuery<ProductCatalogItem[]>({
+    queryKey: ["operator-product-catalog"],
+    queryFn: async () => {
+      const resp = await api.get("operator/catalog/products");
+      return resp.data;
+    }
+  });
+
   return (
-    <div className="space-y-8 animate-in fade-in duration-700">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Product Master Registry</h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-1">
-            Managing {PRODUCTS.length} global SKUs and cross-supplier price variants.
+    <SecureOverlay>
+    <div className="space-y-8 animate-in fade-in duration-700 pb-12">
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-(--sp-border) mt-4">
+        <div className="space-y-1">
+          <h1 className="text-[24px] font-medium tracking-tight text-(--sp-text-0)">Product Registry</h1>
+          <p className="text-[13px] text-(--sp-text-2) flex items-center gap-2">
+             <Package className="w-4 h-4 text-emerald-500" />
+             Managing global SKUs and cross-supplier price variants.
           </p>
         </div>
         
-        <div className="flex items-center gap-3">
-          <div className="relative group">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-violet-500 transition-colors" />
+        <div className="flex flex-col sm:flex-row items-center gap-3">
+          <div className="relative group w-full sm:w-64">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-(--sp-text-3) group-focus-within:text-emerald-500 transition-all" />
             <input 
               type="text" 
-              placeholder="Search Global SKU..." 
-              className="h-10 pl-9 pr-4 bg-white dark:bg-slate-900 rounded-xl text-xs ring-1 ring-slate-200 dark:ring-slate-800 outline-none focus:ring-2 focus:ring-violet-500 transition-all w-64 shadow-sm"
+              placeholder="Search SKU..." 
+              className="h-9 pl-9 pr-4 bg-(--sp-bg-2) rounded-sm text-[13px] text-(--sp-text-0) placeholder:text-(--sp-text-3) outline-none border border-(--sp-border) focus:border-emerald-500/50 transition-all w-full shadow-sm"
             />
           </div>
-          <button className="h-10 px-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl text-xs font-black flex items-center gap-2 hover:scale-105 transition-all shadow-lg">
-            <Plus size={14} /> NEW SKU
+          <button className="h-9 px-4 bg-emerald-500 text-white rounded-sm text-[13px] font-medium flex items-center gap-2 hover:opacity-90 active:scale-[0.97] transition-all shadow-sm">
+            <Plus size={16} /> New SKU
           </button>
         </div>
-      </div>
+      </header>
 
-      {/* Analytics DNA */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: "Active SKUs", value: "482", icon: Package, color: "blue" },
-          { label: "Categories", value: "18", icon: BookOpen, color: "violet" },
+          { label: "Active SKUs", value: products.length.toString(), icon: Package, color: "emerald" },
+          { label: "Categories", value: "18", icon: BookOpen, color: "blue" },
           { label: "Price Volatility", value: "Medium", icon: BarChart3, color: "amber" },
-          { label: "Sourcing Gaps", value: "4", icon: Info, color: "rose" },
+          { label: "Sourcing Gaps", value: "4 Nodes", icon: Info, color: "rose" },
         ].map((stat) => (
-          <div key={stat.label} className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl p-6 rounded-3xl ring-1 ring-slate-100 dark:ring-slate-800 flex items-center gap-4">
-            <div className={cn("p-3 rounded-2xl", 
-              stat.color === "blue" ? "bg-blue-500/10 text-blue-500" :
-              stat.color === "violet" ? "bg-violet-500/10 text-violet-500" :
-              stat.color === "amber" ? "bg-amber-500/10 text-amber-500" :
-              "bg-rose-500/10 text-rose-500"
+          <div key={stat.label} className="bg-(--sp-bg-2) border border-(--sp-border) p-4 rounded-md flex items-center gap-4 shadow-sm hover:border-emerald-500/20 hover:bg-(--sp-bg-3) transition-all">
+            <div className={cn("w-10 h-10 rounded-sm flex items-center justify-center border transition-all", 
+              stat.color === "emerald" ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" :
+              stat.color === "blue" ? "bg-blue-500/10 text-blue-500 border-blue-500/20" :
+              stat.color === "amber" ? "bg-amber-500/10 text-amber-500 border-amber-500/20" :
+              "bg-rose-500/10 text-rose-500 border-rose-500/20"
             )}>
               <stat.icon size={20} />
             </div>
-            <div>
-              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{stat.label}</p>
-              <p className="text-xl font-black text-slate-900 dark:text-white">{stat.value}</p>
+            <div className="flex flex-col">
+              <p className="text-[10px] text-(--sp-text-3) font-semibold uppercase tracking-[0.06em] mb-0.5">{stat.label}</p>
+              <p className="text-[20px] font-medium text-(--sp-text-0) leading-none tracking-tight">{stat.value}</p>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Master List Table */}
-      <div className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl rounded-[2.5rem] ring-1 ring-slate-200 dark:ring-slate-800 overflow-hidden shadow-sm">
-        <div className="p-8 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-           <div className="flex items-center gap-6">
-             <button className="text-sm font-bold text-violet-500 border-b-2 border-violet-500 pb-1">All Products</button>
-             <button className="text-sm font-bold text-slate-400 hover:text-slate-600 pb-1 transition-colors">By Demand</button>
-             <button className="text-sm font-bold text-slate-400 hover:text-slate-600 pb-1 transition-colors">Untracked</button>
+      <div className="bg-(--sp-bg-2) border border-(--sp-border) rounded-md shadow-sm overflow-hidden">
+        <div className="px-6 py-3 border-b border-(--sp-border) flex flex-col md:flex-row md:items-center justify-between gap-4 bg-(--sp-bg-1)/30">
+           <div className="flex items-center gap-6 overflow-x-auto scrollbar-hide">
+              <button className="text-[13px] font-medium text-emerald-500 border-b-2 border-emerald-500 pb-1">All Products</button>
+              <button className="text-[13px] font-medium text-(--sp-text-3) hover:text-(--sp-text-0) pb-1 transition-all">By Demand</button>
+              <button className="text-[13px] font-medium text-(--sp-text-3) hover:text-(--sp-text-0) pb-1 transition-all">Untracked</button>
            </div>
            <div className="flex items-center gap-2">
-             <button className="h-8 px-4 bg-slate-100 dark:bg-slate-800 rounded-lg text-[10px] font-bold text-slate-500 hover:text-slate-900 transition-colors">
-               BULK EDIT PRICING
-             </button>
-             <button className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 transition-colors">
-               <Download size={18} />
-             </button>
+              <button className="h-8 px-4 bg-(--sp-bg-3) text-(--sp-text-1) rounded-sm text-[12px] font-medium hover:text-(--sp-text-0) transition-all border border-(--sp-border) shadow-sm uppercase tracking-[0.04em]">
+                Bulk Edit
+              </button>
+              <button className="w-8 h-8 rounded-sm bg-(--sp-bg-2) border border-(--sp-border) flex items-center justify-center text-(--sp-text-3) hover:text-emerald-500 transition-all shadow-sm">
+                <Download size={16} />
+              </button>
            </div>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
-              <tr className="bg-slate-50/50 dark:bg-slate-800/50 text-slate-500 uppercase text-[10px] font-bold tracking-widest">
-                <th className="p-6">Product Details</th>
-                <th className="p-6">Category</th>
-                <th className="p-6">Active Suppliers</th>
-                <th className="p-6">Avg Market Price</th>
-                <th className="p-6">Status</th>
-                <th className="p-6 text-right">Actions</th>
+              <tr className="bg-(--sp-bg-1)/30 border-b border-(--sp-border)">
+                <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-[0.08em] text-(--sp-text-3)">Product Details</th>
+                <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-[0.08em] text-(--sp-text-3)">Category</th>
+                <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-[0.08em] text-(--sp-text-3)">Hub Signals</th>
+                <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-[0.08em] text-(--sp-text-3)">Market Delta</th>
+                <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-[0.08em] text-(--sp-text-3)">Status</th>
+                <th className="px-6 py-3 text-right"></th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-              {PRODUCTS.map((prod) => (
-                <tr key={prod.id} className="group hover:bg-white dark:hover:bg-slate-800/50 transition-colors">
-                  <td className="p-6">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 group-hover:text-violet-500 transition-colors">
-                        <Package size={20} />
-                      </div>
-                      <div>
-                        <p className="text-sm font-bold text-slate-900 dark:text-white">{prod.name}</p>
-                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">ID: {prod.id}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="p-6">
-                    <span className="text-xs font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md">{prod.category}</span>
-                  </td>
-                  <td className="p-6">
-                    <div className="flex items-center gap-2">
-                       <span className="text-sm font-black text-slate-900 dark:text-white">{prod.suppliers}</span>
-                       <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Vendors</span>
-                    </div>
-                  </td>
-                  <td className="p-6">
+            <tbody className="divide-y divide-(--sp-border)">
+               {isLoading ? (
+                   Array(5).fill(0).map((_, i) => (
+                       <tr key={i} className="animate-pulse">
+                           <td colSpan={6} className="px-6 py-4 h-16 bg-(--sp-bg-1)/20" />
+                       </tr>
+                   ))
+               ) : products.map((prod) => (
+                <tr key={prod.id} className="group hover:bg-(--sp-bg-3) transition-all">
+                  <td className="px-6 py-3">
                     <div className="flex items-center gap-3">
-                       <span className="text-sm font-black text-slate-900 dark:text-white">₹{prod.avgPrice}</span>
-                       <span className={cn(
-                         "text-[9px] font-black px-1.5 py-0.5 rounded",
-                         prod.trend.includes("+") ? "bg-rose-100 text-rose-600" : prod.trend === "Stable" ? "bg-slate-100 text-slate-500" : "bg-green-100 text-green-600"
-                       )}>{prod.trend}</span>
+                       <div className="w-8 h-8 rounded-sm bg-(--sp-bg-3) text-emerald-500 flex items-center justify-center border border-(--sp-border) shadow-sm">
+                        <Package size={16} />
+                      </div>
+                      <div className="flex flex-col">
+                        <p className="text-[13px] font-medium text-(--sp-text-0)">{prod.name}</p>
+                        <p className="text-[10px] text-(--sp-text-3) font-[family-name:var(--font-geist-mono)] uppercase">{prod.sku}</p>
+                      </div>
                     </div>
                   </td>
-                  <td className="p-6">
-                    <StatusBadge status={prod.status as any} />
+                  <td className="px-6 py-3">
+                    <span className="text-[11px] text-(--sp-text-1) px-2 py-0.5 bg-(--sp-bg-3) rounded-[4px] border border-(--sp-border) uppercase font-medium">
+                      {prod.category}
+                    </span>
                   </td>
-                  <td className="p-6 text-right">
-                    <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-violet-500 transition-all">
-                        <Edit3 size={16} />
+                  <td className="px-6 py-3">
+                    <div className="flex items-center gap-2">
+                       <span className="text-[15px] font-medium text-(--sp-text-0)">12</span>
+                       <span className="text-[10px] text-(--sp-text-3) font-bold uppercase tracking-[0.06em]">Vendors</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-3">
+                    <div className="flex items-center gap-2">
+                       <span className="text-[15px] font-medium text-(--sp-text-0)">₹{prod.price}</span>
+                       <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-[4px] bg-emerald-500/5 text-emerald-500 border border-emerald-500/10 uppercase">Stable</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-3">
+                    <div className={cn(
+                      "px-2 py-0.5 rounded-[4px] text-[10px] font-bold transition-all border shadow-sm inline-block uppercase tracking-[0.06em]",
+                      prod.status === 'Active' || prod.status === 'ACTIVE' 
+                        ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' 
+                        : 'bg-(--sp-bg-3) text-(--sp-text-3) border-(--sp-border)'
+                    )}>
+                      {prod.status}
+                    </div>
+                  </td>
+                  <td className="px-6 py-3 text-right">
+                    <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                      <button className="w-8 h-8 rounded-sm bg-(--sp-bg-3) text-(--sp-text-3) hover:text-emerald-500 transition-all border border-(--sp-border) shadow-sm">
+                        <Edit3 size={14} />
                       </button>
-                      <button className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-rose-500 transition-all">
-                        <Trash2 size={16} />
+                      <button className="w-8 h-8 rounded-sm bg-(--sp-bg-3) text-(--sp-text-3) hover:text-(--sp-red) transition-all border border-(--sp-border) shadow-sm">
+                        <Trash2 size={14} />
                       </button>
-                      <div className="w-[1px] h-4 bg-slate-200 dark:bg-slate-800 mx-2" />
-                      <button className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-900 transition-all">
-                        <ExternalLink size={16} />
+                      <div className="w-px h-5 bg-(--sp-border) mx-1" />
+                      <button className="w-8 h-8 rounded-sm bg-emerald-500 text-white shadow-sm flex items-center justify-center hover:opacity-90 transition-all">
+                        <ExternalLink size={14} />
                       </button>
                     </div>
                   </td>
@@ -156,5 +181,6 @@ export default function ProductCatalog() {
         </div>
       </div>
     </div>
+    </SecureOverlay>
   );
 }

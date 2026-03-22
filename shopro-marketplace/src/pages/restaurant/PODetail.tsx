@@ -1,335 +1,263 @@
 "use client";
 
-import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { animate } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { 
   ChevronLeft, 
-  ChevronRight, 
+  ArrowLeft, 
   Package, 
   Truck, 
   CheckCircle2, 
   Clock, 
   AlertCircle,
   FileText,
-  MessageSquare,
-  ArrowUpRight,
-  MoreVertical,
-  Download,
   Printer,
+  Download,
   Edit3,
-  Undo2,
-  Calendar
+  Award,
+  Zap,
+  TrendingUp,
+  Box,
+  CircleDot,
+  ArrowRight,
+  ShieldCheck
 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { useParams, useNavigate } from "react-router-dom";
+import api from "@/api";
+import { SecureOverlay } from "@/components/SecureOverlay";
+import { IconTooltip } from "@/components/shared/IconTooltip";
 
-// ─── DNA PRIMITIVES ──────────────────────────────────────────────────────────
-const SPRING = { type: "spring" as const, stiffness: 500, damping: 30, mass: 1 };
-const EASE_OUT_CSS = "cubic-bezier(0.16, 1, 0.3, 1)";
-const GLOW_GRADIENT = `radial-gradient(circle, #dd7bbb 10%, #dd7bbb00 20%), radial-gradient(circle at 40% 40%, #d79f1e 5%, #d79f1e00 15%), radial-gradient(circle at 60% 60%, #5a922c 10%, #5a922c00 20%), radial-gradient(circle at 40% 60%, #4c7894 10%, #4c789400 20%), repeating-conic-gradient(from 236.84deg at 50% 50%, #dd7bbb 0%, #d79f1e calc(25% / 5), #5a922c calc(50% / 5), #4c7894 calc(75% / 5), #dd7bbb calc(100% / 5))`;
+/**
+ * RD-01 — Purchase Order Detail
+ * Purpose: Track a specific PO for restaurant buyers.
+ */
 
-const STATUS_COLORS = {
-  pending_approval: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-800",
-  confirmed: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/30 dark:text-blue-400 dark:border-blue-800",
-  in_transit: "bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/30 dark:text-indigo-400 dark:border-indigo-800",
-  delivered: "bg-green-50 text-green-700 border-green-200 dark:bg-green-950/30 dark:text-green-400 dark:border-green-800",
-  cancelled: "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/30 dark:text-rose-400 dark:border-rose-800",
-};
-
-function useGlowingBorder(disabled = false) {
-  const containerRef = useRef<HTMLElement>(null);
-  const lastPosition = useRef({ x: 0, y: 0 });
-  const rafRef = useRef<number>(0);
-  const handleMove = useCallback((e?: MouseEvent | { x: number; y: number }) => {
-    if (!containerRef.current || disabled) return;
-    if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    rafRef.current = requestAnimationFrame(() => {
-      const el = containerRef.current; if (!el) return;
-      const { left, top, width, height } = el.getBoundingClientRect();
-      const mx = e?.x ?? lastPosition.current.x;
-      const my = e?.y ?? lastPosition.current.y;
-      if (e) lastPosition.current = { x: mx, y: my };
-      const center = [left + width * 0.5, top + height * 0.5];
-      const dist = Math.hypot(mx - center[0], my - center[1]);
-      if (dist < 0.5 * Math.min(width, height) * 0.01) { el.style.setProperty("--active", "0"); return; }
-      const isActive = mx > left && mx < left + width && my > top && my < top + height;
-      el.style.setProperty("--active", isActive ? "1" : "0");
-      if (!isActive) return;
-      const cur = parseFloat(el.style.getPropertyValue("--start")) || 0;
-      const target = (180 * Math.atan2(my - center[1], mx - center[0])) / Math.PI + 90;
-      const diff = ((target - cur + 180) % 360) - 180;
-      animate(cur, cur + diff, { duration: 2, ease: [0.16, 1, 0.3, 1], onUpdate: (v) => el.style.setProperty("--start", String(v)) });
-    });
-  }, [disabled]);
-  useEffect(() => {
-    if (disabled) return;
-    const onScroll = () => handleMove();
-    const onMove = (e: PointerEvent) => handleMove(e);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    document.body.addEventListener("pointermove", onMove, { passive: true });
-    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); window.removeEventListener("scroll", onScroll); document.body.removeEventListener("pointermove", onMove); };
-  }, [handleMove, disabled]);
-  return containerRef;
+interface POItem {
+  id: string;
+  name: string;
+  price: number;
+  qty: number;
+  unit: string;
 }
 
-function GlowingBorder({ spread = 30, borderWidth = 1 }: { spread?: number; borderWidth?: number }) {
-  return (
-    <div style={{ "--spread": spread, "--start": "0", "--active": "0", "--glowingeffect-border-width": `${borderWidth}px`, "--repeating-conic-gradient-times": "5", "--gradient": GLOW_GRADIENT } as React.CSSProperties}
-      className="pointer-events-none absolute inset-0 rounded-[inherit]">
-      <div className={cn("glow rounded-[inherit]", 'after:content-[""] after:rounded-[inherit] after:absolute after:inset-[calc(-1*var(--glowingeffect-border-width))]', "after:[border:var(--glowingeffect-border-width)_solid_transparent]", "after:[background:var(--gradient)] after:[background-attachment:fixed]", "after:opacity-[var(--active)] after:transition-opacity after:duration-300", "after:[mask-clip:padding-box,border-box] after:[mask-composite:intersect]", "after:[mask-image:linear-gradient(#0000,#0000),conic-gradient(from_calc((var(--start)-var(--spread))*1deg),#00000000_0deg,#fff,#00000000_calc(var(--spread)*2deg))]")} />
+interface PODetail {
+  id: string;
+  status: string;
+  placedDate: string;
+  expectedDelivery: string;
+  items: POItem[];
+  total: number;
+}
+
+const OrderHeader = ({ id, status }: { id: string; status: string }) => (
+  <header className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 border-b border-slate-200 dark:border-slate-800 pb-8 transition-all">
+    <div className="space-y-4">
+      <div className="flex items-center gap-4">
+        <button 
+            onClick={() => window.history.back()}
+            className="h-12 w-12 bg-white dark:bg-slate-950 rounded-xl flex items-center justify-center border border-slate-200 dark:border-slate-800 hover:scale-105 transition-all shadow-sm"
+        >
+            <IconTooltip label="Return to Hub"><ArrowLeft size={20} /></IconTooltip>
+        </button>
+        <h1 className="text-2xl md:text-4xl font-bold tracking-tight text-slate-900 dark:text-white">
+            {id.replace(/PO-/g, '')} <span className="text-brand-primary font-extrabold italic">Order</span>
+        </h1>
+      </div>
+      <p className="text-slate-500 font-medium text-sm flex items-center gap-3">
+         <IconTooltip label="Status Stream"><CircleDot className="w-5 h-5 text-brand-primary animate-pulse" /></IconTooltip>
+         Order Status: <span className="font-bold">{status}</span>
+      </p>
     </div>
-  );
-}
 
-function NeonEdges({ active = false, color = "blue" }: { active?: boolean; color?: "blue" | "violet" | "green" | "rose" }) {
-  const via = color === "violet" ? "via-violet-500" : color === "green" ? "via-green-400" : color === "rose" ? "via-rose-500" : "via-blue-500";
-  return (<>
-    <span className={cn("pointer-events-none absolute h-px inset-x-0 top-0 bg-gradient-to-r w-3/4 mx-auto from-transparent to-transparent transition-all duration-500 ease-in-out", via, active ? "opacity-100" : "opacity-0 group-hover:opacity-100 group-focus-within:opacity-100")} />
-    <span className={cn("pointer-events-none absolute inset-x-0 h-px -bottom-px bg-gradient-to-r w-3/4 mx-auto from-transparent to-transparent transition-opacity duration-500 ease-in-out", via, active ? "opacity-30" : "opacity-0 group-hover:opacity-30 group-focus-within:opacity-30")} />
-  </>);
-}
+    <div className="flex items-center gap-4">
+        <button className="h-12 w-12 bg-white dark:bg-slate-950 text-slate-900 dark:text-white rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-center shadow-md transition-all hover:scale-105">
+            <IconTooltip label="Print Order"><Printer size={20} /></IconTooltip>
+        </button>
+        <button className="h-12 px-6 bg-indigo-600 text-white rounded-xl border border-indigo-400 flex items-center gap-3 shadow-md transition-all hover:scale-[1.02] italic">
+            <IconTooltip label="Request Changes"><Edit3 size={20} /></IconTooltip>
+            <span className="text-sm font-bold tracking-tight uppercase">Request Amendment</span>
+        </button>
+    </div>
+  </header>
+);
 
-// ─── COMPONENTS ──────────────────────────────────────────────────────────────
-
-export function OrderTimeline({ steps }: { steps: any[] }) {
-  return (
-    <div className="flex flex-col gap-0">
-      {steps.map((step, i) => (
-        <div key={i} className="flex gap-4 group">
-          <div className="flex flex-col items-center">
-            <div className={cn(
-              "relative w-8 h-8 rounded-full flex items-center justify-center transition-all duration-500 z-10",
-              step.completed ? "bg-green-500 text-white" : step.current ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 ring-2 ring-violet-500 ring-offset-2" : "bg-slate-100 dark:bg-slate-800 text-slate-400"
-            )}>
-               {step.completed ? <CheckCircle2 className="w-5 h-5" /> : <span className="text-[10px] font-bold">{i + 1}</span>}
-               {step.current && <motion.div animate={{ scale: [1, 1.5, 1], opacity: [0.5, 0, 0.5] }} transition={{ duration: 2, repeat: Infinity }} className="absolute inset-0 rounded-full bg-violet-500/30" />}
-            </div>
-            {i < steps.length - 1 && (
-              <div className={cn("w-[2px] h-12 my-1 transition-all duration-1000", step.completed ? "bg-green-500" : "bg-slate-200 dark:bg-slate-800")} />
-            )}
-          </div>
-          <div className="pb-8 pt-0.5">
-            <div className={cn("text-sm font-bold tracking-tight transition-colors", step.completed || step.current ? "text-slate-900 dark:text-white" : "text-slate-400")}>{step.title}</div>
-            <div className="text-xs text-slate-500 mt-0.5">{step.description}</div>
-            {step.timestamp && <div className="text-[10px] uppercase font-bold text-slate-400 mt-2 tracking-widest">{step.timestamp}</div>}
-          </div>
+const TimelineNode = ({ step, i, total }: { step: any; i: number; total: number }) => (
+  <div className="flex gap-8 group">
+    <div className="flex flex-col items-center">
+        <div className={cn(
+            "relative h-12 w-12 rounded-xl flex items-center justify-center border transition-all duration-500 z-10",
+            step.completed ? "bg-emerald-500 border-emerald-300 text-white" : step.current ? "bg-indigo-600 border-indigo-400 text-white shadow-xl" : "bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-400"
+        )}>
+            {step.completed ? <IconTooltip label="Stage Complete"><CheckCircle2 size={24} /></IconTooltip> : <span className="text-lg font-bold">{i+1}</span>}
+            {step.current && <motion.div animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0, 0.3] }} transition={{ duration: 2, repeat: Infinity }} className="absolute -inset-2 rounded-2xl bg-indigo-500/20 pointer-events-none" />}
         </div>
-      ))}
+        {i < total - 1 && (
+            <div className={cn("w-2 h-20 my-2 rounded-full transition-all duration-700", step.completed ? "bg-emerald-500" : "bg-border")} />
+        )}
     </div>
-  );
-}
-
-// ─── PAGE COMPONENT ──────────────────────────────────────────────────────────
-
-const PO_DATA = {
-  id: "PO-82921-X",
-  status: "in_transit",
-  supplier: {
-    name: "Global Coffee Traders",
-    contact: "Sarah Jenkins",
-    phone: "+1 (555) 012-3456",
-    address: "822 Industrial Way, Portland, OR",
-    image: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=100&h=100&fit=crop"
-  },
-  dates: {
-    placed: "Mar 20, 2024 · 09:42 AM",
-    expected: "Mar 22, 2024",
-    slot: "Morning (08:00 - 11:00)"
-  },
-  items: [
-    { id: "1", name: "Premium Arabica Beans", price: 45.0, qty: 10, unit: "kg" },
-    { id: "2", name: "Whole Milk - Case of 12", price: 28.5, qty: 4, unit: "case" },
-    { id: "3", name: "Oat Milk - Barista Edition", price: 34.0, qty: 2, unit: "case" },
-  ],
-  log: [
-    { title: "Order Placed", description: "PO-82921-X was generated and sent.", timestamp: "20 Mar · 09:42", completed: true },
-    { title: "Confirmed by Supplier", description: "Sarah Jenkins accepted the order.", timestamp: "20 Mar · 11:15", completed: true },
-    { title: "Dispatched", description: "Package is with our logistics partner.", timestamp: "21 Mar · 08:30", completed: true, current: true },
-    { title: "Delivery", description: "Estimated arrival Tomorrow.", timestamp: "22 Mar · AM Slot", completed: false },
-  ]
-};
+    <div className="pt-1 space-y-1 italic leading-none">
+        <div className={cn("text-xl font-bold tracking-tight uppercase", step.completed || step.current ? "text-indigo-600" : "text-slate-400 opacity-60")}>{step.title}</div>
+        <div className="text-[10px] font-semibold tracking-wide text-slate-400 leading-none">{step.description}</div>
+        {step.timestamp && <div className="text-lg font-bold text-slate-900 dark:text-white mt-3 uppercase italic tracking-tighter">{step.timestamp}</div>}
+    </div>
+  </div>
+);
 
 export default function PODetail() {
-  const glowRef = useGlowingBorder();
-  const subtotal = PO_DATA.items.reduce((acc, i) => acc + i.price * i.qty, 0);
+  const { poId } = useParams();
+  const navigate = useNavigate();
+
+  const { data: po, isLoading } = useQuery<PODetail>({
+    queryKey: ["buyer-po-detail", poId],
+    queryFn: async () => {
+      const resp = await api.get(`buyer/orders/${poId}`);
+      return resp.data;
+    }
+  });
+
+  if (isLoading) return (
+      <SecureOverlay>
+          <div className="p-24 space-y-12 animate-pulse">
+              <div className="h-40 bg-muted/20 rounded-3xl" />
+              <div className="grid grid-cols-3 gap-12">
+                  <div className="h-96 bg-muted/20 rounded-3xl col-span-2" />
+                  <div className="h-96 bg-muted/20 rounded-3xl" />
+              </div>
+          </div>
+      </SecureOverlay>
+  );
+
+  if (!po) return null;
 
   return (
-    <div className="min-h-screen bg-slate-50/30 dark:bg-black p-4 sm:p-8">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 mt-2">
-          <div className="space-y-1">
-            <button className="flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-violet-500 transition-colors uppercase tracking-widest mb-2">
-              <ChevronLeft className="w-3 h-3" />
-              Back to Orders
-            </button>
-            <div className="flex items-center gap-4">
-              <h1 className="text-3xl font-black tracking-tighter italic">{PO_DATA.id}</h1>
-              <span className={cn("px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border shadow-sm", STATUS_COLORS[PO_DATA.status as keyof typeof STATUS_COLORS])}>
-                In Transit
-              </span>
-            </div>
-          </div>
+    <SecureOverlay>
+    <div className="max-w-7xl mx-auto space-y-6 animate-in fade-in duration-500 pb-24 text-slate-900 dark:text-white">
+      <OrderHeader id={po.id} status={po.status} />
 
-          <div className="flex items-center gap-2">
-            <button className="group relative p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:shadow-lg transition-all">
-              <Printer className="w-4 h-4 text-slate-600" />
-              <NeonEdges />
-            </button>
-            <button className="group relative p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:shadow-lg transition-all">
-              <Download className="w-4 h-4 text-slate-600" />
-              <NeonEdges />
-            </button>
-            <button className="group relative px-6 py-2.5 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-sm font-bold italic flex items-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all overflow-hidden shadow-xl">
-              <Edit3 className="w-4 h-4" />
-              Request Amendment
-              <NeonEdges color="violet" />
-            </button>
-          </div>
-        </header>
+      <main className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="lg:col-span-8 space-y-12">
+            {/* Items Breakdown */}
+            <section className="bg-white/10 dark:bg-slate-900/30 backdrop-blur-xl p-6 rounded-2xl border-2 border-slate-200 dark:border-slate-800 shadow-lg space-y-6">
+                <h2 className="text-xl font-bold tracking-tight flex items-center gap-4">
+                  <IconTooltip label="Payload Manifest"><Box size={24} className="text-brand-primary" /></IconTooltip> 
+                  Order Items
+                </h2>
+                
+                    <div className="space-y-4">
+                       {po.items.map((item, i) => (
+                           <div key={item.id} className="group relative bg-slate-100/50 dark:bg-slate-950/20 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between transition-all hover:bg-white dark:hover:bg-slate-950 hover:border-indigo-500">
+                              <div className="flex items-center gap-6">
+                                    <div className="h-12 w-12 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 flex items-center justify-center text-lg font-bold italic text-brand-primary shadow-sm group-hover:rotate-6 transition-transform">
+                                        {i + 1}
+                                    </div>
+                                    <div className="space-y-1">
+                                        <h3 className="text-lg font-bold text-slate-900 dark:text-white uppercase italic">{item.name}</h3>
+                                        <p className="text-[10px] text-slate-400 font-semibold tracking-wide">Unit Price: ₹{item.price.toFixed(2)} / {item.unit}</p>
+                                    </div>
+                              </div>
+                              <div className="text-right space-y-1">
+                                    <p className="text-xl font-extrabold tracking-tight text-slate-900 dark:text-white">x{item.qty}</p>
+                                    <p className="text-md font-bold text-brand-primary">₹{(item.price * item.qty).toFixed(2)}</p>
+                              </div>
+                           </div>
+                       ))}
+                    </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Main Content */}
-          <div className="lg:col-span-8 space-y-6">
-            {/* Items Card */}
-            <div className="relative bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-xl overflow-hidden group">
-              <GlowingBorder spread={100} borderWidth={1} />
-              <div className="p-8">
-                <div className="flex items-center justify-between mb-8">
-                  <h2 className="text-xl font-black italic tracking-tight flex items-center gap-2">
-                    <Package className="w-5 h-5 text-violet-500" />
-                    Itemized Breakdown
-                  </h2>
-                  <div className="text-xs font-bold text-slate-400 uppercase tracking-widest bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-lg">
-                    {PO_DATA.items.length} Unique SKUs
-                  </div>
+                <div className="border-t border-slate-200 dark:border-slate-800 pt-8 flex justify-between items-end">
+                    <div className="space-y-4">
+                        <div className="flex gap-8 items-center">
+                            <div className="space-y-1">
+                                <p className="text-[10px] font-bold tracking-widest text-slate-400 opacity-60 uppercase">Subtotal</p>
+                                <p className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">₹{po.total.toFixed(2)}</p>
+                            </div>
+                            <div className="space-y-1">
+                                <p className="text-[10px] font-bold tracking-widest text-brand-success uppercase">Tax Status</p>
+                                <p className="text-xl font-bold italic tracking-tight text-brand-success uppercase">Eligible</p>
+                            </div>
+                        </div>
+                    </div>
+                     <div className="text-right space-y-2">
+                        <p className="text-sm font-extrabold tracking-wider text-brand-primary uppercase">Grand Total</p>
+                        <h3 className="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-none">₹{po.total.toFixed(2)}</h3>
+                    </div>
                 </div>
+            </section>
 
-                <div className="space-y-1">
-                  {PO_DATA.items.map((item, i) => (
-                    <div key={item.id} className="group/row flex items-center gap-4 py-4 px-2 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                      <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center font-black italic text-slate-400 group-hover/row:text-violet-500 transition-colors">
-                        {i + 1}
+            {/* Quick Actions */}
+            <div className="grid grid-cols-2 gap-6">
+                <div className="bg-white/10 dark:bg-slate-900/30 backdrop-blur-xl p-6 rounded-2xl border-2 border-slate-200 dark:border-slate-800 shadow-lg space-y-4 group">
+                   <div className="flex items-center gap-4">
+                      <div className="h-10 w-10 bg-brand-primary/10 rounded-lg border border-brand-primary/20 flex items-center justify-center text-brand-primary shadow-md group-hover:scale-110 transition-transform">
+                         <IconTooltip label="Activity Delta"><FileText size={20} /></IconTooltip>
                       </div>
-                      <div className="flex-1">
-                        <div className="font-bold text-slate-900 dark:text-white leading-tight">{item.name}</div>
-                        <div className="text-xs text-slate-500 uppercase font-black tracking-tighter mt-0.5">${item.price.toFixed(2)} per {item.unit}</div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-lg font-black italic text-slate-900 dark:text-white">x{item.qty}</div>
-                        <div className="text-xs font-bold text-violet-500">${(item.price * item.qty).toFixed(2)}</div>
-                      </div>
-                    </div>
-                  ))}
+                      <h4 className="text-lg font-bold tracking-tight uppercase italic">Activity Logs</h4>
+                   </div>
+                   <p className="text-[10px] font-semibold tracking-wide text-slate-400 uppercase leading-relaxed">
+                      Access full procurement audit trails, manifests, and shipping signatures.
+                   </p>
+                   <button className="h-10 w-full bg-slate-950 dark:bg-white text-white dark:text-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 font-bold uppercase text-[10px] tracking-widest shadow-sm">
+                      Download Logs
+                   </button>
                 </div>
-
-                <div className="mt-8 pt-8 border-t-2 border-dashed border-slate-100 dark:border-slate-800">
-                  <div className="flex justify-between items-end">
-                    <div className="space-y-4 flex-1">
-                       <div className="flex items-center gap-6">
-                          <div>
-                            <div className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1">Subtotal</div>
-                            <div className="text-xl font-black italic">${subtotal.toFixed(2)}</div>
-                          </div>
-                          <div className="text-green-500">
-                            <div className="text-[10px] font-black uppercase tracking-widest mb-1">Tax (0%)</div>
-                            <div className="text-lg font-black italic">VAT Exempt</div>
-                          </div>
-                       </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1">Grand Total</div>
-                      <div className="text-4xl font-black italic tracking-tighter text-slate-900 dark:text-white">${subtotal.toFixed(2)}</div>
-                    </div>
-                  </div>
+                <div className="bg-slate-950 p-6 rounded-2xl border border-brand-primary/50 shadow-lg space-y-4 relative overflow-hidden group text-white">
+                   <div className="absolute inset-0 bg-white/5 translate-y-full group-hover:translate-y-0 transition-transform duration-700" />
+                   <h4 className="text-lg font-bold tracking-tight uppercase relative z-10 flex items-center gap-3 italic">
+                     <IconTooltip label="Fiscal Seal"><Download size={20} /></IconTooltip> 
+                     Invoice
+                   </h4>
+                   <p className="text-[10px] font-bold tracking-wide opacity-40 uppercase leading-relaxed relative z-10">
+                      Transmit compliant tax invoice to external accounting nodes. Secure and verified.
+                   </p>
+                   <button className="h-10 w-full bg-white text-slate-900 rounded-xl border border-white/10 font-bold uppercase text-[10px] tracking-widest shadow-sm relative z-10">
+                      Download Invoice
+                   </button>
                 </div>
-              </div>
             </div>
-
-            {/* Attachments & Notes */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-               <div className="p-6 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 hover:shadow-lg transition-all group relative">
-                 <GlowingBorder spread={30} borderWidth={1} />
-                 <h3 className="text-sm font-bold uppercase tracking-widest text-slate-400 mb-4 italic">Attachments</h3>
-                 <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-100 dark:border-slate-800 group/file cursor-pointer">
-                    <FileText className="w-5 h-5 text-blue-500" />
-                    <div className="flex-1 min-w-0">
-                      <div className="text-xs font-bold truncate">PO-INV-82921.pdf</div>
-                      <div className="text-[10px] text-slate-400 font-bold uppercase">Tax Invoice · 1.2 MB</div>
-                    </div>
-                    <Download className="w-4 h-4 text-slate-300 group-hover/file:text-slate-900 transition-colors" />
-                 </div>
-               </div>
-               <div className="p-6 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 hover:shadow-lg transition-all group relative">
-                 <GlowingBorder spread={30} borderWidth={1} />
-                 <h3 className="text-sm font-bold uppercase tracking-widest text-slate-400 mb-4 italic">Internal Note</h3>
-                 <p className="text-sm text-slate-600 dark:text-slate-400 font-medium italic italic leading-relaxed">
-                   "Please ensure unloading is done at B-Sector loading dock. Regular morning staff will be available for inspection."
-                 </p>
-               </div>
-            </div>
-          </div>
-
-          {/* Sidebar Area */}
-          <div className="lg:col-span-4 space-y-6">
-            {/* Status Tracking */}
-            <div className="bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-100 dark:border-slate-800 p-8 shadow-xl relative overflow-hidden">
-              <GlowingBorder spread={100} borderWidth={1} />
-              <h2 className="text-xl font-black italic tracking-tight mb-8">Live Status</h2>
-              <OrderTimeline steps={PO_DATA.log} />
-              <button className="w-full mt-4 group relative py-3 rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-indigo-100 transition-all overflow-hidden italic">
-                Track Shipment Details
-                <ArrowUpRight className="w-4 h-4" />
-                <NeonEdges color="blue" />
-              </button>
-            </div>
-
-            {/* Supplier Quick Card */}
-            <div className="bg-slate-900 rounded-[2rem] border border-white/10 p-8 shadow-2xl relative overflow-hidden group">
-               <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl" />
-               <div className="flex gap-4 items-center mb-8">
-                  <img src={PO_DATA.supplier.image} className="w-14 h-14 rounded-2xl object-cover ring-2 ring-white/10" />
-                  <div>
-                    <h3 className="text-white font-black italic text-lg leading-tight">{PO_DATA.supplier.name}</h3>
-                    <div className="flex items-center gap-1.5 mt-0.5">
-                       <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                       <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Always On Time</span>
-                    </div>
-                  </div>
-               </div>
-               
-               <div className="space-y-5 mb-8">
-                  <div className="flex items-center gap-3 text-white/60">
-                     <Truck className="w-4 h-4" />
-                     <span className="text-xs font-semibold truncate">{PO_DATA.supplier.address}</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-white/60">
-                     <Calendar className="w-4 h-4" />
-                     <span className="text-xs font-semibold">{PO_DATA.dates.slot}</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-white/60">
-                     <MessageSquare className="w-4 h-4" />
-                     <span className="text-xs font-semibold">Sarah: "Loading now, will arrive early."</span>
-                  </div>
-               </div>
-
-               <button className="group relative w-full py-4 rounded-2xl bg-white text-slate-900 font-black italic tracking-tight text-sm flex items-center justify-center gap-2 hover:scale-[1.02] transition-all overflow-hidden shadow-xl">
-                  Message Supplier
-                  <NeonEdges color="violet" />
-               </button>
-            </div>
-
-            {/* Danger Zone / Cancel */}
-            <div className="p-4 bg-rose-50/50 dark:bg-rose-950/10 border border-rose-100 dark:border-rose-900/30 rounded-3xl flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                 <AlertCircle className="w-5 h-5 text-rose-500" />
-                 <div className="text-[11px] font-bold text-rose-700 dark:text-rose-400 uppercase tracking-tight">Requires Attention?</div>
-              </div>
-              <button className="text-[11px] font-black text-rose-600 hover:underline uppercase tracking-widest">Cancel PO</button>
-            </div>
-          </div>
         </div>
-      </div>
+
+        <aside className="lg:col-span-4 space-y-12">
+            {/* Live Tracking */}
+            <div className="bg-white/10 dark:bg-slate-900/30 backdrop-blur-xl p-6 rounded-2xl border-2 border-slate-200 dark:border-slate-800 shadow-lg space-y-6 relative overflow-hidden group">
+               <div className="absolute inset-0 bg-brand-primary/5 translate-y-full group-hover:translate-y-0 transition-transform duration-700" />
+               <h3 className="text-lg font-bold tracking-tight uppercase flex items-center gap-3 relative z-10">
+                 <IconTooltip label="Order Progress"><TrendingUp className="text-brand-primary" /></IconTooltip> 
+                 Order Tracking
+               </h3>
+               
+               <div className="space-y-6 relative z-10">
+                  <div className="flex flex-col gap-0">
+                    {[
+                        { title: "Order Placed", description: "Order registered in system", timestamp: "MAR 20 09:42", completed: true },
+                        { title: "Supplier Confirmed", description: "Items allocated for delivery", timestamp: "MAR 20 11:15", completed: true },
+                        { title: "In Transit", description: "Out for delivery", timestamp: "MAR 21 08:30", completed: true, current: true },
+                        { title: "Arriving Soon", description: "Estimated delivery time", timestamp: "MAR 22 AM", completed: false },
+                    ].map((step, i) => (
+                        <TimelineNode key={i} step={step} i={i} total={4} />
+                    ))}
+                  </div>
+               </div>
+            </div>
+
+            {/* Support Zone */}
+            <div className="p-6 bg-rose-500/5 border border-rose-500/20 rounded-2xl shadow-lg space-y-6">
+                <div className="flex items-center gap-4">
+                   <div className="h-12 w-12 bg-rose-500 rounded-xl flex items-center justify-center text-white shadow-lg animate-pulse">
+                      <IconTooltip label="Critical Alert"><AlertCircle size={24} /></IconTooltip>
+                   </div>
+                   <div className="space-y-1 uppercase italic leading-none">
+                      <h4 className="text-lg font-bold tracking-tight text-rose-600">Assistance</h4>
+                      <p className="text-[10px] font-bold tracking-widest text-rose-500 opacity-60">Need help with this order?</p>
+                   </div>
+                </div>
+                <button className="h-14 w-full bg-rose-500 text-white rounded-xl border border-rose-400 font-bold text-[10px] tracking-widest shadow-md uppercase hover:scale-[1.02] transition-transform italic">
+                   Cancel Order
+                </button>
+            </div>
+        </aside>
+      </main>
     </div>
+    </SecureOverlay>
   );
 }

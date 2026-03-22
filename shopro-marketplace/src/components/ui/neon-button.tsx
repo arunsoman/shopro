@@ -16,7 +16,7 @@ import { animate } from "motion/react";
 // SHARED DNA PRIMITIVES
 // ─────────────────────────────────────────────────────────────────────────────
 
-const GLOW_GRADIENT = `radial-gradient(circle, #dd7bbb 10%, #dd7bbb00 20%), radial-gradient(circle at 40% 40%, #d79f1e 5%, #d79f1e00 15%), radial-gradient(circle at 60% 60%, #5a922c 10%, #5a922c00 20%), radial-gradient(circle at 40% 60%, #4c7894 10%, #4c789400 20%), repeating-conic-gradient(from 236.84deg at 50% 50%, #dd7bbb 0%, #d79f1e calc(25% / 5), #5a922c calc(50% / 5), #4c7894 calc(75% / 5), #dd7bbb calc(100% / 5))`;
+const GLOW_GRADIENT = `radial-gradient(circle, #4fd1c5 10%, #4fd1c500 20%), radial-gradient(circle at 40% 40%, #ecc94b 5%, #ecc94b00 15%), radial-gradient(circle at 60% 60%, #48bb78 10%, #48bb7800 20%), radial-gradient(circle at 40% 60%, #f56565 10%, #f5656500 20%), repeating-conic-gradient(from 236.84deg at 50% 50%, #4fd1c5 0%, #ecc94b calc(25% / 5), #48bb78 calc(50% / 5), #f56565 calc(75% / 5), #4fd1c5 calc(100% / 5))`;
 const WHITE_GLOW_GRADIENT = `repeating-conic-gradient(from 236.84deg at 50% 50%, var(--black), var(--black) calc(25% / 5))`;
 
 export function GlowingBorder({ spread = 30, borderWidth = 1, variant = "default" }: { spread?: number; borderWidth?: number; variant?: "default" | "white" }) {
@@ -60,11 +60,11 @@ export function GlowingBorder({ spread = 30, borderWidth = 1, variant = "default
   );
 }
 
-export function NeonEdges({ active = false, color = "blue" }: { active?: boolean; color?: "blue" | "violet" | "green" }) {
-  const via = color === "violet" ? "via-violet-500" : color === "green" ? "via-green-400" : "via-blue-500";
+export function NeonEdges({ active = false, color = "blue" }: { active?: boolean; color?: "blue" | "violet" | "green" | "danger" }) {
+  const via = color === "violet" ? "via-brand-secondary" : color === "green" ? "via-brand-success" : color === "danger" ? "via-brand-destructive" : "via-brand-primary";
   return (<>
-    <span className={cn("pointer-events-none absolute h-px inset-x-0 top-0 bg-gradient-to-r w-3/4 mx-auto from-transparent to-transparent transition-all duration-500 ease-in-out", via, active ? "opacity-100" : "opacity-0 group-hover:opacity-100 group-focus-within:opacity-100")} />
-    <span className={cn("pointer-events-none absolute inset-x-0 h-px -bottom-px bg-gradient-to-r w-3/4 mx-auto from-transparent to-transparent transition-opacity duration-500 ease-in-out", via, active ? "opacity-30" : "opacity-0 group-hover:opacity-30 group-focus-within:opacity-30")} />
+    <span className={cn("pointer-events-none absolute h-px inset-x-0 top-0 bg-gradient-to-r w-full mx-auto from-transparent to-transparent transition-all duration-700 ease-in-out", via, active ? "opacity-100 shadow-[0_0_8px_rgba(99,102,241,0.6)]" : "opacity-0 group-hover:opacity-100 group-focus-within:opacity-100")} />
+    <span className={cn("pointer-events-none absolute inset-x-0 h-px -bottom-px bg-gradient-to-r w-full mx-auto from-transparent to-transparent transition-opacity duration-700 ease-in-out", via, active ? "opacity-40 shadow-[0_0_8px_rgba(99,102,241,0.4)]" : "opacity-0 group-hover:opacity-40 group-focus-within:opacity-40")} />
   </>);
 }
 
@@ -77,8 +77,8 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-blue-500/5 hover:bg-blue-500/0 border-blue-500/20",
-        solid: "bg-blue-500 hover:bg-blue-600 text-white border-transparent hover:border-foreground/50",
+        default: "bg-brand-primary/5 hover:bg-brand-primary/10 border-brand-primary/20",
+        solid: "bg-brand-primary hover:bg-brand-primary/90 text-slate-900 border-transparent hover:border-white/20",
         ghost: "border-transparent bg-transparent hover:border-zinc-600 hover:bg-white/10",
       },
       size: {
@@ -108,7 +108,7 @@ export const NeonButton = forwardRef<HTMLButtonElement, NeonButtonProps>(
       {...props}
     >
       <GlowingBorder spread={20} borderWidth={1} />
-      <NeonEdges color={variant === "solid" ? "violet" : "blue"} />
+      <NeonEdges color={variant === "solid" ? "green" : "blue"} />
       <span className="relative z-10">{children}</span>
     </button>
   )

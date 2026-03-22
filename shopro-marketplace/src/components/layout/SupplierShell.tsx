@@ -50,7 +50,7 @@ export function SupplierShell({ children }: { children: React.ReactNode }) {
             <GlowingSearch 
               placeholder="Search bids, invoices..." 
               className="hidden lg:flex"
-              onSearch={(q) => console.log("Supplier Search:", q)}
+              onSearch={(q: string) => console.log("Supplier Search:", q)}
             />
           </div>
 

@@ -1,0 +1,13 @@
+-- PO Enhancement Fields: Delivery Address, Internal Notes, and Approval Logic
+ALTER TABLE purchase_order 
+ADD COLUMN IF NOT EXISTS delivery_address TEXT,
+ADD COLUMN IF NOT EXISTS billing_address TEXT,
+ADD COLUMN IF NOT EXISTS special_instructions TEXT,
+ADD COLUMN IF NOT EXISTS internal_notes TEXT,
+ADD COLUMN IF NOT EXISTS approval_required BOOLEAN DEFAULT FALSE,
+ADD COLUMN IF NOT EXISTS approval_status VARCHAR(50) DEFAULT 'NOT_REQUIRED',
+ADD COLUMN IF NOT EXISTS approved_by VARCHAR(255),
+ADD COLUMN IF NOT EXISTS total_tax NUMERIC(19, 4) DEFAULT 0,
+ADD COLUMN IF NOT EXISTS total_discount NUMERIC(19, 4) DEFAULT 0,
+ADD COLUMN IF NOT EXISTS created_by_principal_id VARCHAR(255),
+ADD COLUMN IF NOT EXISTS source VARCHAR(50) DEFAULT 'MANUAL';

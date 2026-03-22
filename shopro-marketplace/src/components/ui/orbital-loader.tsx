@@ -41,17 +41,17 @@ export function OrbitalLoader({
     <div className={cn(orbitalVariants({ messagePlacement }))}>
       <div className={cn("relative w-16 h-16", className)} {...props}>
         <motion.div
-          className="absolute inset-0 border-2 border-transparent border-t-brand-primary rounded-full"
+          className="absolute inset-0 border-2 border-transparent border-t-primary rounded-full shadow-[0_0_15px_rgba(99,102,241,0.3)]"
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
         />
         <motion.div
-          className="absolute inset-2 border-2 border-transparent border-t-brand-secondary rounded-full"
+          className="absolute inset-2 border-2 border-transparent border-t-secondary rounded-full shadow-[0_0_15px_rgba(168,85,247,0.3)]"
           animate={{ rotate: -360 }}
           transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
         />
         <motion.div
-          className="absolute inset-4 border-2 border-transparent border-t-foreground rounded-full"
+          className="absolute inset-4 border-2 border-transparent border-t-brand-success rounded-full shadow-[0_0_15px_rgba(34,197,94,0.3)]"
           animate={{ rotate: 360 }}
           transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
         />

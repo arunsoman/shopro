@@ -51,10 +51,10 @@ function GlowingBorder({ spread = 30, borderWidth = 1 }: { spread?: number; bord
 }
 
 function NeonEdges({ active = false, color = "blue" }: { active?: boolean; color?: "blue" | "violet" | "green" }) {
-  const via = color === "violet" ? "via-violet-500" : color === "green" ? "via-green-400" : "via-blue-500";
+  const via = color === "violet" ? "via-secondary" : color === "green" ? "via-brand-success" : "via-primary";
   return (<>
-    <span className={cn("pointer-events-none absolute h-px inset-x-0 top-0 bg-gradient-to-r w-3/4 mx-auto from-transparent to-transparent transition-all duration-500 ease-in-out", via, active ? "opacity-100" : "opacity-0 group-hover:opacity-100 group-focus-within:opacity-100")} />
-    <span className={cn("pointer-events-none absolute inset-x-0 h-px -bottom-px bg-gradient-to-r w-3/4 mx-auto from-transparent to-transparent transition-opacity duration-500 ease-in-out", via, active ? "opacity-30" : "opacity-0 group-hover:opacity-30 group-focus-within:opacity-30")} />
+    <span className={cn("pointer-events-none absolute h-px inset-x-0 top-0 bg-gradient-to-r w-full mx-auto from-transparent to-transparent transition-all duration-700 ease-in-out", via, active ? "opacity-100 shadow-[0_0_8px_rgba(99,102,241,0.6)]" : "opacity-0 group-hover:opacity-100 group-focus-within:opacity-100")} />
+    <span className={cn("pointer-events-none absolute inset-x-0 h-px -bottom-px bg-gradient-to-r w-full mx-auto from-transparent to-transparent transition-opacity duration-700 ease-in-out", via, active ? "opacity-30 shadow-[0_0_8px_rgba(99,102,241,0.4)]" : "opacity-0 group-hover:opacity-30 group-focus-within:opacity-30")} />
   </>);
 }
 
@@ -111,10 +111,16 @@ export function RestaurantSidebar({ items, activeId, onNavigate, collapsed = fal
             <div key={item.id}>
               <Wrapper
                 {...(wrapperProps as any)}
-                className={cn("group relative flex items-center gap-3 w-full rounded-lg cursor-pointer transition-all duration-300", collapsed ? "justify-center px-0 py-2.5" : "px-3 py-2", isActive ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900" : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100")}
+                className={cn(
+                    "group relative flex items-center gap-3 w-full rounded-lg cursor-pointer transition-all duration-300", 
+                    collapsed ? "justify-center px-0 py-2.5" : "px-3 py-2", 
+                    isActive 
+                      ? "bg-primary/5 dark:bg-primary/10 text-primary shadow-[0_0_20px_rgba(99,102,241,0.1)] ring-1 ring-primary/20" 
+                      : "text-muted-foreground hover:bg-primary/5 hover:text-primary"
+                )}
               >
-                {isActive && <GlowingBorder borderWidth={1} spread={20} />}
-                {!isActive && <NeonEdges />}
+                {isActive && <GlowingBorder borderWidth={1} spread={50} />}
+                <NeonEdges active={isActive} color={role === "platform" ? "violet" : role === "seller" ? "green" : "blue"} />
                 <span className="shrink-0 w-5 h-5 flex items-center justify-center">{item.icon}</span>
                 <AnimatePresence>{!collapsed && (<motion.span initial={{ opacity: 0, width: 0 }} animate={{ opacity: 1, width: "auto" }} exit={{ opacity: 0, width: 0 }} transition={{ duration: 0.2 }} className="text-sm font-medium truncate flex-1">{item.label}</motion.span>)}</AnimatePresence>
                 {!collapsed && item.badge != null && item.badge > 0 && (<span className="shrink-0 min-w-[18px] h-[18px] px-1 rounded-full bg-blue-500 text-white text-[10px] font-bold flex items-center justify-center">{item.badge > 99 ? "99+" : item.badge}</span>)}
