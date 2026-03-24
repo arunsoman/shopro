@@ -41,15 +41,23 @@ public class DPoPService {
     @Autowired
     private StaffRepository staffRepository;
 
-    public String validateProof(String dpopHeader, HttpServletRequest request, String expectedThumbprint) {
+    public record ValidationResult(boolean isValid, String jkt, String error, String message) {
+        public static ValidationResult success(String jkt) {
+            return new ValidationResult(true, jkt, null, "Success");
+        }
+        public static ValidationResult failure(String error, String message) {
+            return new ValidationResult(false, null, error, message);
+        }
+    }
+
+    public ValidationResult validateProof(String dpopHeader, HttpServletRequest request, String expectedThumbprint) {
         if (dpopHeader == null || dpopHeader.isEmpty()) {
             log.warn("DPoP validation failed: Missing header");
-            return null;
+            return ValidationResult.failure("missing_header", "DPoP header is required.");
         }
 
         try {
             // 1. Parse and validate signature using JJWT 0.12.x
-            // We use a custom Locator to find the public key from the header's JWK
             Jws<Claims> jws = Jwts.parser()
                     .keyLocator(header -> {
                         Map<String, Object> jwk = (Map<String, Object>) header.get("jwk");
@@ -67,16 +75,16 @@ public class DPoPService {
             Claims claims = jws.getPayload();
             JwsHeader header = jws.getHeader();
 
-            // Validate Algorithm (Manual check for maximum compatibility with JJWT versions)
+            // Validate Algorithm
             String alg = header.getAlgorithm();
             if (alg == null || !Set.of("EdDSA", "PS256", "RS256").contains(alg)) {
                 log.warn("DPoP invalid alg: {}", alg);
-                return null;
+                return ValidationResult.failure("invalid_alg", "Unsupported DPoP algorithm: " + alg);
             }
 
             if (!"dpop+jwt".equals(header.getType())) {
                 log.warn("DPoP invalid typ: {}", header.getType());
-                return null;
+                return ValidationResult.failure("invalid_typ", "Invalid DPoP JWT type: " + header.getType());
             }
 
             Map<String, Object> jwk = (Map<String, Object>) header.get("jwk");
@@ -85,7 +93,7 @@ public class DPoPService {
             // 2. Validate thumbprint matches expected device binding (if provided)
             if (expectedThumbprint != null && !expectedThumbprint.equals(actualThumbprint)) {
                 log.warn("DPoP jkt mismatch: expected {}, got {}", expectedThumbprint, actualThumbprint);
-                return null;
+                return ValidationResult.failure("jkt_mismatch", "DPoP key thumbprint does not match the active session binding.");
             }
 
             // 3. Validate 'htm' (method) and 'htu' (url)
@@ -94,7 +102,7 @@ public class DPoPService {
 
             if (method == null || !method.equalsIgnoreCase(request.getMethod())) {
                 log.warn("DPoP htm mismatch: expected {}, got {}", request.getMethod(), method);
-                return null;
+                return ValidationResult.failure("htm_mismatch", "DPoP method mismatch: expected " + request.getMethod() + ", got " + method);
             }
 
             String requestUrl = request.getRequestURL().toString();
@@ -121,20 +129,20 @@ public class DPoPService {
             
             if (!urlMatch) {
                 log.warn("DPoP htu mismatch: requestUrl={}, requestPath={}, htu={}", requestUrl, requestPath, url);
-                return null;
+                return ValidationResult.failure("htu_mismatch", "DPoP URL mismatch. Expected: " + requestPath);
             }
 
-            // 4. Freshness check (iat) is handled by JJWT (exp check is also automatic if set, but we use iat check manually too)
+            // 4. Freshness check (iat)
             long iatSeconds = claims.getIssuedAt().getTime() / 1000;
             if (Math.abs(System.currentTimeMillis() / 1000 - iatSeconds) > 120) {
                 log.warn("DPoP iat skew too high: skew={}s", Math.abs(System.currentTimeMillis() / 1000 - iatSeconds));
-                return null;
+                return ValidationResult.failure("iat_skew", "DPoP time skew too high. Please ensure your device clock is synchronized.");
             }
 
-            return actualThumbprint;
+            return ValidationResult.success(actualThumbprint);
         } catch (Exception e) {
             log.warn("DPoP validation exception: {}", e.getMessage());
-            return null;
+            return ValidationResult.failure("invalid_proof", "Failed to validate DPoP proof: " + e.getMessage());
         }
     }
 

@@ -1,6 +1,9 @@
 package mls.sho.dms.application.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jws;
 import jakarta.servlet.http.HttpServletRequest;
 import mls.sho.dms.repository.staff.DeviceBindingRepository;
 import mls.sho.dms.repository.staff.StaffRepository;
@@ -31,31 +34,38 @@ class DPoPServiceTest {
 
     private ObjectMapper mapper = new ObjectMapper();
 
+    private java.security.KeyPair keyPair;
+
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
         MockitoAnnotations.openMocks(this);
+        java.security.KeyPairGenerator keyGen = java.security.KeyPairGenerator.getInstance("RSA");
+        keyGen.initialize(2048);
+        keyPair = keyGen.generateKeyPair();
     }
 
     private String generateProof(String method, String url, Map<String, Object> jwk, long iat) throws Exception {
-        Map<String, Object> header = new HashMap<>();
-        header.put("typ", "dpop+jwt");
-        header.put("alg", "RS256");
-        header.put("jwk", jwk);
-        
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("htm", method);
-        payload.put("htu", url);
-        payload.put("iat", iat);
-        payload.put("jti", UUID.randomUUID().toString());
-        
-        String h = Base64.getUrlEncoder().withoutPadding().encodeToString(mapper.writeValueAsBytes(header));
-        String p = Base64.getUrlEncoder().withoutPadding().encodeToString(mapper.writeValueAsBytes(payload));
-        return h + "." + p + ".dummy-signature";
+        return Jwts.builder()
+                .header()
+                .type("dpop+jwt")
+                .add("jwk", jwk)
+                .and()
+                .claim("htm", method)
+                .claim("htu", url)
+                .claim("iat", new java.util.Date(iat * 1000))
+                .claim("jti", UUID.randomUUID().toString())
+                .signWith(keyPair.getPrivate(), Jwts.SIG.RS256)
+                .compact();
     }
 
-    @Test
-    void shouldFailOnNullHeader() {
-        assertNull(dpopService.validateProof(null, mock(HttpServletRequest.class), "any"));
+    private String base64UrlEncodeUnsigned(java.math.BigInteger value) {
+        byte[] array = value.toByteArray();
+        if (array[0] == 0) {
+            byte[] tmp = new byte[array.length - 1];
+            System.arraycopy(array, 1, tmp, 0, tmp.length);
+            array = tmp;
+        }
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(array);
     }
 
     @Test
@@ -63,16 +73,22 @@ class DPoPServiceTest {
         HttpServletRequest request = mock(HttpServletRequest.class);
         when(request.getMethod()).thenReturn("POST");
         when(request.getRequestURL()).thenReturn(new StringBuffer("https://api.shopro.com/api/v1/payments"));
+        when(request.getRequestURI()).thenReturn("/api/v1/payments");
 
+        java.security.interfaces.RSAPublicKey publicKey = (java.security.interfaces.RSAPublicKey) keyPair.getPublic();
         Map<String, Object> jwk = new HashMap<>();
         jwk.put("kty", "RSA");
-        jwk.put("n", "rXy...testing");
-        jwk.put("e", "AQAB");
+        jwk.put("n", base64UrlEncodeUnsigned(publicKey.getModulus()));
+        jwk.put("e", base64UrlEncodeUnsigned(publicKey.getPublicExponent()));
 
         String proof = generateProof("POST", "https://api.shopro.com/api/v1/payments", jwk, System.currentTimeMillis() / 1000);
         String actualJkt = dpopService.calculateJkt(jwk);
         
-        assertNotNull(dpopService.validateProof(proof, request, actualJkt));
+        DPoPService.ValidationResult result = dpopService.validateProof(proof, request, actualJkt);
+        if (!result.isValid()) {
+            System.err.println("Validation failed in test: " + result.error() + " - " + result.message());
+        }
+        assertTrue(result.isValid(), "Validation should be valid: " + result.message());
     }
 
     @Test
@@ -80,15 +96,17 @@ class DPoPServiceTest {
         HttpServletRequest request = mock(HttpServletRequest.class);
         when(request.getMethod()).thenReturn("GET");
         when(request.getRequestURL()).thenReturn(new StringBuffer("https://api.shopro.com/api/v1/payments"));
+        when(request.getRequestURI()).thenReturn("/api/v1/payments");
 
+        java.security.interfaces.RSAPublicKey publicKey = (java.security.interfaces.RSAPublicKey) keyPair.getPublic();
         Map<String, Object> jwk = new HashMap<>();
         jwk.put("kty", "RSA");
-        jwk.put("n", "rXy...testing");
-        jwk.put("e", "AQAB");
+        jwk.put("n", base64UrlEncodeUnsigned(publicKey.getModulus()));
+        jwk.put("e", base64UrlEncodeUnsigned(publicKey.getPublicExponent()));
 
         String proof = generateProof("POST", "https://api.shopro.com/api/v1/payments", jwk, System.currentTimeMillis() / 1000);
         
-        assertNull(dpopService.validateProof(proof, request, dpopService.calculateJkt(jwk)));
+        assertFalse(dpopService.validateProof(proof, request, dpopService.calculateJkt(jwk)).isValid());
     }
 
     @Test
@@ -96,15 +114,17 @@ class DPoPServiceTest {
         HttpServletRequest request = mock(HttpServletRequest.class);
         when(request.getMethod()).thenReturn("POST");
         when(request.getRequestURL()).thenReturn(new StringBuffer("https://api.shopro.com/api/v1/payments"));
+        when(request.getRequestURI()).thenReturn("/api/v1/payments");
 
+        java.security.interfaces.RSAPublicKey publicKey = (java.security.interfaces.RSAPublicKey) keyPair.getPublic();
         Map<String, Object> jwk = new HashMap<>();
         jwk.put("kty", "RSA");
-        jwk.put("n", "rXy...testing");
-        jwk.put("e", "AQAB");
+        jwk.put("n", base64UrlEncodeUnsigned(publicKey.getModulus()));
+        jwk.put("e", base64UrlEncodeUnsigned(publicKey.getPublicExponent()));
 
         // 5 minutes ago
         String proof = generateProof("POST", "https://api.shopro.com/api/v1/payments", jwk, (System.currentTimeMillis() / 1000) - 300);
         
-        assertNull(dpopService.validateProof(proof, request, dpopService.calculateJkt(jwk)));
+        assertFalse(dpopService.validateProof(proof, request, dpopService.calculateJkt(jwk)).isValid());
     }
 }

@@ -45,39 +45,69 @@ public class DPoPFilter extends OncePerRequestFilter {
         boolean shouldEnforce = isStrictPath && !"GET".equalsIgnoreCase(method);
 
         if (dpopHeader != null) {
-            String expectedThumbprint = null;
+            java.util.List<DeviceBinding> allBindings = new java.util.ArrayList<>();
             if (isStrictPath && staffIdHeader != null) {
                 try {
                     UUID staffId = UUID.fromString(staffIdHeader);
-                    expectedThumbprint = deviceBindingRepository.findByStaffMemberId(staffId).stream()
-                            .filter(b -> !b.isRevoked())
-                            .map(DeviceBinding::getPublicKeyThumbprint)
-                            .findFirst()
-                            .orElse(null);
+                    allBindings = deviceBindingRepository.findByStaffMemberId(staffId);
                 } catch (IllegalArgumentException e) {
                     // Ignore invalid IDs
                 }
             }
 
-            String verifiedJkt = dpopService.validateProof(dpopHeader, request, expectedThumbprint);
+            DPoPService.ValidationResult result = null;
+            if (allBindings.isEmpty()) {
+                // If no bindings ever found but Header is present, validate signature/URL only
+                result = dpopService.validateProof(dpopHeader, request, null);
+            } else {
+                // 1. First check if any ACTIVE binding matches the provided proof
+                for (DeviceBinding b : allBindings) {
+                    if (!b.isRevoked()) {
+                        result = dpopService.validateProof(dpopHeader, request, b.getPublicKeyThumbprint());
+                        if (result.isValid()) break;
+                    }
+                }
 
-            if (verifiedJkt != null) {
+                // 2. If no active match, check if it matches a REVOKED binding to detect "logged in elsewhere"
+                if (result == null || !result.isValid()) {
+                    for (DeviceBinding b : allBindings) {
+                        if (b.isRevoked()) {
+                            // We use validateProof with null expectedThumbprint just to get the actual jkt from the header
+                            DPoPService.ValidationResult jktResult = dpopService.validateProof(dpopHeader, request, null);
+                            if (jktResult.isValid() && jktResult.jkt().equals(b.getPublicKeyThumbprint())) {
+                                log.warn("DPoPFilter detecting revoked session: jkt {} matches a revoked binding for staff {}", jktResult.jkt(), staffIdHeader);
+                                result = DPoPService.ValidationResult.failure("session_revoked", "Your session was revoked because you logged in from another device. Please log in again.");
+                                break;
+                            }
+                        }
+                    }
+                }
+                
+                // 3. Fallback: if still no result (e.g. jkt doesn't match ANY binding), use the last failure result
+                if (result == null) {
+                    result = dpopService.validateProof(dpopHeader, request, null);
+                }
+            }
+
+            if (result != null && result.isValid()) {
                 request.setAttribute("dpop_verified", true);
-                request.setAttribute("bound_dpop_jkt", verifiedJkt);
+                request.setAttribute("bound_dpop_jkt", result.jkt());
             } else if (shouldEnforce) {
-                log.warn("DPoPFilter rejecting request: DPoP Service validation failed for path={}, method={}", path, method);
-                // Only block if it's a sensitive path AND validation failed
+                String error = (result != null) ? result.error() : "invalid_dpop_proof";
+                String message = (result != null) ? result.message() : "A valid DPoP proof is required for this operation.";
+                
+                log.warn("DPoPFilter rejecting request: {} (code={}) for path={}, method={}", message, error, path, method);
+                
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.setContentType("application/json");
-                response.getWriter().write("{\"error\": \"invalid_dpop_proof\", \"message\": \"A valid DPoP proof is required for this operation.\"}");
+                response.getWriter().write(String.format("{\"error\": \"%s\", \"message\": \"%s\"}", error, message));
                 return;
             }
         } else if (shouldEnforce) {
             log.warn("DPoPFilter rejecting request: Missing DPoP header for path={}, method={}", path, method);
-            // Missing header on sensitive path
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json");
-            response.getWriter().write("{\"error\": \"invalid_dpop_proof\", \"message\": \"A valid DPoP proof is required for this operation.\"}");
+            response.getWriter().write("{\"error\": \"missing_header\", \"message\": \"A valid DPoP proof is required for this operation.\"}");
             return;
         }
 

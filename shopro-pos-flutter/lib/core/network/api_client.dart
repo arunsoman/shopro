@@ -49,10 +49,11 @@ class ApiClient {
       onError: (DioException e, handler) {
         if (e.response?.statusCode == 401) {
           final data = e.response?.data;
-          if (data is Map && data['error'] == 'invalid_dpop_proof') {
-            // Target the revocation specifically
+          if (data is Map && data.containsKey('error') && data.containsKey('message')) {
+            // Surface the backend's error message directly
+            // This handles htu_mismatch, iat_skew, session_revoked, etc.
             _ref.read(authProvider.notifier).logout(
-              reason: 'Your session was revoked because you logged in from another device. Please log in again.'
+              reason: data['message']
             );
           }
         }
