@@ -20,13 +20,19 @@ public class WebConfig implements WebMvcConfigurer {
     private final MarketplaceAuthenticationInterceptor marketplaceAuthenticationInterceptor;
 
     @Override
+    public void addResourceHandlers(org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry registry) {
+        registry.addResourceHandler("/api/v1/uploads/**")
+                .addResourceLocations("file:/app/uploads/");
+    }
+
+    @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(floorPlanPermissionInterceptor)
                 .addPathPatterns("/api/v1/floor-plan/**");
         
         registry.addInterceptor(staffAuthenticationInterceptor)
                 .addPathPatterns("/api/v1/**")
-                .excludePathPatterns("/api/v1/marketplace/**");
+                .excludePathPatterns("/api/v1/marketplace/**", "/api/v1/uploads/**"); // Exclude uploads from auth
 
         registry.addInterceptor(marketplaceAuthenticationInterceptor)
                 .addPathPatterns("/api/v1/marketplace/**");
