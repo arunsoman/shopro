@@ -27,6 +27,9 @@ RUN ./gradlew :shopro-pos-server:build -x test --no-daemon
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
+# Install native dependencies for OpenCV
+RUN apk add --no-cache libstdc++ gcompat
+
 # Add a non-root user for security
 RUN addgroup -S spring && adduser -S spring -G spring
 
