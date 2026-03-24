@@ -93,6 +93,12 @@ public class DPoPService {
                     return ValidationResult.failure("invalid_alg", "Unsupported DPoP key type: " + jwk.getKeyType());
                 }
                 
+                // Explicitly use BouncyCastle if registered (fixes SUN EdDSA "y value is too large" bug)
+                java.security.Provider bc = java.security.Security.getProvider(org.bouncycastle.jce.provider.BouncyCastleProvider.PROVIDER_NAME);
+                if (bc != null) {
+                    verifier.getJCAContext().setProvider(bc);
+                }
+                
                 if (!signedJWT.verify(verifier)) {
                     return ValidationResult.failure("invalid_proof", "DPoP signature verification failed");
                 }
