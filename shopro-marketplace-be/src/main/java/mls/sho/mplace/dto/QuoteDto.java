@@ -10,5 +10,7 @@ public record QuoteDto(
     Integer supplierTrustScore,
     BigDecimal totalAmount,
     String status,
+    Integer leadTime,
+    Double reliabilityScore,
     LocalDateTime submittedAt
 ) {}

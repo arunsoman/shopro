@@ -1,17 +1,44 @@
 {
-  "entity": "Restaurant",
-  "fields": [
-    { "name": "name", "type": "String", "required": true, "editable": true },
-    { "name": "category", "type": "String", "required": true, "editable": true },
-    { "name": "city", "type": "String", "required": true, "editable": true },
-    { "name": "address", "type": "String", "required": false, "editable": true },
-    { "name": "contactPerson", "type": "String", "required": true, "editable": true },
-    { "name": "contactInfo", "type": "String", "required": true, "editable": true },
-    { "name": "verificationStatus", "type": "Enum", "required": true, "editable": true, "options": ["PENDING", "ACTIVE", "SUSPENDED"] }
+  "sealStatus": {
+    "questionsRaised": 3,
+    "resolvedSchema": 1,
+    "resolvedInferred": 2,
+    "resolvedWeb": 0,
+    "assumptions": 0,
+    "open": 0
+  },
+  "entities": [
+    {
+      "name": "BidInvitation",
+      "fields": [
+        { "name": "operationMode", "type": "Enum", "mapping": "AUTO|SEMI|MANUAL", "required": true },
+        { "name": "repeatFrequency", "type": "String", "mapping": "e.g. WEEKLY", "required": false },
+        { "name": "nextRunDate", "type": "DateTime", "required": false }
+      ]
+    },
+    {
+      "name": "Quote",
+      "fields": [
+        { "name": "leadTime", "type": "Integer", "required": true },
+        { "name": "items", "type": "OneToMany", "target": "QuoteItem" }
+      ]
+    },
+    {
+      "name": "QuoteItem",
+      "fields": [
+        { "name": "leadTime", "type": "Integer", "required": true },
+        { "name": "offeredQuantity", "type": "BigDecimal", "required": true }
+      ]
+    }
   ],
-  "api": {
-    "list": "/api/operator/restaurants",
-    "updateStatus": "/api/operator/restaurants/{id}/status",
-    "onboard": "/api/operator/onboarding/restaurant"
-  }
+  "migrations": [
+    {
+      "file": "V14__Bidding_Engine_Automated_Fields.sql",
+      "actions": [
+        "ADD operation_mode, repeat_frequency, next_run_date TO bid_invitation",
+        "ADD lead_time TO quote, quote_item",
+        "ADD offered_quantity TO quote_item"
+      ]
+    }
+  ]
 }

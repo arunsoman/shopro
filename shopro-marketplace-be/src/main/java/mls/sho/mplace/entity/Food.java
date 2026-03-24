@@ -31,4 +31,7 @@ public class Food {
 
     @Column(name = "food_subgroup", length = 100)
     private String foodSubgroup;
+
+    @Column(name = "super_group", length = 100)
+    private String superGroup;
 }

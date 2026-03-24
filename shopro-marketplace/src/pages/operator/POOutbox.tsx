@@ -22,6 +22,7 @@ interface SubOrder {
   destination: string;
   status: string;
   sentAt: string;
+  amount: number;
 }
 
 export default function POOutbox() {
@@ -30,10 +31,19 @@ export default function POOutbox() {
   const { data: subOrders = [], isLoading } = useQuery<SubOrder[]>({
     queryKey: ["operator-po-outbox"],
     queryFn: async () => {
-      const resp = await api.get("/operator/sourcing/po-outbox");
+      const resp = await api.get("operator/sourcing/po-outbox");
       return resp.data;
     }
   });
+
+  const formatDate = (dateStr: string) => {
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('en-IN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    } catch (e) {
+      return dateStr;
+    }
+  };
 
   return (
     <SecureOverlay>
@@ -92,12 +102,12 @@ export default function POOutbox() {
                </div>
                
                <h3 className="text-[18px] font-medium text-(--sp-text-0) truncate mb-1">{spo.destination}</h3>
-               <p className="text-[11px] font-medium text-(--sp-text-3) uppercase tracking-[0.04em] mb-6">{spo.id} • Sent: {spo.sentAt}</p>
+               <p className="text-[11px] font-medium text-(--sp-text-3) uppercase tracking-[0.04em] mb-6">{spo.id} • Sent: {formatDate(spo.sentAt)}</p>
                
                <div className="flex items-end justify-between">
                  <div>
                     <p className="text-[10px] text-(--sp-text-3) font-medium uppercase tracking-[0.06em] mb-1">Integrated value</p>
-                    <p className="text-[24px] font-light text-emerald-500 tracking-[-0.02em] tabular-nums">₹45,200.00</p>
+                    <p className="text-[24px] font-light text-emerald-500 tracking-[-0.02em] tabular-nums">₹{spo.amount.toLocaleString()}</p>
                  </div>
                  <div className="h-10 w-10 rounded-sm bg-(--sp-bg-3) text-(--sp-text-1) border border-(--sp-border) group-hover:bg-emerald-500 group-hover:text-white group-hover:border-emerald-500 transition-all flex items-center justify-center">
                     <ArrowRight size={20} />
@@ -157,7 +167,7 @@ export default function POOutbox() {
                       </div>
                       <div className="space-y-0.5">
                         <p className="text-[14px] font-medium text-(--sp-text-0) group-hover:text-emerald-500 transition-colors">{row.id}</p>
-                        <p className="text-[11px] text-(--sp-text-3) uppercase tracking-[0.04em]">Sent: {row.sentAt}</p>
+                        <p className="text-[11px] text-(--sp-text-3) uppercase tracking-[0.04em]">Sent: {formatDate(row.sentAt)}</p>
                       </div>
                     </div>
                   </td>
@@ -179,7 +189,7 @@ export default function POOutbox() {
                     </div>
                   </td>
                   <td className="py-5 px-6">
-                    <p className="text-[16px] font-medium text-(--sp-text-0)">₹22,500.00</p>
+                    <p className="text-[16px] font-medium text-(--sp-text-0)">₹{row.amount.toLocaleString()}</p>
                   </td>
                   <td className="py-5 px-6 text-right">
                     <button className="h-8 px-4 rounded-[4px] bg-emerald-500 text-white text-[11px] font-medium hover:opacity-90 transition-all shadow-sm">

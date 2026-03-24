@@ -43,6 +43,7 @@ export const STATUS_MAP = {
   INFO: "bg-brand-primary/10 text-brand-primary border-brand-primary/20",
   READ: "bg-muted/10 text-muted-foreground border-border",
   INACTIVE: "bg-muted/10 text-muted-foreground border-border",
+  "SUPPLIER CONFIRMED": "bg-blue-500/10 text-blue-500 border-blue-500/20",
 } as const;
 
 export type StatusType = keyof typeof STATUS_MAP;

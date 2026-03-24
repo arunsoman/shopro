@@ -39,6 +39,12 @@ public class OrderItem extends BaseEntity {
     @Column(name = "price_at_order", precision = 19, scale = 4, nullable = false)
     private BigDecimal priceAtOrder;
 
+    @Column(name = "vendor_price_at_order", precision = 19, scale = 4)
+    private BigDecimal vendorPriceAtOrder;
+
+    @Column(name = "markup_amount", precision = 19, scale = 4)
+    private BigDecimal markupAmount = BigDecimal.ZERO;
+
     public BigDecimal getPrice() {
         return priceAtOrder;
     }

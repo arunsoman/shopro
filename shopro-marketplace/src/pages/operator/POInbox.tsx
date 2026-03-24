@@ -3,7 +3,7 @@
 import React, { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { Search, Filter, Clock, ArrowRight, FileText, Download, ChevronDown, ChevronUp, Calendar, Info, RefreshCw, Database } from "lucide-react";
+import { Search, Filter, Clock, ArrowRight, FileText, Download, ChevronDown, ChevronUp, Calendar, Info, RefreshCw, Database, ShieldCheck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
@@ -35,7 +35,7 @@ export default function POInbox() {
   const { data: pos = [], isLoading } = useQuery<PurchaseOrder[]>({
     queryKey: ["operator-po-inbox"],
     queryFn: async () => {
-      const resp = await api.get("/operator/sourcing/po-inbox");
+      const resp = await api.get("operator/sourcing/po-inbox");
       return resp.data;
     }
   });
@@ -121,7 +121,7 @@ export default function POInbox() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {isLoading ? [...Array(3)].map((_, i) => (
              <div key={i} className="h-48 rounded-md bg-(--sp-bg-2) border border-(--sp-border) animate-pulse" />
-        )) : pos.slice(0, 3).map((po, i) => (
+        )) : filteredPOs.slice(0, 3).map((po, i) => (
           <motion.div
             key={po.id}
             initial={{ opacity: 0, y: 10 }}
@@ -235,6 +235,14 @@ export default function POInbox() {
                     </td>
                     <td className="py-5 px-6 text-right">
                       <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-all">
+                        <IconTooltip label="Audit Traceability">
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); navigate(`/operator/po/${row.id}/audit`); }}
+                            className="p-1.5 rounded-md hover:bg-white/10 text-slate-400 hover:text-brand-primary transition-all"
+                          >
+                            <ShieldCheck size={18} />
+                          </button>
+                        </IconTooltip>
                         <Info size={16} className="text-(--sp-text-3) hover:text-emerald-500 transition-colors" />
                         <button className="h-8 px-4 rounded-[4px] bg-emerald-500 text-white text-[11px] font-medium hover:opacity-90 transition-all shadow-sm">
                           Process

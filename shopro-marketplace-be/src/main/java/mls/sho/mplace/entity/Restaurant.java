@@ -62,6 +62,14 @@ public class Restaurant extends BaseEntity {
     @Column(name = "image_url")
     private String imageUrl;
 
+    @Column(name = "country_iso_code", length = 2)
+    private String countryIsoCode;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "hub_id")
+    private Hub hub;
+
+
     public enum VerificationStatus {
         PENDING, ACTIVE, SUSPENDED, REJECTED
     }

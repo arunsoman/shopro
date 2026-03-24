@@ -1,15 +1,12 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { GlowingBorder } from "@/components/ui/neon-button";
-import { NeonEdges } from "@/components/ui/neon-button";
 import { Link, useLocation } from "react-router-dom";
-
-/**
- * SupplierSidebar
- * Adapted from: SidebarNav (shopro-missing-components.tsx)
- * Role: seller (Suppliers)
- */
+import { LayoutDashboard, Package, Inbox, Zap, Wallet, Truck, User, Settings as SettingsIcon, LogOut } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import api from "@/api";
+import { IconTooltip } from "@/components/shared/IconTooltip";
+import { GlowingBorder, NeonEdges } from "@/components/ui/neon-button";
 
 const SPRING = { type: "spring" as const, stiffness: 400, damping: 25, mass: 1 };
 
@@ -22,17 +19,24 @@ export function SupplierSidebar({
   const [isCollapsed, setIsCollapsed] = useState(false);
   const location = useLocation();
 
+  const { data: stats } = useQuery({
+    queryKey: ["supplier-dashboard-stats"],
+    queryFn: async () => {
+      const resp = await api.get("/supplier/dashboard/stats");
+      return resp.data;
+    }
+  });
+
   // Nav config as per screen.md
   const NAV_ITEMS = [
-    { id: "dashboard",   label: "Dashboard",       icon: "📈", href: "/supplier/dashboard" },
-    { id: "catalog",     label: "My Catalog",      icon: "🗂️", href: "/supplier/catalog" },
-    { id: "bids",        label: "Bid Invitations", icon: "📧", badge: 3, href: "/supplier/bids" },
-    { id: "leads",       label: "Market Leads",    icon: "🎯", href: "/supplier/leads" },
-    { id: "orders",      label: "My Orders",       icon: "📦", badge: 8, href: "/supplier/orders" },
-    { id: "logistics",   label: "Logistics",       icon: "🚚", href: "/supplier/logistics" },
-    { id: "finance",     label: "Finance",         icon: "💰", href: "/supplier/finance" },
-    { id: "profile",     label: "Profile",          icon: "🏢", href: "/supplier/profile" },
-    { id: "settings",    label: "Settings",         icon: "⚙️", href: "/supplier/settings" },
+    { id: "dashboard",   label: "Home",             icon: LayoutDashboard, href: "/supplier/dashboard" },
+    { id: "inventory",   label: "My Catalog",       icon: Package, href: "/supplier/inventory" },
+    { id: "bids-pos",    label: "Orders & Bids",    icon: Inbox, badge: stats?.activeOrders, href: "/supplier/bids-pos" },
+    { id: "leads",       label: "Opportunities",    icon: Zap, href: "/supplier/leads" },
+    { id: "finance",     label: "Earnings",         icon: Wallet, href: "/supplier/finance/overview" },
+    { id: "logistics",   label: "Deliveries",       icon: Truck, href: "/supplier/logistics" },
+    { id: "profile",     label: "Company Profile",  icon: User, href: "/supplier/profile" },
+    { id: "settings",    label: "Preferences",      icon: SettingsIcon, href: "/supplier/settings" },
   ];
 
   return (
@@ -89,7 +93,16 @@ export function SupplierSidebar({
                 {isActive && <GlowingBorder spread={40} />}
               </AnimatePresence>
               
-              <span className="text-xl flex-shrink-0">{item.icon}</span>
+              <div className="flex-none shrink-0 group-hover:scale-110 transition-transform duration-500">
+                <IconTooltip label={item.label} side="right">
+                  <item.icon size={22} className={cn(
+                    "transition-all duration-500",
+                    isActive 
+                      ? "text-emerald-500 drop-shadow-[0_0_8px_rgba(16,185,129,0.5)] scale-110" 
+                      : "text-slate-500 group-hover:text-emerald-400"
+                  )} />
+                </IconTooltip>
+              </div>
               
               {!isCollapsed && (
                 <span className="text-sm font-medium truncate">{item.label}</span>
@@ -112,7 +125,9 @@ export function SupplierSidebar({
           <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800 flex-shrink-0" />
           {!isCollapsed && (
             <div className="min-w-0">
-              <p className="text-xs font-bold text-slate-900 dark:text-white truncate">Global Foods Ltd</p>
+              <p className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                {stats?.companyName || "Loading..."}
+              </p>
               <p className="text-[10px] text-slate-500 uppercase font-medium truncate tracking-wider">Approved Supplier</p>
             </div>
           )}

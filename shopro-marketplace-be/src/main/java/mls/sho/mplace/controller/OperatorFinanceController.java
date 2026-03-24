@@ -1,6 +1,7 @@
 package mls.sho.mplace.controller;
 
 import lombok.RequiredArgsConstructor;
+import mls.sho.mplace.dto.LedgerStatsDto;
 import mls.sho.mplace.service.FinanceService;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
@@ -16,6 +17,11 @@ public class OperatorFinanceController {
     public record Dispute(String id, String orderId, String restaurant, String supplier, String reason, String status, LocalDateTime openedAt) {}
     public record Reconciliation(String id, String period, String totalAmount, String status, int itemsCount) {}
     public record Statement(String id, String entityName, String entityType, String balance, String lastActivity) {}
+
+    @GetMapping("/stats")
+    public LedgerStatsDto getStats() {
+        return financeService.getLedgerStats();
+    }
 
     @GetMapping("/disputes")
     public List<Dispute> getDisputes() {
@@ -37,14 +43,26 @@ public class OperatorFinanceController {
 
     @GetMapping("/statements")
     public List<Statement> getStatements() {
-        return financeService.getAllTransactions().stream()
-                .map(tx -> new Statement(
+        return financeService.getAllTransactionsForOperator().stream()
+                .map(tx -> {
+                    String entityName = "N/A";
+                    String entityType = "Unknown";
+                    if (tx.getRestaurant() != null) {
+                        entityName = tx.getRestaurant().getName();
+                        entityType = "Buyer";
+                    } else if (tx.getSupplier() != null) {
+                        entityName = tx.getSupplier().getName();
+                        entityType = "Supplier";
+                    }
+                    
+                    return new Statement(
                         "STMT-" + tx.getId().toString().substring(0, 5).toUpperCase(),
-                        tx.getRestaurant() != null ? tx.getRestaurant().getName() : "SUPPLIER_" + tx.getSupplier().getName(),
-                        tx.getRestaurant() != null ? "Buyer" : "Supplier",
+                        entityName,
+                        entityType,
                         "₹" + tx.getAmount(),
-                        tx.getCreatedAt().toString()
-                )).toList();
+                        tx.getCreatedAt() != null ? tx.getCreatedAt().toString() : "N/A"
+                    );
+                }).toList();
     }
 
     @GetMapping("/audit-summary")

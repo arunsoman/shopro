@@ -63,6 +63,7 @@ export function OperatorSidebar({
         { label: "Global Flux", href: "/operator/orders" },
         { label: "PO Inbox", href: "/operator/po/inbox" },
         { label: "PO Outbox", href: "/operator/po/outbox" },
+        { label: "Traceability", href: "/operator/orders/traceability" },
         { label: "Disputes", href: "/operator/disputes" },
       ]
     },
@@ -73,8 +74,8 @@ export function OperatorSidebar({
       intent: "Monitor active reverse-auctions and bid awards",
       badge: 5,
       subItems: [
-        { label: "New Bid", href: "/operator/bids/new" },
-        { label: "Active Bids", href: "/operator/bids/demo-bid" },
+        { label: "Management Console", href: "/operator/bids" },
+        { label: "Launch New", href: "/operator/bids/new" },
       ]
     },
     { 
@@ -113,7 +114,9 @@ export function OperatorSidebar({
         { label: "Ledger", href: "/operator/ledger" },
         { label: "Reconciliation", href: "/operator/reconciliation" },
         { label: "Tax Dashboard", href: "/operator/tax" },
+        { label: "Financial Reports", href: "/operator/financial-reports" },
         { label: "Credit Notes", href: "/operator/credit-notes" },
+
       ]
     },
     { 
@@ -123,6 +126,7 @@ export function OperatorSidebar({
       intent: "Deep insights into marketplace demand and revenue",
       subItems: [
         { label: "Revenue Pulse", href: "/operator/revenue" },
+        { label: "Price Comparison", href: "/operator/sourcing/comparison" },
         { label: "Sourcing Wizard", href: "/operator/sourcing-wizard" },
         { label: "Demand Forecast", href: "/operator/demand-forecasting" },
       ]
@@ -144,6 +148,7 @@ export function OperatorSidebar({
       intent: "Campaign management and pricing optimization",
       subItems: [
         { label: "Pricing Rules", href: "/operator/pricing-rules" },
+        { label: "Price Refresh", href: "/operator/pricing-refresh" },
         { label: "Promo Vault", href: "/operator/discounts" },
         { label: "Margin Opt.", href: "/operator/margin-optimization" },
       ]

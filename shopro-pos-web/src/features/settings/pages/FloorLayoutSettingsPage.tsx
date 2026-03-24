@@ -150,7 +150,7 @@ export function FloorLayoutSettingsPage() {
                                 </div>
                                 <h3 className="text-lg font-medium text-foreground/80">Layout Canvas</h3>
                                 <p className="text-muted-foreground text-sm mt-1 max-w-sm">
-                                    Canvas is empty. Drag high-fidelity table templates from the sidebar to start designing your floor plan.
+                                    Canvas is empty. Drag  table templates from the sidebar to start designing your floor plan.
                                 </p>
                             </div>
                         )}

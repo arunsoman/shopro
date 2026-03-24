@@ -67,7 +67,7 @@ public class MarketplaceDataLoader implements CommandLineRunner {
         // 4. Create Supplier & User
         Supplier supplier = new Supplier();
         supplier.setName("Ooty Fresh Organics");
-        supplier.setCategory(Supplier.Category.PRODUCE);
+        supplier.setCategory("PRODUCE");
         supplier.setVerificationStatus(Supplier.VerificationStatus.VERIFIED);
         supplier.setRating(4.8);
         supplier.setOrganizationId("ORG-8821-X");

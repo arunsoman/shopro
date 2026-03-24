@@ -25,4 +25,10 @@ public class QuoteItem extends BaseEntity {
 
     @Column(name = "total_price", precision = 19, scale = 4)
     private BigDecimal totalPrice;
+
+    @Column(name = "lead_time")
+    private Integer leadTime = 0;
+
+    @Column(name = "offered_quantity", precision = 19, scale = 4)
+    private BigDecimal offeredQuantity;
 }

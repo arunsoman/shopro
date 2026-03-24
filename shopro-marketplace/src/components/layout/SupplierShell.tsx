@@ -7,8 +7,11 @@ import { NotificationDrawer, type Notification } from "@/components/ui/notificat
 import CinematicThemeSwitcher from "@/components/ui/cinematic-theme-switcher";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { OrbitalLoader } from "@/components/ui/orbital-loader";
+import { useQuery } from "@tanstack/react-query";
+import api from "@/api";
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { LoadingBoundary } from "./LoadingBoundary";
 
 /**
  * SHELL-S — Supplier App Shell
@@ -26,6 +29,29 @@ export function SupplierShell({ children }: { children: React.ReactNode }) {
 
   const location = useLocation();
   const navigate = useNavigate();
+
+  const { data: stats } = useQuery({
+    queryKey: ["supplier-dashboard-stats"],
+    queryFn: async () => {
+      const resp = await api.get("/supplier/dashboard/stats");
+      return resp.data;
+    }
+  });
+
+  // Auth guard: Redirect if no token or incorrect role
+  React.useEffect(() => {
+    const token = sessionStorage.getItem("token");
+    const role = sessionStorage.getItem("role");
+    
+    if (!token) {
+      navigate("/login/supplier");
+    } else if (role !== "marketplace_supplier") {
+      // Cross-portal prevention: Redirect to authorized portal
+      if (role === "marketplace_operator") navigate("/operator/dashboard");
+      else if (role === "marketplace_buyer") navigate("/restaurant/dashboard");
+      else navigate("/login/supplier");
+    }
+  }, [navigate]);
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -76,12 +102,12 @@ export function SupplierShell({ children }: { children: React.ReactNode }) {
             <Popover>
               <PopoverTrigger asChild>
                 <button className="flex items-center gap-2 pl-2 pr-1 py-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-                  <div className="flex flex-col items-end hidden sm:flex">
-                    <span className="text-xs font-bold leading-none">Global Foods Ltd.</span>
+                  <div className="hidden sm:flex flex-col items-end relative z-10">
+                    <span className="text-xs font-bold leading-none">{stats?.companyName || "Loading..."}</span>
                     <span className="text-[10px] text-muted-foreground uppercase tracking-wider mt-0.5">Supplier</span>
                   </div>
                   <div className="w-8 h-8 rounded-full bg-green-600 flex items-center justify-center text-white text-xs font-bold border-2 border-white dark:border-slate-800 shadow-sm">
-                    GF
+                    {(stats?.companyName || "GF").substring(0, 2).toUpperCase()}
                   </div>
                 </button>
               </PopoverTrigger>
@@ -96,7 +122,10 @@ export function SupplierShell({ children }: { children: React.ReactNode }) {
                 </button>
                 <div className="h-px bg-slate-200 dark:bg-slate-700 my-2" />
                 <button 
-                  onClick={() => navigate("/")}
+                  onClick={() => {
+                    sessionStorage.clear();
+                    navigate("/login/supplier");
+                  }}
                   className="w-full flex items-center gap-3 px-3 py-2 rounded-md hover:bg-rose-50 dark:hover:bg-rose-950/30 text-rose-500 text-sm transition-colors"
                 >
                   <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" strokeLinecap="round" strokeLinejoin="round" /></svg>
@@ -109,9 +138,11 @@ export function SupplierShell({ children }: { children: React.ReactNode }) {
 
         {/* Main Content Area */}
         <main className="flex-1 overflow-y-auto custom-scrollbar p-6 relative">
-          <React.Suspense fallback={<div className="flex h-full items-center justify-center"><OrbitalLoader message="Syncing data..." /></div>}>
-            {children}
-          </React.Suspense>
+          <LoadingBoundary>
+            <React.Suspense fallback={<div className="flex h-full items-center justify-center"><OrbitalLoader message="Syncing data..." /></div>}>
+              {children}
+            </React.Suspense>
+          </LoadingBoundary>
         </main>
       </div>
 

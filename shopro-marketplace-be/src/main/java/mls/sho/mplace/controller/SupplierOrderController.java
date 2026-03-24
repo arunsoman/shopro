@@ -1,7 +1,7 @@
 package mls.sho.mplace.controller;
 
 import lombok.RequiredArgsConstructor;
-import mls.sho.mplace.entity.MarketplaceSupplier;
+import mls.sho.mplace.config.MarketplaceUser;
 import mls.sho.mplace.entity.SubOrder;
 import mls.sho.mplace.service.SupplierOrderService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -25,17 +25,22 @@ public class SupplierOrderController {
     public record SubOrderDTO(String id, String buyer, String date, double amount, String status, List<SupplierOrderItem> items) {}
 
     @GetMapping
-    public List<SubOrderDTO> getOrders(@AuthenticationPrincipal MarketplaceSupplier supplier) {
-        return supplierOrderService.getOrdersForSupplier(supplier).stream()
+    public List<SubOrderDTO> getOrders(@AuthenticationPrincipal MarketplaceUser user) {
+        return supplierOrderService.getOrdersForSupplier(user.getSupplierId()).stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
     }
 
+    @GetMapping("/all")
+    public List<SubOrderDTO> getAllOrders(@AuthenticationPrincipal MarketplaceUser user) {
+        return getOrders(user);
+    }
+
     @PatchMapping("/{id}/status")
-    public String updateStatus(@PathVariable java.util.UUID id, @RequestParam String status, @AuthenticationPrincipal MarketplaceSupplier supplier) {
+    public String updateStatus(@PathVariable java.util.UUID id, @RequestParam String status, @AuthenticationPrincipal MarketplaceUser user) {
         SubOrder.SubOrderStatus newStatus = "PENDING_ACK".equals(status) ? SubOrder.SubOrderStatus.ACK_PENDING : SubOrder.SubOrderStatus.valueOf(status);
-        supplierOrderService.updateStatus(id, newStatus, supplier);
-        return "STATUS_UPDATED_TO_" + status + ".X";
+        supplierOrderService.updateStatus(id, newStatus, user.getSupplierId());
+        return "Order status successfully updated to " + status + ".";
     }
 
     private SubOrderDTO toDTO(SubOrder sub) {
@@ -46,7 +51,11 @@ public class SupplierOrderController {
                 sub.getTotalAmount() != null ? sub.getTotalAmount().doubleValue() : 0.0,
                 sub.getStatus() == SubOrder.SubOrderStatus.ACK_PENDING ? "PENDING_ACK" : sub.getStatus().name(),
                 sub.getItems().stream()
-                        .map(i -> new SupplierOrderItem(i.getId().toString(), i.getProduct().getName(), i.getQuantity() != null ? i.getQuantity().doubleValue() : 0.0, i.getPrice() != null ? i.getPrice().doubleValue() : 0.0))
+                        .map(i -> new SupplierOrderItem(
+                                i.getId().toString(),
+                                i.getProduct() != null ? i.getProduct().getName() : (i.getItemName() != null ? i.getItemName() : "Unknown Product"),
+                                i.getQuantity() != null ? i.getQuantity().doubleValue() : 0.0,
+                                i.getPrice() != null ? i.getPrice().doubleValue() : 0.0))
                         .collect(Collectors.toList())
         );
     }

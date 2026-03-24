@@ -6,7 +6,7 @@ The Shopro Live Floor Plan is a real-time, event-driven orchestration layer that
 The floor plan is more than a static map; it is a live dashboard of the restaurant's pulse.
 
 ### User Experience
-- **Interactive Map**: Tables are rendered with high-fidelity badges indicating capacity, server assignment, and current status.
+- **Interactive Map**: Tables are rendered with  badges indicating capacity, server assignment, and current status.
 - **Bento Grid Layout**: Using a radial gradient and grid background, the floor plan provides a "premium" software feel.
 - **Live Updates**: Table states (e.g., green for available, blue for occupied, red for dirty) update instantly across all terminals without page refreshes.
 

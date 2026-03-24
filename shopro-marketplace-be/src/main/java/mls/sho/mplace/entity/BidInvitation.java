@@ -36,6 +36,17 @@ public class BidInvitation extends BaseEntity {
     @Column(nullable = false)
     private String urgency = "NORMAL";
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "operation_mode")
+    private OperationMode operationMode = OperationMode.MANUAL;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "repeat_frequency")
+    private RepeatFrequency repeatFrequency = RepeatFrequency.NONE;
+
+    @Column(name = "next_run_date")
+    private LocalDateTime nextRunDate;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "purchase_order_id")
     private PurchaseOrder purchaseOrder;

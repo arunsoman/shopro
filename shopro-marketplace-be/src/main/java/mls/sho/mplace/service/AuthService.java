@@ -50,7 +50,7 @@ public class AuthService {
         }
         
         var token = jwtService.generateToken(user, audience);
-        return new AuthResponse(token, null);
+        return new AuthResponse(token, null, audience);
     }
 
     @Transactional

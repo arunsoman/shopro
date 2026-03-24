@@ -10,7 +10,7 @@ interface SecureOverlayProps {
 
 export const SecureOverlay: React.FC<SecureOverlayProps> = ({ children, isAuthenticated = false }) => {
   const navigate = useNavigate();
-  const token = localStorage.getItem('token');
+  const token = sessionStorage.getItem('token');
   const isProtected = !!token;
 
   if (isProtected) {
@@ -44,7 +44,12 @@ export const SecureOverlay: React.FC<SecureOverlayProps> = ({ children, isAuthen
           </div>
 
           <button
-            onClick={() => navigate('/login')}
+            onClick={() => {
+              const path = window.location.pathname;
+              if (path.startsWith('/operator')) navigate('/login/operator');
+              else if (path.startsWith('/supplier')) navigate('/login/supplier');
+              else navigate('/login/restaurant');
+            }}
             className="w-full py-4 rounded-2xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 text-xs font-black italic uppercase tracking-widest hover:scale-105 transition-all shadow-xl"
           >
             Authenticate Session

@@ -3,6 +3,8 @@ package mls.sho.mplace.controller;
 import lombok.RequiredArgsConstructor;
 import mls.sho.mplace.service.AuditLogService;
 import mls.sho.mplace.repository.AutoReorderRuleRepository;
+import mls.sho.mplace.repository.POActivityRepository;
+import mls.sho.mplace.dto.AutoPOStatsDto;
 import org.springframework.web.bind.annotation.*;
 import java.util.*;
 
@@ -13,6 +15,25 @@ public class OperatorAutomationController {
 
     private final AuditLogService auditLogService;
     private final AutoReorderRuleRepository autoReorderRuleRepository;
+    private final POActivityRepository poActivityRepository;
+
+    @GetMapping("/autopo/stats")
+    public AutoPOStatsDto getAutoPOStats() {
+        var since = java.time.LocalDateTime.now().minusHours(24);
+        long total = poActivityRepository.countByActivityDateAfter(since);
+        long failed = poActivityRepository.countByStatusAndActivityDateAfter("FAILED", since);
+        
+        double successRate = total > 0 ? ((double)(total - failed) / total) * 100 : 100.0;
+        
+        return new AutoPOStatsDto(
+            (int)total,
+            successRate,
+            "48 / 64", // Mocked for now
+            (int)failed,
+            "+12%", // Trend mocked for now
+            "-5%" // Trend mocked for now
+        );
+    }
 
     @GetMapping("/autopo/rules")
     public List<Map<String, Object>> getAutoPORules() {
@@ -21,7 +42,7 @@ public class OperatorAutomationController {
                     Map<String, Object> map = new HashMap<>();
                     map.put("id", r.getId().toString());
                     map.put("name", r.getProduct().getName() + " Auto-Replenish");
-                    map.put("trigger", "Stock < " + r.getThreshold());
+                    map.put("trigger", "Stock < " + r.getAlert());
                     map.put("action", "Create PO (" + r.getReorderQuantity() + ")");
                     map.put("status", r.isActive() ? "Active" : "Paused");
                     return map;

@@ -19,8 +19,8 @@ public class AutoReorderRule extends BaseEntity {
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
-    @Column(precision = 19, scale = 4, nullable = false)
-    private BigDecimal threshold;
+    @Column(name = "min_threshold", precision = 19, scale = 4, nullable = false)
+    private BigDecimal alert;
 
     @Column(name = "reorder_quantity", precision = 19, scale = 4, nullable = false)
     private BigDecimal reorderQuantity;

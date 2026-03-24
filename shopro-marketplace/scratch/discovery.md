@@ -1,17 +1,21 @@
-# Phase 1 Discovery: Restaurant Onboarding Widget
+# Discovery Summary — SEALED
 
-## Core Entity: `Restaurant`
-- Table: `restaurant`
-- Key Fields: `onboarding_status`, `verification_status`, `name`, `category`, `city`, `volume`, `trust_score`.
+## Seal status
+- Questions raised: 4
+- Resolved (doc): 0
+- Resolved (inferred): 1
+- Resolved (user/assumption): 3
+- Open/unresolved: 0
 
-## Target Location: `RestaurantManagement.tsx`
-- The widget will replace the static "Onboard Hub node" placeholder (lines 203-211).
-- It will use a collapsible/expandable design as requested.
+## Operational Architecture
+- **Modes**: AUTOMATIC, SEMI-AUTOMATIC, MANUAL.
+- **Timing**: 3-day default deadline for "Time-to-Quote".
+- **Weighting**: Mock performance scoring (BidRate 90%, Quality 4.5/5).
+- **Automation**: Rolling intervals for repeat frequencies.
+- **Notification**: REST integration with `shopro-pos-server` (Target: `SUPPLIER_ADMIN`).
 
-## API Integration:
-- GET `/api/operator/restaurants` for the list.
-- PATCH `/api/operator/restaurants/{id}/status` for status updates (already exists).
-- NEW: POST `/api/operator/onboarding/restaurant` for new registration.
-- NEW: PATCH `/api/operator/onboarding/restaurant/{id}` for editing details.
-
-SEALED: Phase 1
+## Entity Scoping (Phase 2 Preview)
+- `BidInvitation`: Add `operationMode`, `repeatFrequency`, `nextRunDate`.
+- `Quote`: Add `leadTime`, `items`.
+- `QuoteItem`: Add `leadTime`, `offeredQuantity`.
+- `BidItem`: Add `remainingQuantity` (Design only).

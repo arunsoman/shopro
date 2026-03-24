@@ -77,8 +77,13 @@ export default function POCreation() {
   const fetchPrices = async () => {
     setIsFetchingPrices(true);
     try {
-      const foodIds = items.map(item => item.foodId).filter(id => id !== undefined) as number[];
-      const resp = await api.post("/prices/bulk", { foodIds });
+      const payload = {
+        items: items.map(item => ({
+          foodId: item.foodId,
+          quantity: item.quantity
+        }))
+      };
+      const resp = await api.post("/prices/bulk", payload);
       const priceMap: Record<string, any> = {};
       resp.data.forEach((p: any) => {
         priceMap[p.foodId.toString()] = { 
@@ -329,16 +334,16 @@ export default function POCreation() {
                    <IconTooltip label="Seal Selection"><Award size={28} className="text-indigo-600" /></IconTooltip> 
                    Final Review
                  </h2>
-                 <div className="p-6 bg-slate-950 text-white rounded-2xl border border-brand-primary/50 space-y-6 shadow-lg relative overflow-hidden">
+                 <div className="p-6 bg-white dark:bg-slate-950 text-slate-900 dark:text-white rounded-2xl border-2 border-slate-200 dark:border-brand-primary/50 space-y-6 shadow-lg relative overflow-hidden transition-all">
                     <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-[80px] pointer-events-none" />
                            <div className="space-y-6 relative z-10">
                         <div className="flex justify-between items-end border-b border-white/10 pb-6">
                             <div>
-                                <p className="text-[10px] font-bold tracking-widest opacity-60 uppercase">Order Summary</p>
+                                <p className="text-[10px] font-bold tracking-widest opacity-60 uppercase text-slate-500 dark:text-slate-400">Order Summary</p>
                                  <h3 className="text-2xl font-bold italic tracking-tight mt-1">{items.length} Items</h3>
                             </div>
                             <div className="text-right">
-                                <p className="text-[10px] font-bold tracking-widest opacity-60 text-indigo-400 uppercase">Total Price</p>
+                                <p className="text-[10px] font-bold tracking-widest opacity-60 text-indigo-600 dark:text-indigo-400 uppercase">Total Price</p>
                                  <h3 className="text-2xl font-bold italic tracking-tight mt-1 text-brand-primary">₹{subtotal.toFixed(2)}</h3>
                             </div>
                         </div>
@@ -362,14 +367,14 @@ export default function POCreation() {
                                 onChange={(e) => setInternalNotes(e.target.value)} 
                                 placeholder="Private notes for your records..."
                                 rows={2}
-                                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-sm font-medium text-white focus:ring-2 focus:ring-indigo-500/30 outline-none shadow-sm resize-none"
+                                className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg px-4 py-3 text-sm font-medium text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500/30 outline-none shadow-sm resize-none transition-all"
                             />
                         </div>
 
                         <div className="space-y-4 pt-2">
-                            <div className="flex items-center gap-4 py-4 px-6 bg-white/5 rounded-xl border border-white/10">
-                                <IconTooltip label="Security Protocol"><ShieldCheck className="text-indigo-400" size={24} /></IconTooltip>
-                                <p className="text-xs font-bold tracking-wide opacity-80 uppercase leading-relaxed">
+                            <div className="flex items-center gap-4 py-4 px-6 bg-slate-50 dark:bg-white/5 rounded-xl border border-slate-200 dark:border-white/10 transition-all">
+                                <IconTooltip label="Security Protocol"><ShieldCheck className="text-indigo-600 dark:text-indigo-400" size={24} /></IconTooltip>
+                                <p className="text-xs font-bold tracking-wide opacity-80 uppercase leading-relaxed text-slate-600 dark:text-slate-300">
                                     Purchase Terms: Net 30 Days. Dispute mediation active. Secure payment enabled.
                                 </p>
                             </div>
@@ -400,7 +405,7 @@ export default function POCreation() {
                         <span className={cn(row.highlight ? "text-indigo-600" : "text-slate-900 dark:text-white")}>{row.val}</span>
                     </div>
                  ))}
-                 <div className="border-t border-slate-200 dark:border-slate-800 pt-6 mt-6 flex justify-between items-center">
+                 <div className="border-t border-slate-200 dark:border-slate-800 pt-6 mt-6 flex justify-between items-center text-slate-900 dark:text-white">
                     <span className="text-sm font-extrabold tracking-wider text-indigo-600 uppercase">Grand Total</span>
                     <span className="text-xl font-extrabold tracking-tight">₹{subtotal.toFixed(2)}</span>
                  </div>

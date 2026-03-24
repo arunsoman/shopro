@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import CinematicThemeSwitcher from '../ui/cinematic-theme-switcher';
+import { LoadingBoundary } from './LoadingBoundary';
 
 const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
@@ -54,7 +55,9 @@ const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         </header>
 
         <main className="p-10 flex-1">
-          {children}
+          <LoadingBoundary>
+            {children}
+          </LoadingBoundary>
         </main>
       </div>
     </div>

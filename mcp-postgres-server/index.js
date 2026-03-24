@@ -15,7 +15,7 @@ const { Pool } = pg;
 const dbConfig = {
   host: process.env.DB_HOST || "localhost",
   port: parseInt(process.env.DB_PORT || "5432", 10),
-  database: process.env.DB_NAME || "shopro_pos",
+  database: process.env.DB_NAME || "shopro_marketplace_db",
   user: process.env.DB_USER || "postgres",
   password: process.env.DB_PASSWORD || "password",
 };
@@ -96,7 +96,7 @@ class PostgresServer {
                   type: "text",
                   text: JSON.stringify(result.rows, null, 2),
                 },
-              ],
+                ],
             };
           } catch (error) {
             return {

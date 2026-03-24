@@ -36,7 +36,7 @@ While the previous Gap Analysis focused on catching up to current market leaders
 
 ## 7. AR-Enhanced "Ghost" Dining
 - **The Vision**: Augmented Reality menus where guests see a 3D, life-sized version of the dish on their table before ordering.
-- **The Experience**: Guest points their phone at a QR code; a high-fidelity 3D model of the "Chocolate Lava Cake" appears on the table, allowing them to see the texture and size.
+- **The Experience**: Guest points their phone at a QR code; a  3D model of the "Chocolate Lava Cake" appears on the table, allowing them to see the texture and size.
 - **The Tech**: WebGL/ARCore integration in the Tableside Ordering app.
 
 ---

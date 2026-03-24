@@ -8,6 +8,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Entity
 @Table(name = "purchase_order")
@@ -67,7 +68,26 @@ public class PurchaseOrder extends BaseEntity {
     private String createdByPrincipalId;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "routing_status")
+    private RoutingStatus routingStatus = RoutingStatus.NOT_STARTED;
+
+    @Column(name = "display_status")
+    private String displayStatus;
+
+    @OneToMany(mappedBy = "purchaseOrder", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<POActivity> activities = new ArrayList<>();
+
+    @Enumerated(EnumType.STRING)
     private POSource source = POSource.MANUAL;
+
+    public enum RoutingStatus {
+        NOT_STARTED,
+        PENDING_ROUTING,
+        IN_PROGRESS,
+        ROUTED,
+        COMPLETED,
+        FAILED
+    }
 
     @OneToMany(mappedBy = "purchaseOrder", cascade = CascadeType.ALL)
     private List<SubOrder> subOrders = new ArrayList<>();

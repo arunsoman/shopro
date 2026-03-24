@@ -1,7 +1,12 @@
 package mls.sho.mplace.controller;
-import lombok.RequiredArgsConstructor;
 
+import lombok.RequiredArgsConstructor;
+import mls.sho.mplace.config.MarketplaceUser;
+import mls.sho.mplace.entity.Supplier;
+import mls.sho.mplace.service.ProfileService;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -15,20 +20,21 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class SupplierProfileController {
 
-    private final mls.sho.mplace.service.ProfileService profileService;
+    private final ProfileService profileService;
 
-    public record Profile(String id, String name, String organization, String category, double rating, String status, List<String> regions) {}
+    public record ProfileDTO(String id, String name, String organization, String category, double rating, String status, List<String> regions) {}
 
     @GetMapping
-    public Profile getProfile() {
-        var supplier = (mls.sho.mplace.entity.Supplier) profileService.getMyProfile();
+    public ProfileDTO getProfile(@AuthenticationPrincipal MarketplaceUser user) {
+        // ProfileService already uses SecurityUtils, but for consistency we could pass ID
+        Supplier supplier = (Supplier) profileService.getMyProfile();
         if (supplier == null) return null;
 
-        return new Profile(
+        return new ProfileDTO(
                 supplier.getId().toString(),
                 supplier.getName(),
                 supplier.getOrganizationId(),
-                supplier.getCategory() != null ? supplier.getCategory().name() : "N/A",
+                supplier.getCategory() != null ? supplier.getCategory() : "N/A",
                 supplier.getRating(),
                 supplier.getVerificationStatus().name(),
                 supplier.getRegions() != null ? List.of(supplier.getRegions().split(",")) : Collections.emptyList()
@@ -36,7 +42,7 @@ public class SupplierProfileController {
     }
 
     @PatchMapping
-    public String updateProfile(@RequestBody Map<String, Object> updates) {
-        return "PROFILE_UPDATE_SUBMITTED_FOR_REVIEW.SIGNAL";
+    public String updateProfile(@RequestBody Map<String, Object> updates, @AuthenticationPrincipal MarketplaceUser user) {
+        return "Your profile update has been submitted for review. You will be notified once it is approved.";
     }
 }

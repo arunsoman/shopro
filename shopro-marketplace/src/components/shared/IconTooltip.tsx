@@ -21,7 +21,7 @@ export function IconTooltip({
       <TooltipPrimitive.Root>
         <TooltipPrimitive.Trigger asChild>
           <span
-            className="inline-flex items-center justify-center cursor-default"
+            className="inline-flex items-center justify-center cursor-pointer"
             aria-label={label}
           >
             {children}

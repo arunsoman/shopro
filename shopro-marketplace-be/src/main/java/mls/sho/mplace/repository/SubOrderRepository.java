@@ -11,4 +11,5 @@ import java.util.UUID;
 public interface SubOrderRepository extends JpaRepository<SubOrder, UUID> {
     List<SubOrder> findAllByPurchaseOrder_Restaurant_Id(UUID restaurantId);
     List<SubOrder> findAllBySupplier_Id(UUID supplierId);
+    List<SubOrder> findAllByPurchaseOrder_Id(UUID purchaseOrderId);
 }

@@ -1,7 +1,7 @@
 package mls.sho.mplace.controller;
 
 import lombok.RequiredArgsConstructor;
-import mls.sho.mplace.entity.MarketplaceSupplier;
+import mls.sho.mplace.config.MarketplaceUser;
 import mls.sho.mplace.service.SupplierLeadService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -23,8 +23,8 @@ public class SupplierLeadController {
     public record MarketLead(String id, String requirement, String category, String volume, String proximity, String urgency) {}
 
     @GetMapping
-    public List<MarketLead> getLeads(@AuthenticationPrincipal MarketplaceSupplier supplier) {
-        return leadService.getLeadsForSupplier(supplier).stream()
+    public List<MarketLead> getLeads(@AuthenticationPrincipal MarketplaceUser user) {
+        return leadService.getLeadsForSupplier(user.getSupplierId()).stream()
                 .map(l -> new MarketLead(
                         l.getId().toString(),
                         l.getTitle(),

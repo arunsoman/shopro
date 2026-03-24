@@ -8,10 +8,17 @@ import { NeonButton } from "@/components/ui/neon-button";
 import { OrbitalLoader } from "@/components/ui/orbital-loader";
 import { GlowingBorder } from "@/components/ui/neon-button";
 import { SocialLogins } from "@/components/ui/social-logins";
+import { QuickLogin, type QuickLoginUser } from "@/components/ui/quick-login";
 import { RestaurantPasswordField } from "@/components/ui/restaurant-password-field";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import api from "@/api";
+
+const OPERATOR_USERS: QuickLoginUser[] = [
+  { label: "Root Admin", email: "root@shopro.internal", roleDescription: "Full platform management (V10)" },
+  { label: "Ops Manager", email: "ops@shopro.internal", roleDescription: "Standard operations & bids (V10)" },
+  { label: "Amara Okoro", email: "amara@shopro.ae", roleDescription: "Regional Admin (V3)" },
+];
 
 /**
  * OP-00 — Operator Login + MFA
@@ -27,20 +34,25 @@ export default function OperatorLogin() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const performLogin = async (loginEmail: string, loginPassword: string) => {
     setIsLoading(true);
     setError("");
-    localStorage.removeItem("token");
+    sessionStorage.removeItem("token");
     try {
-        const resp = await api.post("/auth/login", { email, password });
-        localStorage.setItem("token", resp.data.token);
+        const resp = await api.post("/auth/login", { email: loginEmail, password: loginPassword });
+        sessionStorage.setItem("token", resp.data.token);
+        sessionStorage.setItem("role", resp.data.role);
         setStep("mfa");
     } catch (err: any) {
         setError(err.response?.data?.message || "Authentication failed");
     } finally {
         setIsLoading(false);
     }
+  };
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await performLogin(email, password);
   };
 
   const handleMFAComplete = (code: string) => {
@@ -118,6 +130,15 @@ export default function OperatorLogin() {
                 </NeonButton>
 
                 <SocialLogins className="pt-2" />
+
+                <QuickLogin 
+                  users={OPERATOR_USERS}
+                  onSelect={async (email) => {
+                    setEmail(email);
+                    setPassword("password");
+                    await performLogin(email, "password");
+                  }}
+                />
               </motion.form>
             ) : (
               <motion.div 

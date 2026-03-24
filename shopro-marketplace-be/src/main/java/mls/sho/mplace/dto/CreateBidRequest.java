@@ -10,6 +10,8 @@ public record CreateBidRequest(
     UUID categoryId,
     LocalDateTime deadline,
     String urgency,
+    mls.sho.mplace.entity.OperationMode operationMode,
+    mls.sho.mplace.entity.RepeatFrequency repeatFrequency,
     List<BidItemRequest> items
 ) {
     public record BidItemRequest(

@@ -17,7 +17,7 @@ public class SupplierLeadService {
     private final BidInvitationRepository bidInvitationRepository;
     private final QuoteRepository quoteRepository;
 
-    public List<BidInvitation> getLeadsForSupplier(MarketplaceSupplier supplier) {
+    public List<BidInvitation> getLeadsForSupplier(java.util.UUID supplierId) {
         // In a real scenario, we'd filter by supplier's categories and check if they already quoted
         // For now, return all OPEN bid invitations
         return bidInvitationRepository.findAll().stream()

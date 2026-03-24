@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 public class OperatorBidController {
 
     private final BidService bidService;
+    private final mls.sho.mplace.service.PerformanceAnalyticsService performanceAnalyticsService;
 
     @GetMapping
     public List<BidInvitationDto> getAllBids() {
@@ -56,6 +57,9 @@ public class OperatorBidController {
                 i.getDeadline(),
                 i.getStatus().name(),
                 i.getUrgency(),
+                i.getOperationMode().name(),
+                i.getRepeatFrequency().name(),
+                i.getNextRunDate(),
                 i.getItems().stream().map(this::mapItemToDto).collect(Collectors.toList())
         );
     }
@@ -76,6 +80,8 @@ public class OperatorBidController {
                 q.getSupplier().getTrustScore(),
                 q.getTotalAmount(),
                 q.getStatus().name(),
+                q.getLeadTime(),
+                performanceAnalyticsService.getReliabilityScore(q.getSupplier().getId()),
                 q.getCreatedAt()
         );
     }

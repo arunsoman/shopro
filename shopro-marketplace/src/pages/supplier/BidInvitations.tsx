@@ -44,7 +44,7 @@ export default function BidInvitations() {
   const { data: invitations = [], isLoading } = useQuery<BidInvitation[]>({
     queryKey: ["supplier-bid-invitations"],
     queryFn: async () => {
-      const resp = await api.get("/api/supplier/bids/invitations");
+      const resp = await api.get("/supplier/bids/invitations");
       return resp.data;
     }
   });

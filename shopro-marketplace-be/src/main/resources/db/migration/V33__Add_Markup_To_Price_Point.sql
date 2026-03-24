@@ -1,0 +1,2 @@
+-- -- V30: Add markup_amount to price_point for auditability
+-- ALTER TABLE price_point ADD COLUMN markup_amount DECIMAL(19, 4) DEFAULT 0.0000;

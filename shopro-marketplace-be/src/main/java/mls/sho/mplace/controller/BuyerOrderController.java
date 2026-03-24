@@ -26,8 +26,8 @@ public class BuyerOrderController {
     private final SecurityUtils securityUtils;
 
     public record POItem(String id, String name, double price, int qty, String unit) {}
-    public record PODetail(String id, String status, String placedDate, String expectedDelivery, List<POItem> items, double total) {}
-    public record OrderSummary(String id, String date, int items, double total, String status, String tracking) {}
+    public record PODetail(String id, String status, String displayStatus, String placedDate, String expectedDelivery, List<POItem> items, double total, List<mls.sho.mplace.dto.POActivityDto> activities) {}
+    public record OrderSummary(String id, String date, int items, double total, String status, String displayStatus, String tracking) {}
 
     @GetMapping
     public List<OrderSummary> getOrders() {
@@ -35,9 +35,10 @@ public class BuyerOrderController {
                 .map(po -> new OrderSummary(
                         po.id().toString(),
                         po.raisedAt() != null ? po.raisedAt().toString() : "N/A",
-                        po.itemCount() != null ? po.itemCount() : 0,
+                        po.itemCount(),
                         po.totalAmount().doubleValue(),
                         po.status(),
+                        po.displayStatus(),
                         "N/A"
                 )).toList();
     }
@@ -59,10 +60,12 @@ public class BuyerOrderController {
         return new PODetail(
             po.id().toString(),
             po.status(),
+            po.displayStatus(),
             po.raisedAt() != null ? po.raisedAt().toString() : "N/A",
             po.deliveryDate() != null ? po.deliveryDate().toString() : "N/A",
             itemDtos, 
-            po.totalAmount().doubleValue()
+            po.totalAmount().doubleValue(),
+            po.activities().stream().filter(a -> !a.internal()).toList()
         );
     }
 

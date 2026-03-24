@@ -52,6 +52,12 @@ public class SubOrder extends BaseEntity {
     @Column(name = "shipping_address", columnDefinition = "TEXT")
     private String shippingAddress;
 
+    @Column(name = "markup_amount", precision = 19, scale = 4)
+    private BigDecimal markupAmount = BigDecimal.ZERO;
+
+    @Column(name = "routing_strategy")
+    private String routingStrategy;
+
     public enum AssignmentMode {
         DIRECT,
         BID
@@ -71,6 +77,8 @@ public class SubOrder extends BaseEntity {
 
     public enum SubOrderStatus {
         ACK_PENDING,
+        DISPATCHED,
+        ROUTED,
         DISPATCHED_TO_SUPPLIER,
         ACKNOWLEDGED,
         PREPARING,

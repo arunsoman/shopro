@@ -15,16 +15,16 @@ public class SupplierOrderService {
 
     private final SubOrderRepository subOrderRepository;
 
-    public List<SubOrder> getOrdersForSupplier(MarketplaceSupplier supplier) {
-        return subOrderRepository.findAllBySupplier_Id(supplier.getSupplierId());
+    public List<SubOrder> getOrdersForSupplier(java.util.UUID supplierId) {
+        return subOrderRepository.findAllBySupplier_Id(supplierId);
     }
 
     @Transactional
-    public void updateStatus(java.util.UUID id, SubOrder.SubOrderStatus status, MarketplaceSupplier supplier) {
+    public void updateStatus(java.util.UUID id, SubOrder.SubOrderStatus status, java.util.UUID supplierId) {
         SubOrder order = subOrderRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
+                .orElseThrow(() -> new RuntimeException("Order not found. Please verify the order ID."));
 
-        if (!order.getSupplier().getId().equals(supplier.getSupplierId())) {
+        if (!order.getSupplier().getId().equals(supplierId)) {
             throw new RuntimeException("Unauthorized: This order does not belong to your organization.");
         }
 

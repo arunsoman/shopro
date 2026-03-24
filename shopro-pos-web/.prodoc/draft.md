@@ -528,7 +528,7 @@ Managers and System Administrators.
 |---|---|
 | Global Toggle | Turns the tableside experience on or off for the entire venue. |
 | QR Generator | Creates unique, secure links for each table in the restaurant. |
-| Print Preview | A high-fidelity window for printing QR tokens with restaurant branding. |
+| Print Preview | A  window for printing QR tokens with restaurant branding. |
 | Table Selection | A checklist to select which specific tables should have active digital ordering. |
 | Batch Actions | Tools to generate or print QR codes for dozens of tables at once. |
 

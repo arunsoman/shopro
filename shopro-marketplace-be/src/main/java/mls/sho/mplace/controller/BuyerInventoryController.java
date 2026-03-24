@@ -52,7 +52,7 @@ public class BuyerInventoryController {
                 .map(r -> new AutoRule(
                         r.getId().toString(),
                         r.getProduct().getName(),
-                        r.getThreshold().doubleValue(),
+                        r.getAlert().doubleValue(),
                         r.getReorderQuantity().intValue(),
                         r.isActive()
                 )).toList();
@@ -66,7 +66,7 @@ public class BuyerInventoryController {
     }
 
     @PostMapping("/foods")
-    public InventoryItem addFoodToInventory(@RequestBody InventoryController.InventoryRequest request) {
+    public mls.sho.mplace.dto.FoodInventoryDto addFoodToInventory(@RequestBody InventoryController.InventoryRequest request) {
         var requester = securityUtils.getCurrentRequester();
         if (requester == null || !requester.isBuyer()) {
             throw new org.springframework.security.access.AccessDeniedException("User must be logged in as a buyer to manage inventory");
@@ -78,7 +78,7 @@ public class BuyerInventoryController {
     }
 
     @PostMapping("/foods/purchase-orders")
-    public InventoryItem createFoodPO(@RequestBody InventoryController.InventoryRequest request) {
+    public mls.sho.mplace.dto.FoodInventoryDto createFoodPO(@RequestBody InventoryController.InventoryRequest request) {
         var requester = securityUtils.getCurrentRequester();
         if (requester == null || !requester.isBuyer()) {
             throw new org.springframework.security.access.AccessDeniedException("User must be logged in as a buyer to place purchase orders");
@@ -87,5 +87,12 @@ public class BuyerInventoryController {
             throw new IllegalArgumentException("Food ID is required");
         }
         return inventoryService.createFoodPurchaseOrder(requester.restaurantId(), request.foodId());
+    }
+
+    @PutMapping("/foods/{inventoryItemId}")
+    public mls.sho.mplace.dto.FoodInventoryDto updateInventorySettings(
+            @PathVariable UUID inventoryItemId,
+            @RequestBody mls.sho.mplace.dto.InventorySettingsRequest request) {
+        return inventoryService.updateInventorySettings(inventoryItemId, request.leadTime(), request.alertLevel(), request.reorderCount());
     }
 }

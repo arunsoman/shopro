@@ -8,4 +8,5 @@ import java.util.UUID;
 
 public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, UUID> {
     List<PurchaseOrder> findAllByRestaurant_Id(UUID restaurantId);
+    List<PurchaseOrder> findAllByRoutingStatus(PurchaseOrder.RoutingStatus routingStatus);
 }

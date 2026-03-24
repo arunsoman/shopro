@@ -33,7 +33,7 @@ export default function SupplierDashboard() {
   const { data: stats, isLoading: isStatsLoading } = useQuery({
     queryKey: ["supplier-dashboard-stats"],
     queryFn: async () => {
-      const resp = await api.get("/api/supplier/dashboard/stats");
+      const resp = await api.get("/supplier/dashboard/stats");
       return resp.data;
     }
   });
@@ -41,7 +41,7 @@ export default function SupplierDashboard() {
   const { data: activity = [], isLoading: isActivityLoading } = useQuery({
     queryKey: ["supplier-dashboard-activity"],
     queryFn: async () => {
-      const resp = await api.get("/api/supplier/dashboard/activity");
+      const resp = await api.get("/supplier/dashboard/activity");
       return resp.data;
     }
   });
@@ -49,44 +49,44 @@ export default function SupplierDashboard() {
   const { data: performance } = useQuery({
     queryKey: ["supplier-dashboard-performance"],
     queryFn: async () => {
-      const resp = await api.get("/api/supplier/dashboard/performance");
+      const resp = await api.get("/supplier/dashboard/performance");
       return resp.data;
     }
   });
 
   return (
     <SecureOverlay>
-    <div className="max-w-[1600px] mx-auto space-y-12 animate-in fade-in duration-1000 font-black italic uppercase leading-none pb-24">
+    <div className="max-w-[1600px] mx-auto space-y-10 animate-in fade-in duration-1000 leading-none pb-24">
       {/* Platform Header */}
-      <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-12 border-b-8 border-slate-100 dark:border-slate-800 pb-12 font-black italic leading-none shadow-inner">
-        <div className="space-y-6">
-          <h1 className="text-4xl md:text-7xl font-black tracking-tighter italic uppercase leading-none shadow-text mt-4 text-slate-900 dark:text-white">
-             Nexus <span className="text-indigo-500">Command.X</span>
+      <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 border-b-4 border-slate-100 dark:border-slate-800 pb-10 shadow-sm">
+        <div className="space-y-4">
+          <h1 className="text-4xl md:text-5xl font-black tracking-tight text-slate-900 dark:text-white">
+             Supplier <span className="text-indigo-500">Control Center</span>
           </h1>
-          <p className="text-slate-500 font-black italic text-xl tracking-wide opacity-60 leading-none flex items-center gap-4">
-             <Target className="w-8 h-8 text-indigo-500 animate-pulse" />
-             Global supply chain metrics and performance overview alpha.
+          <p className="text-slate-500 font-medium text-lg tracking-normal opacity-80 leading-relaxed flex items-center gap-3">
+             <Target className="w-6 h-6 text-indigo-500" />
+             A comprehensive overview of your supply chain performance and marketplace metrics.
           </p>
         </div>
         
-        <div className="flex items-center gap-6 font-black italic uppercase tracking-[0.4em] leading-none">
-          <div className="flex items-center gap-4 bg-white dark:bg-slate-950 px-8 py-5 rounded-[1.5rem] border-4 border-slate-50 dark:border-slate-800 shadow-xl shadow-inner">
-             <div className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse shadow-4xl shadow-emerald-500/20" />
-             <span className="text-[10px] font-black tracking-[0.2em] italic text-slate-900 dark:text-white">NODE_ACTIVE.SIGN</span>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 bg-white dark:bg-slate-950 px-6 py-3 rounded-2xl border-2 border-slate-100 dark:border-slate-800 shadow-sm">
+             <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+             <span className="text-[11px] font-bold tracking-wider text-slate-600 dark:text-slate-300 uppercase">System Online</span>
           </div>
-          <button className="w-20 h-20 rounded-[1.5rem] bg-slate-950 dark:bg-white text-white dark:text-slate-900 flex items-center justify-center border-4 border-slate-50 dark:border-slate-800 hover:scale-110 transition-all shadow-4xl shadow-inner">
-             <Zap size={32} />
+          <button className="w-14 h-14 rounded-2xl bg-indigo-600 text-white flex items-center justify-center hover:bg-indigo-700 transition-all shadow-lg active:scale-95">
+             <Zap size={24} />
           </button>
         </div>
       </header>
 
       {/* KPI Matrix */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 font-black italic uppercase leading-none">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
          {[
-           { label: "Monthly_Revenue.X", val: stats?.monthlyRevenue ? `₹${(stats.monthlyRevenue / 100000).toFixed(1)}L` : "₹0.0L", icon: TrendingUp, color: "indigo" },
-           { label: "Active_Orders.SIGN", val: stats?.activeOrders || 0, icon: Package, color: "emerald" },
-           { label: "Fulfillment_Rate.FORCE", val: `${stats?.fulfillmentRate || 0}%`, icon: Zap, color: "amber" },
-           { label: "Quotations_Pending.X", val: stats?.pendingQuotations || 0, icon: Clock, color: "rose" },
+           { label: "Monthly Revenue", val: stats?.monthlyRevenue ? `₹${(stats.monthlyRevenue / 100000).toFixed(1)}L` : "₹0.0L", icon: TrendingUp, color: "indigo" },
+           { label: "Active Orders", val: stats?.activeOrders || 0, icon: Package, color: "emerald" },
+           { label: "Fulfillment Rate", val: `${stats?.fulfillmentRate || 0}%`, icon: Zap, color: "amber" },
+           { label: "Pending Quotations", val: stats?.pendingQuotations || 0, icon: Clock, color: "rose" },
          ].map((kpi, i) => (
            <div key={i} className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-3xl rounded-[3rem] border-4 border-slate-100 dark:border-slate-800 p-10 shadow-4xl flex items-center justify-between group relative overflow-hidden shadow-inner">
               <div className="space-y-4">
@@ -106,17 +106,17 @@ export default function SupplierDashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 font-black italic uppercase leading-none">
          {/* Live Ledger / Audit Log */}
-         <div className="lg:col-span-8 space-y-8">
-            <div className="flex items-center justify-between px-8 bg-slate-50/50 dark:bg-slate-950/20 py-6 rounded-[2rem] border-4 border-slate-100 dark:border-slate-800/60 shadow-text">
-               <h2 className="text-3xl font-black italic text-slate-900 dark:text-white flex items-center gap-6 tracking-tight">
-                  <Activity size={32} className="text-indigo-500 animate-pulse" /> Live System Audit.X
+         <div className="lg:col-span-8 space-y-6">
+            <div className="flex items-center justify-between px-6 bg-slate-50/50 dark:bg-slate-950/20 py-4 rounded-2xl border border-slate-100 dark:border-slate-800/60 shadow-sm">
+               <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-4 tracking-tight">
+                  <Activity size={24} className="text-indigo-500" /> Recent Activity
                </h2>
-               <button className="text-[11px] font-black text-indigo-500 hover:text-indigo-600 tracking-[0.4em] italic uppercase transition-all flex items-center gap-4">
-                  FULL_LEDGER.FORCE <ChevronRight size={20} />
+               <button className="text-[11px] font-bold text-indigo-600 hover:text-indigo-700 tracking-wider uppercase transition-all flex items-center gap-2">
+                  View Full History <ChevronRight size={18} />
                </button>
             </div>
             
-            <div className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-3xl rounded-[4rem] border-4 border-slate-100 dark:border-slate-800 p-1 shadow-4xl shadow-inner min-h-[500px] overflow-hidden">
+            <div className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-3xl rounded-[2rem] border-2 border-slate-100 dark:border-slate-800 p-1 shadow-sm min-h-[500px] overflow-hidden">
                {isActivityLoading ? (
                   <div className="p-40 flex flex-col items-center justify-center space-y-12 opacity-40">
                       <RefreshCw className="w-20 h-20 text-indigo-500 animate-spin" />
@@ -135,9 +135,9 @@ export default function SupplierDashboard() {
                                  {log.type === 'ORDER' ? <ShoppingBag size={28} /> : log.type === 'BID' ? <Zap size={28} /> : log.type === 'FINANCE' ? <ShieldCheck size={28} /> : <AlertCircle size={28} />}
                               </div>
                               <div className="min-w-0 space-y-2">
-                                 <p className="text-2xl font-black italic tracking-tight text-slate-900 dark:text-white uppercase leading-none shadow-text group-hover/row:text-indigo-500 transition-colors">{log.event}</p>
-                                 <div className="flex items-center gap-4 text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] italic opacity-60 leading-none">
-                                    <Clock size={14} className="text-indigo-500" /> {log.time} • {log.type}_NODE.X
+                                 <p className="text-lg font-bold text-slate-900 dark:text-white uppercase leading-none group-hover/row:text-indigo-600 transition-colors">{log.event}</p>
+                                 <div className="flex items-center gap-2 text-[10px] font-medium text-slate-400 uppercase tracking-widest opacity-80 leading-none">
+                                    <Clock size={12} className="text-indigo-500" /> {log.time} • {log.type.toLowerCase()} update
                                  </div>
                               </div>
                            </div>
@@ -150,47 +150,47 @@ export default function SupplierDashboard() {
          </div>
 
          {/* Efficiency & Compliance */}
-         <div className="lg:col-span-4 space-y-8">
-            <h2 className="text-3xl font-black italic text-slate-900 dark:text-white flex items-center gap-6 px-10 tracking-tight shadow-text">
-               <BarChart3 size={32} className="text-indigo-500" /> Performance.X
+         <div className="lg:col-span-4 space-y-6">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-4 px-6 tracking-tight">
+               <BarChart3 size={24} className="text-indigo-500" /> Performance Metrics
             </h2>
-            <div className="bg-slate-950 rounded-[4rem] p-12 border-b-[1.5rem] border-indigo-600 shadow-4xl shadow-inner space-y-12 relative overflow-hidden group">
+            <div className="bg-slate-900 dark:bg-slate-950 rounded-[2rem] p-8 border-b-8 border-indigo-600 shadow-xl space-y-10 relative overflow-hidden group">
                <div className="absolute top-[-20%] right-[-10%] w-[400px] h-[400px] bg-indigo-600/10 rounded-full blur-[100px] pointer-events-none group-hover:scale-150 transition-transform duration-[4000ms]" />
                
-               <div className="relative z-10 space-y-10">
+               <div className="relative z-10 space-y-8">
                   {[
-                     { name: "Fulfillment_Accuracy.SIGN", val: performance?.fulfillment || 0, color: "indigo" },
-                     { name: "On-Time_Dispatch.NODE", val: performance?.onTimeDelivery || 0, color: "emerald" },
-                     { name: "Quality_Index.FLUX", val: performance?.qualityIndex || 0, color: "rose" },
+                     { name: "Fulfillment Accuracy", val: performance?.fulfillment || 0, color: "indigo" },
+                     { name: "On-Time Delivery", val: performance?.onTimeDelivery || 0, color: "emerald" },
+                     { name: "Quality Score", val: performance?.qualityIndex || 0, color: "rose" },
                   ].map((sys) => (
-                     <div key={sys.name} className="space-y-5 group/stat">
-                        <div className="flex items-center justify-between uppercase">
-                           <span className="text-[11px] font-black text-slate-400 tracking-[0.4em] group-hover/stat:text-white transition-colors italic leading-none">{sys.name}</span>
-                           <span className={cn("text-2xl font-black italic tracking-tighter tabular-nums leading-none shadow-text", 
-                              sys.color === 'indigo' ? 'text-indigo-500' : sys.color === 'emerald' ? 'text-emerald-500' : 'text-rose-500')}>{sys.val}%</span>
+                     <div key={sys.name} className="space-y-4 group/stat">
+                        <div className="flex items-center justify-between">
+                           <span className="text-[11px] font-bold text-slate-400 tracking-wider group-hover/stat:text-white transition-colors uppercase leading-none">{sys.name}</span>
+                           <span className={cn("text-xl font-black italic tracking-tight tabular-nums leading-none", 
+                               sys.color === 'indigo' ? 'text-indigo-500' : sys.color === 'emerald' ? 'text-emerald-500' : 'text-rose-500')}>{sys.val}%</span>
                         </div>
-                        <div className="h-4 w-full bg-white/5 rounded-full border-2 border-white/5 overflow-hidden shadow-inner flex items-center p-1">
+                        <div className="h-2.5 w-full bg-white/5 rounded-full overflow-hidden flex items-center">
                            <motion.div 
                              initial={{ width: 0 }}
                              animate={{ width: `${sys.val}%` }}
-                             className={cn("h-full rounded-full shadow-4xl", 
-                                sys.color === 'indigo' ? 'bg-indigo-600 shadow-indigo-500/30' : 
-                                sys.color === 'emerald' ? 'bg-emerald-500 shadow-emerald-500/30' : 'bg-rose-600 shadow-rose-500/30')}
+                             className={cn("h-full rounded-full", 
+                                sys.color === 'indigo' ? 'bg-indigo-600' : 
+                                sys.color === 'emerald' ? 'bg-emerald-500' : 'bg-rose-600')}
                            />
                         </div>
                      </div>
                   ))}
                </div>
 
-               <div className="pt-12 border-t-4 border-white/5 space-y-8 relative z-10 font-black italic shadow-inner">
-                  <div className="flex items-start gap-6 font-black italic">
-                    <ShieldCheck size={32} className="text-amber-500 animate-pulse shrink-0 shadow-text" />
-                    <p className="text-[11px] text-slate-400 font-black tracking-[0.2em] leading-relaxed italic uppercase opacity-60">
-                      Integrity check completed 3m ago. All encryption keys are rotated and secure delta.
+               <div className="pt-8 border-t border-white/5 space-y-6 relative z-10">
+                  <div className="flex items-start gap-4">
+                    <ShieldCheck size={24} className="text-amber-500 shrink-0" />
+                    <p className="text-[11px] text-slate-400 font-medium leading-relaxed opacity-80">
+                      Standard system check completed 3m ago. Your account data and transaction logs are fully secured.
                     </p>
                   </div>
-                  <button className="w-full h-20 bg-white/5 hover:bg-white/10 border-4 border-white/5 text-white rounded-[2rem] text-[10px] font-black uppercase tracking-[0.5em] transition-all hover:scale-105 active:scale-95 italic shadow-4xl">
-                    INFRASTRUCTURE_DETAILS.FORCE
+                  <button className="w-full h-14 bg-white/5 hover:bg-white/10 border-2 border-white/5 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all hover:scale-105 active:scale-95 shadow-sm">
+                    View Performance Details
                   </button>
                </div>
             </div>

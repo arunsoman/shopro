@@ -42,3 +42,5 @@ design-artifacts/
 docs/ brain/
 validation-report.json
 validation-report.md
+marketplace-be.log
+scratch/*

@@ -1,32 +1,43 @@
-# Phase 3 UI/UX Plan: Restaurant Onboarding Widget
+# UI Plan — Bidding Engine Enhancements
 
-## Design Strategy
-Replace the static "Onboard Hub node" card in `RestaurantManagement.tsx` with a dynamic, stateful widget.
+## Core UX Modules
 
-### 1. Collapsed Widget (Active/Inactive Indicator)
-- **Visual:** A dashed border card (matches existing style) but with a bottom status bar.
-- **Content:**
-  - Icon: `Plus` (Add New) or `Building2` (Existing being onboarded).
-  - Title: "Onboard Hub node" or "{Restaurant Name}".
-  - Status: `StatusBadge` (Active/Pending/Suspended).
-- **Action:** Click to expand.
+### 1. Bid Creation Wizard (Extension)
+- **Path**: `shopro-marketplace/src/pages/operator/BidCreation.tsx`
+- **Updates**:
+  - **Step 2 (Bid protocol)**: Add "Operational Mode" selector (AUTOMATIC, SEMI-AUTOMATIC, MANUAL).
+  - **Step 2 (Bid protocol)**: Add "Repeat Frequency" configuration (NONE, DAILY, WEEKLY, MONTHLY).
+- **Components**: 
+  - `OperationalModeSelector`: Card-based radio group.
+  - `FrequencyConfig`: Select + helper text for `nextRunDate`.
 
-### 2. Expanded Detail (View/Edit)
-- **AnimatePresence:** Smooth vertical slide down from the card.
-- **Left Column:** Basic metadata (Name, Category, City).
-- **Right Column:** Contact & Compliance (Contact Person, Info, GSTIN).
-- **Bottom Bar:**
-  - Status Toggle (Force Active / Suspend).
-  - Save Changes button (Zod-validated).
-  - Cancel/Collapse button.
+### 2. Weighted Evaluation Dashboard (New)
+- **Path**: `shopro-marketplace/src/pages/operator/BidEvaluation.tsx`
+- **Purpose**: Compare quotes with "Reliability Node" scoring.
+- **Components**:
+  - `QuoteComparisonTable`: Columns for Total Price, Lead Time, and Reliability Score.
+  - `ReliabilityBadge`: Color-coded chip (Green 4.5+, Amber 3.5+, Red <3.5).
+  - `WeightedAwardButton`: Single-click award in SEMI/MANUAL modes.
 
-### 3. Functional Requirements
-- **State:** Use a local `useState` to handle expansion and form state.
-- **Validation:** Zod schema for required fields (Name, Category, City, Contact Info).
-- **Feedback:** `RefreshCw` animation on saving. `CheckCircle2` on success.
+### 3. Quote Submission Modal (Update)
+- **Path**: `shopro-marketplace/src/components/supplier/QuoteSubmissionModal.tsx`
+- **Updates**:
+  - Add `leadTime` field (Global and per-item).
+  - Multi-item pricing grid with total calculation.
 
-### 4. Code Placement
-- New component: `OnboardingWidget.tsx` in `src/pages/operator/components/`.
-- Integration: Import and use in `RestaurantManagement.tsx`.
+## Component Reuse
+- `Card` → `src/components/ui/card.tsx`
+- `Table` → `src/components/ui/table.tsx`
+- `Badge` → `src/components/ui/badge.tsx`
+- `SecureOverlay` → `src/components/SecureOverlay.tsx`
 
-SEALED: Phase 3
+## Validation Strategy
+- **Library**: `react-hook-form` + `zod`.
+- **Logic**: 
+  - If `operationMode === 'AUTOMATIC'`, `deadline` must be at least +24h.
+  - `leadTime` must be positive integer.
+
+## API Integration
+- `POST /api/operator/bids`: Payload updated with `operationMode`, `repeatFrequency`.
+- `POST /api/supplier/quotes`: Payload updated with `leadTime`, `items`.
+- `GET /api/operator/bids/:id/comparison`: New endpoint for the dashboard.

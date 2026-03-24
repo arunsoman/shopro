@@ -26,8 +26,12 @@ interface Bid {
   id: string;
   supplierName: string;
   supplierRating: number;
+  bidResponseRate: number; // New: % of bids responded to
+  fulfillmentQuality: number; // New: 1-5 quality score
+  reliabilityScore: number; // New: Weighted average %
   totalAmount: number;
   deliveryDate: string;
+  leadTime: number; // New: Fulfillment lead time
   status: string;
   items: BidItem[];
   submittedAt: string;
@@ -40,6 +44,8 @@ interface BidEvent {
   status: string;
   deadline: string;
   urgency: string;
+  operationMode: string; // New: AUTO|SEMI|MANUAL
+  repeatFrequency: string; // New
   items: BidItem[];
   bids: Bid[];
 }
@@ -61,13 +67,19 @@ export default function BidEvaluation() {
         status: resp.data?.status || "PENDING",
         deadline: resp.data?.deadline || new Date().toISOString(),
         urgency: resp.data?.urgency || "NORMAL",
+        operationMode: resp.data?.operationMode || "MANUAL",
+        repeatFrequency: resp.data?.repeatFrequency || "NONE",
         items: resp.data?.items || [],
         bids: resp.data?.bids?.map((bid: any) => ({
           id: bid?.id || "---",
           supplierName: bid?.supplierName || "Unknown Supplier",
           supplierRating: bid?.supplierRating || 0,
+          bidResponseRate: bid?.bidResponseRate || 95, // MOCK
+          fulfillmentQuality: bid?.fulfillmentQuality || 4.5, // MOCK
+          reliabilityScore: bid?.reliabilityScore || 92, // MOCK
           totalAmount: bid?.totalAmount || 0,
           deliveryDate: bid?.deliveryDate || "",
+          leadTime: bid?.leadTime || 0,
           status: bid?.status || "SUBMITTED",
           items: bid?.items || [],
           submittedAt: bid?.submittedAt || new Date().toISOString()
@@ -123,7 +135,7 @@ export default function BidEvaluation() {
             )}
             <p className="text-(--sp-text-3) font-semibold text-[13px] flex items-center gap-2">
               <TrendingDown className="w-4 h-4 text-(--sp-cyan)" />
-              Comparing {bids.length} fulfillment signals for marketplace synchronization.
+              Comparing {bids.length} fulfillment signals for {event?.operationMode || "MANUAL"} orchestration.
             </p>
           </div>
 
@@ -193,8 +205,8 @@ export default function BidEvaluation() {
               ) : mostTrusted ? (
                 <div className="space-y-8">
                   <div className="space-y-2">
-                    <p className="text-[48px] font-semibold text-white tracking-tighter tabular-nums leading-none">{mostTrusted?.supplierRating || 0}%</p>
-                    <p className="text-[12px] text-white/40 font-bold uppercase tracking-wider">{mostTrusted?.supplierName} • ₹{(mostTrusted?.totalAmount || 0).toLocaleString()}</p>
+                    <p className="text-[48px] font-semibold text-white tracking-tighter tabular-nums leading-none">{mostTrusted?.reliabilityScore || 0}%</p>
+                    <p className="text-[12px] text-white/40 font-bold uppercase tracking-wider">{mostTrusted?.supplierName} • {mostTrusted?.fulfillmentQuality}★ Quality • {mostTrusted?.leadTime}h speed</p>
                   </div>
                   <button
                     onClick={() => handleAward(mostTrusted)}
@@ -236,8 +248,9 @@ export default function BidEvaluation() {
               <thead>
                 <tr className="bg-(--sp-bg-1)/50 border-b border-(--sp-border)/50 text-(--sp-text-3)">
                   <th className="py-4 px-8 text-[11px] font-bold uppercase tracking-wider">Candidate hub</th>
-                  <th className="py-4 px-8 text-[11px] font-bold uppercase tracking-wider">Trust score</th>
+                  <th className="py-4 px-8 text-[11px] font-bold uppercase tracking-wider">Reliability node</th>
                   <th className="py-4 px-8 text-[11px] font-bold uppercase tracking-wider">Total bid</th>
+                  <th className="py-4 px-8 text-[11px] font-bold uppercase tracking-wider">Speed</th>
                   <th className="py-4 px-8 text-[11px] font-bold uppercase tracking-wider">Received</th>
                   <th className="text-right py-4 px-8 text-[11px] font-bold uppercase tracking-wider">Action</th>
                 </tr>
@@ -271,16 +284,22 @@ export default function BidEvaluation() {
                     <td className="py-6 px-8">
                        <div className="space-y-2.5 w-40">
                           <div className="flex justify-between text-[10px] font-bold text-(--sp-text-3) uppercase tracking-wider opacity-60">
-                             <span>Reliability</span>
-                             <span className="text-(--sp-text-1)">{bid?.supplierRating || 0}%</span>
+                             <span>Consolidated Score</span>
+                             <span className="text-(--sp-text-1)">{bid?.reliabilityScore || 0}%</span>
                           </div>
                           <div className="h-1.5 w-full bg-(--sp-bg-1) rounded-full overflow-hidden border border-(--sp-border)/50 shadow-inner">
-                             <motion.div initial={{ width: 0 }} animate={{ width: `${bid?.supplierRating || 0}%` }} className="h-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.3)]" />
+                             <motion.div initial={{ width: 0 }} animate={{ width: `${bid?.reliabilityScore || 0}%` }} className={cn(
+                                "h-full shadow-[0_0_8px_rgba(16,185,129,0.3)]",
+                                (bid?.reliabilityScore || 0) >= 90 ? "bg-emerald-500" : (bid?.reliabilityScore || 0) >= 80 ? "bg-amber-500" : "bg-rose-500"
+                             )} />
                           </div>
                        </div>
                     </td>
                     <td className="py-6 px-8">
                        <p className="text-[18px] font-bold text-(--sp-text-0) tabular-nums tracking-tighter">₹{(bid?.totalAmount || 0).toLocaleString()}</p>
+                    </td>
+                    <td className="py-6 px-8">
+                       <p className="text-[14px] font-bold text-(--sp-text-1) tabular-nums tracking-tighter">{bid?.leadTime || 0}h</p>
                     </td>
                     <td className="py-6 px-8">
                        <p className="text-[11px] font-bold text-(--sp-text-3) uppercase tracking-wider opacity-60 tabular-nums">{bid?.submittedAt ? new Date(bid.submittedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "---"}</p>

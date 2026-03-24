@@ -1,7 +1,7 @@
 # Growth & CRM (Loyalty) Requirements
 
 ## 1. Overview
-This document captures high-fidelity User Stories for the Customer Relationship Management (CRM) and Loyalty module, augmented with industry-leading features from top-tier platforms (Punchh, Thanx, SevenRooms). The goal is to move beyond simple point-based systems toward zero-friction identity, predictive marketing, and gamified guest engagement.
+This document captures  User Stories for the Customer Relationship Management (CRM) and Loyalty module, augmented with industry-leading features from top-tier platforms (Punchh, Thanx, SevenRooms). The goal is to move beyond simple point-based systems toward zero-friction identity, predictive marketing, and gamified guest engagement.
 
 ## 2. User Roles
 *   **Server/Cashier:** Identifies guests, manages rewards, and provides personalized service based on guest ledgers.

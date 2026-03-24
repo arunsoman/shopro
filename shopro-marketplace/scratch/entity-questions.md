@@ -1,10 +1,10 @@
-# Phase 2 Entity Questions
+# Open Questions — Phase 2 Entity Map (Bidding Engine)
 
-1. **Category Values:** What are the standard categories for restaurants in the Shopro ecosystem?
-   - **Answer (Infer):** From `RestaurantManagement.tsx`, categories like "Produce", "Premium", "Organic" are mentioned. I'll use a dynamic list from the backend if possible, or a standard set: [QSR, Fine Dining, Cafe, Cloud Kitchen].
+## EQ1 [RESOLVED — Inferred]
+**Resolution:** Treat `restaurantId` and `supplierId` as raw `java.util.UUID` fields in the JPA entities. This maintains decoupling between the separate databases (`shopro_marketplace_db` and `shopro_pos`).
 
-2. **Validation Rules:** Any specific constraints (phone length, GSTIN format for India)?
-   - **Answer (Domain):** Indian phone numbers are 10 digits. GSTIN is 15 chars. I'll include these in the Zod schema for safety.
+## EQ2 [RESOLVED — Schema Fix]
+**Resolution:** Add `@OneToMany(mappedBy = "quote", cascade = CascadeType.ALL)` to the `Quote` entity to correctly persist line-item pricing from the `QuoteItem` entity.
 
-3. **Status Transitions:** Who can change the status from PENDING to ACTIVE?
-   - **Answer (System):** Operator Portal users (Operators) can verify restaurants. This widget is for them, so I'll include a "Verify" toggle.
+## EQ3 [RESOLVED — Inferred]
+**Resolution:** Use `EnumType.STRING` for `operationMode` and `repeatFrequency` for better readability and persistence safety.

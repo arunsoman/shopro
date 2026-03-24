@@ -29,7 +29,7 @@ export function GlowingSearch({
 
   // Load recent searches on mount
   useEffect(() => {
-    const saved = localStorage.getItem("shopro_recent_searches");
+    const saved = sessionStorage.getItem("shopro_recent_searches");
     if (saved) {
       try {
         setRecentSearches(JSON.parse(saved));
@@ -42,7 +42,7 @@ export function GlowingSearch({
   const saveToRecent = (result: SearchResult) => {
     const updated = [result, ...recentSearches.filter(r => r.id !== result.id)].slice(0, 5);
     setRecentSearches(updated);
-    localStorage.setItem("shopro_recent_searches", JSON.stringify(updated));
+    sessionStorage.setItem("shopro_recent_searches", JSON.stringify(updated));
   };
 
   const flatResults = query.length >= 2 

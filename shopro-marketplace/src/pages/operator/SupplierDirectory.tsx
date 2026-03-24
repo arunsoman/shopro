@@ -30,6 +30,14 @@ export default function SupplierDirectory() {
   const [activeCategory, setActiveCategory] = useState("All Categories");
   const [searchQuery, setSearchQuery] = useState("");
 
+  const { data: superGroups = [] } = useQuery<string[]>({
+    queryKey: ["super-groups"],
+    queryFn: async () => {
+      const resp = await api.get("/operator/catalog/super-groups");
+      return resp.data;
+    }
+  });
+
   const { data: suppliers = [], isLoading } = useQuery<Supplier[]>({
     queryKey: ["operator-suppliers-directory"],
     queryFn: async () => {
@@ -37,6 +45,8 @@ export default function SupplierDirectory() {
       return resp.data;
     }
   });
+
+  const categories = ["All Categories", ...superGroups];
 
   const filteredSuppliers = useMemo(() => {
     return suppliers.filter(sup => {
@@ -78,7 +88,7 @@ export default function SupplierDirectory() {
 
       {/* Category Pills */}
       <div className="flex items-center gap-2 overflow-x-auto pb-4 scrollbar-hide">
-        {["All Categories", "Fruits & Veggies", "Seafood", "Meat", "Grains", "Dairy", "Packaging"].map((cat) => (
+        {categories.map((cat) => (
           <button 
             key={cat}
             onClick={() => setActiveCategory(cat)}

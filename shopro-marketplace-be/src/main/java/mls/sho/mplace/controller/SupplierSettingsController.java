@@ -1,7 +1,7 @@
 package mls.sho.mplace.controller;
 
 import lombok.RequiredArgsConstructor;
-import mls.sho.mplace.entity.MarketplaceSupplier;
+import mls.sho.mplace.config.MarketplaceUser;
 import mls.sho.mplace.service.SupplierSettingsService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -20,13 +20,13 @@ public class SupplierSettingsController {
     private final SupplierSettingsService settingsService;
 
     @GetMapping
-    public Map<String, Object> getSettings(@AuthenticationPrincipal MarketplaceSupplier principal) {
-        return settingsService.getSettings(principal.getSupplierId());
+    public Map<String, Object> getSettings(@AuthenticationPrincipal MarketplaceUser user) {
+        return settingsService.getSettings(user.getSupplierId());
     }
 
     @PatchMapping("/payout")
-    public String updatePayout(@AuthenticationPrincipal MarketplaceSupplier principal, @RequestBody Map<String, String> details) {
-        settingsService.updatePayout(principal.getSupplierId(), details);
-        return "PAYOUT_UPDATE_INITIATED_24H_HOLD.CORE";
+    public String updatePayout(@AuthenticationPrincipal MarketplaceUser user, @RequestBody Map<String, String> details) {
+        settingsService.updatePayout(user.getSupplierId(), details);
+        return "Payout update initiated. A 24-hour verification hold is active.";
     }
 }

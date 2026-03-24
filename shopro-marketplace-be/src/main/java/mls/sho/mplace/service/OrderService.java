@@ -1,6 +1,8 @@
 package mls.sho.mplace.service;
 
 import lombok.RequiredArgsConstructor;
+import mls.sho.mplace.accounting.aop.AccountingEvent;
+import mls.sho.mplace.accounting.aop.AccountingEventType;
 import mls.sho.mplace.dto.*;
 import mls.sho.mplace.entity.*;
 import mls.sho.mplace.repository.*;
@@ -29,6 +31,8 @@ public class OrderService {
     private final mls.sho.mplace.repository.InventoryItemRepository inventoryItemRepository;
     private final mls.sho.mplace.util.SecurityUtils securityUtils;
     private final FinancialTransactionRepository financialTransactionRepository;
+    private final SupplyListRepository supplyListRepository;
+    private final POActivityRepository poActivityRepository;
 
     public List<SubOrderDetailsDto> getAllSubOrders() {
         var requester = securityUtils.getCurrentRequester();
@@ -76,6 +80,62 @@ public class OrderService {
         }
 
         return mapToDto(po);
+    }
+
+    public OrderAuditDto getOrderAudit(UUID id) {
+        PurchaseOrder po = poRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("PO not found"));
+
+        List<OrderAuditDto.ActivityEntry> activityEntries = poActivityRepository.findByPurchaseOrderIdOrderByActivityDateAsc(id).stream()
+                .sorted(Comparator.comparing(POActivity::getActivityDate).reversed())
+                .map(a -> new OrderAuditDto.ActivityEntry(
+                        a.getStatus(),
+                        a.getDescription(),
+                        a.getActivityDate().toString(),
+                        a.isCompleted(),
+                        a.isInternal()
+                )).toList();
+
+        List<FinancialTransaction> transactions = financialTransactionRepository.findAllByPurchaseOrder_Id(id);
+        // Also include suborder transactions
+        List<SubOrder> subOrders = subOrderRepository.findAllByPurchaseOrder_Id(id);
+        for (SubOrder so : subOrders) {
+            transactions.addAll(financialTransactionRepository.findAllBySubOrder_Id(so.getId()));
+        }
+
+        List<OrderAuditDto.LedgerEntry> ledgerEntries = transactions.stream()
+                .sorted(Comparator.comparing(FinancialTransaction::getTransactionDate).reversed())
+                .map(t -> new OrderAuditDto.LedgerEntry(
+                        t.getId(),
+                        t.getDescription(),
+                        t.getAmount(),
+                        t.getType().name(),
+                        t.getStatus().name(),
+                        t.getTransactionDate().toString()
+                )).toList();
+
+        List<OrderAuditDto.AllocationEntry> allocationEntries = subOrders.stream()
+                .map(so -> new OrderAuditDto.AllocationEntry(
+                        so.getId(),
+                        so.getSupplier() != null ? so.getSupplier().getName() : "Unknown",
+                        so.getTotalAmount(),
+                        so.getStatus().name(),
+                        so.getRoutingStrategy(),
+                        so.getItems().stream().map(OrderItem::getItemName).toList()
+                )).toList();
+
+        return new OrderAuditDto(
+                po.getId(),
+                po.getReferenceNumber(),
+                po.getRestaurant() != null ? po.getRestaurant().getName() : "Unknown",
+                po.getStatus().name(),
+                po.getDisplayStatus(),
+                po.getCreatedAt().toString(),
+                po.getTotalAmount(),
+                activityEntries,
+                ledgerEntries,
+                allocationEntries
+        );
     }
 
     @Transactional
@@ -128,15 +188,20 @@ public class OrderService {
 
         savedPo.setTotalAmount(total);
 
+        // Initial Activity
+        recordActivity(savedPo, "Order Placed", "Order registered in system", true, false);
+
         // Approval Logic
         if (total.compareTo(new BigDecimal("5000")) > 0) {
             savedPo.setStatus(PurchaseOrder.POStatus.PENDING_APPROVAL);
             savedPo.setApprovalRequired(true);
             savedPo.setApprovalStatus(PurchaseOrder.ApprovalStatus.PENDING);
+            recordActivity(savedPo, "Pending Approval", "High value order requires management review", false, false);
         } else {
             savedPo.setStatus(PurchaseOrder.POStatus.ACCEPTED);
             savedPo.setApprovalRequired(false);
             savedPo.setApprovalStatus(PurchaseOrder.ApprovalStatus.NOT_REQUIRED);
+            recordActivity(savedPo, "Accepted", "Order verified and accepted by system", true, false);
         }
 
         // Financial Transaction
@@ -150,7 +215,29 @@ public class OrderService {
         transaction.setDescription("Purchase Order Commitment: " + savedPo.getReferenceNumber());
         financialTransactionRepository.save(transaction);
 
+        // Auto-queue for MidMind Routing
+        savedPo.setRoutingStatus(PurchaseOrder.RoutingStatus.PENDING_ROUTING);
+        recordActivity(savedPo, "Queued for Routing", "Order scheduled for automated vendor routing", false, true);
+
         return poRepository.saveAndFlush(savedPo);
+    }
+
+    private void recordActivity(PurchaseOrder po, String status, String description, boolean completed, boolean isInternal) {
+        POActivity activity = new POActivity();
+        activity.setPurchaseOrder(po);
+        activity.setStatus(status.toUpperCase());
+        activity.setDescription(description);
+        activity.setActivityDate(LocalDateTime.now());
+        activity.setCompleted(completed);
+        activity.setInternal(isInternal);
+        if (po.getActivities() == null) {
+            po.setActivities(new java.util.ArrayList<>());
+        }
+        po.getActivities().add(activity);
+        
+        if (!isInternal) {
+            po.setDisplayStatus(status.toUpperCase());
+        }
     }
 
     @Transactional
@@ -159,6 +246,18 @@ public class OrderService {
                 .orElseThrow(() -> new RuntimeException("SubOrder not found"));
         so.setStatus(SubOrder.SubOrderStatus.valueOf(status));
         subOrderRepository.save(so);
+
+        // Update parent PO visibility
+        PurchaseOrder po = so.getPurchaseOrder();
+        if (po != null) {
+            String statusUpper = status.toUpperCase();
+            if ("SHIPPED".equals(statusUpper)) {
+                recordActivity(po, "In Transit", "Items are out for delivery", true, false);
+            } else if ("DELIVERED".equals(statusUpper) || "COMPLETED".equals(statusUpper)) {
+                recordActivity(po, "Delivered", "Order has been successfully fulfilled", true, false);
+            }
+            poRepository.save(po);
+        }
     }
 
     @Transactional
@@ -183,15 +282,20 @@ public class OrderService {
                 so.setTotalAmount(BigDecimal.ZERO);
                 so.setStatus(SubOrder.SubOrderStatus.ACK_PENDING);
                 so.setAssignmentMode(SubOrder.AssignmentMode.DIRECT);
-                return subOrderRepository.save(so);
+                return subOrderRepository.saveAndFlush(so);
             });
 
             item.setSubOrder(subOrder);
+            subOrder.getItems().add(item); // Bidirectional sync
             subOrder.setTotalAmount(subOrder.getTotalAmount().add(item.getPriceAtOrder().multiply(item.getQuantity())));
-            orderItemRepository.save(item);
+            orderItemRepository.saveAndFlush(item);
         }
 
+        // Trigger AutoAck after all items are associated
+        supplierSubOrders.values().forEach(this::triggerAutoAck);
+
         po.setStatus(PurchaseOrder.POStatus.SPLIT_COMPLETE);
+        recordActivity(po, "Supplier Confirmed", "Items allocated for delivery", true, false);
         poRepository.save(po);
     }
 
@@ -224,6 +328,32 @@ public class OrderService {
 
         po.setStatus(PurchaseOrder.POStatus.SPLITTING);
         poRepository.save(po);
+    }
+
+    private void triggerAutoAck(SubOrder subOrder) {
+        Supplier supplier = subOrder.getSupplier();
+        if (supplier == null) return;
+
+        boolean allAuto = true;
+        for (OrderItem item : subOrder.getItems()) {
+            Optional<SupplyList> slOpt = supplyListRepository.findBySupplierIdAndFoodId(supplier.getId(), item.getInventoryItem().getFood().getId());
+            if (slOpt.isPresent()) {
+                SupplyList sl = slOpt.get();
+                if (sl.getAutoResponseMode() && sl.getIsAvailable() && sl.getOfferCount() >= item.getQuantity().intValue()) {
+                    sl.setOfferCount(sl.getOfferCount() - item.getQuantity().intValue());
+                    supplyListRepository.save(sl);
+                } else {
+                    allAuto = false;
+                }
+            } else {
+                allAuto = false;
+            }
+        }
+
+        if (allAuto && !subOrder.getItems().isEmpty()) {
+            subOrder.setStatus(SubOrder.SubOrderStatus.ACKNOWLEDGED); // Auto-Ack
+            subOrderRepository.save(subOrder);
+        }
     }
 
     private PurchaseOrderDto mapToDto(PurchaseOrder po) {
@@ -267,12 +397,31 @@ public class OrderService {
                 .mapToInt(item -> item.getQuantity().intValue())
                 .sum();
 
+        List<POActivityDto> activityDtos = po.getActivities().stream()
+                .map(a -> new POActivityDto(
+                        a.getStatus(),
+                        a.getDescription(),
+                        a.getActivityDate().toString(),
+                        a.isCompleted(),
+                        a.isInternal()
+                )).toList();
+
+        int fulfillmentScore = 0;
+        if (!subOrderDtos.isEmpty()) {
+            long totalSubOrders = subOrderDtos.size();
+            long deliveredSubOrders = subOrderDtos.stream()
+                    .filter(so -> "DELIVERED".equals(so.status()) || "COMPLETED".equals(so.status()))
+                    .count();
+            fulfillmentScore = (int) ((deliveredSubOrders * 100) / totalSubOrders);
+        }
+
         return new PurchaseOrderDto(
                 po.getId(),
                 po.getReferenceNumber(),
                 restaurantName,
                 po.getTotalAmount(),
                 po.getStatus().name(),
+                po.getDisplayStatus(),
                 po.getDeliveryDate(),
                 po.getDeliveryAddress(),
                 po.getSpecialInstructions(),
@@ -283,8 +432,16 @@ public class OrderService {
                 po.getCreatedAt(),
                 totalItemsCount,
                 subOrderDtos,
-                items
+                items,
+                activityDtos,
+                fulfillmentScore
         );
+    }
+
+    public TraceabilityStatsDto getTraceabilityStats() {
+        long totalLogs = poActivityRepository.count();
+        long activeNodes = subOrderRepository.count(); // Actually sub-orders are nodes
+        return new TraceabilityStatsDto(totalLogs, activeNodes, "100%");
     }
 
     private SubOrderDetailsDto mapToDetailsDto(SubOrder so) {
@@ -294,6 +451,7 @@ public class OrderService {
                 so.getPurchaseOrder() != null ? so.getPurchaseOrder().getReferenceNumber() : "Unknown",
                 so.getSupplier() != null ? so.getSupplier().getName() : "Unknown",
                 so.getTotalAmount(),
+                so.getMarkupAmount(),
                 so.getStatus().name(),
                 so.getCreatedAt(),
                 so.getPurchaseOrder() != null && so.getPurchaseOrder().getDeliveryDate() != null ? so.getPurchaseOrder().getDeliveryDate().toString() : "--"

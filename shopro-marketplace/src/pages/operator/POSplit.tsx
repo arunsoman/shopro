@@ -2,10 +2,10 @@
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Gavel, Link2, Plus, Trash2, CheckCircle2, ChevronRight, AlertCircle, ShoppingCart, Database, RefreshCw } from "lucide-react";
+import { ArrowLeft, Gavel, Link2, Plus, Trash2, CheckCircle2, ChevronRight, AlertCircle, ShoppingCart, Database, RefreshCw, Zap, Cpu } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate, useParams } from "react-router-dom";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/api";
 import { SecureOverlay } from "@/components/SecureOverlay";
 import { IconTooltip } from "@/components/shared/IconTooltip";
@@ -41,6 +41,7 @@ interface Supplier {
 export default function POSplit() {
   const navigate = useNavigate();
   const { poId } = useParams();
+  const queryClient = useQueryClient();
   
   const [unassignedItems, setUnassignedItems] = useState<LineItem[]>([]);
   const [groups, setGroups] = useState<SplitGroup[]>([
@@ -84,6 +85,17 @@ export default function POSplit() {
     },
     onSuccess: () => {
         navigate(`/operator/po-inbox`);
+    }
+  });
+
+  const autoRouteMutation = useMutation({
+    mutationFn: async () => {
+      return api.post(`/operator/orders/${poId}/auto-route`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["operator-po-split-items", poId] });
+      // In a real app, we'd refetch or the backend would return the new splits
+      window.location.reload(); // Quick refresh to see new groups/items
     }
   });
 
@@ -137,13 +149,24 @@ export default function POSplit() {
           </div>
         </div>
         
-        <button 
-          onClick={finalizeSplit}
-          disabled={splitMutation.isPending || unassignedItems.length > 0}
-          className="h-10 px-6 bg-emerald-500 text-white rounded-[6px] font-medium text-[13px] hover:opacity-90 transition-all shadow-sm flex items-center gap-2 disabled:opacity-40 disabled:grayscale uppercase tracking-[0.04em]"
-        >
-          {splitMutation.isPending ? "Routing..." : "Commit & Dispatch"} <CheckCircle2 size={16} />
-        </button>
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={() => autoRouteMutation.mutate()}
+            disabled={autoRouteMutation.isPending || unassignedItems.length === 0}
+            className="h-10 px-6 bg-slate-900 text-emerald-500 rounded-[6px] font-medium text-[13px] hover:bg-slate-800 transition-all shadow-sm flex items-center gap-2 disabled:opacity-40 border border-emerald-500/20 uppercase tracking-[0.04em]"
+          >
+            {autoRouteMutation.isPending ? <RefreshCw className="animate-spin" size={16} /> : <Zap size={16} />} 
+            midMind Auto-Route
+          </button>
+
+          <button 
+            onClick={finalizeSplit}
+            disabled={splitMutation.isPending || unassignedItems.length > 0}
+            className="h-10 px-6 bg-emerald-500 text-white rounded-[6px] font-medium text-[13px] hover:opacity-90 transition-all shadow-sm flex items-center gap-2 disabled:opacity-40 disabled:grayscale uppercase tracking-[0.04em]"
+          >
+            {splitMutation.isPending ? "Routing..." : "Commit & Dispatch"} <CheckCircle2 size={16} />
+          </button>
+        </div>
       </header>
 
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-12 items-start font-black italic uppercase leading-none">

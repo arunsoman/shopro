@@ -36,6 +36,46 @@ export default function TaxCompliance() {
     }
   });
 
+  const { data: stats, isLoading: statsLoading } = useQuery({
+
+    queryKey: ["tax-stats"],
+    queryFn: async () => {
+      const resp = await api.get("/operator/reports/tax-stats");
+      return resp.data;
+    }
+  });
+
+  const statCards = [
+    { 
+      label: "GST payable", 
+      value: stats?.gstPayable != null ? `₹${(stats.gstPayable / 100000).toFixed(2)}L` : "₹0.00L", 
+      icon: Landmark, 
+      color: "text-(--sp-cyan)", 
+      due: stats?.dueInDays != null ? `${stats.dueInDays} Days` : "--" 
+    },
+    { 
+      label: "TDS withheld", 
+      value: stats?.tdsWithheld != null ? `₹${(stats.tdsWithheld / 1000).toFixed(1)}K` : "₹0.0K", 
+      icon: ShieldCheck, 
+      color: "text-(--sp-text-3)", 
+      due: "Filed" 
+    },
+    { 
+      label: "Tax liability", 
+      value: stats?.totalLiability != null ? `₹${(stats.totalLiability / 100000).toFixed(2)}L` : "₹0.00L", 
+      icon: Calculator, 
+      color: "text-rose-500", 
+      due: "Total" 
+    },
+    { 
+      label: "Compliance score", 
+      value: stats?.complianceScore != null ? `${stats.complianceScore}%` : "100%", 
+      icon: PieChart, 
+      color: "text-emerald-500", 
+      due: "High" 
+    },
+  ];
+
   return (
     <SecureOverlay>
     <div className="max-w-[1280px] mx-auto space-y-8 animate-in fade-in duration-1000 pb-20">
@@ -61,13 +101,8 @@ export default function TaxCompliance() {
       </header>
 
       {/* Grid: Tax Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        {[
-          { label: "GST payable", value: "₹4.85L", icon: Landmark, color: "text-(--sp-cyan)", due: "12 Days" },
-          { label: "TDS withheld", value: "₹12.4K", icon: ShieldCheck, color: "text-(--sp-text-3)", due: "Filed" },
-          { label: "Tax liability", value: "₹5.12L", icon: Calculator, color: "text-rose-500", due: "Total" },
-          { label: "Compliance score", value: "99.8%", icon: PieChart, color: "text-emerald-500", due: "High" },
-        ].map((stat) => (
+      <div className={cn("grid grid-cols-1 md:grid-cols-4 gap-6", statsLoading && "opacity-50 pointer-events-none")}>
+        {statCards.map((stat) => (
           <div key={stat.label} className="group bg-(--sp-bg-2) p-6 rounded-md border border-(--sp-border) shadow-sm hover:border-(--sp-cyan)/30 transition-all relative overflow-hidden">
              <div className="flex justify-between items-center mb-6">
                 <div className={cn("w-10 h-10 rounded-md flex items-center justify-center border border-(--sp-border) bg-(--sp-bg-1) shadow-sm", stat.color)}>

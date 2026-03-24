@@ -42,13 +42,22 @@ interface POItem {
   unit: string;
 }
 
+interface POActivity {
+  status: string;
+  description: string;
+  timestamp: string;
+  completed: boolean;
+}
+
 interface PODetail {
   id: string;
   status: string;
+  displayStatus: string;
   placedDate: string;
   expectedDelivery: string;
   items: POItem[];
   total: number;
+  activities: POActivity[];
 }
 
 const OrderHeader = ({ id, status }: { id: string; status: string }) => (
@@ -134,7 +143,7 @@ export default function PODetail() {
   return (
     <SecureOverlay>
     <div className="max-w-7xl mx-auto space-y-6 animate-in fade-in duration-500 pb-24 text-slate-900 dark:text-white">
-      <OrderHeader id={po.id} status={po.status} />
+      <OrderHeader id={po.id} status={po.displayStatus || po.status} />
 
       <main className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div className="lg:col-span-8 space-y-12">
@@ -228,14 +237,46 @@ export default function PODetail() {
                
                <div className="space-y-6 relative z-10">
                   <div className="flex flex-col gap-0">
-                    {[
-                        { title: "Order Placed", description: "Order registered in system", timestamp: "MAR 20 09:42", completed: true },
-                        { title: "Supplier Confirmed", description: "Items allocated for delivery", timestamp: "MAR 20 11:15", completed: true },
-                        { title: "In Transit", description: "Out for delivery", timestamp: "MAR 21 08:30", completed: true, current: true },
-                        { title: "Arriving Soon", description: "Estimated delivery time", timestamp: "MAR 22 AM", completed: false },
-                    ].map((step, i) => (
-                        <TimelineNode key={i} step={step} i={i} total={4} />
-                    ))}
+                    {(po.activities && po.activities.length > 0) ? (
+                        po.activities.map((step, i) => (
+                            <TimelineNode 
+                                key={i} 
+                                step={{
+                                    title: step.status,
+                                    description: step.description,
+                                    timestamp: new Date(step.timestamp).toLocaleString('en-IN', {
+                                        month: 'short',
+                                        day: '2-digit',
+                                        hour: '2-digit',
+                                        minute: '2-digit',
+                                        hour12: false
+                                    }).toUpperCase(),
+                                    completed: step.completed,
+                                    current: i === po.activities.length - 1 && step.completed
+                                }} 
+                                i={i} 
+                                total={po.activities.length} 
+                            />
+                        ))
+                    ) : (
+                        <TimelineNode 
+                            step={{
+                                title: "Order Placed",
+                                description: "Order registered in system",
+                                timestamp: new Date(po.placedDate).toLocaleString('en-IN', {
+                                    month: 'short',
+                                    day: '2-digit',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                    hour12: false
+                                }).toUpperCase(),
+                                completed: true,
+                                current: true
+                            }} 
+                            i={0} 
+                            total={1} 
+                        />
+                    )}
                   </div>
                </div>
             </div>

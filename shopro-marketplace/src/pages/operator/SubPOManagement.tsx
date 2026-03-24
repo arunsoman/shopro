@@ -3,7 +3,7 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { ArrowLeft, ExternalLink, Info, Truck, AlertTriangle, BarChart3, MessageSquare, RefreshCw, Database } from "lucide-react";
+import { ArrowLeft, ExternalLink, Info, Truck, AlertTriangle, BarChart3, MessageSquare, RefreshCw, Database, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -19,10 +19,12 @@ import { IconTooltip } from "@/components/shared/IconTooltip";
 
 interface SubOrder {
   id: string;
+  referenceNumber: string;
   parentPO: string;
   supplier: string;
   status: string;
   amount: number;
+  markupAmount: number;
 }
 
 const STATUS_FLOW = ["PENDING", "ACCEPTED", "PREPARING", "DISPATCHED", "DELIVERED"];
@@ -35,8 +37,19 @@ export default function SubPOManagement() {
   const { data: subPos = [], isLoading } = useQuery<SubOrder[]>({
     queryKey: ["operator-sub-pos", poId],
     queryFn: async () => {
+      // In a real app, we'd use the poId to filter
       const resp = await api.get(`/operator/sourcing/sub-pos`);
       return resp.data;
+    }
+  });
+
+  const consolidateMutation = useMutation({
+    mutationFn: async () => {
+      return api.post(`/operator/orders/${poId}/consolidate-invoices`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["operator-sub-pos", poId] });
+      alert("Invoices consolidated successfully. Consolidated Buyer Invoice generated.");
     }
   });
 
@@ -82,6 +95,16 @@ export default function SubPOManagement() {
         </div>
 
          <div className="flex items-center gap-4">
+           {!isLoading && subPos.every(s => s.status === "DELIVERED") && (
+             <button 
+               onClick={() => consolidateMutation.mutate()}
+               disabled={consolidateMutation.isPending}
+               className="h-9 px-6 bg-slate-900 text-emerald-500 rounded-sm text-[13px] font-medium border border-emerald-500/20 flex items-center gap-2 hover:bg-slate-800 transition-all shadow-sm uppercase tracking-[0.04em]"
+             >
+               {consolidateMutation.isPending ? <RefreshCw className="animate-spin" size={16} /> : <Zap size={16} />}
+               Consolidate Invoices
+             </button>
+           )}
            <button className="h-9 px-6 bg-(--sp-bg-2) text-(--sp-text-1) rounded-sm text-[13px] font-medium border border-(--sp-border) flex items-center gap-2 hover:bg-(--sp-bg-3) transition-all shadow-sm uppercase tracking-[0.04em]">
              <BarChart3 size={16} /> Manifest_gen.x
            </button>
@@ -191,17 +214,23 @@ export default function SubPOManagement() {
                   </div>
                 </div>
 
-                <div className="pt-6 border-t border-(--sp-border) flex items-center justify-between mt-auto">
-                  <div className="flex items-center gap-3">
-                    <Truck size={18} className="text-emerald-500" />
-                    <span className="text-[11px] font-medium text-(--sp-text-2) uppercase tracking-[0.04em]">
-                      ETA: T-Minus 24H
-                    </span>
-                  </div>
-                  <p className="text-[20px] font-medium text-(--sp-text-0) tabular-nums">
-                    ₹{spo.amount.toLocaleString()}
-                  </p>
-                </div>
+                 <div className="pt-6 border-t border-(--sp-border) flex items-center justify-between mt-auto">
+                   <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <Zap size={12} className="text-emerald-500" />
+                        <span className="text-[10px] font-medium text-(--sp-text-3) uppercase tracking-[0.06em]">Revenue Flux</span>
+                      </div>
+                      <p className="text-[14px] font-medium text-emerald-500">
+                        +₹{spo.markupAmount?.toLocaleString()}
+                      </p>
+                   </div>
+                   <div className="text-right space-y-1">
+                      <span className="text-[10px] font-medium text-(--sp-text-3) uppercase tracking-[0.06em]">Supplier Total</span>
+                      <p className="text-[20px] font-medium text-(--sp-text-0) tabular-nums">
+                        ₹{spo.amount.toLocaleString()}
+                      </p>
+                   </div>
+                 </div>
               </div>
             </motion.div>
           ))

@@ -53,7 +53,7 @@ public class InventoryService {
 
     @Transactional(readOnly = true)
     public List<mls.sho.mplace.dto.FoodInventoryDto> getFoodInventory(UUID restaurantId) {
-        return inventoryItemRepository.findByRestaurantId(restaurantId).stream()
+        return inventoryItemRepository.findByRestaurantIdWithActivePricing(restaurantId).stream()
                 .map(this::mapToFoodDto)
                 .collect(java.util.stream.Collectors.toList());
     }
@@ -70,6 +70,7 @@ public class InventoryService {
                 item.getFood().getName(),
                 item.getFood().getFoodGroup(),
                 item.getFood().getFoodSubgroup(),
+                item.getFood().getSuperGroup(),
                 item.getQuantity(),
                 item.getUnit(),
                 item.getLeadTime(),
@@ -81,26 +82,27 @@ public class InventoryService {
     }
 
     @Transactional
-    public InventoryItem addToFoodInventory(UUID restaurantId, Integer foodId) {
-        return inventoryItemRepository.findByRestaurantIdAndFood_Id(restaurantId, foodId)
+    public mls.sho.mplace.dto.FoodInventoryDto addToFoodInventory(UUID restaurantId, Integer foodId) {
+        InventoryItem item = inventoryItemRepository.findByRestaurantIdAndFood_Id(restaurantId, foodId)
                 .orElseGet(() -> {
                     Food food = foodRepository.findById(foodId)
                             .orElseThrow(() -> new RuntimeException("Food not found with id: " + foodId));
-                    InventoryItem item = new InventoryItem();
-                    item.setRestaurantId(restaurantId);
-                    item.setFood(food);
-                    item.setQuantity(0.0);
-                    item.setUnit("unit"); // Default or from food if available
-                    item.setLeadTime(3);   // Default restaurant-specific
-                    item.setAlertLevel(10.0);
-                    item.setReorderCount(50.0);
-                    item.setStatus("AVAILABLE");
-                    return inventoryItemRepository.save(item);
+                    InventoryItem newItem = new InventoryItem();
+                    newItem.setRestaurantId(restaurantId);
+                    newItem.setFood(food);
+                    newItem.setQuantity(0.0);
+                    newItem.setUnit("unit"); // Default or from food if available
+                    newItem.setLeadTime(3);   // Default restaurant-specific
+                    newItem.setAlertLevel(10.0);
+                    newItem.setReorderCount(50.0);
+                    newItem.setStatus("AVAILABLE");
+                    return inventoryItemRepository.save(newItem);
                 });
+        return mapToFoodDto(item);
     }
 
     @Transactional
-    public InventoryItem createFoodPurchaseOrder(UUID restaurantId, Integer foodId) {
+    public mls.sho.mplace.dto.FoodInventoryDto createFoodPurchaseOrder(UUID restaurantId, Integer foodId) {
         InventoryItem item = inventoryItemRepository.findByRestaurantIdAndFood_Id(restaurantId, foodId)
                 .orElseGet(() -> {
                     Food food = foodRepository.findById(foodId)
@@ -115,8 +117,26 @@ public class InventoryService {
         
         if ("AVAILABLE".equals(item.getStatus()) || "OUT_OF_STOCK".equals(item.getStatus())) {
             item.setStatus("ORDERED");
-            return inventoryItemRepository.save(item);
+            item = inventoryItemRepository.save(item);
         }
-        return item;
+        return mapToFoodDto(item);
+    }
+
+    @Transactional
+    public mls.sho.mplace.dto.FoodInventoryDto updateInventorySettings(UUID inventoryItemId, Integer leadTime, Double alertLevel, Double reorderCount) {
+        InventoryItem item = inventoryItemRepository.findById(inventoryItemId)
+                .orElseThrow(() -> new RuntimeException("Inventory item not found with id: " + inventoryItemId));
+
+        var requester = securityUtils.getCurrentRequester();
+        if (requester == null || !item.getRestaurantId().equals(requester.restaurantId())) {
+            throw new org.springframework.security.access.AccessDeniedException("Unauthorized to update this inventory item");
+        }
+
+        if (leadTime != null) item.setLeadTime(leadTime);
+        if (alertLevel != null) item.setAlertLevel(alertLevel);
+        if (reorderCount != null) item.setReorderCount(reorderCount);
+
+        InventoryItem saved = inventoryItemRepository.save(item);
+        return mapToFoodDto(saved);
     }
 }

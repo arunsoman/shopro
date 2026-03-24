@@ -7,8 +7,14 @@ import { NeonButton } from "@/components/ui/neon-button";
 import { OrbitalLoader } from "@/components/ui/orbital-loader";
 import { GlowingBorder } from "@/components/ui/neon-button";
 import { SocialLogins } from "@/components/ui/social-logins";
+import { QuickLogin, type QuickLoginUser } from "@/components/ui/quick-login";
 import { useNavigate } from "react-router-dom";
 import api from "@/api";
+
+const RESTAURANT_USERS: QuickLoginUser[] = [
+  { label: "Ahmed Safadi", email: "buyer@alsafadi.com", roleDescription: "Al Safadi Resto (V3)" },
+  { label: "Bistro Owner", email: "owner@bistro.internal", roleDescription: "Bistro Hub (V10)" },
+];
 
 /**
  * R-00 — Restaurant Login
@@ -23,27 +29,25 @@ export default function RestaurantLogin() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-    const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const performLogin = async (loginEmail: string, loginPassword: string) => {
     setIsLoading(true);
     setError("");
-    
-    // Clear any stale token before attempting new login
-    localStorage.removeItem("token");
-    
+    sessionStorage.removeItem("token");
     try {
-        console.log("Attempting login with:", { email, password });
-        const resp = await api.post("/auth/login", { email, password });
-        localStorage.setItem("token", resp.data.token);
-        console.log("Login successful, navigating to dashboard...");
+        const resp = await api.post("/auth/login", { email: loginEmail, password: loginPassword });
+        sessionStorage.setItem("token", resp.data.token);
+        sessionStorage.setItem("role", resp.data.role);
         navigate("/restaurant/dashboard");
     } catch (err: any) {
-        console.error("Login failed:", err);
         setError(err.response?.data?.message || "Authentication failed");
-        // Removed unsafe fallback for owner@bistro.internal
     } finally {
         setIsLoading(false);
     }
+  };
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await performLogin(email, password);
   };
 
   return (
@@ -106,6 +110,15 @@ export default function RestaurantLogin() {
             {error && <p className="text-2xs text-red-500 text-center font-medium italic mt-2">{error}</p>}
 
             <SocialLogins className="pt-2" />
+
+            <QuickLogin 
+              users={RESTAURANT_USERS}
+              onSelect={async (email) => {
+                setEmail(email);
+                setPassword("password");
+                await performLogin(email, "password");
+              }}
+            />
 
             <p className="text-center text-2xs text-slate-500">
               Secure access for Shopro Marketplace

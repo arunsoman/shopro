@@ -54,6 +54,22 @@ export default function StatementOfAccounts() {
     }
   });
 
+  const { data: stats } = useQuery({
+    queryKey: ["operator-finance-stats"],
+    queryFn: async () => {
+      const resp = await api.get("operator/finance/stats");
+      return resp.data;
+    }
+  });
+
+  const formatCurrency = (val: number | undefined) => {
+    if (val === undefined) return "₹0";
+    if (val >= 10000000) return `₹${(val / 10000000).toFixed(2)}Cr`;
+    if (val >= 100000) return `₹${(val / 100000).toFixed(2)}L`;
+    if (val >= 1000) return `₹${(val / 1000).toFixed(2)}K`;
+    return `₹${val.toFixed(2)}`;
+  };
+
   const filteredStatements = useMemo(() => {
     return statements.filter(soa => 
       soa.entityName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -109,13 +125,12 @@ export default function StatementOfAccounts() {
         </button>
       </header>
 
-      {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[
-            { label: "Total Platform Float", value: "₹4.2M", icon: DollarSign, color: "amber" },
-            { label: "Pending Payouts", value: "₹1.1M", icon: ArrowUpRight, color: "rose" },
-            { label: "Accounts Receivable", value: "₹890K", icon: ArrowDownLeft, color: "emerald" },
-            { label: "Settlement Accuracy", value: "99.98%", icon: ShieldCheck, color: "cyan" },
+            { label: "Total Platform Float", value: formatCurrency(stats?.platformFloat), icon: DollarSign, color: "amber" },
+            { label: "Pending Payouts", value: formatCurrency(stats?.pendingPayouts), icon: ArrowUpRight, color: "rose" },
+            { label: "Accounts Receivable", value: formatCurrency(stats?.accountsReceivable), icon: ArrowDownLeft, color: "emerald" },
+            { label: "Settlement Accuracy", value: stats?.settlementAccuracy || "100.00%", icon: ShieldCheck, color: "cyan" },
           ].map((stat, i) => (
             <div key={i} className="bg-(--sp-bg-2) p-6 rounded-[12px] border border-(--sp-border) shadow-sm relative overflow-hidden group">
                <div className="flex items-center justify-between mb-4">

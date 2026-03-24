@@ -20,8 +20,11 @@ public class RestaurantInventory extends BaseEntity {
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
-    @Column(precision = 19, scale = 4)
+    @Column(name = "current_stock", precision = 19, scale = 4)
     private BigDecimal currentQuantity;
+
+    @Column(nullable = false)
+    private String unit;
 
     @Column(precision = 19, scale = 4)
     private BigDecimal minimumThreshold;

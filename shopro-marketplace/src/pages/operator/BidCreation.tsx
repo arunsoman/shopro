@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Gavel, Users, Settings, Package, ChevronRight, Info, Plus, Trash2, RefreshCw, Database, Star, ShieldCheck } from "lucide-react";
+import { Search, ArrowLeft, Gavel, Users, Settings, Package, ChevronRight, Info, Plus, Trash2, RefreshCw, Database, Star, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -16,11 +16,10 @@ import { IconTooltip } from "@/components/shared/IconTooltip";
  * DNA: Stepper-based wizard, product tag cloud, supplier invitation list.
  */
 
-interface Product {
+interface FoodItem {
   id: string;
   name: string;
-  categoryName: string;
-  unit: string;
+  foodGroup: string;
 }
 
 interface SelectedItem {
@@ -44,17 +43,23 @@ export default function BidCreation() {
   const [description, setDescription] = useState("");
   const [deadline, setDeadline] = useState("");
   const [urgency, setUrgency] = useState("NORMAL");
+  const [operationMode, setOperationMode] = useState("MANUAL"); // AUTOMATIC, SEMI_AUTOMATIC, MANUAL
+  const [repeatFrequency, setRepeatFrequency] = useState("NONE"); // NONE, DAILY, WEEKLY, MONTHLY
+  const [searchTerm, setSearchTerm] = useState("");
 
-  const { data: products = [] } = useQuery<Product[]>({
-    queryKey: ["operator-products-minimal-bidding"],
+  const { data: foodList = [] } = useQuery<FoodItem[]>({
+    queryKey: ["operator-food-briefs-bidding"],
     queryFn: async () => {
-      const resp = await api.get("/operator/products");
-      return resp.data?.map((p: any) => ({
-        id: p?.id || "---",
-        name: p?.name || "Unknown Product",
-        categoryName: p?.categoryName || "General",
-        unit: p?.unit || "UNIT"
-      })) || [];
+      const resp = await api.get("/operator/catalog/foods/brief");
+      return resp.data || [];
+    }
+  });
+  
+  const { data: suppliers = [] } = useQuery<any[]>({
+    queryKey: ["operator-suppliers-bidding"],
+    queryFn: async () => {
+      const resp = await api.get("/operator/suppliers");
+      return resp.data || [];
     }
   });
 
@@ -66,12 +71,16 @@ export default function BidCreation() {
       if (resp?.data?.id) {
         navigate(`/operator/bids/${resp.data.id}`);
       }
+    },
+    onError: (error: any) => {
+      console.error("Bid Launch failed:", error);
+      alert("Failed to launch bid: " + (error.response?.data?.message || error.message));
     }
   });
 
-  const addItem = (product: Product) => {
-    if (selectedItems.find(item => item.id === product.id)) return;
-    setSelectedItems([...selectedItems, { id: product.id, name: product.name, qty: 10, unit: product.unit }]);
+  const addItem = (food: FoodItem) => {
+    if (selectedItems.find(item => item.id === food.id)) return;
+    setSelectedItems([...selectedItems, { id: food.id, name: food.name, qty: 10, unit: "UNIT" }]);
   };
 
   const removeItem = (id: string) => {
@@ -82,8 +91,10 @@ export default function BidCreation() {
       launchMutation.mutate({
           title: title || "New bid event node",
           description: description,
-          deadline: deadline ? new Date(deadline).toISOString() : new Date(Date.now() + 86400000 * 3).toISOString(),
+          deadline: deadline ? new Date(deadline).toISOString().slice(0, 19) : new Date(Date.now() + 86400000 * 3).toISOString().slice(0, 19),
           urgency: urgency,
+          operationMode: operationMode,
+          repeatFrequency: repeatFrequency,
           items: selectedItems.map(si => ({
               productName: si?.name,
               quantity: si?.qty,
@@ -195,27 +206,55 @@ export default function BidCreation() {
                      </motion.div>
                    ))}
                    
-                   <div className="relative group/add">
-                      <button className="w-full h-[104px] border border-dashed border-(--sp-border) rounded-md text-(--sp-text-3) hover:text-(--sp-cyan) hover:border-(--sp-cyan)/50 hover:bg-(--sp-bg-1) transition-all flex flex-col items-center justify-center gap-2 group/btn shadow-inner">
-                          <Plus size={24} className="group-hover/btn:scale-110 transition-transform" />
-                          <span className="text-[10px] font-bold uppercase tracking-wider opacity-60">Add merchandise</span>
-                      </button>
-                      
-                      <div className="absolute top-full left-0 right-0 mt-3 bg-(--sp-bg-2) rounded-md shadow-xl border border-(--sp-border) p-4 z-50 opacity-0 pointer-events-none group-hover/add:opacity-100 group-hover/add:pointer-events-auto transition-all scale-95 group-hover/add:scale-100 max-h-[300px] overflow-y-auto">
-                        {products?.length === 0 ? (
-                             <p className="p-8 text-center text-[12px] text-(--sp-text-3) opacity-60 font-medium">No products found.</p>
-                        ) : products?.filter(p => !selectedItems?.find(si => si?.id === p?.id))?.map(product => (
-                          <button 
-                            key={product?.id}
-                            onClick={() => addItem(product)}
-                            className="w-full text-left px-4 py-3 hover:bg-(--sp-cyan) hover:text-white rounded-md flex items-center justify-between group/p transition-all text-[13px] font-semibold text-(--sp-text-1) mb-1 uppercase tracking-tight"
-                          >
-                            <span>{product?.name}</span>
-                            <Plus size={14} className="opacity-40 group-hover/p:opacity-100" />
-                          </button>
-                        ))}
-                      </div>
-                   </div>
+                    <div className="relative group/add col-span-1 md:col-span-2 lg:col-span-3">
+                       <div className="flex items-center gap-4 bg-(--sp-bg-1) p-4 rounded-md border border-(--sp-border) shadow-inner mt-4">
+                          <Search size={18} className="text-(--sp-text-3)" />
+                          <input 
+                            type="text" 
+                            placeholder="Type to search universal food catalog..."
+                            className="flex-1 bg-transparent border-none outline-none text-[14px] text-(--sp-text-1) font-medium placeholder:text-(--sp-text-3)/40"
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            value={searchTerm}
+                          />
+                          {searchTerm && (
+                            <button onClick={() => setSearchTerm("")} className="text-[10px] font-bold text-rose-500 uppercase">Clear</button>
+                          )}
+                       </div>
+                       
+                       <AnimatePresence>
+                         {searchTerm && (
+                           <motion.div 
+                             initial={{ opacity: 0, y: 10 }}
+                             animate={{ opacity: 1, y: 0 }}
+                             exit={{ opacity: 0, y: 10 }}
+                             className="absolute top-full left-0 right-0 mt-3 bg-(--sp-bg-2) rounded-md shadow-2xl border border-(--sp-border) p-2 z-50 max-h-[300px] overflow-y-auto"
+                           >
+                             {foodList.filter(f => 
+                                f.name.toLowerCase().includes(searchTerm.toLowerCase()) && 
+                                !selectedItems.find(si => si.id === f.id)
+                             ).slice(0, 10).map(food => (
+                               <button 
+                                 key={food.id}
+                                 onClick={() => {
+                                   addItem(food);
+                                   setSearchTerm("");
+                                 }}
+                                 className="w-full text-left px-4 py-3 hover:bg-(--sp-cyan) hover:text-white rounded-md flex items-center justify-between group/p transition-all text-[13px] font-semibold text-(--sp-text-1) mb-1 uppercase tracking-tight"
+                               >
+                                 <div className="flex flex-col">
+                                   <span>{food.name}</span>
+                                   <span className="text-[10px] opacity-60 group-hover:text-white/70">{food.foodGroup}</span>
+                                 </div>
+                                 <Plus size={14} className="opacity-40 group-hover/p:opacity-100" />
+                               </button>
+                             ))}
+                             {foodList.filter(f => f.name.toLowerCase().includes(searchTerm.toLowerCase())).length === 0 && (
+                               <p className="p-8 text-center text-[12px] text-(--sp-text-3) opacity-60 font-medium">No results for "{searchTerm}"</p>
+                             )}
+                           </motion.div>
+                         )}
+                       </AnimatePresence>
+                    </div>
                 </div>
               </div>
 
@@ -283,20 +322,53 @@ export default function BidCreation() {
               </div>
 
               <div className="space-y-8">
-                 <h3 className="text-[11px] font-bold uppercase tracking-wider text-(--sp-text-3) opacity-60">Auto-award logic</h3>
+                 <h3 className="text-[11px] font-bold uppercase tracking-wider text-(--sp-text-3) opacity-60">Operational Mode Control</h3>
                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                    {[
-                     { label: "Lowest price", desc: "Cheapest absolute fulfillment", icon: Star },
-                     { label: "Equity balanced", desc: "4.8+ rating weighted hub", icon: ShieldCheck },
-                     { label: "Manual audit", desc: "Operator reviews all streams", icon: Users },
-                   ].map((logic) => (
-                     <div key={logic.label} className="p-8 rounded-md bg-(--sp-bg-1) border border-(--sp-border) hover:border-(--sp-cyan)/50 transition-all cursor-pointer group shadow-sm">
-                        <logic.icon className="w-8 h-8 text-(--sp-text-3) group-hover:text-(--sp-cyan) transition-all mb-6 opacity-40 group-hover:opacity-100" />
-                        <p className="text-[15px] font-bold text-(--sp-text-0) group-hover:text-(--sp-cyan) transition-colors uppercase tracking-tight">{logic.label}</p>
-                        <p className="text-[12px] text-(--sp-text-3) font-medium mt-3 leading-relaxed opacity-60">{logic.desc}</p>
+                     { id: "AUTOMATIC", label: "Automatic", desc: "Fully autonomous fulfillment signal propagation.", icon: RefreshCw },
+                     { id: "SEMI_AUTOMATIC", label: "Semi-Auto", desc: "Proposed award requires Operator handshake.", icon: ShieldCheck },
+                     { id: "MANUAL", label: "Manual", desc: "Full-control orchestration of all nodes.", icon: Users },
+                   ].map((mode) => (
+                     <div 
+                        key={mode.id} 
+                        onClick={() => setOperationMode(mode.id)}
+                        className={cn(
+                            "p-8 rounded-md bg-(--sp-bg-1) border transition-all cursor-pointer group shadow-sm",
+                            operationMode === mode.id ? "border-(--sp-cyan) ring-1 ring-(--sp-cyan)/30 bg-(--sp-bg-0)" : "border-(--sp-border) hover:border-(--sp-cyan)/50"
+                        )}
+                     >
+                        <mode.icon className={cn(
+                            "w-8 h-8 transition-all mb-6",
+                            operationMode === mode.id ? "text-(--sp-cyan)" : "text-(--sp-text-3) opacity-40 group-hover:opacity-100"
+                        )} />
+                        <p className={cn(
+                            "text-[15px] font-bold uppercase tracking-tight transition-colors",
+                            operationMode === mode.id ? "text-(--sp-cyan)" : "text-(--sp-text-0)"
+                        )}>{mode.label}</p>
+                        <p className="text-[12px] text-(--sp-text-3) font-medium mt-3 leading-relaxed opacity-60">{mode.desc}</p>
                      </div>
                    ))}
                  </div>
+              </div>
+
+              <div className="space-y-8">
+                <h3 className="text-[11px] font-bold uppercase tracking-wider text-(--sp-text-3) opacity-60">Automation Frequency</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                    <div className="p-8 rounded-md bg-(--sp-bg-1) border border-(--sp-border) space-y-4 shadow-inner">
+                        <label className="text-[10px] font-bold text-(--sp-text-3) uppercase tracking-wider opacity-60">Recurrence Interval</label>
+                        <select 
+                            value={repeatFrequency}
+                            onChange={(e) => setRepeatFrequency(e.target.value)}
+                            className="w-full h-12 px-6 bg-(--sp-bg-2) border border-(--sp-border) rounded-md outline-none text-[14px] font-semibold text-(--sp-text-0) appearance-none cursor-pointer focus:border-(--sp-cyan)/50 transition-all shadow-sm"
+                        >
+                            <option value="NONE">Manual execution only</option>
+                            <option value="DAILY">Daily cycle</option>
+                            <option value="WEEKLY">Weekly handshake</option>
+                            <option value="MONTHLY">Monthly contract refresh</option>
+                        </select>
+                        <p className="text-[11px] text-(--sp-text-3) opacity-60">The next event will be automatically scheduled based on this interval.</p>
+                    </div>
+                </div>
               </div>
             </motion.div>
           )}
@@ -314,25 +386,23 @@ export default function BidCreation() {
                   Candidate handshake registry
               </h2>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {[
-                  { name: "Golden harvest hub", rating: 4.8, category: "Produce", location: "Bangalore Node" },
-                  { name: "Fresh express delta", rating: 4.2, category: "Produce", location: "Mysore Point" },
-                  { name: "Nature's basket B2B", rating: 4.9, category: "Premium", location: "Bangalore Core" },
-                  { name: "Organic root alpha", rating: 4.5, category: "Organic", location: "Coimbatore Site" },
-                ].map((s) => (
-                  <div key={s.name} className="p-6 bg-(--sp-bg-1) rounded-md border border-(--sp-border) flex items-center justify-between shadow-sm hover:border-(--sp-cyan)/30 transition-all group">
+                {suppliers.slice(0, 10).map((s) => (
+                  <div key={s.id} className="p-6 bg-(--sp-bg-1) rounded-md border border-(--sp-border) flex items-center justify-between shadow-sm hover:border-(--sp-cyan)/30 transition-all group">
                     <div className="flex items-center gap-4">
                        <div className="w-12 h-12 rounded-md bg-(--sp-cyan)/10 text-(--sp-cyan) border border-(--sp-cyan)/20 flex items-center justify-center font-bold text-[18px] shadow-sm uppercase">
                          {s.name[0]}
                        </div>
                        <div className="space-y-1">
                          <p className="text-[14px] font-bold text-(--sp-text-0) uppercase tracking-tight">{s.name}</p>
-                         <p className="text-[12px] text-(--sp-text-3) font-semibold opacity-60 uppercase tracking-wider">{s.rating} ★ • {s.location}</p>
+                         <p className="text-[12px] text-(--sp-text-3) font-semibold opacity-60 uppercase tracking-wider">{s.trustScore}% Trust • {s.category}</p>
                        </div>
                     </div>
                     <input type="checkbox" defaultChecked className="w-5 h-5 accent-(--sp-cyan) rounded cursor-pointer border-(--sp-border) shadow-inner" />
                   </div>
                 ))}
+                {suppliers.length === 0 && (
+                  <p className="col-span-full py-20 text-center text-(--sp-text-3) opacity-60 font-medium">No active supplier nodes detected.</p>
+                )}
               </div>
               
               <button className="w-full py-10 border border-dashed border-(--sp-border) rounded-md text-(--sp-text-3) text-[10px] font-bold uppercase tracking-wider hover:text-(--sp-cyan) hover:border-(--sp-cyan)/50 hover:bg-(--sp-bg-1) transition-all shadow-inner">

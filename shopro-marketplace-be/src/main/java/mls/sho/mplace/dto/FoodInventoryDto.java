@@ -9,6 +9,7 @@ public record FoodInventoryDto(
     String foodName,
     String foodGroup,
     String foodSubgroup,
+    String superGroup,
     Double quantity,
     String unit,
     Integer leadTime,

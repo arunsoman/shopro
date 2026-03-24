@@ -14,33 +14,36 @@ import { IconTooltip } from "@/components/shared/IconTooltip";
  * Purpose: Master record of all marketplace merchandise and SKU nodes.
  */
 
-interface ProductMasterItem {
+interface FoodMasterItem {
   id: string;
   name: string;
-  sku: string;
-  category: string;
-  supplierCount: number;
-  price: number;
-  status: string;
-  stock: number;
-  imageUrl?: string;
+  scientificName: string;
+  foodGroup: string;
+  foodSubgroup: string;
+  description: string;
 }
 
 export default function ProductMaster() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [page, setPage] = useState(0);
+  const pageSize = 15;
 
-  const { data: products = [], isLoading } = useQuery<ProductMasterItem[]>({
-    queryKey: ["operator-product-master"],
+  const { data, isLoading } = useQuery({
+    queryKey: ["operator-food-master", page, searchTerm],
     queryFn: async () => {
-      const resp = await api.get("operator/catalog/products");
+      const resp = await api.get(`operator/catalog/foods?page=${page}&size=${pageSize}${searchTerm ? `&search=${searchTerm}` : ""}`);
       return resp.data;
     }
   });
 
-  const filteredProducts = products.filter(p => 
-    p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    p.sku.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const foods = (data?.content as FoodMasterItem[]) || [];
+  const totalElements = data?.totalElements || 0;
+  const totalPages = data?.totalPages || 0;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const currentPage = data?.currentPage || 0;
+
+  // Search is now server-side, but we keep this for map-safety
+  const filteredFoods = foods;
 
   return (
     <SecureOverlay>
@@ -48,11 +51,11 @@ export default function ProductMaster() {
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-(--sp-border) mt-4">
         <div className="space-y-1">
           <h1 className="text-[24px] font-medium tracking-tight text-(--sp-text-0)">
-             Product Master Registry
+             Master Material Registry
           </h1>
           <p className="text-[13px] text-(--sp-text-2) flex items-center gap-2">
              <Box className="w-4 h-4 text-emerald-500" />
-             Master record of all marketplace merchandise and SKU nodes.
+             Master record of all food materials and master SKU nodes.
           </p>
         </div>
         
@@ -69,9 +72,9 @@ export default function ProductMaster() {
       {/* Catalog Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
          {[
-           { label: "Active SKUs", val: String(products.length), change: "+124 Flux", icon: Package, color: "emerald" },
-           { label: "Suppliers Hooked", val: String(products.reduce((acc, p) => acc + (p.supplierCount || 0), 0)), change: "Global Reach", icon: Truck, color: "blue" },
-           { label: "Out of Stock", val: String(products.filter(p => p.stock === 0).length), change: "Action Required", icon: AlertCircle, color: "rose" },
+           { label: "Active Nodes", val: String(totalElements), change: "+12 Flux", icon: Package, color: "emerald" },
+           { label: "Taxonomy Groups", val: String(new Set(foods.map((f: FoodMasterItem) => f.foodGroup)).size), change: "Global Hierarchy", icon: Layers, color: "blue" },
+           { label: "Incomplete Docs", val: String(foods.filter((f: FoodMasterItem) => !f.description).length), change: "Action Required", icon: AlertCircle, color: "rose" },
            { label: "Indexing Health", val: "100%", change: "Sync Valid", icon: CheckCircle2, color: "emerald" },
          ].map((stat, i) => (
            <div key={i} className="bg-(--sp-bg-2) border border-(--sp-border) p-4 rounded-md flex items-center justify-between shadow-sm hover:border-emerald-500/20 hover:bg-(--sp-bg-3) transition-all">
@@ -95,13 +98,13 @@ export default function ProductMaster() {
 
       {/* Toolbar */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-         <div className="relative group w-full max-w-lg">
+         <div className="relative group w-full max-w-2xl">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-(--sp-text-3) group-focus-within:text-emerald-500 transition-all font-bold" />
             <input 
                type="text" 
                placeholder="Search SKU or label..." 
                value={searchTerm}
-               onChange={(e) => setSearchTerm(e.target.value)}
+               onChange={(e) => { setSearchTerm(e.target.value); setPage(0); }}
                className="w-full pl-9 pr-4 h-9 bg-(--sp-bg-2) border border-(--sp-border) rounded-sm text-[13px] text-(--sp-text-0) placeholder:text-(--sp-text-3) focus:border-emerald-500/50 transition-all shadow-sm outline-none" 
             />
          </div>
@@ -127,71 +130,59 @@ export default function ProductMaster() {
           <table className="w-full text-left">
              <thead>
                 <tr className="bg-(--sp-bg-1)/30 border-b border-(--sp-border)">
-                   <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-[0.08em] text-(--sp-text-3)">Merchandise</th>
-                   <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-[0.08em] text-(--sp-text-3)">Taxonomy</th>
-                   <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-[0.08em] text-(--sp-text-3)">Connections</th>
-                   <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-[0.08em] text-(--sp-text-3)">Stock</th>
-                   <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-[0.08em] text-(--sp-text-3)">Base Pricing</th>
+                   <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-[0.08em] text-(--sp-text-3)">Material</th>
+                   <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-[0.08em] text-(--sp-text-3)">Group</th>
+                   <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-[0.08em] text-(--sp-text-3)">Sub Group Type</th>
+                   <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-[0.08em] text-(--sp-text-3)">Validation</th>
                    <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-[0.08em] text-(--sp-text-3) text-right">Integrity</th>
                    <th className="px-6 py-3"></th>
                 </tr>
              </thead>
              <tbody className="divide-y divide-(--sp-border)">
-                {filteredProducts.map(prod => (
-                  <tr key={prod.id} className="group hover:bg-(--sp-bg-3) transition-all cursor-pointer">
+                {filteredFoods.map((food: FoodMasterItem) => (
+                  <tr key={food.id} className="group hover:bg-(--sp-bg-3) transition-all cursor-pointer">
                      <td className="px-6 py-3">
                         <div className="flex items-center gap-4">
                            <div className="relative">
                               <div className="w-10 h-10 rounded-sm bg-emerald-500 text-white flex items-center justify-center font-bold text-xl shadow-sm overflow-hidden group-hover:scale-105 transition-all">
-                                  {prod.imageUrl ? <img src={prod.imageUrl} className="w-full h-full object-cover" /> : prod.name.substring(0, 1)}
+                                  {food.name.substring(0, 1)}
                               </div>
                            </div>
                            <div className="flex flex-col">
-                              <div className="text-[14px] font-medium text-(--sp-text-0)">{prod.name}</div>
-                              <div className="text-[10px] font-medium text-(--sp-text-3) uppercase tracking-widest font-mono">{prod.sku}</div>
+                              <div className="text-[14px] font-medium text-(--sp-text-0)">{food.name}</div>
+                              <div className="text-[10px] font-medium text-(--sp-text-3) uppercase tracking-widest font-mono">{food.scientificName || "NO-GENUS"}</div>
                            </div>
                         </div>
                      </td>
                      <td className="px-6 py-3">
                         <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 bg-emerald-500/5 rounded-[4px] border border-emerald-500/10 flex items-center gap-1.5 w-fit text-emerald-500">
                            <Tag size={12} />
-                           {prod.category}
+                           {food.foodGroup}
                         </span>
                      </td>
                      <td className="px-6 py-3">
                         <div className="flex items-center gap-3">
-                           <div className="flex -space-x-2">
-                              {[1,2,3].map((i) => (
-                                <div key={i} className="w-6 h-6 rounded-full bg-(--sp-bg-3) border border-(--sp-border) flex items-center justify-center text-[7px] font-bold text-(--sp-text-3) uppercase shadow-sm">
-                                   NODE
-                                </div>
-                              ))}
-                           </div>
-                           <span className="text-[10px] font-bold text-emerald-500 tracking-wider">+{prod.supplierCount || 12} HUBS</span>
+                           <span className="text-[10px] font-bold text-emerald-500 tracking-wider uppercase">{food.foodSubgroup || "Root Node"}</span>
                         </div>
                      </td>
                      <td className="px-6 py-3">
-                        <div className="text-[14px] font-medium text-(--sp-text-0) tabular-nums">
-                           {prod.stock > 0 ? prod.stock.toLocaleString() : <span className="text-(--sp-red) opacity-60">DEPLETED</span>}
-                           <span className="text-[10px] text-(--sp-text-3) ml-1 uppercase tracking-widest font-bold">QTY</span>
+                        <div className="text-[12px] font-medium text-(--sp-text-2) max-w-[200px] truncate">
+                           {food.description || <span className="text-(--sp-red) opacity-60 italic">NO-METADATA</span>}
                         </div>
-                     </td>
-                     <td className="px-6 py-3">
-                        <div className="text-[14px] font-bold text-(--sp-text-0) tabular-nums tracking-tight">₹{prod.price.toFixed(2)}</div>
                      </td>
                      <td className="px-6 py-3 text-right">
                         <div className={cn(
                           "inline-flex items-center px-2 py-0.5 rounded-[4px] text-[10px] font-bold uppercase tracking-[0.06em] border shadow-sm leading-none",
-                          prod.status === 'in_stock' || prod.status === 'Active' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-rose-500/10 text-rose-500 border-rose-500/20'
+                          'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
                         )}>
-                           {prod.status}
+                           Synchronized
                         </div>
                      </td>
                      <td className="px-6 py-3 text-right">
                         <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
                            <button className="w-8 h-8 rounded-sm bg-(--sp-bg-3) text-(--sp-text-3) hover:text-emerald-500 transition-all flex items-center justify-center shadow-sm border border-(--sp-border)"><IconTooltip label="Preview Node"><Eye size={14} /></IconTooltip></button>
                            <button className="h-8 px-4 rounded-sm bg-emerald-500 text-white text-[11px] font-bold uppercase tracking-[0.04em] shadow-sm hover:opacity-90 active:scale-95 transition-all">
-                               Manage SKU
+                                Manage Node
                            </button>
                         </div>
                      </td>
@@ -204,11 +195,27 @@ export default function ProductMaster() {
 
           {!isLoading && (
              <div className="px-6 py-3 flex flex-col md:flex-row md:items-center justify-between border-t border-(--sp-border) bg-(--sp-bg-1)/30">
-                <div className="text-[11px] font-bold uppercase text-(--sp-text-3) tracking-widest">Propagating {filteredProducts.length} Metadata Nodes</div>
+                <div className="text-[11px] font-bold uppercase text-(--sp-text-3) tracking-widest">
+                   Displaying {foods.length} of {totalElements} Metadata Nodes
+                </div>
                 <div className="flex items-center gap-2">
-                   <button className="w-8 h-8 rounded-sm border border-(--sp-border) text-(--sp-text-3) hover:text-emerald-500 transition-all flex items-center justify-center bg-(--sp-bg-2) shadow-sm"><ChevronLeft size={16} /></button>
-                   <button className="h-8 px-4 rounded-sm bg-emerald-500 text-white text-[12px] font-bold shadow-sm">1</button>
-                   <button className="w-8 h-8 rounded-sm border border-(--sp-border) text-(--sp-text-3) hover:text-emerald-500 transition-all flex items-center justify-center bg-(--sp-bg-2) shadow-sm"><ChevronRight size={16} /></button>
+                   <button 
+                     onClick={() => setPage(Math.max(0, page - 1))}
+                     disabled={page === 0}
+                     className="w-8 h-8 rounded-sm border border-(--sp-border) text-(--sp-text-3) hover:text-emerald-500 disabled:opacity-30 disabled:hover:text-(--sp-text-3) transition-all flex items-center justify-center bg-(--sp-bg-2) shadow-sm"
+                   >
+                     <ChevronLeft size={16} />
+                   </button>
+                   <div className="h-8 px-4 rounded-sm bg-emerald-500 text-white text-[12px] font-bold shadow-sm flex items-center justify-center">
+                     {page + 1} / {totalPages || 1}
+                   </div>
+                   <button 
+                     onClick={() => setPage(Math.min(totalPages - 1, page + 1))}
+                     disabled={page >= totalPages - 1}
+                     className="w-8 h-8 rounded-sm border border-(--sp-border) text-(--sp-text-3) hover:text-emerald-500 disabled:opacity-30 disabled:hover:text-(--sp-text-3) transition-all flex items-center justify-center bg-(--sp-bg-2) shadow-sm"
+                   >
+                     <ChevronRight size={16} />
+                   </button>
                 </div>
              </div>
           )}

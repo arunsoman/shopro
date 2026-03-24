@@ -1,14 +1,14 @@
-CREATE TABLE IF NOT EXISTS price_point (
-    id BIGSERIAL PRIMARY KEY,
-    food_id INTEGER NOT NULL REFERENCES food(id),
-    price DECIMAL(19, 4) NOT NULL,
-    effective_from TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
+-- CREATE TABLE IF NOT EXISTS price_point (
+--     id BIGSERIAL PRIMARY KEY,
+--     food_id INTEGER NOT NULL REFERENCES food(id),
+--     price DECIMAL(19, 4) NOT NULL,
+--     effective_from TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+-- );
 
--- Seed some initial prices for the catalog
-INSERT INTO price_point (food_id, price, effective_from) 
-VALUES 
-(1, 120.50, NOW()), -- Whole Milk
-(2, 45.00, NOW()),  -- Eggs
-(3, 85.75, NOW()),  -- Flour
-(4, 15.00, NOW());  -- Kiwi (matching the subagent's test)
+-- -- Seed some initial prices for the catalog
+-- INSERT INTO price_point (food_id, price, effective_from) 
+-- VALUES 
+-- (1, 120.50, NOW()), -- Whole Milk
+-- (2, 45.00, NOW()),  -- Eggs
+-- (3, 85.75, NOW()),  -- Flour
+-- (4, 15.00, NOW());  -- Kiwi (matching the subagent's test)

@@ -6,9 +6,19 @@ import { RestaurantPasswordField } from "@/components/ui/restaurant-password-fie
 import { NeonButton, GlowingBorder } from "@/components/ui/neon-button";
 import { OrbitalLoader } from "@/components/ui/orbital-loader";
 import { SocialLogins } from "@/components/ui/social-logins";
+import { QuickLogin, type QuickLoginUser } from "@/components/ui/quick-login";
 import { ShoproInput } from "@/components/ui/shopro-input";
 import { useNavigate } from "react-router-dom";
 import api from "@/api";
+
+const SUPPLIER_USERS: QuickLoginUser[] = [
+  { label: "Green Harvest", email: "sales@greenharvest.com", roleDescription: "Fresh Produce Vendor" },
+  { label: "Ocean's Best", email: "info@oceansbest.com", roleDescription: "Seafood Specialist" },
+  { label: "Global Coffee", email: "sales@globalcoffee.com", roleDescription: "Coffee Importer" },
+  { label: "Fresh Dairy", email: "logistics@freshdairy.com", roleDescription: "Dairy Logistics" },
+  { label: "Prime Meat", email: "orders@primemeat.com", roleDescription: "Meat Distributor" },
+  { label: "Baker's Secret", email: "baker@bakerssecret.com", roleDescription: "Grain & Bakery" },
+];
 
 /**
  * S-01 — Supplier Login
@@ -22,27 +32,25 @@ export default function SupplierLogin() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-    const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const performLogin = async (loginEmail: string, loginPassword: string) => {
     setIsLoading(true);
     setError("");
-    
-    // Clear any stale token before attempting new login
-    localStorage.removeItem("token");
-    
+    sessionStorage.removeItem("token");
     try {
-        console.log("Supplier attempting login with:", { email, password });
-        const resp = await api.post("/auth/login", { email, password });
-        localStorage.setItem("token", resp.data.token);
-        console.log("Login successful, navigating to supplier dashboard...");
+        const resp = await api.post("/auth/login", { email: loginEmail, password: loginPassword });
+        sessionStorage.setItem("token", resp.data.token);
+        sessionStorage.setItem("role", resp.data.role);
         navigate("/supplier/dashboard");
     } catch (err: any) {
-        console.error("Supplier login failed:", err);
         setError(err.response?.data?.message || "Authentication failed");
-        // Removed unsafe fallback
     } finally {
         setIsLoading(false);
     }
+  };
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await performLogin(email, password);
   };
 
   return (
@@ -90,6 +98,16 @@ export default function SupplierLogin() {
             {error && <p className="text-2xs text-red-500 text-center font-medium italic mt-2">{error}</p>}
 
             <SocialLogins className="pt-2" />
+
+            <QuickLogin 
+              users={SUPPLIER_USERS}
+              onSelect={async (email) => {
+                const pass = "password";
+                setEmail(email);
+                setPassword(pass);
+                await performLogin(email, pass);
+              }}
+            />
 
             <div className="pt-4 border-t border-border flex flex-col items-center gap-3">
               <button type="button" className="text-2xs text-secondary hover:text-violet-500 transition-colors">

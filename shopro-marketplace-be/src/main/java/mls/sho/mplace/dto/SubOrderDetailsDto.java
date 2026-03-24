@@ -10,6 +10,7 @@ public record SubOrderDetailsDto(
     String parentPoReference,
     String supplierName,
     BigDecimal totalAmount,
+    BigDecimal markupAmount,
     String status,
     LocalDateTime createdAt,
     String deliveryWindow

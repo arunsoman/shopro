@@ -37,6 +37,7 @@ interface OrderSummary {
   items: number;
   total: number;
   status: string;
+  displayStatus: string;
   tracking: string;
 }
 
@@ -106,7 +107,7 @@ export default function OrderHistory() {
       </header>
 
       {/* Active Tracking Status DNA */}
-      <div className="relative group overflow-hidden rounded-3xl border-4 border-brand-primary shadow-2xl shadow-inner">
+      <div className="relative group overflow-hidden rounded-3xl border-4 border-brand-primary shadow-2xl">
         <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/20 rounded-full -translate-y-1/2 translate-x-1/2 blur-[120px] pointer-events-none" />
         <div className="relative z-10 bg-slate-950 dark:bg-slate-900/40 backdrop-blur-3xl p-8 flex flex-col lg:flex-row items-center justify-between gap-8 text-white">
            <div className="flex items-center gap-8">
@@ -169,7 +170,7 @@ export default function OrderHistory() {
                             <td className="p-4">
                                 <div className="space-y-1">
                                     <div className={cn("inline-flex px-3 py-0.5 rounded-lg border font-bold text-[9px] tracking-wide uppercase shadow-sm", status.color)}>
-                                        {status.label}
+                                        {order.displayStatus || status.label}
                                     </div>
                                     <p className="text-[9px] font-bold text-slate-400 flex items-center gap-2">
                                         {order.tracking === "DELIVERED" ? <CheckCircle2 size={10} className="text-brand-success" /> : <RefreshCw size={10} className="text-brand-primary animate-spin" />}

@@ -28,6 +28,14 @@ export default function SupplierManagement() {
   const [filter, setFilter] = useState("all");
   const queryClient = useQueryClient();
 
+  const { data: superGroups = [] } = useQuery<string[]>({
+    queryKey: ["super-groups"],
+    queryFn: async () => {
+      const resp = await api.get("/operator/catalog/super-groups");
+      return resp.data;
+    }
+  });
+
   const { data: suppliers = [], isLoading } = useQuery<Supplier[]>({
     queryKey: ["operator-suppliers-management"],
     queryFn: async () => {
@@ -35,6 +43,8 @@ export default function SupplierManagement() {
       return resp.data;
     }
   });
+
+  const categories = ["All", ...superGroups];
 
   const filteredSuppliers = suppliers.filter(sup => {
       if (filter === 'all') return true;
@@ -95,8 +105,8 @@ export default function SupplierManagement() {
 
       {/* Toolbar */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 px-1">
-         <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
-            {["All", "Fruits & Veggies", "Dairy", "Meat", "Grains", "Seafood"].map(t => (
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
+            {categories.map(t => (
               <button
                 key={t}
                 onClick={() => setFilter(t)}
@@ -110,7 +120,7 @@ export default function SupplierManagement() {
                  {t}
               </button>
             ))}
-         </div>
+          </div>
          <div className="relative group w-full md:max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-(--sp-text-2) group-focus-within:text-(--sp-cyan) transition-colors" />
             <input

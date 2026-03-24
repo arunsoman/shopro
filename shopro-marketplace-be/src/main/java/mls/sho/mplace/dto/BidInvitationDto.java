@@ -12,5 +12,8 @@ public record BidInvitationDto(
     LocalDateTime deadline,
     String status,
     String urgency,
+    String operationMode,
+    String repeatFrequency,
+    LocalDateTime nextRunDate,
     List<BidItemDto> items
 ) {}

@@ -12,6 +12,7 @@ public record PurchaseOrderDto(
     String restaurantName,
     BigDecimal totalAmount,
     String status,
+    String displayStatus,
     LocalDate deliveryDate,
     String deliveryAddress,
     String specialInstructions,
@@ -20,9 +21,11 @@ public record PurchaseOrderDto(
     String approvalStatus,
     String source,
     LocalDateTime raisedAt,
-    Integer itemCount,
+    int itemCount,
     List<SubOrderDto> subOrders,
-    List<OrderItemDto> items
+    List<OrderItemDto> items,
+    List<POActivityDto> activities,
+    int fulfillmentScore
 ) {
     public record OrderItemCreateRequest(
         String itemId,

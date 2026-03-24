@@ -1,7 +1,7 @@
 package mls.sho.mplace.controller;
 
 import lombok.RequiredArgsConstructor;
-import mls.sho.mplace.entity.MarketplaceSupplier;
+import mls.sho.mplace.config.MarketplaceUser;
 import mls.sho.mplace.service.BidService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -24,7 +24,7 @@ public class SupplierBidController {
     public record BidHistoryDTO(String id, String title, double quotedAmount, String status, String date) {}
 
     @GetMapping("/invitations")
-    public List<BidInvitationDTO> getInvitations(@AuthenticationPrincipal MarketplaceSupplier supplier) {
+    public List<BidInvitationDTO> getInvitations(@AuthenticationPrincipal MarketplaceUser user) {
         return bidService.getInvitations().stream()
                 .map(bi -> new BidInvitationDTO(
                         bi.getId().toString(),
@@ -36,9 +36,14 @@ public class SupplierBidController {
                 )).toList();
     }
 
+    @GetMapping("/all")
+    public List<BidInvitationDTO> getAllBids(@AuthenticationPrincipal MarketplaceUser user) {
+        return getInvitations(user);
+    }
+
     @GetMapping("/history")
-    public List<BidHistoryDTO> getHistory(@AuthenticationPrincipal MarketplaceSupplier supplier) {
-        return bidService.getQuotesForSupplier(supplier).stream()
+    public List<BidHistoryDTO> getHistory(@AuthenticationPrincipal MarketplaceUser user) {
+        return bidService.getQuotesForSupplier(user.getSupplierId()).stream()
                 .map(q -> new BidHistoryDTO(
                         q.getId().toString(),
                         q.getBidInvitation().getTitle(),

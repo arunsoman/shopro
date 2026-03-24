@@ -25,8 +25,7 @@ public class Supplier extends BaseEntity {
     @Column(name = "verification_status")
     private VerificationStatus verificationStatus;
 
-    @Enumerated(EnumType.STRING)
-    private Category category;
+    private String category;
 
     @Column(name = "organization_id")
     private String organizationId;
@@ -48,23 +47,6 @@ public class Supplier extends BaseEntity {
 
     private Double rating = 0.0;
 
-    @Column(name = "performance_metrics", columnDefinition = "JSONB")
-    private String performanceMetrics;
-
-    public enum Category {
-        PRODUCE,
-        DAIRY,
-        MEAT,
-        SEAFOOD,
-        GRAINS,
-        CEREALS,
-        SPICES,
-        BEVERAGES,
-        PACKAGING,
-        EQUIPMENT,
-        OTHERS
-    }
-
     @Column(precision = 19, scale = 4)
     private BigDecimal volume = BigDecimal.ZERO;
 
@@ -76,6 +58,10 @@ public class Supplier extends BaseEntity {
 
     @Column(name = "image_url")
     private String imageUrl;
+
+    @Column(name = "country_iso_code", length = 2)
+    private String countryIsoCode;
+
 
     public enum VerificationStatus {
         PENDING, VERIFIED, REJECTED, SUSPENDED

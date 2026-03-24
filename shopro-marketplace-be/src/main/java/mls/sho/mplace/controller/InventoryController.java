@@ -22,14 +22,14 @@ public class InventoryController {
     }
 
     @PostMapping("/inventory")
-    public InventoryItem addToInventory(
+    public FoodInventoryDto addToInventory(
             @PathVariable("id") UUID restaurantId,
             @RequestBody InventoryRequest request) {
         return inventoryService.addToFoodInventory(restaurantId, request.foodId());
     }
 
     @PostMapping("/purchase-orders")
-    public InventoryItem createPurchaseOrder(
+    public FoodInventoryDto createPurchaseOrder(
             @PathVariable("id") UUID restaurantId,
             @RequestBody InventoryRequest request) {
         return inventoryService.createFoodPurchaseOrder(restaurantId, request.foodId());

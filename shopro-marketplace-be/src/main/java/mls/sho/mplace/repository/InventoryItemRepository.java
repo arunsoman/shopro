@@ -14,4 +14,7 @@ public interface InventoryItemRepository extends JpaRepository<InventoryItem, UU
     List<InventoryItem> findByRestaurantId(UUID restaurantId);
     
     Optional<InventoryItem> findByRestaurantIdAndFood_Id(UUID restaurantId, Integer foodId);
+
+    @org.springframework.data.jpa.repository.Query("SELECT i FROM InventoryItem i WHERE i.restaurantId = :resId")
+    List<InventoryItem> findByRestaurantIdWithActivePricing(@org.springframework.data.repository.query.Param("resId") java.util.UUID resId);
 }

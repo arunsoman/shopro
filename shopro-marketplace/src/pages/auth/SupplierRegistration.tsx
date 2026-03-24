@@ -147,7 +147,7 @@ function Wizard({ steps, currentStep, onStepChange, onComplete }: {
 export default function SupplierRegistration() {
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState(() => {
-    const saved = localStorage.getItem('supplier_onboarding_draft');
+    const saved = sessionStorage.getItem('supplier_onboarding_draft');
     return saved ? JSON.parse(saved) : {
       businessName: '',
       tradeName: '',
@@ -167,7 +167,7 @@ export default function SupplierRegistration() {
   });
 
   useEffect(() => {
-    localStorage.setItem('supplier_onboarding_draft', JSON.stringify(formData));
+    sessionStorage.setItem('supplier_onboarding_draft', JSON.stringify(formData));
   }, [formData]);
 
   const updateField = (field: string, value: any) => {

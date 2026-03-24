@@ -33,7 +33,7 @@ public class OperatorSupplierController {
         return new SupplierManagementDto(
                 s.getId(),
                 s.getName(),
-                s.getCategory() != null ? s.getCategory().name() : "OTHERS",
+                s.getCategory() != null ? s.getCategory() : "OTHERS",
                 s.getVolume(),
                 s.getVerificationStatus().name(),
                 s.getTrustScore(),

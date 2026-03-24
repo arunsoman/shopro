@@ -33,6 +33,7 @@ import POSplit from './pages/operator/POSplit';
 import SubPOManagement from './pages/operator/SubPOManagement';
 import BidCreation from './pages/operator/BidCreation';
 import BidEvaluation from './pages/operator/BidEvaluation';
+import BiddingManagement from './pages/operator/BiddingManagement';
 import AutoPOAdmin from './pages/operator/AutoPOAdmin';
 import RestaurantManagement from './pages/operator/RestaurantManagement';
 import SupplierVetting from './pages/operator/SupplierVetting';
@@ -41,6 +42,7 @@ import SupplierDetail from './pages/operator/SupplierDetail';
 import CategoryManagement from './pages/operator/CategoryManagement';
 import ProductMaster from './pages/operator/ProductMaster';
 import PricingRules from './pages/operator/PricingRules';
+import PricingRefresh from './pages/operator/PricingRefresh';
 import DiscountManagement from './pages/operator/DiscountManagement';
 import OrderOperations from './pages/operator/OrderOperations';
 import DisputeCenter from './pages/operator/DisputeCenter';
@@ -65,15 +67,19 @@ import SourcingWizard from './pages/operator/SourcingWizard';
 import DemandForecasting from './pages/operator/DemandForecasting';
 import MarginOptimization from './pages/operator/MarginOptimization';
 import POOutbox from './pages/operator/POOutbox';
+import FinancialReports from './pages/operator/FinancialReports';
 import NotificationHub from './pages/operator/NotificationHub';
+import PriceComparison from './pages/operator/PriceComparison';
+import OrderAudit from './pages/operator/OrderAudit';
+import Traceability from './pages/operator/Traceability';
+
 import SupplierDashboard from './pages/supplier/Dashboard';
-import SupplierCatalog from './pages/supplier/Catalog';
-import BidInvitations from './pages/supplier/BidInvitations';
-import BidHistory from './pages/supplier/BidHistory';
 import LeadResponse from './pages/supplier/LeadResponse';
 import OrderFulfillment from './pages/supplier/OrderFulfillment';
+import InventoryManagement from './pages/supplier/InventoryManagement';
+import BidsAndPOs from './pages/supplier/BidsAndPOs';
 import Logistics from './pages/supplier/Logistics';
-import Finance from './pages/supplier/Finance';
+import FinanceHub from './pages/supplier/FinanceHub';
 import SupplierKYC from './pages/supplier/KYC';
 import SupplierSettings from './pages/supplier/Settings';
 import SupplierProfile from './pages/supplier/Profile';
@@ -124,6 +130,8 @@ function App() {
               <Route path="po/:poId" element={<POReview />} />
               <Route path="po/:poId/split" element={<POSplit />} />
               <Route path="po/:poId/sub-pos" element={<SubPOManagement />} />
+              <Route path="po/:poId/audit" element={<OrderAudit />} />
+              <Route path="bids" element={<BiddingManagement />} />
               <Route path="bids/new" element={<BidCreation />} />
               <Route path="bids/:eventId" element={<BidEvaluation />} />
               <Route path="auto-po" element={<AutoPOAdmin />} />
@@ -134,8 +142,10 @@ function App() {
               <Route path="categories" element={<CategoryManagement />} />
               <Route path="products" element={<ProductMaster />} />
               <Route path="pricing-rules" element={<PricingRules />} />
+              <Route path="pricing-refresh" element={<PricingRefresh />} />
               <Route path="discounts" element={<DiscountManagement />} />
               <Route path="orders" element={<OrderOperations />} />
+              <Route path="orders/traceability" element={<Traceability />} />
               <Route path="disputes" element={<DisputeCenter />} />
               <Route path="settlement-logs" element={<SettlementLogs />} />
               <Route path="payouts" element={<PayoutApproval />} />
@@ -155,9 +165,12 @@ function App() {
               <Route path="reconciliation" element={<PaymentReconciliation />} />
               <Route path="credit-notes" element={<CreditNoteIssue />} />
               <Route path="tax" element={<TaxCompliance />} />
+              <Route path="sourcing/comparison" element={<PriceComparison />} />
               <Route path="sourcing-wizard" element={<SourcingWizard />} />
               <Route path="demand-forecasting" element={<DemandForecasting />} />
               <Route path="margin-optimization" element={<MarginOptimization />} />
+              <Route path="financial-reports" element={<FinancialReports />} />
+
               <Route path="*" element={<Navigate to="/operator/dashboard" replace />} />
             </Routes>
           </OperatorShell>
@@ -168,13 +181,11 @@ function App() {
           <SupplierShell>
             <Routes>
                <Route path="dashboard" element={<SupplierDashboard />} />
-              <Route path="catalog" element={<SupplierCatalog />} />
-              <Route path="bids" element={<BidInvitations />} />
-              <Route path="bids/history" element={<BidHistory />} />
+              <Route path="inventory" element={<InventoryManagement />} />
+              <Route path="bids-pos" element={<BidsAndPOs />} />
               <Route path="leads" element={<LeadResponse />} />
-              <Route path="orders" element={<OrderFulfillment />} />
               <Route path="logistics" element={<Logistics />} />
-              <Route path="finance" element={<Finance />} />
+              <Route path="finance/*" element={<FinanceHub />} />
               <Route path="verification" element={<SupplierKYC />} />
               <Route path="settings" element={<SupplierSettings />} />
               <Route path="profile" element={<SupplierProfile />} />

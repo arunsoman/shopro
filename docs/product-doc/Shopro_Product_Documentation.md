@@ -1,7 +1,7 @@
 # Shopro Restaurant POS — Product Documentation
 
 ## 1. Executive Summary
-Shopro is a high-fidelity, full-stack restaurant management platform designed for the modern hospitality industry. It seamlessly integrates front-of-house operations (Floor Plan, Tableside Ordering) with back-of-house controls (Inventory, Procurement, Recipe Costing) and guest-centric growth tools (CRM, Loyalty).
+Shopro is a , full-stack restaurant management platform designed for the modern hospitality industry. It seamlessly integrates front-of-house operations (Floor Plan, Tableside Ordering) with back-of-house controls (Inventory, Procurement, Recipe Costing) and guest-centric growth tools (CRM, Loyalty).
 
 Built with a focus on premium aesthetics and real-time synchronization, Shopro ensures that every staff member — from the host at the entrance to the chef in the kitchen — operates with a single, accurate view of the restaurant's heartbeat.
 

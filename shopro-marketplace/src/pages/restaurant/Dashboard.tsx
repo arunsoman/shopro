@@ -60,22 +60,16 @@ export default function RestaurantDashboard() {
       <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 border-b border-slate-200 dark:border-slate-800 pb-8 transition-all">
         <div className="space-y-3">
           <h1 className="text-2xl md:text-4xl font-bold tracking-tight text-slate-900 dark:text-white">
-             Merchant <span className="text-brand-primary font-extrabold italic">Hub</span>
+             Restaurant <span className="text-brand-primary font-extrabold italic">Hub</span>
           </h1>
           <p className="text-slate-500 font-medium text-sm flex items-center gap-3">
              <ShieldCheck className="w-5 h-5 text-brand-primary animate-pulse" />
-             Inventory: 92% Sync • 3 Critical Discrepancies
+             Inventory: {stats?.inventorySyncPercentage || 100}% Sync • {stats?.criticalDiscrepancies || 0} Critical Discrepancies
           </p>
         </div>
         
         <div className="flex items-center gap-6">
-            <button 
-                onClick={() => window.location.href = '/restaurant/orders/new'}
-                className="h-14 px-8 bg-slate-950 dark:bg-white text-white dark:text-slate-900 rounded-xl font-bold text-lg shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center gap-3 border border-indigo-500/50 group"
-            >
-                <Plus size={24} className="group-hover:rotate-90 transition-transform" />
-                New Procurement
-            </button>
+            {/* New Procurement button removed as per user request */}
         </div>
       </header>
 
@@ -174,7 +168,7 @@ export default function RestaurantDashboard() {
           </h2>
           <div className="flex flex-col gap-6">
             {[
-                { label: "Direct Procurement", sub: "Manually enter a purchase order", icon: <Plus size={28} />, color: "indigo", path: "/restaurant/orders/new" },
+                { label: "Procure", sub: "Enter a purchase order manually", icon: <Plus size={28} />, color: "indigo", path: "/restaurant/orders/new" },
                 { label: "Logistics Tracking", sub: "Monitor active shipments", icon: <Truck size={28} />, color: "emerald", path: "/restaurant/orders" },
                 { label: "Finance Hub", sub: "Reconciliation & Payments", icon: <CreditCard size={28} />, color: "violet", path: "/restaurant/payments" },
             ].map((action, i) => (

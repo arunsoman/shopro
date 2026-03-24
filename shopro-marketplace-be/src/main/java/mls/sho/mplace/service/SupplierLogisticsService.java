@@ -3,11 +3,13 @@ package mls.sho.mplace.service;
 import lombok.RequiredArgsConstructor;
 import mls.sho.mplace.entity.MarketplaceSupplier;
 import mls.sho.mplace.entity.SubOrder;
+import mls.sho.mplace.repository.MarketplaceSupplierRepository;
 import mls.sho.mplace.repository.SubOrderRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -15,11 +17,13 @@ import java.util.stream.Collectors;
 public class SupplierLogisticsService {
 
     private final SubOrderRepository subOrderRepository;
+    private final MarketplaceSupplierRepository supplierRepository;
 
     public record DeliveryTracking(String id, String orderId, String vehicle, String driver, String status, String eta) {}
 
-    public List<DeliveryTracking> getActiveDeliveries(MarketplaceSupplier supplier) {
-        List<SubOrder> orders = subOrderRepository.findAllBySupplier_Id(supplier.getSupplierId());
+    public List<DeliveryTracking> getActiveDeliveries(UUID supplierId) {
+        MarketplaceSupplier supplier = supplierRepository.findById(supplierId).orElseThrow();
+        List<SubOrder> orders = subOrderRepository.findAllBySupplier_Id(supplierId);
         
         return orders.stream()
                 .filter(o -> o.getStatus() == SubOrder.SubOrderStatus.SHIPPED || o.getStatus() == SubOrder.SubOrderStatus.PREPARING)
@@ -34,7 +38,7 @@ public class SupplierLogisticsService {
                 .collect(Collectors.toList());
     }
 
-    public List<Map<String, String>> getVehicles(MarketplaceSupplier supplier) {
+    public List<Map<String, String>> getVehicles(UUID supplierId) {
         // Mock data for fleet management
         return List.of(
             Map.of("id", "V-1", "plate", "MH-01-AX-9021", "type", "Refrigerated Truck", "status", "BUSY"),

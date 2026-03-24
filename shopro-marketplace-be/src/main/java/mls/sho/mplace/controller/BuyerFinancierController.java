@@ -1,8 +1,10 @@
 package mls.sho.mplace.controller;
 
 import lombok.RequiredArgsConstructor;
+import mls.sho.mplace.config.MarketplaceUser;
 import mls.sho.mplace.service.FinanceService;
 import mls.sho.mplace.service.SupportService;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
@@ -16,21 +18,21 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class BuyerFinancierController {
 
-    private final mls.sho.mplace.service.FinanceService financeService;
-    private final mls.sho.mplace.service.SupportService supportService;
+    private final FinanceService financeService;
+    private final SupportService supportService;
 
-    public record Transaction(String id, String date, String description, double amount, String status) {}
-    public record Ticket(String id, String subject, String status, String priority) {}
+    public record TransactionDTO(String id, String date, String description, double amount, String status) {}
+    public record TicketDTO(String id, String subject, String status, String priority) {}
 
     @GetMapping("/stats")
-    public FinanceService.BuyerFinanceStats getStats() {
-        return financeService.getBuyerStats();
+    public FinanceService.BuyerFinanceStats getStats(@AuthenticationPrincipal MarketplaceUser user) {
+        return financeService.getBuyerStats(user.getRestaurantId());
     }
 
     @GetMapping("/transactions")
-    public List<Transaction> getTransactions() {
-        return financeService.getAllTransactions().stream()
-                .map(t -> new Transaction(
+    public List<TransactionDTO> getTransactions(@AuthenticationPrincipal MarketplaceUser user) {
+        return financeService.getAllTransactionsByRestaurant(user.getRestaurantId()).stream()
+                .map(t -> new TransactionDTO(
                         t.getId().toString(),
                         t.getCreatedAt().toString(),
                         t.getDescription(),
@@ -40,9 +42,9 @@ public class BuyerFinancierController {
     }
 
     @GetMapping("/tickets")
-    public List<Ticket> getTickets() {
+    public List<TicketDTO> getTickets() {
         return supportService.getMyTickets().stream()
-                .map(t -> new Ticket(
+                .map(t -> new TicketDTO(
                         t.getId().toString(),
                         t.getSubject(),
                         t.getStatus().name(),

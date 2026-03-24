@@ -1,7 +1,7 @@
 package mls.sho.mplace.controller;
 
 import lombok.RequiredArgsConstructor;
-import mls.sho.mplace.entity.MarketplaceSupplier;
+import mls.sho.mplace.config.MarketplaceUser;
 import mls.sho.mplace.service.SupplierLogisticsService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -21,12 +21,12 @@ public class SupplierLogisticsController {
     private final SupplierLogisticsService logisticsService;
 
     @GetMapping("/active")
-    public List<SupplierLogisticsService.DeliveryTracking> getActiveDeliveries(@AuthenticationPrincipal MarketplaceSupplier supplier) {
-        return logisticsService.getActiveDeliveries(supplier);
+    public List<SupplierLogisticsService.DeliveryTracking> getActiveDeliveries(@AuthenticationPrincipal MarketplaceUser user) {
+        return logisticsService.getActiveDeliveries(user.getSupplierId());
     }
 
     @GetMapping("/vehicles")
-    public List<Map<String, String>> getVehicles(@AuthenticationPrincipal MarketplaceSupplier supplier) {
-        return logisticsService.getVehicles(supplier);
+    public List<Map<String, String>> getVehicles(@AuthenticationPrincipal MarketplaceUser user) {
+        return logisticsService.getVehicles(user.getSupplierId());
     }
 }
