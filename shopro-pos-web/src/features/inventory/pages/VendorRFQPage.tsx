@@ -23,7 +23,7 @@ export const VendorRFQPage: React.FC = () => {
         paymentTerms: 'NET30',
         notes: ''
     });
-    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isSubmitting] = useState(false);
 
     const handleSubmit = async () => {
         if (!supplierId) {
