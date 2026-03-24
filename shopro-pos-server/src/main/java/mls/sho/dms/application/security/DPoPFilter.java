@@ -107,7 +107,7 @@ public class DPoPFilter extends OncePerRequestFilter {
             log.warn("DPoPFilter rejecting request: Missing DPoP header for path={}, method={}", path, method);
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json");
-            response.getWriter().write("{\"error\": \"missing_header\", \"message\": \"A valid DPoP proof is required for this operation.\"}");
+            response.getWriter().write("{\"error\": \"missing_dpop_header\", \"message\": \"Missing DPoP proof header.\"}");
             return;
         }
 
