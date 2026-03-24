@@ -2,6 +2,13 @@ package mls.sho.dms.application.security;
 
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.JWSVerifier;
+import com.nimbusds.jose.crypto.ECDSAVerifier;
+import com.nimbusds.jose.crypto.Ed25519Verifier;
+import com.nimbusds.jose.crypto.RSASSAVerifier;
+import com.nimbusds.jose.jwk.ECKey;
+import com.nimbusds.jose.jwk.JWK;
+import com.nimbusds.jose.jwk.OctetKeyPair;
+import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import jakarta.servlet.http.HttpServletRequest;
@@ -13,21 +20,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import java.security.PublicKey;
-import java.security.interfaces.ECPublicKey;
-import java.security.interfaces.RSAPublicKey;
-import java.util.Set;
-
-import java.security.Key;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.PublicKey;
 import java.time.Instant;
-import java.util.Date;
+import java.util.Set;
 import java.util.UUID;
 import java.util.Map;
-import java.util.Base64;
-import java.nio.charset.StandardCharsets;
 
 /**
  * Implements FAPI 2.0 / DPoP (Proof-of-Possession) validation.
@@ -76,39 +72,35 @@ public class DPoPService {
                 return ValidationResult.failure("invalid_typ", "Invalid DPoP JWT type: " + header.getType());
             }
 
-            Map<String, Object> jwk = header.getJWK().toJSONObject();
+            Map<String, Object> jwkMap = header.getJWK().toJSONObject();
+            com.nimbusds.jose.jwk.JWK jwk = com.nimbusds.jose.jwk.JWK.parse(jwkMap);
+            String actualThumbprint = jwk.computeThumbprint().toString();
 
-            // 3. Signature verification (using NimbusDS for better EdDSA/EC support)
+            // 3. Signature verification (using NimbusDS specialized verifiers)
             JWSVerifier verifier;
             try {
-                if ("RS256".equals(alg) || "PS256".equals(alg)) { // PS256 also uses RSA
-                    RSAPublicKey rsaPublicKey = (RSAPublicKey) com.nimbusds.jose.jwk.JWK.parse(jwk).toRSAKey().toRSAPublicKey();
-                    verifier = new com.nimbusds.jose.crypto.RSASSAVerifier(rsaPublicKey);
-                } else if ("ES256".equals(alg)) {
-                    ECPublicKey ecPublicKey = (ECPublicKey) com.nimbusds.jose.jwk.JWK.parse(jwk).toECKey().toECPublicKey();
-                    verifier = new com.nimbusds.jose.crypto.ECDSAVerifier(ecPublicKey);
-                } else if ("EdDSA".equals(alg)) {
-                    // Correct way to reconstruct Ed25519 from JWK using NimbusDS
-                    com.nimbusds.jose.jwk.OctetKeyPair okp = com.nimbusds.jose.jwk.OctetKeyPair.parse(jwk);
-                    verifier = new com.nimbusds.jose.crypto.Ed25519Verifier(okp.toPublicJWK());
+                if (jwk instanceof com.nimbusds.jose.jwk.RSAKey) {
+                    verifier = new com.nimbusds.jose.crypto.RSASSAVerifier((com.nimbusds.jose.jwk.RSAKey) jwk);
+                } else if (jwk instanceof com.nimbusds.jose.jwk.ECKey) {
+                    verifier = new com.nimbusds.jose.crypto.ECDSAVerifier((com.nimbusds.jose.jwk.ECKey) jwk);
+                } else if (jwk instanceof com.nimbusds.jose.jwk.OctetKeyPair) {
+                    verifier = new com.nimbusds.jose.crypto.Ed25519Verifier((com.nimbusds.jose.jwk.OctetKeyPair) jwk);
                 } else {
-                    return ValidationResult.failure("invalid_alg", "Unsupported DPoP algorithm: " + alg);
+                    return ValidationResult.failure("invalid_alg", "Unsupported DPoP key type: " + jwk.getKeyType());
                 }
                 
                 if (!signedJWT.verify(verifier)) {
                     return ValidationResult.failure("invalid_proof", "DPoP signature verification failed");
                 }
             } catch (Exception e) {
-                log.warn("DPoP validation exception: {}", e.getMessage(), e);
-                return ValidationResult.failure("invalid_proof", "Error reconstructing public key: " + e.getMessage());
+                log.warn("DPoP signature verification exception: {}", e.getMessage(), e);
+                return ValidationResult.failure("invalid_proof", "Error verifying DPoP signature: " + e.getMessage());
             }
-
-            String actualThumbprint = calculateJkt(jwk);
 
             // 2. Validate thumbprint matches expected device binding (if provided)
             if (expectedThumbprint != null && !expectedThumbprint.equals(actualThumbprint)) {
                 log.warn("DPoP jkt mismatch: expected {}, got {}", expectedThumbprint, actualThumbprint);
-                return ValidationResult.failure("jkt_mismatch", "DPoP key thumbprint does not match the active session binding.");
+                return ValidationResult.failure("jkt_mismatch", "DPoP key thumbprint mismatch.");
             }
 
             // 3. Validate 'htm' (method) and 'htu' (url)
@@ -159,39 +151,6 @@ public class DPoPService {
             log.warn("DPoP validation exception: {}", e.getMessage());
             return ValidationResult.failure("invalid_proof", "Failed to validate DPoP proof: " + e.getMessage());
         }
-    }
-
-    /**
-     * Calculates the SHA-256 thumbprint of a JWK (RFC 7638).
-     */
-    public String calculateJkt(Map<String, Object> jwk) throws NoSuchAlgorithmException {
-        // Minimum required fields for thumbprint calculation per kty
-        Map<String, String> required = new java.util.TreeMap<>();
-        String kty = (String) jwk.get("kty");
-        required.put("kty", kty);
-        
-        if ("RSA".equals(kty)) {
-            required.put("n", (String) jwk.get("n"));
-            required.put("e", (String) jwk.get("e"));
-        } else if ("EC".equals(kty)) {
-            required.put("crv", (String) jwk.get("crv"));
-            required.put("x", (String) jwk.get("x"));
-            required.put("y", (String) jwk.get("y"));
-        } else if ("OKP".equals(kty)) {
-            required.put("crv", (String) jwk.get("crv"));
-            required.put("x", (String) jwk.get("x"));
-        }
-
-        StringBuilder sb = new StringBuilder("{");
-        for (Map.Entry<String, String> entry : required.entrySet()) {
-            if (sb.length() > 1) sb.append(",");
-            sb.append("\"").append(entry.getKey()).append("\":\"").append(entry.getValue()).append("\"");
-        }
-        sb.append("}");
-        
-        MessageDigest digest = MessageDigest.getInstance("SHA-256");
-        byte[] hash = digest.digest(sb.toString().getBytes(StandardCharsets.UTF_8));
-        return Base64.getUrlEncoder().withoutPadding().encodeToString(hash);
     }
 
     /**
