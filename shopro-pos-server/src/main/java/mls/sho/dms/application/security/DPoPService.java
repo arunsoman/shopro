@@ -108,14 +108,14 @@ public class DPoPService {
             }
 
             // 3. Validate 'htm' (method) and 'htu' (url)
-            String method = claims.get("htm", String.class);
-            String url = claims.get("htu", String.class);
-
+            String method = claims.getStringClaim("htm");
+            String url = claims.getStringClaim("htu");
+ 
             if (method == null || !method.equalsIgnoreCase(request.getMethod())) {
                 log.warn("DPoP htm mismatch: expected {}, got {}", request.getMethod(), method);
                 return ValidationResult.failure("htm_mismatch", "DPoP method mismatch: expected " + request.getMethod() + ", got " + method);
             }
-
+ 
             String requestUrl = request.getRequestURL().toString();
             String requestPath = request.getRequestURI();
             
@@ -142,14 +142,20 @@ public class DPoPService {
                 log.warn("DPoP htu mismatch: requestUrl={}, requestPath={}, htu={}", requestUrl, requestPath, url);
                 return ValidationResult.failure("htu_mismatch", "DPoP URL mismatch. Expected: " + requestPath);
             }
-
+ 
             // 4. Freshness check (iat)
-            long iatSeconds = claims.getIssuedAt().getTime() / 1000;
+            java.util.Date iat = claims.getIssueTime();
+            if (iat == null) {
+                log.warn("DPoP iat missing");
+                return ValidationResult.failure("iat_missing", "DPoP iat claim is missing.");
+            }
+            
+            long iatSeconds = iat.getTime() / 1000;
             if (Math.abs(System.currentTimeMillis() / 1000 - iatSeconds) > 120) {
                 log.warn("DPoP iat skew too high: skew={}s", Math.abs(System.currentTimeMillis() / 1000 - iatSeconds));
                 return ValidationResult.failure("iat_skew", "DPoP time skew too high. Please ensure your device clock is synchronized.");
             }
-
+ 
             return ValidationResult.success(actualThumbprint);
         } catch (Exception e) {
             log.warn("DPoP validation exception: {}", e.getMessage());
