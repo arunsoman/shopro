@@ -1,7 +1,9 @@
 package mls.sho.dms.application.security;
 
-import io.jsonwebtoken.*;
-import io.jsonwebtoken.security.Keys;
+import com.nimbusds.jose.JWSHeader;
+import com.nimbusds.jose.JWSVerifier;
+import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.jwt.SignedJWT;
 import jakarta.servlet.http.HttpServletRequest;
 import mls.sho.dms.entity.staff.DeviceBinding;
 import mls.sho.dms.entity.staff.StaffMember;
@@ -11,8 +13,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import java.security.KeyFactory;
-import java.security.spec.RSAPublicKeySpec;
+import java.security.PublicKey;
+import java.security.interfaces.ECPublicKey;
+import java.security.interfaces.RSAPublicKey;
 import java.util.Set;
 
 import java.security.Key;
@@ -57,37 +60,49 @@ public class DPoPService {
         }
 
         try {
-            // 1. Parse and validate signature using JJWT 0.12.x
-            Jws<Claims> jws = Jwts.parser()
-                    .keyLocator(header -> {
-                        Map<String, Object> jwk = (Map<String, Object>) header.get("jwk");
-                        if (jwk == null) return null;
-                        try {
-                            return parseJwkToPublicKey(jwk);
-                        } catch (Exception e) {
-                            log.error("Failed to parse JWK to PublicKey", e);
-                            return null;
-                        }
-                    })
-                    .build()
-                    .parseSignedClaims(dpopHeader);
-
-            Claims claims = jws.getPayload();
-            JwsHeader header = jws.getHeader();
+            SignedJWT signedJWT = SignedJWT.parse(dpopHeader);
+            JWSHeader header = signedJWT.getHeader();
+            JWTClaimsSet claims = signedJWT.getJWTClaimsSet();
 
             // Validate Algorithm
-            String alg = header.getAlgorithm();
-            if (alg == null || !Set.of("EdDSA", "PS256", "RS256").contains(alg)) {
+            String alg = header.getAlgorithm().getName();
+            if (alg == null || !Set.of("EdDSA", "PS256", "RS256", "ES256").contains(alg)) { // Added ES256 for NimbusDS
                 log.warn("DPoP invalid alg: {}", alg);
                 return ValidationResult.failure("invalid_alg", "Unsupported DPoP algorithm: " + alg);
             }
 
-            if (!"dpop+jwt".equals(header.getType())) {
+            if (!"dpop+jwt".equals(header.getType().toString())) {
                 log.warn("DPoP invalid typ: {}", header.getType());
                 return ValidationResult.failure("invalid_typ", "Invalid DPoP JWT type: " + header.getType());
             }
 
-            Map<String, Object> jwk = (Map<String, Object>) header.get("jwk");
+            Map<String, Object> jwk = header.getJWK().toJSONObject();
+
+            // 3. Signature verification (using NimbusDS for better EdDSA/EC support)
+            JWSVerifier verifier;
+            try {
+                if ("RS256".equals(alg) || "PS256".equals(alg)) { // PS256 also uses RSA
+                    RSAPublicKey rsaPublicKey = (RSAPublicKey) com.nimbusds.jose.jwk.JWK.parse(jwk).toRSAKey().toRSAPublicKey();
+                    verifier = new com.nimbusds.jose.crypto.RSASSAVerifier(rsaPublicKey);
+                } else if ("ES256".equals(alg)) {
+                    ECPublicKey ecPublicKey = (ECPublicKey) com.nimbusds.jose.jwk.JWK.parse(jwk).toECKey().toECPublicKey();
+                    verifier = new com.nimbusds.jose.crypto.ECDSAVerifier(ecPublicKey);
+                } else if ("EdDSA".equals(alg)) {
+                    // Correct way to reconstruct Ed25519 from JWK using NimbusDS
+                    com.nimbusds.jose.jwk.OctetKeyPair okp = com.nimbusds.jose.jwk.OctetKeyPair.parse(jwk);
+                    verifier = new com.nimbusds.jose.crypto.Ed25519Verifier(okp.toPublicJWK());
+                } else {
+                    return ValidationResult.failure("invalid_alg", "Unsupported DPoP algorithm: " + alg);
+                }
+                
+                if (!signedJWT.verify(verifier)) {
+                    return ValidationResult.failure("invalid_proof", "DPoP signature verification failed");
+                }
+            } catch (Exception e) {
+                log.warn("DPoP validation exception: {}", e.getMessage(), e);
+                return ValidationResult.failure("invalid_proof", "Error reconstructing public key: " + e.getMessage());
+            }
+
             String actualThumbprint = calculateJkt(jwk);
 
             // 2. Validate thumbprint matches expected device binding (if provided)
@@ -144,32 +159,6 @@ public class DPoPService {
             log.warn("DPoP validation exception: {}", e.getMessage());
             return ValidationResult.failure("invalid_proof", "Failed to validate DPoP proof: " + e.getMessage());
         }
-    }
-
-    private PublicKey parseJwkToPublicKey(Map<String, Object> jwk) throws Exception {
-        String kty = (String) jwk.get("kty");
-        if ("OKP".equals(kty)) {
-            // Ed25519 (RFC 8037)
-            byte[] xBytes = Base64.getUrlDecoder().decode((String) jwk.get("x"));
-            java.security.spec.EdECPublicKeySpec spec = new java.security.spec.EdECPublicKeySpec(
-                    new java.security.spec.NamedParameterSpec("Ed25519"),
-                    new java.security.spec.EdECPoint(false, new java.math.BigInteger(1, swap(xBytes)))
-            );
-            return java.security.KeyFactory.getInstance("Ed25519").generatePublic(spec);
-        } else if ("RSA".equals(kty)) {
-            java.math.BigInteger n = new java.math.BigInteger(1, Base64.getUrlDecoder().decode((String) jwk.get("n")));
-            java.math.BigInteger e = new java.math.BigInteger(1, Base64.getUrlDecoder().decode((String) jwk.get("e")));
-            return java.security.KeyFactory.getInstance("RSA").generatePublic(new java.security.spec.RSAPublicKeySpec(n, e));
-        }
-        throw new UnsupportedOperationException("Unsupported JWK kty: " + kty);
-    }
-
-    private byte[] swap(byte[] x) {
-        byte[] res = new byte[x.length];
-        for (int i = 0; i < x.length; i++) {
-            res[i] = x[x.length - 1 - i];
-        }
-        return res;
     }
 
     /**
