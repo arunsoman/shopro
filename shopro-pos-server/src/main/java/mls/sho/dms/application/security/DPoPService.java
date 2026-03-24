@@ -16,22 +16,26 @@ import mls.sho.dms.entity.staff.DeviceBinding;
 import mls.sho.dms.entity.staff.StaffMember;
 import mls.sho.dms.repository.staff.DeviceBindingRepository;
 import mls.sho.dms.repository.staff.StaffRepository;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import java.security.Security;
 import java.time.Instant;
 import java.util.Set;
 import java.util.UUID;
 import java.util.Map;
 
-/**
- * Implements FAPI 2.0 / DPoP (Proof-of-Possession) validation.
- * Ensures that requests are cryptographically bound to the device hardware.
- */
 @Service
 public class DPoPService {
-
+ 
+    static {
+        if (java.security.Security.getProvider(org.bouncycastle.jce.provider.BouncyCastleProvider.PROVIDER_NAME) == null) {
+            java.security.Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
+        }
+    }
+ 
     private static final Logger log = LoggerFactory.getLogger(DPoPService.class);
 
     @Autowired
