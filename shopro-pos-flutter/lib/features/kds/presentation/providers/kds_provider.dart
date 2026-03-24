@@ -281,10 +281,13 @@ class KDSNotifier extends StateNotifier<KDSState> {
       );
     }).toList();
 
-    // Sort groups by earliest ticket or table number
+    // Sort groups by table number
     groups.sort((a, b) => a.tableNumber.compareTo(b.tableNumber));
 
-    state = state.copyWith(expoGroups: groups);
+    // KDS UX Rule: Only show tables that have active orders needing preparation/service (non-served items)
+    final activeGroups = groups.where((g) => g.items.isNotEmpty).toList();
+
+    state = state.copyWith(expoGroups: activeGroups);
   }
 
   Future<void> bumpTicket(String ticketId) async {

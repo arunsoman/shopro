@@ -5,6 +5,7 @@ import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/floor_plan/presentation/screens/floor_plan_screen.dart';
 import '../../features/order/presentation/screens/order_course_management_screen.dart';
 import '../../features/order/presentation/screens/checkout_screen.dart';
+import '../../features/order/presentation/screens/customer_checkout_screen.dart';
 import '../../features/order/presentation/screens/order_history_screen.dart';
 import '../../features/order/presentation/screens/staff_dashboard_screen.dart';
 import '../../features/floor_plan/presentation/screens/table_dashboard_screen.dart';
@@ -161,6 +162,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           location: state.uri.path,
           child: const NotificationRoutingScreen(),
         ),
+      ),
+      GoRoute(
+        path: '/customer-checkout',
+        builder: (context, state) => const CustomerCheckoutScreen(),
       ),
     ],
   );

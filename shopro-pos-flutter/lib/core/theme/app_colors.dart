@@ -46,4 +46,11 @@ class AppColors {
   static const Color readyTag = Color(
     0xFFFF6B00,
   ); // For the "Ready" orange highlight
+
+  // Emerald Terminal (NEXGO EF60 Optimized)
+  static const Color emeraldBase = Color(0xFF121212);
+  static const Color emeraldSurface = Color(0xFF1B1B1B);
+  static const Color emeraldAccent = Color(0xFF10B981);
+  static const Color emeraldOffWhite = Color(0xFFF5F4F0);
+  static const Color emeraldMuted = Color(0xFF4A4A4A);
 }

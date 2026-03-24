@@ -55,4 +55,58 @@ class AppTheme {
       ),
     );
   }
+
+  static ThemeData get emeraldTerminal {
+    return ThemeData(
+      useMaterial3: true,
+      colorScheme: const ColorScheme.dark(
+        primary: AppColors.emeraldAccent,
+        surface: AppColors.emeraldSurface,
+        onSurface: AppColors.emeraldOffWhite,
+        onPrimary: AppColors.emeraldBase,
+      ),
+      scaffoldBackgroundColor: AppColors.emeraldBase,
+      textTheme: GoogleFonts.syneTextTheme().copyWith(
+        displayLarge: GoogleFonts.syne(
+          fontWeight: FontWeight.bold,
+          color: AppColors.emeraldOffWhite,
+        ),
+        titleLarge: GoogleFonts.syne(
+          fontWeight: FontWeight.w600,
+          color: AppColors.emeraldOffWhite,
+        ),
+        bodyMedium: GoogleFonts.syne(
+          color: AppColors.emeraldOffWhite,
+        ),
+        labelMedium: GoogleFonts.jetBrainsMono(
+          color: AppColors.emeraldAccent,
+        ),
+        labelLarge: GoogleFonts.jetBrainsMono(
+          fontWeight: FontWeight.bold,
+          color: AppColors.emeraldOffWhite,
+        ),
+      ),
+      cardTheme: CardThemeData(
+        color: AppColors.emeraldSurface,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        ),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.emeraldAccent,
+          foregroundColor: AppColors.emeraldBase,
+          textStyle: GoogleFonts.syne(
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+          ),
+          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 32),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+          ),
+        ),
+      ),
+    );
+  }
 }

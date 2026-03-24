@@ -65,19 +65,7 @@ class _KDSQueueScreenState extends ConsumerState<KDSQueueScreen> with SingleTick
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.white,
-        title: Column(
-          children: [
-            Text(
-              widget.stationName.toUpperCase(),
-              style: const TextStyle(fontWeight: FontWeight.w900, letterSpacing: 2, fontSize: 18, color: Colors.black87),
-            ),
-            const Text(
-              'Live Kitchen Management',
-              style: TextStyle(fontSize: 10, color: Colors.orange, fontWeight: FontWeight.bold),
-            ),
-          ],
-        ),
-        centerTitle: true,
+        automaticallyImplyLeading: false,
         bottom: TabBar(
           controller: _tabController,
           labelColor: Colors.orange,
@@ -113,7 +101,7 @@ class _KDSQueueScreenState extends ConsumerState<KDSQueueScreen> with SingleTick
 
   Widget _buildQueueView(KDSState kds, bool isExpo) {
     if (isExpo) {
-      if (kds.expoGroups.isEmpty) return _buildEmptyState('No tables occupied');
+      if (kds.expoGroups.isEmpty) return _buildEmptyState('No active tables');
       return _buildExpoQueue(kds.expoGroups);
     }
 
