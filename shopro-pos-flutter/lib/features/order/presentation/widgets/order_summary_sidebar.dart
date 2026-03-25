@@ -166,25 +166,22 @@ class OrderSummarySidebar extends ConsumerWidget {
                 children: [
                   if (!isSent)
                     IconButton(
-                      icon: const Icon(Icons.add_circle_outline, size: 18, color: AppColors.primary),
+                      icon: const Icon(Icons.keyboard_arrow_up, size: 20, color: AppColors.primary),
                       onPressed: () => ref.read(orderProvider.notifier).updateItemQuantity(item.id, item.quantity + 1),
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
                     ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 2), // Reduced to 2px
-                    child: Text(
-                      '${item.quantity}x',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13, // Slightly smaller
-                        color: AppColors.primary,
-                      ),
+                  Text(
+                    '${item.quantity}x',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                      color: AppColors.primary,
                     ),
                   ),
                   if (!isSent)
                     IconButton(
-                      icon: const Icon(Icons.remove_circle_outline, size: 18, color: AppColors.primary),
+                      icon: const Icon(Icons.keyboard_arrow_down, size: 20, color: AppColors.primary),
                       onPressed: () => ref.read(orderProvider.notifier).updateItemQuantity(item.id, item.quantity - 1),
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
