@@ -156,7 +156,7 @@ class OrderSummarySidebar extends ConsumerWidget {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4), // Reduced from AppSpacing.md
+          padding: const EdgeInsets.symmetric(vertical: 4),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -601,6 +601,4 @@ class OrderSummarySidebar extends ConsumerWidget {
       ),
     );
   }
-
 }
-
