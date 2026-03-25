@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useFloorPlanStore } from '../../store/studio-store';
-import type { EditorTool } from '../../types/studio-types';
 
 interface ToolBtnProps {
   icon: React.ElementType;

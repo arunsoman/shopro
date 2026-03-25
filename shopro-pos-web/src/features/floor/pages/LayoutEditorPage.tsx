@@ -1,4 +1,3 @@
-import React from "react";
 import FloorPlanEditor from "../components/studio/FloorPlanEditor";
 
 export function LayoutEditorPage() {
