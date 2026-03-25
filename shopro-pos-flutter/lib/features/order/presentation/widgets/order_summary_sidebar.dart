@@ -327,6 +327,10 @@ class OrderSummarySidebar extends ConsumerWidget {
       (i) => i.status == OrderItemStatus.pending,
     );
 
+    final hasSentItems = order!.items.any(
+      (i) => i.status != OrderItemStatus.pending && i.status != OrderItemStatus.voided,
+    );
+
     final allServedOrVoided = order!.items.every(
       (i) =>
           i.status == OrderItemStatus.delivered ||
@@ -453,7 +457,7 @@ class OrderSummarySidebar extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.md),
-          if (order!.status != TicketStatus.paid && order!.status != TicketStatus.voided)
+          if (order!.status != TicketStatus.paid && order!.status != TicketStatus.voided && !hasSentItems)
             SizedBox(
               width: double.infinity,
               child: TextButton(
