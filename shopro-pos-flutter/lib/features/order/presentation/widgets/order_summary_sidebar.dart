@@ -160,15 +160,39 @@ class OrderSummarySidebar extends ConsumerWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                '${item.quantity}x',
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                  color: AppColors.primary,
-                ),
+              // Left: Vertical Quantity Control
+              Column(
+                children: [
+                  if (!isSent)
+                    IconButton(
+                      icon: const Icon(Icons.add_circle_outline, size: 20, color: AppColors.primary),
+                      onPressed: () => ref.read(orderProvider.notifier).updateItemQuantity(item.id, item.quantity + 1),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Text(
+                      '${item.quantity}x',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ),
+                  if (!isSent)
+                    IconButton(
+                      icon: const Icon(Icons.remove_circle_outline, size: 20, color: AppColors.primary),
+                      onPressed: () => ref.read(orderProvider.notifier).updateItemQuantity(item.id, item.quantity - 1),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                ],
               ),
               const SizedBox(width: AppSpacing.md),
+              
+              // Middle: Item details
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -199,116 +223,61 @@ class OrderSummarySidebar extends ConsumerWidget {
                       Padding(
                         padding: const EdgeInsets.only(top: 6, left: 4),
                         child: Column(
-                          children:
-                              item.taxBreakdowns.map((tax) {
-                                return Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 1,
+                          children: item.taxBreakdowns.map((tax) {
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 1),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.subdirectory_arrow_right, size: 10, color: AppColors.lightMuted),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '${tax.ruleName} (${(tax.rate * 100).toStringAsFixed(0)}%)',
+                                    style: const TextStyle(
+                                      fontSize: 10,
+                                      color: AppColors.lightMuted,
+                                      fontStyle: FontStyle.italic,
+                                    ),
                                   ),
-                                  child: Row(
-                                    children: [
-                                      const Icon(
-                                        Icons.subdirectory_arrow_right,
-                                        size: 10,
-                                        color: AppColors.lightMuted,
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        '${tax.ruleName} (${(tax.rate * 100).toStringAsFixed(0)}%)',
-                                        style: const TextStyle(
-                                          fontSize: 10,
-                                          color: AppColors.lightMuted,
-                                          fontStyle: FontStyle.italic,
-                                        ),
-                                      ),
-                                      const Spacer(),
-                                      Text(
-                                        '\$${tax.amount.toStringAsFixed(2)}',
-                                        style: const TextStyle(
-                                          fontSize: 10,
-                                          color: AppColors.lightMuted,
-                                        ),
-                                      ),
-                                    ],
+                                  const Spacer(),
+                                  Text(
+                                    '\$${tax.amount.toStringAsFixed(2)}',
+                                    style: const TextStyle(fontSize: 10, color: AppColors.lightMuted),
                                   ),
-                                );
-                              }).toList(),
+                                ],
+                              ),
+                            );
+                          }).toList(),
                         ),
                       ),
                   ],
                 ),
               ),
               const SizedBox(width: AppSpacing.md),
+              
+              // Right: Price and Removal
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Row(
-                    children: [
-                      Text(
-                        '\$${item.calculatedTotal.toStringAsFixed(2)}',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ],
+                  Text(
+                    '\$${item.calculatedTotal.toStringAsFixed(2)}',
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                   ),
                   if (item.status == OrderItemStatus.voided)
                     const Padding(
                       padding: EdgeInsets.only(top: 4),
                       child: Text(
                         'VOIDED',
-                        style: TextStyle(
-                          color: AppColors.error,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  if (!isSent)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8),
-                      child: Row(
-                        children: [
-                          _QuantityButton(
-                            icon: Icons.remove,
-                            onTap:
-                                () => ref
-                                    .read(orderProvider.notifier)
-                                    .updateItemQuantity(
-                                      item.id,
-                                      item.quantity - 1,
-                                    ),
-                          ),
-                          const SizedBox(width: 8),
-                          _QuantityButton(
-                            icon: Icons.add,
-                            onTap:
-                                () => ref
-                                    .read(orderProvider.notifier)
-                                    .updateItemQuantity(
-                                      item.id,
-                                      item.quantity + 1,
-                                    ),
-                          ),
-                        ],
+                        style: TextStyle(color: AppColors.error, fontSize: 10, fontWeight: FontWeight.bold),
                       ),
                     ),
                   if (item.status == OrderItemStatus.pending)
                     Padding(
                       padding: const EdgeInsets.only(top: 8),
-                      child: TextButton(
+                      child: IconButton(
+                        icon: const Icon(Icons.delete_outline, color: AppColors.error, size: 24),
                         onPressed: () => _handleVoidItem(context, ref, item),
-                        style: TextButton.styleFrom(
-                          minimumSize: Size.zero,
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          foregroundColor: AppColors.error,
-                        ),
-                        child: const Text(
-                          'REMOVE',
-                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
-                        ),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
                       ),
                     ),
                 ],
@@ -637,25 +606,3 @@ class OrderSummarySidebar extends ConsumerWidget {
 
 }
 
-class _QuantityButton extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback onTap;
-
-  const _QuantityButton({required this.icon, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          border: Border.all(color: AppColors.lightBorder),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Icon(icon, size: 20, color: AppColors.lightMuted),
-      ),
-    );
-  }
-}
