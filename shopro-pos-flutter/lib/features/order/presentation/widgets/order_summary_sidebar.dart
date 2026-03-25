@@ -156,34 +156,35 @@ class OrderSummarySidebar extends ConsumerWidget {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+          padding: const EdgeInsets.symmetric(vertical: 4), // Reduced from AppSpacing.md
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Left: Vertical Quantity Control
               Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   if (!isSent)
                     IconButton(
-                      icon: const Icon(Icons.add_circle_outline, size: 20, color: AppColors.primary),
+                      icon: const Icon(Icons.add_circle_outline, size: 18, color: AppColors.primary),
                       onPressed: () => ref.read(orderProvider.notifier).updateItemQuantity(item.id, item.quantity + 1),
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
                     ),
                   Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    padding: const EdgeInsets.symmetric(vertical: 2), // Reduced to 2px
                     child: Text(
                       '${item.quantity}x',
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
-                        fontSize: 14,
+                        fontSize: 13, // Slightly smaller
                         color: AppColors.primary,
                       ),
                     ),
                   ),
                   if (!isSent)
                     IconButton(
-                      icon: const Icon(Icons.remove_circle_outline, size: 20, color: AppColors.primary),
+                      icon: const Icon(Icons.remove_circle_outline, size: 18, color: AppColors.primary),
                       onPressed: () => ref.read(orderProvider.notifier).updateItemQuantity(item.id, item.quantity - 1),
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
