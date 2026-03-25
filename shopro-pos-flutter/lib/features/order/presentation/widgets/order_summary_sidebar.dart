@@ -188,9 +188,7 @@ class OrderSummarySidebar extends ConsumerWidget {
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 13,
-                      color: (!isSent)
-                          ? AppColors.primary
-                          : AppColors.lightMuted,
+                      color: (!isSent) ? AppColors.primary : AppColors.primary,
                     ),
                   ),
                   IconButton(
@@ -199,7 +197,7 @@ class OrderSummarySidebar extends ConsumerWidget {
                       size: 20,
                       color: (!isSent)
                           ? AppColors.primary
-                          : AppColors.lightMuted,
+                          : AppColors.secondary,
                     ),
                     onPressed: (!isSent)
                         ? () => ref
