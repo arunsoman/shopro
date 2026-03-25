@@ -22,10 +22,6 @@ class StubNotificationNotifier extends NotificationNotifier {
     state = NotificationState(notifications: [], isConnected: connected);
   }
 
-  @override
-  void _init() {
-    // Prevent real network/stomp calls
-  }
 }
 
 void main() {

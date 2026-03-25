@@ -344,49 +344,6 @@ class OrderNotifier extends Notifier<OrderState> {
     }
   }
 
-  Future<void> cancelOrder(String orderId, {String? managerPin}) async {
-    state = state.copyWith(isLoading: true);
-    try {
-      final repository = ref.read(orderRepositoryProvider);
-      await repository.cancelOrder(orderId, managerPin: managerPin);
-      state = state.copyWith(activeOrder: null, isLoading: false, clearActiveOrder: true);
-      ref.read(floorPlanProvider.notifier).refresh();
-      fetchActiveOrders();
-    } on DioException catch (e) {
-      final data = e.response?.data;
-      String errorMessage = e.message ?? e.toString();
-      if (data is Map && data.containsKey('message')) {
-        errorMessage = data['message'];
-      }
-      state = state.copyWith(isLoading: false, error: errorMessage);
-    } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
-    }
-  }
-
-  Future<void> voidOrderItem(String itemId, String reason, {String? managerPin}) async {
-    if (state.activeOrder == null) return;
-    state = state.copyWith(isLoading: true);
-    try {
-      final repository = ref.read(orderRepositoryProvider);
-      final updatedOrder = await repository.voidOrderItem(
-        state.activeOrder!.id,
-        itemId,
-        reason,
-        managerPin: managerPin,
-      );
-      state = state.copyWith(activeOrder: updatedOrder, isLoading: false);
-    } on DioException catch (e) {
-      final data = e.response?.data;
-      String errorMessage = e.message ?? e.toString();
-      if (data is Map && data.containsKey('message')) {
-        errorMessage = data['message'];
-      }
-      state = state.copyWith(isLoading: false, error: errorMessage);
-    } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
-    }
-  }
 
   Future<void> fetchActiveOrders() async {
     state = state.copyWith(isLoading: true, error: null);
@@ -421,6 +378,57 @@ class OrderNotifier extends Notifier<OrderState> {
       state = state.copyWith(isLoading: false, error: errorMessage);
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
+    }
+  }
+
+  Future<void> cancelOrder({String? managerPin}) async {
+    if (state.activeOrder == null) return;
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      final repository = ref.read(orderRepositoryProvider);
+      final updatedOrder = await repository.cancelOrder(
+        state.activeOrder!.id,
+        managerPin: managerPin,
+      );
+      state = state.copyWith(activeOrder: updatedOrder, isLoading: false);
+      fetchActiveOrders();
+    } on DioException catch (e) {
+      final data = e.response?.data;
+      String errorMessage = e.message ?? e.toString();
+      if (data is Map && data.containsKey('message')) {
+        errorMessage = data['message'];
+      }
+      state = state.copyWith(isLoading: false, error: errorMessage);
+      rethrow;
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+      rethrow;
+    }
+  }
+
+  Future<void> voidOrderItem(String itemId, String reason, {String? managerPin}) async {
+    if (state.activeOrder == null) return;
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      final repository = ref.read(orderRepositoryProvider);
+      final updatedOrder = await repository.voidOrderItem(
+        state.activeOrder!.id,
+        itemId,
+        reason,
+        managerPin: managerPin,
+      );
+      state = state.copyWith(activeOrder: updatedOrder, isLoading: false);
+    } on DioException catch (e) {
+      final data = e.response?.data;
+      String errorMessage = e.message ?? e.toString();
+      if (data is Map && data.containsKey('message')) {
+        errorMessage = data['message'];
+      }
+      state = state.copyWith(isLoading: false, error: errorMessage);
+      rethrow;
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+      rethrow;
     }
   }
 

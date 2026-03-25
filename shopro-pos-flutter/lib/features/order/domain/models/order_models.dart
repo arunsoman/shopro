@@ -137,7 +137,6 @@ class OrderItem {
   final List<OrderItemModifier> modifiers;
   final List<TaxBreakdownEntry> taxBreakdowns;
   final bool isCancellable;
-
   OrderItem({
     required this.id,
     required this.menuItemId,
@@ -155,7 +154,7 @@ class OrderItem {
     this.firedAt,
     this.modifiers = const [],
     this.taxBreakdowns = const [],
-    this.isCancellable = false,
+    this.isCancellable = true,
   });
 
   factory OrderItem.fromJson(Map<String, dynamic> json) {
@@ -190,7 +189,7 @@ class OrderItem {
               ?.map((t) => TaxBreakdownEntry.fromJson(t))
               .toList() ??
           const [],
-      isCancellable: json['isCancellable'] ?? false,
+      isCancellable: json['isCancellable'] ?? true,
     );
   }
 }
@@ -270,7 +269,6 @@ class OrderTicket {
   final DateTime createdAt;
   final DateTime? paidAt;
   final bool isCancellable;
-
   OrderTicket({
     required this.id,
     required this.orderNumber,
@@ -295,7 +293,7 @@ class OrderTicket {
     required this.createdAt,
     this.paidAt,
     this.taxSummary = const {},
-    this.isCancellable = false,
+    this.isCancellable = true,
   });
 
   OrderTicket copyWith({
@@ -393,7 +391,7 @@ class OrderTicket {
             (k, v) => MapEntry(k, (v as num).toDouble()),
           ) ??
           const {},
-      isCancellable: json['isCancellable'] ?? false,
+      isCancellable: json['isCancellable'] ?? true,
     );
   }
 }

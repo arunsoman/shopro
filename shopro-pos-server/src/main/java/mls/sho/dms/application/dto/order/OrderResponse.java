@@ -34,5 +34,5 @@ public record OrderResponse(
     java.time.Instant createdAt,
     java.time.Instant paidAt,
     java.util.Map<String, java.math.BigDecimal> taxSummary,
-    boolean isCancellable
+    Boolean isCancellable
 ) {}

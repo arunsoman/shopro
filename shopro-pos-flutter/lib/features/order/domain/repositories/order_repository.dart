@@ -12,13 +12,6 @@ abstract class OrderRepository {
     required int guestCount,
     required OrderType orderType,
   });
-  Future<void> cancelOrder(String orderId, {String? managerPin});
-  Future<OrderTicket> voidOrderItem(
-    String orderId,
-    String itemId,
-    String reason, {
-    String? managerPin,
-  });
   Future<OrderTicket> addOrderItem(
     String orderId,
     Map<String, dynamic> itemData,
@@ -38,6 +31,8 @@ abstract class OrderRepository {
   Future<void> initiateMiPay(String orderId, String phoneNumber);
   Future<void> completePayment(String orderId, PaymentMethod method, double amount);
   Future<OrderTicket> markAsServed(String orderId);
+  Future<OrderTicket> cancelOrder(String orderId, {String? managerPin});
+  Future<OrderTicket> voidOrderItem(String orderId, String itemId, String reason, {String? managerPin});
 }
 
 class OrderRepositoryImpl implements OrderRepository {
@@ -97,28 +92,6 @@ class OrderRepositoryImpl implements OrderRepository {
     return OrderTicket.fromJson(response.data);
   }
 
-  @override
-  Future<void> cancelOrder(String orderId, {String? managerPin}) async {
-    await _apiClient.post(
-      '/orders/$orderId/cancel',
-      queryParameters: managerPin != null ? {'managerPin': managerPin} : null,
-    );
-  }
-
-  @override
-  Future<OrderTicket> voidOrderItem(
-    String orderId,
-    String itemId,
-    String reason, {
-    String? managerPin,
-  }) async {
-    final response = await _apiClient.post(
-      '/orders/$orderId/items/$itemId/void',
-      data: {'reason': reason},
-      queryParameters: managerPin != null ? {'managerPin': managerPin} : null,
-    );
-    return OrderTicket.fromJson(response.data);
-  }
 
   @override
   Future<OrderTicket> addOrderItem(
@@ -201,6 +174,27 @@ class OrderRepositoryImpl implements OrderRepository {
   @override
   Future<OrderTicket> markAsServed(String orderId) async {
     final response = await _apiClient.post('/orders/$orderId/serve');
+    return OrderTicket.fromJson(response.data);
+  }
+
+  @override
+  Future<OrderTicket> cancelOrder(String orderId, {String? managerPin}) async {
+    final response = await _apiClient.post(
+      '/orders/$orderId/cancel',
+      queryParameters: managerPin != null ? {'managerPin': managerPin} : null,
+    );
+    return OrderTicket.fromJson(response.data);
+  }
+
+  @override
+  Future<OrderTicket> voidOrderItem(String orderId, String itemId, String reason, {String? managerPin}) async {
+    final response = await _apiClient.post(
+      '/orders/$orderId/items/$itemId/void',
+      queryParameters: {
+        'reason': reason,
+        if (managerPin != null) 'managerPin': managerPin,
+      },
+    );
     return OrderTicket.fromJson(response.data);
   }
 }

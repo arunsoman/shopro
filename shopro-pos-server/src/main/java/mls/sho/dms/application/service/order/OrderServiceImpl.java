@@ -3,7 +3,6 @@ package mls.sho.dms.application.service.order;
 import lombok.RequiredArgsConstructor;
 import mls.sho.dms.application.dto.order.*;
 import mls.sho.dms.application.exception.ResourceNotFoundException;
-import mls.sho.dms.application.exception.BusinessRuleException;
 import mls.sho.dms.application.dto.floor.TableShapeResponse;
 import mls.sho.dms.entity.crm.CustomerProfile;
 import mls.sho.dms.entity.floor.TableShape;
@@ -123,6 +122,90 @@ public class OrderServiceImpl implements OrderService {
 
         OrderResponse response = mapToResponse(ticket);
         messagingTemplate.convertAndSend("/topic/orders", response);
+        return response;
+    }
+
+    private void checkModifiable(OrderTicket ticket) {
+        if (ticket.getStatus() == TicketStatus.PAID || ticket.getStatus() == TicketStatus.VOIDED) {
+            throw new IllegalStateException("Order is already " + ticket.getStatus());
+        }
+        // Requirement AC 2.6: No split orders can be modified
+        // An order is split if it has a parent or if it has sub-tickets
+        boolean isSplit = ticket.getParentTicket() != null || !orderTicketRepository.findByParentTicket(ticket).isEmpty();
+        if (isSplit || ticket.getStatus() == TicketStatus.PARTIALLY_PAID) {
+             throw new IllegalStateException("Cannot cancel or void items in an order with active splits/partial payments. Revert splits first.");
+        }
+    }
+
+    @Override
+    @Transactional
+    public OrderResponse cancelOrder(UUID orderId, String performedBy, String managerPin) {
+        OrderTicket ticket = orderTicketRepository.findById(orderId)
+            .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + orderId));
+        
+        checkModifiable(ticket);
+
+        boolean allNew = kdsService.areAllTicketsNew(orderId);
+        if (!allNew) {
+            if (managerPin == null || !staffService.validateManagerPin(managerPin)) {
+                throw new mls.sho.dms.application.exception.BusinessRuleException("Chef has started cooking. Manager override required to cancel this order.");
+            }
+            log.info("Manager override used to cancel cooking order: {}", orderId);
+        }
+
+        ticket.setStatus(TicketStatus.VOIDED);
+        kdsService.cancelKDSTickets(orderId);
+        
+        // Null-safe table transition
+        if (ticket.getTable() != null) {
+            ticket.getTable().setStatus(mls.sho.dms.entity.floor.TableStatus.DIRTY);
+            tableShapeRepository.save(ticket.getTable());
+            broadcastTableUpdate(ticket.getTable());
+        }
+
+        OrderTicket saved = orderTicketRepository.save(ticket);
+        recordAuditLog(saved, "ORDER_CANCELLED", "Order cancelled by " + performedBy, null);
+        
+        OrderResponse response = mapToResponse(saved);
+        messagingTemplate.convertAndSend("/topic/orders/" + orderId, "REFRESH");
+        return response;
+    }
+
+    @Override
+    @Transactional
+    public OrderResponse voidOrderItem(UUID orderId, UUID itemId, String reason, String performedBy, String managerPin) {
+        OrderTicket ticket = orderTicketRepository.findById(orderId)
+            .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + orderId));
+        
+        OrderItem item = orderItemRepository.findById(itemId)
+            .orElseThrow(() -> new ResourceNotFoundException("Item not found: " + itemId));
+
+        checkModifiable(ticket);
+
+        if (item.getStatus() == OrderItemStatus.VOIDED) {
+            throw new IllegalStateException("Item is already voided");
+        }
+
+        boolean isPending = kdsService.isItemPendingInKDS(itemId);
+        if (!isPending) {
+            if (managerPin == null || !staffService.validateManagerPin(managerPin)) {
+                throw new mls.sho.dms.application.exception.BusinessRuleException("Preparation has started. Manager override required to void this item.");
+            }
+            log.info("Manager override used to void cooking item: {} (Reason: {})", itemId, reason);
+        }
+
+        item.setStatus(OrderItemStatus.VOIDED);
+        orderItemRepository.save(item);
+        
+        kdsService.voidItemInKDS(itemId);
+        
+        recalculateTicket(ticket);
+        OrderTicket saved = orderTicketRepository.save(ticket);
+        
+        recordAuditLog(saved, "ITEM_VOIDED", "Item " + item.getMenuItem().getName() + " voided. Reason: " + reason, null);
+        
+        OrderResponse response = mapToResponse(saved);
+        messagingTemplate.convertAndSend("/topic/orders/" + orderId, "REFRESH");
         return response;
     }
 
@@ -585,8 +668,6 @@ public class OrderServiceImpl implements OrderService {
                 Collectors.reducing(BigDecimal.ZERO, mls.sho.dms.tax.entity.TaxCalculationResult::getTaxAmount, BigDecimal::add)
             ));
 
-        boolean isCancellable = (ticket.getStatus() == TicketStatus.OPEN || ticket.getStatus() == TicketStatus.SUBMITTED)
-                && kdsService.areAllTicketsNew(ticket.getId());
 
         return new OrderResponse(
             ticket.getId(),
@@ -614,7 +695,7 @@ public class OrderServiceImpl implements OrderService {
             ticket.getCreatedAt(),
             ticket.getPaidAt(),
             taxSummary,
-            isCancellable
+            ticket.getStatus() != TicketStatus.PAID && ticket.getStatus() != TicketStatus.VOIDED && kdsService.areAllTicketsNew(ticket.getId())
         );
     }
 
@@ -682,8 +763,7 @@ public class OrderServiceImpl implements OrderService {
             item.getFiredAt(),
             modifierResponses,
             itemTaxBreakdowns,
-            (item.getStatus() == OrderItemStatus.PENDING || item.getStatus() == OrderItemStatus.HELD || item.getStatus() == OrderItemStatus.SENT)
-                && kdsService.isItemPendingInKDS(item.getId())
+            item.getStatus() != OrderItemStatus.VOIDED && kdsService.isItemPendingInKDS(item.getId())
         );
     }
 
@@ -703,86 +783,6 @@ public class OrderServiceImpl implements OrderService {
         return tickets.stream()
             .map(this::mapToResponse)
             .collect(Collectors.toList());
-    }
-
-    @Override
-    @Transactional
-    public OrderResponse cancelOrder(UUID orderId, String performedBy, String managerPin) {
-        OrderTicket ticket = orderTicketRepository.findById(orderId)
-            .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + orderId));
-        
-        if (ticket.getStatus() == TicketStatus.PAID || ticket.getStatus() == TicketStatus.VOIDED) {
-            throw new IllegalStateException("Order is already " + ticket.getStatus());
-        }
-
-        if (ticket.getStatus() == TicketStatus.PARTIALLY_PAID) {
-             throw new IllegalStateException("Cannot cancel an order with partial payments. Revert payments first.");
-        }
-
-        boolean allNew = kdsService.areAllTicketsNew(orderId);
-        if (!allNew) {
-            if (managerPin == null || !staffService.validateManagerPin(managerPin)) {
-                throw new BusinessRuleException("Chef has started cooking. Manager override required to cancel this order.");
-            }
-            log.info("Manager override used to cancel cooking order: {}", orderId);
-        }
-
-        ticket.setStatus(TicketStatus.VOIDED);
-        kdsService.cancelKDSTickets(orderId);
-        
-        // Update Table status back to DIRTY
-        if (ticket.getTable() != null) {
-            TableShape table = ticket.getTable();
-            List<OrderTicket> otherActive = orderTicketRepository.findByTableAndStatusIn(table, List.of(TicketStatus.OPEN, TicketStatus.SUBMITTED));
-            if (otherActive.size() <= 1) { 
-                table.setStatus(mls.sho.dms.entity.floor.TableStatus.DIRTY);
-                tableShapeRepository.save(table);
-            }
-        }
-        
-        orderTicketRepository.save(ticket);
-        StaffMember staff = staffMemberRepository.findByFullName(performedBy).orElse(null);
-        String auditMsg = allNew ? "Order cancelled by " + performedBy : "Order cancelled with Manager Override by " + performedBy;
-        recordAuditLog(ticket, "ORDER_CANCELLED", auditMsg, staff);
-        
-        OrderResponse response = mapToResponse(ticket);
-        messagingTemplate.convertAndSend("/topic/orders/" + orderId, response);
-        if (ticket.getTable() != null) { broadcastTableUpdate(ticket.getTable()); }
-        return response;
-    }
-
-    @Override
-    @Transactional
-    public OrderResponse voidOrderItem(UUID orderId, UUID itemId, String reason, String performedBy, String managerPin) {
-        OrderTicket ticket = orderTicketRepository.findById(orderId)
-            .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + orderId));
-        OrderItem item = orderItemRepository.findById(itemId)
-            .orElseThrow(() -> new ResourceNotFoundException("Item not found: " + itemId));
-        
-        if (ticket.getStatus() == TicketStatus.PARTIALLY_PAID) {
-             throw new IllegalStateException("Cannot void items on a partially paid order.");
-        }
-
-        boolean isPending = kdsService.isItemPendingInKDS(itemId);
-        if (!isPending) {
-            if (managerPin == null || !staffService.validateManagerPin(managerPin)) {
-                throw new BusinessRuleException("Item is already being prepared. Manager override required to void.");
-            }
-            log.info("Manager override used to void preparing item: {}", itemId);
-        }
-
-        item.setStatus(OrderItemStatus.VOIDED);
-        orderItemRepository.save(item);
-        kdsService.voidItemInKDS(itemId);
-        
-        recalculateTicket(ticket);
-        StaffMember staff = staffMemberRepository.findByFullName(performedBy).orElse(null);
-        String auditMsg = "Item " + item.getMenuItem().getName() + " voided: " + reason + (isPending ? "" : " (Manager Override)");
-        recordAuditLog(ticket, "ITEM_VOIDED", auditMsg, staff);
-        
-        OrderResponse response = mapToResponse(ticket);
-        messagingTemplate.convertAndSend("/topic/orders/" + orderId, response);
-        return response;
     }
 
     @Override

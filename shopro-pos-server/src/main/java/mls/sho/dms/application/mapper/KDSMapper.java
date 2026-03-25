@@ -13,14 +13,14 @@ import java.util.List;
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface KDSMapper {
 
-    @Mapping(target = "tableNumber", source = "entity.orderTicket.table.name")
-    @Mapping(target = "serverName", source = "entity.orderTicket.server.fullName")
+    @Mapping(target = "tableNumber", source = "ticket.orderTicket.table.name")
+    @Mapping(target = "serverName", source = "ticket.orderTicket.server.fullName")
     @Mapping(target = "items", source = "items")
-    @Mapping(target = "id", source = "entity.id")
-    @Mapping(target = "status", source = "entity.status")
-    @Mapping(target = "firedAt", source = "entity.firedAt")
-    @Mapping(target = "cookingAt", source = "entity.cookingAt")
-    KDSTicketResponse toResponse(KDSTicket entity, List<KDSTicketItemResponse> items);
+    @Mapping(target = "id", source = "ticket.id")
+    @Mapping(target = "status", source = "ticket.status")
+    @Mapping(target = "firedAt", source = "ticket.firedAt")
+    @Mapping(target = "cookingAt", source = "ticket.cookingAt")
+    public abstract KDSTicketResponse toResponse(KDSTicket ticket, List<KDSTicketItemResponse> items);
 
     @Mapping(target = "id", source = "entity.id")
     @Mapping(target = "menuItemId", source = "entity.orderItem.menuItem.id")
@@ -30,6 +30,6 @@ public interface KDSMapper {
     @Mapping(target = "customNote", source = "entity.orderItem.customNote")
     @Mapping(target = "modifiers", ignore = true) // Will support modifiers later
     @Mapping(target = "priority", source = "entity.priority")
-    @Mapping(target = "preparationTimeMinutes", source = "entity.orderItem.menuItem.preparationTimeMinutes")
+    @Mapping(target = "preparationTimeMinutes", expression = "java(entity.getOrderItem().getMenuItem().getPreparationTimeMinutes() != null ? entity.getOrderItem().getMenuItem().getPreparationTimeMinutes() : 0)")
     KDSTicketItemResponse toItemResponse(KDSTicketItem entity);
 }

@@ -7,6 +7,7 @@ import '../../domain/models/order_models.dart';
 import '../providers/order_provider.dart';
 import 'discount_dialog.dart';
 import 'split_dialog.dart';
+import '../../../auth/presentation/widgets/manager_pin_dialog.dart';
 
 class OrderSummarySidebar extends ConsumerWidget {
   final OrderTicket? order;
@@ -243,12 +244,6 @@ class OrderSummarySidebar extends ConsumerWidget {
                 children: [
                   Row(
                     children: [
-                      if (item.status != OrderItemStatus.voided)
-                        IconButton(
-                          icon: const Icon(Icons.close, size: 16, color: Colors.red),
-                          onPressed: () => _voidItem(context, ref, item),
-                          tooltip: 'Void Item',
-                        ),
                       Text(
                         '\$${item.calculatedTotal.toStringAsFixed(2)}',
                         style: const TextStyle(
@@ -258,6 +253,18 @@ class OrderSummarySidebar extends ConsumerWidget {
                       ),
                     ],
                   ),
+                  if (item.status == OrderItemStatus.voided)
+                    const Padding(
+                      padding: EdgeInsets.only(top: 4),
+                      child: Text(
+                        'VOIDED',
+                        style: TextStyle(
+                          color: AppColors.error,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
                   if (!isSent)
                     Padding(
                       padding: const EdgeInsets.only(top: 8),
@@ -285,6 +292,23 @@ class OrderSummarySidebar extends ConsumerWidget {
                                     ),
                           ),
                         ],
+                      ),
+                    ),
+                  if (isSent && item.status != OrderItemStatus.voided)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: TextButton(
+                        onPressed: () => _handleVoidItem(context, ref, item),
+                        style: TextButton.styleFrom(
+                          minimumSize: Size.zero,
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          foregroundColor: AppColors.error,
+                        ),
+                        child: const Text(
+                          'VOID',
+                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                        ),
                       ),
                     ),
                 ],
@@ -429,21 +453,18 @@ class OrderSummarySidebar extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.md),
-          if (order!.status != TicketStatus.paid &&
-              order!.status != TicketStatus.voided)
+          if (order!.status != TicketStatus.paid && order!.status != TicketStatus.voided)
             SizedBox(
               width: double.infinity,
-              child: TextButton.icon(
-                onPressed: () => _cancelWholeOrder(context, ref),
-                icon:
-                    const Icon(Icons.delete_outline, color: Colors.red, size: 20),
-                label: const Text(
-                  'CANCEL ORDER',
-                  style:
-                      TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
-                ),
+              child: TextButton(
+                onPressed: () => _handleCancelOrder(context, ref),
                 style: TextButton.styleFrom(
+                  foregroundColor: AppColors.error,
                   padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                ),
+                child: const Text(
+                  'CANCEL ORDER',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                 ),
               ),
             ),
@@ -471,123 +492,110 @@ class OrderSummarySidebar extends ConsumerWidget {
     );
   }
 
-  Future<void> _voidItem(
-    BuildContext context,
-    WidgetRef ref,
-    OrderItem item,
-  ) async {
-    final reasonController = TextEditingController();
-    final pinController = TextEditingController();
-
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            title: Text('Void ${item.name}'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: reasonController,
-                  decoration: const InputDecoration(
-                    labelText: 'Reason for voiding',
-                  ),
-                  autofocus: true,
-                ),
-                if (!item.isCancellable &&
-                    item.status != OrderItemStatus.pending) ...[
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Preparation has started. Manager PIN required.',
-                    style: TextStyle(color: Colors.red, fontSize: 12),
-                  ),
-                  TextField(
-                    controller: pinController,
-                    obscureText: true,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(labelText: 'Manager PIN'),
-                  ),
-                ],
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('CANCEL'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: const Text('VOID', style: TextStyle(color: Colors.red)),
-              ),
-            ],
-          ),
-    );
-
-    if (confirmed == true) {
-      await ref
-          .read(orderProvider.notifier)
-          .voidOrderItem(
-            item.id,
-            reasonController.text,
-            managerPin:
-                pinController.text.isNotEmpty ? pinController.text : null,
-          );
+  void _handleCancelOrder(BuildContext context, WidgetRef ref) {
+    if (order!.isCancellable) {
+      _confirmCancel(context, ref);
+    } else {
+      showDialog(
+        context: context,
+        builder: (context) => ManagerPinDialog(
+          onAuthorized: (pin) => _confirmCancel(context, ref, managerPin: pin),
+        ),
+      );
     }
   }
 
-  Future<void> _cancelWholeOrder(BuildContext context, WidgetRef ref) async {
-    final pinController = TextEditingController();
-    final confirmed = await showDialog<bool>(
+  void _confirmCancel(BuildContext context, WidgetRef ref, {String? managerPin}) {
+    showDialog(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('Cancel Whole Order?'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text('This will void the entire ticket and sync with KDS.'),
-                if (!order!.isCancellable &&
-                    order!.status != TicketStatus.open) ...[
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Kitchen has started preparation. Manager PIN required.',
-                    style: TextStyle(color: Colors.red, fontSize: 12),
-                  ),
-                  TextField(
-                    controller: pinController,
-                    obscureText: true,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(labelText: 'Manager PIN'),
-                  ),
-                ],
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('BACK'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: const Text(
-                  'CONFIRM CANCEL',
-                  style: TextStyle(color: Colors.red),
-                ),
-              ),
-            ],
+      builder: (context) => AlertDialog(
+        title: const Text('Cancel Order'),
+        content: const Text('Are you sure you want to cancel this entire order? This cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('NO, KEEP IT'),
           ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              ref.read(orderProvider.notifier).cancelOrder(managerPin: managerPin).catchError((e) {
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(e.toString()), backgroundColor: AppColors.error),
+                );
+              });
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+            child: const Text('YES, CANCEL ORDER'),
+          ),
+        ],
+      ),
     );
+  }
 
-    if (confirmed == true) {
-      await ref
-          .read(orderProvider.notifier)
-          .cancelOrder(
-            order!.id,
-            managerPin:
-                pinController.text.isNotEmpty ? pinController.text : null,
-          );
+  void _handleVoidItem(BuildContext context, WidgetRef ref, OrderItem item) {
+    if (item.isCancellable) {
+      _showVoidReason(context, ref, item);
+    } else {
+      showDialog(
+        context: context,
+        builder: (context) => ManagerPinDialog(
+          onAuthorized: (pin) => _showVoidReason(context, ref, item, managerPin: pin),
+        ),
+      );
     }
   }
+
+  void _showVoidReason(BuildContext context, WidgetRef ref, OrderItem item, {String? managerPin}) {
+    final controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Void ${item.name}'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Please provide a reason for voiding this item:'),
+            const SizedBox(height: 16),
+            TextField(
+              controller: controller,
+              decoration: const InputDecoration(
+                hintText: 'e.g., Customer changed mind, Kitchen error',
+                border: OutlineInputBorder(),
+              ),
+              autofocus: true,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('CANCEL'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (controller.text.trim().isEmpty) return;
+              Navigator.pop(context);
+              ref.read(orderProvider.notifier).voidOrderItem(
+                item.id,
+                controller.text.trim(),
+                managerPin: managerPin,
+              ).catchError((e) {
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(e.toString()), backgroundColor: AppColors.error),
+                );
+              });
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+            child: const Text('VOID ITEM'),
+          ),
+        ],
+      ),
+    );
+  }
+
 }
 
 class _QuantityButton extends StatelessWidget {

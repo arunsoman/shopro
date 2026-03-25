@@ -54,8 +54,8 @@ public class MenuItem extends BaseEntity {
     @OrderBy("displayOrder ASC")
     private java.util.List<MenuItemModifierGroup> modifierGroups = new java.util.ArrayList<>();
 
-    @Column(name = "preparation_time_minutes", nullable = false)
-    private int preparationTimeMinutes = 10;
+    @Column(name = "preparation_time_minutes")
+    private Integer preparationTimeMinutes = 10;
 
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
@@ -77,8 +77,8 @@ public class MenuItem extends BaseEntity {
 
     public java.util.List<MenuItemModifierGroup> getModifierGroups() { return modifierGroups; }
     
-    public int getPreparationTimeMinutes() { return preparationTimeMinutes; }
-    public void setPreparationTimeMinutes(int preparationTimeMinutes) { this.preparationTimeMinutes = preparationTimeMinutes; }
+    public Integer getPreparationTimeMinutes() { return preparationTimeMinutes; }
+    public void setPreparationTimeMinutes(Integer preparationTimeMinutes) { this.preparationTimeMinutes = preparationTimeMinutes; }
 
     public void addModifierGroup(MenuItemModifierGroup group) {
         modifierGroups.add(group);

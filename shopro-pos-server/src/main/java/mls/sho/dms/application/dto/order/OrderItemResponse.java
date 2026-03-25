@@ -23,5 +23,5 @@ public record OrderItemResponse(
     Instant firedAt,
     List<OrderItemModifierResponse> modifiers,
     List<mls.sho.dms.tax.dto.response.TaxBreakdownEntry> taxBreakdowns,
-    boolean isCancellable
+    Boolean isCancellable
 ) {}
