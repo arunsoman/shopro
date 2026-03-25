@@ -110,7 +110,11 @@ class OrderNotifier extends Notifier<OrderState> {
         destination: '/topic/orders/$orderId',
         callback: (frame) {
           if (frame.body != null) {
-            _handleOrderUpdate(json.decode(frame.body!));
+            try {
+              _handleOrderUpdate(json.decode(frame.body!));
+            } catch (e) {
+              debugPrint('Error handling order update: $e');
+            }
           }
         },
       );
@@ -394,9 +398,11 @@ class OrderNotifier extends Notifier<OrderState> {
       fetchActiveOrders();
     } on DioException catch (e) {
       final data = e.response?.data;
-      String errorMessage = e.message ?? e.toString();
+      String errorMessage = 'Server error during cancellation';
       if (data is Map && data.containsKey('message')) {
         errorMessage = data['message'];
+      } else if (e.message != null) {
+        errorMessage = e.message!;
       }
       state = state.copyWith(isLoading: false, error: errorMessage);
       rethrow;

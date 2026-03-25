@@ -98,7 +98,11 @@ class FloorPlanNotifier extends Notifier<FloorPlanState> {
         destination: '/topic/tables',
         callback: (frame) {
           if (frame.body != null) {
-            _handleTableUpdate(json.decode(frame.body!));
+            try {
+              _handleTableUpdate(json.decode(frame.body!));
+            } catch (e) {
+              debugPrint('Error handling table update: $e');
+            }
           }
         },
       );
@@ -108,7 +112,11 @@ class FloorPlanNotifier extends Notifier<FloorPlanState> {
         destination: '/topic/waitlist',
         callback: (frame) {
           if (frame.body != null) {
-            _handleWaitlistUpdate(json.decode(frame.body!));
+            try {
+              _handleWaitlistUpdate(json.decode(frame.body!));
+            } catch (e) {
+              debugPrint('Error handling waitlist update: $e');
+            }
           }
         },
       );

@@ -493,6 +493,7 @@ class OrderSummarySidebar extends ConsumerWidget {
   }
 
   void _handleCancelOrder(BuildContext context, WidgetRef ref) {
+    if (order == null) return;
     if (order!.isCancellable) {
       _confirmCancel(context, ref);
     } else {
