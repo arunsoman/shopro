@@ -294,6 +294,7 @@ class OrderSummarySidebar extends ConsumerWidget {
                         ],
                       ),
                     ),
+                  if (item.status == OrderItemStatus.pending)
                     Padding(
                       padding: const EdgeInsets.only(top: 8),
                       child: TextButton(
@@ -304,9 +305,9 @@ class OrderSummarySidebar extends ConsumerWidget {
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           foregroundColor: AppColors.error,
                         ),
-                        child: Text(
-                          isSent ? 'VOID' : 'REMOVE',
-                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                        child: const Text(
+                          'REMOVE',
+                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
                         ),
                       ),
                     ),
