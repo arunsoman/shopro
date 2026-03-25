@@ -3,6 +3,8 @@ package mls.sho.dms.entity.floor;
 import jakarta.persistence.*;
 import mls.sho.dms.entity.core.BaseEntity;
 import mls.sho.dms.entity.staff.StaffMember;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 /**
  * Represents a physical table shape on the restaurant's floor plan.
@@ -63,6 +65,7 @@ public class TableShape extends BaseEntity {
      * Stored as JSONB in PostgreSQL.
      */
     @Column(name = "extra_props", columnDefinition = "jsonb")
+    @JdbcTypeCode(SqlTypes.JSON)
     private String extraProps;
 
     /** NFC Tag ID for quick table selection (US-10.3). */
