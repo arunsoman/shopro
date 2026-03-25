@@ -167,10 +167,8 @@ class OrderSummarySidebar extends ConsumerWidget {
                   IconButton(
                     icon: Icon(
                       Icons.keyboard_arrow_up,
-                      size: 20,
-                      color: (!isSent)
-                          ? AppColors.primary
-                          : AppColors.lightMuted,
+                      size: 14,
+                      color: (!isSent) ? AppColors.primary : AppColors.primary,
                     ),
                     onPressed: (!isSent)
                         ? () => ref
@@ -194,10 +192,8 @@ class OrderSummarySidebar extends ConsumerWidget {
                   IconButton(
                     icon: Icon(
                       Icons.keyboard_arrow_down,
-                      size: 20,
-                      color: (!isSent)
-                          ? AppColors.primary
-                          : AppColors.secondary,
+                      size: 14,
+                      color: (!isSent) ? AppColors.primary : AppColors.primary,
                     ),
                     onPressed: (!isSent)
                         ? () => ref
