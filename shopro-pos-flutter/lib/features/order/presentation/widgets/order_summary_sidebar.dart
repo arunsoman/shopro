@@ -294,7 +294,6 @@ class OrderSummarySidebar extends ConsumerWidget {
                         ],
                       ),
                     ),
-                  if (isSent && item.status != OrderItemStatus.voided)
                     Padding(
                       padding: const EdgeInsets.only(top: 8),
                       child: TextButton(
@@ -305,9 +304,9 @@ class OrderSummarySidebar extends ConsumerWidget {
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           foregroundColor: AppColors.error,
                         ),
-                        child: const Text(
-                          'VOID',
-                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                        child: Text(
+                          isSent ? 'VOID' : 'REMOVE',
+                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
                         ),
                       ),
                     ),
@@ -494,16 +493,44 @@ class OrderSummarySidebar extends ConsumerWidget {
 
   void _handleCancelOrder(BuildContext context, WidgetRef ref) {
     if (order == null) return;
+    
+    // If order is not yet submitted, allow instant "Clear All"
+    if (order!.status == TicketStatus.open) {
+      _confirmClear(context, ref);
+      return;
+    }
+
     if (order!.isCancellable) {
       _confirmCancel(context, ref);
     } else {
-      showDialog(
-        context: context,
-        builder: (context) => ManagerPinDialog(
-          onAuthorized: (pin) => _confirmCancel(context, ref, managerPin: pin),
-        ),
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('This order cannot be cancelled (e.g. already paid)')),
       );
     }
+  }
+
+  void _confirmClear(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Clear Order?'),
+        content: const Text('This will remove all items from this unsubmitted order. This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              ref.read(orderProvider.notifier).cancelOrder(); // No PIN needed for OPEN
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Clear All'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _confirmCancel(BuildContext context, WidgetRef ref, {String? managerPin}) {
@@ -536,6 +563,12 @@ class OrderSummarySidebar extends ConsumerWidget {
   }
 
   void _handleVoidItem(BuildContext context, WidgetRef ref, OrderItem item) {
+    if (item.status == OrderItemStatus.pending) {
+      // Instant removal for unsubmitted items
+      ref.read(orderProvider.notifier).voidOrderItem(item.id, 'Removed before submission');
+      return;
+    }
+
     if (item.isCancellable) {
       _showVoidReason(context, ref, item);
     } else {

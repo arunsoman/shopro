@@ -187,17 +187,24 @@ public class OrderServiceImpl implements OrderService {
         }
 
         boolean isPending = kdsService.isItemPendingInKDS(itemId);
-        if (!isPending) {
-            if (managerPin == null || !staffService.validateManagerPin(managerPin)) {
-                throw new mls.sho.dms.application.exception.BusinessRuleException("Preparation has started. Manager override required to void this item.");
-            }
-            log.info("Manager override used to void cooking item: {} (Reason: {})", itemId, reason);
-        }
+        boolean isUnsubmitted = item.getStatus() == mls.sho.dms.entity.order.OrderItemStatus.PENDING;
 
-        item.setStatus(OrderItemStatus.VOIDED);
-        orderItemRepository.save(item);
-        
-        kdsService.voidItemInKDS(itemId);
+        if (isUnsubmitted) {
+            // Permanent deletion for unsubmitted items
+            ticket.getItems().remove(item);
+            orderItemRepository.delete(item);
+            log.info("Deleting unsubmitted item {} from order {}", itemId, orderId);
+        } else {
+            if (!isPending) {
+                if (managerPin == null || !staffService.validateManagerPin(managerPin)) {
+                    throw new mls.sho.dms.application.exception.BusinessRuleException("Preparation has started. Manager override required to void this item.");
+                }
+                log.info("Manager override used to void cooking item: {} (Reason: {})", itemId, reason);
+            }
+            item.setStatus(mls.sho.dms.entity.order.OrderItemStatus.VOIDED);
+            orderItemRepository.save(item);
+            kdsService.voidItemInKDS(itemId);
+        }
         
         recalculateTicket(ticket);
         OrderTicket saved = orderTicketRepository.save(ticket);
