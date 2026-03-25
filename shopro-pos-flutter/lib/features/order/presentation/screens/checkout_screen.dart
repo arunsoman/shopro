@@ -6,6 +6,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../providers/order_provider.dart';
+import '../../../floor_plan/presentation/providers/floor_plan_provider.dart';
 import '../../domain/models/order_models.dart';
 import '../../domain/repositories/order_repository.dart';
 
@@ -312,7 +313,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   Future<void> _processPayment(String orderId) async {
     setState(() {
       _isProcessing = true;
-      _processingStatus = _selectedMethod == PaymentMethod.mipay ? 'Initiating MiPay request...' : 'Processing payment...';
+      _processingStatus = _selectedMethod == PaymentMethod.mipay
+          ? 'Initiating MiPay request...'
+          : 'Processing ${_selectedMethod.name.toUpperCase()} payment...';
     });
 
     try {
@@ -326,13 +329,24 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         setState(() => _processingStatus = 'Confirming payment receipt...');
         await Future.delayed(const Duration(seconds: 1));
       } else {
-        await Future.delayed(const Duration(seconds: 2));
+        // Collect Payment for Cash/Card/Digital
+        await ref.read(orderProvider.notifier).completePayment(_selectedMethod);
       }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Payment Successful!'), backgroundColor: AppColors.emeraldAccent),
+          const SnackBar(
+            content: Text('Payment Successful!'),
+            backgroundColor: AppColors.emeraldAccent,
+          ),
         );
+
+        // Clear active order so it doesn't linger
+        ref.read(orderProvider.notifier).clearActiveOrder();
+
+        // Optimistic refresh of floor plan
+        ref.read(floorPlanProvider.notifier).refresh();
+
         context.go('/floor-plan');
       }
     } catch (e) {
@@ -341,7 +355,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
           _isProcessing = false;
           _processingStatus = null;
         });
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Payment failed: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Payment failed: $e')),
+        );
       }
     }
   }

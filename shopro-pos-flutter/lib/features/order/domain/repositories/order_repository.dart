@@ -35,6 +35,7 @@ abstract class OrderRepository {
     String? serverName,
   });
   Future<void> initiateMiPay(String orderId, String phoneNumber);
+  Future<void> completePayment(String orderId, PaymentMethod method, double amount);
   Future<OrderTicket> markAsServed(String orderId);
 }
 
@@ -176,6 +177,18 @@ class OrderRepositoryImpl implements OrderRepository {
     await _apiClient.post(
       '/payments/mipay/initiate',
       data: {'orderId': orderId, 'phoneNumber': phoneNumber},
+    );
+  }
+
+  @override
+  Future<void> completePayment(String orderId, PaymentMethod method, double amount) async {
+    await _apiClient.post(
+      '/payments/complete',
+      data: {
+        'orderId': orderId,
+        'method': method.jsonValue,
+        'amount': amount,
+      },
     );
   }
 

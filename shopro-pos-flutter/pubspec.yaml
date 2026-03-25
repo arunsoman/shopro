@@ -57,6 +57,7 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^5.0.0
   build_runner: any
+  mockito: ^5.4.4
   freezed: any
   json_serializable: any
 

@@ -29,9 +29,10 @@ class OrderState {
     List<OrderTicket>? allOrders,
     bool? isLoading,
     String? error,
+    bool clearActiveOrder = false,
   }) {
     return OrderState(
-      activeOrder: activeOrder ?? this.activeOrder,
+      activeOrder: clearActiveOrder ? null : (activeOrder ?? this.activeOrder),
       allOrders: allOrders ?? this.allOrders,
       isLoading: isLoading ?? this.isLoading,
       error: error,
@@ -376,6 +377,37 @@ class OrderNotifier extends Notifier<OrderState> {
       state = state.copyWith(isLoading: false, error: errorMessage);
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
+    }
+  }
+
+  void clearActiveOrder() {
+    _unsub?.call();
+    _unsub = null;
+    state = state.copyWith(clearActiveOrder: true);
+  }
+
+  Future<void> completePayment(PaymentMethod method) async {
+    if (state.activeOrder == null) return;
+    final orderId = state.activeOrder!.id;
+    final amount = state.activeOrder!.totalAmount;
+
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      final repository = ref.read(orderRepositoryProvider);
+      await repository.completePayment(orderId, method, amount);
+      // We don't clear here yet, let the UI call clearActiveOrder after showing success
+      state = state.copyWith(isLoading: false);
+    } on DioException catch (e) {
+      final data = e.response?.data;
+      String errorMessage = e.message ?? e.toString();
+      if (data is Map && data.containsKey('message')) {
+        errorMessage = data['message'];
+      }
+      state = state.copyWith(isLoading: false, error: errorMessage);
+      rethrow;
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+      rethrow;
     }
   }
 }
