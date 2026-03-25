@@ -160,40 +160,58 @@ class OrderSummarySidebar extends ConsumerWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Left: Vertical Quantity Control — compact, no gaps
+              // Left: Vertical Quantity Control
               Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  if (!isSent)
-                    GestureDetector(
-                      onTap: () => ref
-                          .read(orderProvider.notifier)
-                          .updateItemQuantity(item.id, item.quantity + 1),
-                      child: const Icon(
-                        Icons.keyboard_arrow_up,
-                        size: 20,
-                        color: AppColors.primary,
-                      ),
+                  IconButton(
+                    icon: Icon(
+                      Icons.keyboard_arrow_up,
+                      size: 20,
+                      color: (!isSent)
+                          ? AppColors.primary
+                          : AppColors.lightMuted,
                     ),
-                  Text(
-                    '${item.quantity}x',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13,
-                      color: AppColors.primary,
+                    onPressed: (!isSent)
+                        ? () => ref
+                              .read(orderProvider.notifier)
+                              .updateItemQuantity(item.id, item.quantity + 1)
+                        : null,
+                    padding: EdgeInsets.zero,
+                    style: IconButton.styleFrom(
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
                   ),
-                  if (!isSent)
-                    GestureDetector(
-                      onTap: () => ref
-                          .read(orderProvider.notifier)
-                          .updateItemQuantity(item.id, item.quantity - 1),
-                      child: const Icon(
-                        Icons.keyboard_arrow_down,
-                        size: 20,
-                        color: AppColors.primary,
-                      ),
+                  Text(
+                    '${item.quantity}x',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                      color: (!isSent)
+                          ? AppColors.primary
+                          : AppColors.lightMuted,
                     ),
+                  ),
+                  IconButton(
+                    icon: Icon(
+                      Icons.keyboard_arrow_down,
+                      size: 20,
+                      color: (!isSent)
+                          ? AppColors.primary
+                          : AppColors.lightMuted,
+                    ),
+                    onPressed: (!isSent)
+                        ? () => ref
+                              .read(orderProvider.notifier)
+                              .updateItemQuantity(item.id, item.quantity - 1)
+                        : null,
+                    padding: EdgeInsets.zero,
+                    style: IconButton.styleFrom(
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(width: AppSpacing.md),
@@ -293,13 +311,15 @@ class OrderSummarySidebar extends ConsumerWidget {
                   if (item.status == OrderItemStatus.pending)
                     Padding(
                       padding: const EdgeInsets.only(top: 8),
-                      child: GestureDetector(
-                        onTap: () => _handleVoidItem(context, ref, item),
-                        child: const Icon(
+                      child: IconButton(
+                        icon: const Icon(
                           Icons.delete_outline,
                           color: AppColors.error,
                           size: 24,
                         ),
+                        onPressed: () => _handleVoidItem(context, ref, item),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
                       ),
                     ),
                 ],
@@ -377,9 +397,7 @@ class OrderSummarySidebar extends ConsumerWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: hasDraftItems
                     ? AppColors.primary
-                    : (canPay
-                        ? const Color(0xFF1E293B)
-                        : AppColors.lightMuted),
+                    : (canPay ? const Color(0xFF1E293B) : AppColors.lightMuted),
                 foregroundColor: Colors.white,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
@@ -408,12 +426,12 @@ class OrderSummarySidebar extends ConsumerWidget {
                     ),
                   ),
                   style: OutlinedButton.styleFrom(
-                    padding:
-                        const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: AppSpacing.md,
+                    ),
                     side: const BorderSide(color: AppColors.lightBorder),
                     shape: RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.circular(AppSpacing.radiusMd),
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                     ),
                   ),
                   child: const Text('SPLIT'),
@@ -424,17 +442,16 @@ class OrderSummarySidebar extends ConsumerWidget {
                 child: OutlinedButton(
                   onPressed: () => showDialog(
                     context: context,
-                    builder: (context) => DiscountDialog(
-                      currentTotal: order!.totalAmount,
-                    ),
+                    builder: (context) =>
+                        DiscountDialog(currentTotal: order!.totalAmount),
                   ),
                   style: OutlinedButton.styleFrom(
-                    padding:
-                        const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: AppSpacing.md,
+                    ),
                     side: const BorderSide(color: AppColors.lightBorder),
                     shape: RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.circular(AppSpacing.radiusMd),
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                     ),
                   ),
                   child: const Text('DISCOUNT'),
@@ -452,13 +469,11 @@ class OrderSummarySidebar extends ConsumerWidget {
                 onPressed: () => _handleCancelOrder(context, ref),
                 style: TextButton.styleFrom(
                   foregroundColor: AppColors.error,
-                  padding:
-                      const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
                 ),
                 child: const Text(
                   'CANCEL ORDER',
-                  style:
-                      TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                 ),
               ),
             ),
@@ -475,13 +490,11 @@ class OrderSummarySidebar extends ConsumerWidget {
         children: [
           Text(
             label,
-            style:
-                const TextStyle(color: AppColors.lightMuted, fontSize: 13),
+            style: const TextStyle(color: AppColors.lightMuted, fontSize: 13),
           ),
           Text(
             '\$${amount.toStringAsFixed(2)}',
-            style:
-                const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
           ),
         ],
       ),
@@ -501,8 +514,7 @@ class OrderSummarySidebar extends ConsumerWidget {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text(
-              'This order cannot be cancelled (e.g. already paid)'),
+          content: Text('This order cannot be cancelled (e.g. already paid)'),
         ),
       );
     }
@@ -514,7 +526,8 @@ class OrderSummarySidebar extends ConsumerWidget {
       builder: (context) => AlertDialog(
         title: const Text('Clear Order?'),
         content: const Text(
-            'This will remove all items from this unsubmitted order. This action cannot be undone.'),
+          'This will remove all items from this unsubmitted order. This action cannot be undone.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
@@ -525,8 +538,7 @@ class OrderSummarySidebar extends ConsumerWidget {
               Navigator.of(context).pop();
               ref.read(orderProvider.notifier).cancelOrder();
             },
-            style:
-                ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             child: const Text('Clear All'),
           ),
         ],
@@ -534,14 +546,18 @@ class OrderSummarySidebar extends ConsumerWidget {
     );
   }
 
-  void _confirmCancel(BuildContext context, WidgetRef ref,
-      {String? managerPin}) {
+  void _confirmCancel(
+    BuildContext context,
+    WidgetRef ref, {
+    String? managerPin,
+  }) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Cancel Order'),
         content: const Text(
-            'Are you sure you want to cancel this entire order? This cannot be undone.'),
+          'Are you sure you want to cancel this entire order? This cannot be undone.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -554,17 +570,16 @@ class OrderSummarySidebar extends ConsumerWidget {
                   .read(orderProvider.notifier)
                   .cancelOrder(managerPin: managerPin)
                   .catchError((e) {
-                if (!context.mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(e.toString()),
-                    backgroundColor: AppColors.error,
-                  ),
-                );
-              });
+                    if (!context.mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(e.toString()),
+                        backgroundColor: AppColors.error,
+                      ),
+                    );
+                  });
             },
-            style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.error),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
             child: const Text('YES, CANCEL ORDER'),
           ),
         ],
@@ -572,8 +587,7 @@ class OrderSummarySidebar extends ConsumerWidget {
     );
   }
 
-  void _handleVoidItem(
-      BuildContext context, WidgetRef ref, OrderItem item) {
+  void _handleVoidItem(BuildContext context, WidgetRef ref, OrderItem item) {
     if (item.status == OrderItemStatus.pending) {
       ref
           .read(orderProvider.notifier)
@@ -595,8 +609,11 @@ class OrderSummarySidebar extends ConsumerWidget {
   }
 
   void _showVoidReason(
-      BuildContext context, WidgetRef ref, OrderItem item,
-      {String? managerPin}) {
+    BuildContext context,
+    WidgetRef ref,
+    OrderItem item, {
+    String? managerPin,
+  }) {
     final controller = TextEditingController();
     showDialog(
       context: context,
@@ -634,17 +651,16 @@ class OrderSummarySidebar extends ConsumerWidget {
                     managerPin: managerPin,
                   )
                   .catchError((e) {
-                if (!context.mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(e.toString()),
-                    backgroundColor: AppColors.error,
-                  ),
-                );
-              });
+                    if (!context.mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(e.toString()),
+                        backgroundColor: AppColors.error,
+                      ),
+                    );
+                  });
             },
-            style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.error),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
             child: const Text('VOID ITEM'),
           ),
         ],
