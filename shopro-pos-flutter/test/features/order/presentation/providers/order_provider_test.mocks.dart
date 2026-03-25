@@ -3,15 +3,23 @@
 // Do not manually edit this file.
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'dart:async' as _i5;
+import 'dart:async' as _i7;
+import 'dart:typed_data' as _i12;
 
 import 'package:dio/dio.dart' as _i3;
+import 'package:flutter_riverpod/flutter_riverpod.dart' as _i10;
 import 'package:mockito/mockito.dart' as _i1;
-import 'package:shopro_pos_flutter/core/network/api_client.dart' as _i6;
+import 'package:shopro_pos_flutter/core/network/api_client.dart' as _i8;
+import 'package:shopro_pos_flutter/features/notifications/data/models/notification_model.dart'
+    as _i9;
+import 'package:shopro_pos_flutter/features/notifications/presentation/providers/notification_provider.dart'
+    as _i4;
 import 'package:shopro_pos_flutter/features/order/domain/models/order_models.dart'
     as _i2;
 import 'package:shopro_pos_flutter/features/order/domain/repositories/order_repository.dart'
-    as _i4;
+    as _i6;
+import 'package:state_notifier/state_notifier.dart' as _i11;
+import 'package:stomp_dart_client/stomp_dart_client.dart' as _i5;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values
@@ -42,57 +50,68 @@ class _FakeResponse_2<T> extends _i1.SmartFake implements _i3.Response<T> {
     : super(parent, parentInvocation);
 }
 
+class _FakeNotificationState_3 extends _i1.SmartFake
+    implements _i4.NotificationState {
+  _FakeNotificationState_3(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
+}
+
+class _FakeStompConfig_4 extends _i1.SmartFake implements _i5.StompConfig {
+  _FakeStompConfig_4(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
+}
+
 /// A class which mocks [OrderRepository].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockOrderRepository extends _i1.Mock implements _i4.OrderRepository {
+class MockOrderRepository extends _i1.Mock implements _i6.OrderRepository {
   @override
-  _i5.Future<_i2.OrderTicket> getOrder(String? orderId) =>
+  _i7.Future<_i2.OrderTicket> getOrder(String? orderId) =>
       (super.noSuchMethod(
             Invocation.method(#getOrder, [orderId]),
-            returnValue: _i5.Future<_i2.OrderTicket>.value(
+            returnValue: _i7.Future<_i2.OrderTicket>.value(
               _FakeOrderTicket_0(this, Invocation.method(#getOrder, [orderId])),
             ),
-            returnValueForMissingStub: _i5.Future<_i2.OrderTicket>.value(
+            returnValueForMissingStub: _i7.Future<_i2.OrderTicket>.value(
               _FakeOrderTicket_0(this, Invocation.method(#getOrder, [orderId])),
             ),
           )
-          as _i5.Future<_i2.OrderTicket>);
+          as _i7.Future<_i2.OrderTicket>);
 
   @override
-  _i5.Future<List<_i2.OrderTicket>> getActiveOrders() =>
+  _i7.Future<List<_i2.OrderTicket>> getActiveOrders() =>
       (super.noSuchMethod(
             Invocation.method(#getActiveOrders, []),
-            returnValue: _i5.Future<List<_i2.OrderTicket>>.value(
+            returnValue: _i7.Future<List<_i2.OrderTicket>>.value(
               <_i2.OrderTicket>[],
             ),
-            returnValueForMissingStub: _i5.Future<List<_i2.OrderTicket>>.value(
+            returnValueForMissingStub: _i7.Future<List<_i2.OrderTicket>>.value(
               <_i2.OrderTicket>[],
             ),
           )
-          as _i5.Future<List<_i2.OrderTicket>>);
+          as _i7.Future<List<_i2.OrderTicket>>);
 
   @override
-  _i5.Future<_i2.OrderTicket> fireCourse(String? orderId, int? courseNumber) =>
+  _i7.Future<_i2.OrderTicket> fireCourse(String? orderId, int? courseNumber) =>
       (super.noSuchMethod(
             Invocation.method(#fireCourse, [orderId, courseNumber]),
-            returnValue: _i5.Future<_i2.OrderTicket>.value(
+            returnValue: _i7.Future<_i2.OrderTicket>.value(
               _FakeOrderTicket_0(
                 this,
                 Invocation.method(#fireCourse, [orderId, courseNumber]),
               ),
             ),
-            returnValueForMissingStub: _i5.Future<_i2.OrderTicket>.value(
+            returnValueForMissingStub: _i7.Future<_i2.OrderTicket>.value(
               _FakeOrderTicket_0(
                 this,
                 Invocation.method(#fireCourse, [orderId, courseNumber]),
               ),
             ),
           )
-          as _i5.Future<_i2.OrderTicket>);
+          as _i7.Future<_i2.OrderTicket>);
 
   @override
-  _i5.Future<_i2.OrderTicket> sendToKitchen(
+  _i7.Future<_i2.OrderTicket> sendToKitchen(
     String? orderId, {
     String? idempotencyKey,
   }) =>
@@ -102,7 +121,7 @@ class MockOrderRepository extends _i1.Mock implements _i4.OrderRepository {
               [orderId],
               {#idempotencyKey: idempotencyKey},
             ),
-            returnValue: _i5.Future<_i2.OrderTicket>.value(
+            returnValue: _i7.Future<_i2.OrderTicket>.value(
               _FakeOrderTicket_0(
                 this,
                 Invocation.method(
@@ -112,7 +131,7 @@ class MockOrderRepository extends _i1.Mock implements _i4.OrderRepository {
                 ),
               ),
             ),
-            returnValueForMissingStub: _i5.Future<_i2.OrderTicket>.value(
+            returnValueForMissingStub: _i7.Future<_i2.OrderTicket>.value(
               _FakeOrderTicket_0(
                 this,
                 Invocation.method(
@@ -123,10 +142,10 @@ class MockOrderRepository extends _i1.Mock implements _i4.OrderRepository {
               ),
             ),
           )
-          as _i5.Future<_i2.OrderTicket>);
+          as _i7.Future<_i2.OrderTicket>);
 
   @override
-  _i5.Future<_i2.OrderTicket> createOrder({
+  _i7.Future<_i2.OrderTicket> createOrder({
     required String? tableId,
     required int? guestCount,
     required _i2.OrderType? orderType,
@@ -137,7 +156,7 @@ class MockOrderRepository extends _i1.Mock implements _i4.OrderRepository {
               #guestCount: guestCount,
               #orderType: orderType,
             }),
-            returnValue: _i5.Future<_i2.OrderTicket>.value(
+            returnValue: _i7.Future<_i2.OrderTicket>.value(
               _FakeOrderTicket_0(
                 this,
                 Invocation.method(#createOrder, [], {
@@ -147,7 +166,7 @@ class MockOrderRepository extends _i1.Mock implements _i4.OrderRepository {
                 }),
               ),
             ),
-            returnValueForMissingStub: _i5.Future<_i2.OrderTicket>.value(
+            returnValueForMissingStub: _i7.Future<_i2.OrderTicket>.value(
               _FakeOrderTicket_0(
                 this,
                 Invocation.method(#createOrder, [], {
@@ -158,71 +177,71 @@ class MockOrderRepository extends _i1.Mock implements _i4.OrderRepository {
               ),
             ),
           )
-          as _i5.Future<_i2.OrderTicket>);
+          as _i7.Future<_i2.OrderTicket>);
 
   @override
-  _i5.Future<void> cancelOrder(String? orderId) =>
+  _i7.Future<void> cancelOrder(String? orderId) =>
       (super.noSuchMethod(
             Invocation.method(#cancelOrder, [orderId]),
-            returnValue: _i5.Future<void>.value(),
-            returnValueForMissingStub: _i5.Future<void>.value(),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
           )
-          as _i5.Future<void>);
+          as _i7.Future<void>);
 
   @override
-  _i5.Future<_i2.OrderTicket> voidOrderItem(
+  _i7.Future<_i2.OrderTicket> voidOrderItem(
     String? orderId,
     String? itemId,
     String? reason,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#voidOrderItem, [orderId, itemId, reason]),
-            returnValue: _i5.Future<_i2.OrderTicket>.value(
+            returnValue: _i7.Future<_i2.OrderTicket>.value(
               _FakeOrderTicket_0(
                 this,
                 Invocation.method(#voidOrderItem, [orderId, itemId, reason]),
               ),
             ),
-            returnValueForMissingStub: _i5.Future<_i2.OrderTicket>.value(
+            returnValueForMissingStub: _i7.Future<_i2.OrderTicket>.value(
               _FakeOrderTicket_0(
                 this,
                 Invocation.method(#voidOrderItem, [orderId, itemId, reason]),
               ),
             ),
           )
-          as _i5.Future<_i2.OrderTicket>);
+          as _i7.Future<_i2.OrderTicket>);
 
   @override
-  _i5.Future<_i2.OrderTicket> addOrderItem(
+  _i7.Future<_i2.OrderTicket> addOrderItem(
     String? orderId,
     Map<String, dynamic>? itemData,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#addOrderItem, [orderId, itemData]),
-            returnValue: _i5.Future<_i2.OrderTicket>.value(
+            returnValue: _i7.Future<_i2.OrderTicket>.value(
               _FakeOrderTicket_0(
                 this,
                 Invocation.method(#addOrderItem, [orderId, itemData]),
               ),
             ),
-            returnValueForMissingStub: _i5.Future<_i2.OrderTicket>.value(
+            returnValueForMissingStub: _i7.Future<_i2.OrderTicket>.value(
               _FakeOrderTicket_0(
                 this,
                 Invocation.method(#addOrderItem, [orderId, itemData]),
               ),
             ),
           )
-          as _i5.Future<_i2.OrderTicket>);
+          as _i7.Future<_i2.OrderTicket>);
 
   @override
-  _i5.Future<_i2.OrderTicket> updateOrderItem(
+  _i7.Future<_i2.OrderTicket> updateOrderItem(
     String? orderId,
     String? itemId,
     Map<String, dynamic>? itemData,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#updateOrderItem, [orderId, itemId, itemData]),
-            returnValue: _i5.Future<_i2.OrderTicket>.value(
+            returnValue: _i7.Future<_i2.OrderTicket>.value(
               _FakeOrderTicket_0(
                 this,
                 Invocation.method(#updateOrderItem, [
@@ -232,7 +251,7 @@ class MockOrderRepository extends _i1.Mock implements _i4.OrderRepository {
                 ]),
               ),
             ),
-            returnValueForMissingStub: _i5.Future<_i2.OrderTicket>.value(
+            returnValueForMissingStub: _i7.Future<_i2.OrderTicket>.value(
               _FakeOrderTicket_0(
                 this,
                 Invocation.method(#updateOrderItem, [
@@ -243,10 +262,10 @@ class MockOrderRepository extends _i1.Mock implements _i4.OrderRepository {
               ),
             ),
           )
-          as _i5.Future<_i2.OrderTicket>);
+          as _i7.Future<_i2.OrderTicket>);
 
   @override
-  _i5.Future<List<_i2.OrderTicket>> getOrderHistory({
+  _i7.Future<List<_i2.OrderTicket>> getOrderHistory({
     String? orderId,
     String? tableName,
     DateTime? startDate,
@@ -261,61 +280,61 @@ class MockOrderRepository extends _i1.Mock implements _i4.OrderRepository {
               #endDate: endDate,
               #serverName: serverName,
             }),
-            returnValue: _i5.Future<List<_i2.OrderTicket>>.value(
+            returnValue: _i7.Future<List<_i2.OrderTicket>>.value(
               <_i2.OrderTicket>[],
             ),
-            returnValueForMissingStub: _i5.Future<List<_i2.OrderTicket>>.value(
+            returnValueForMissingStub: _i7.Future<List<_i2.OrderTicket>>.value(
               <_i2.OrderTicket>[],
             ),
           )
-          as _i5.Future<List<_i2.OrderTicket>>);
+          as _i7.Future<List<_i2.OrderTicket>>);
 
   @override
-  _i5.Future<void> initiateMiPay(String? orderId, String? phoneNumber) =>
+  _i7.Future<void> initiateMiPay(String? orderId, String? phoneNumber) =>
       (super.noSuchMethod(
             Invocation.method(#initiateMiPay, [orderId, phoneNumber]),
-            returnValue: _i5.Future<void>.value(),
-            returnValueForMissingStub: _i5.Future<void>.value(),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
           )
-          as _i5.Future<void>);
+          as _i7.Future<void>);
 
   @override
-  _i5.Future<void> completePayment(
+  _i7.Future<void> completePayment(
     String? orderId,
     _i2.PaymentMethod? method,
     double? amount,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#completePayment, [orderId, method, amount]),
-            returnValue: _i5.Future<void>.value(),
-            returnValueForMissingStub: _i5.Future<void>.value(),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
           )
-          as _i5.Future<void>);
+          as _i7.Future<void>);
 
   @override
-  _i5.Future<_i2.OrderTicket> markAsServed(String? orderId) =>
+  _i7.Future<_i2.OrderTicket> markAsServed(String? orderId) =>
       (super.noSuchMethod(
             Invocation.method(#markAsServed, [orderId]),
-            returnValue: _i5.Future<_i2.OrderTicket>.value(
+            returnValue: _i7.Future<_i2.OrderTicket>.value(
               _FakeOrderTicket_0(
                 this,
                 Invocation.method(#markAsServed, [orderId]),
               ),
             ),
-            returnValueForMissingStub: _i5.Future<_i2.OrderTicket>.value(
+            returnValueForMissingStub: _i7.Future<_i2.OrderTicket>.value(
               _FakeOrderTicket_0(
                 this,
                 Invocation.method(#markAsServed, [orderId]),
               ),
             ),
           )
-          as _i5.Future<_i2.OrderTicket>);
+          as _i7.Future<_i2.OrderTicket>);
 }
 
 /// A class which mocks [ApiClient].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockApiClient extends _i1.Mock implements _i6.ApiClient {
+class MockApiClient extends _i1.Mock implements _i8.ApiClient {
   @override
   _i3.Dio get dio =>
       (super.noSuchMethod(
@@ -335,7 +354,7 @@ class MockApiClient extends _i1.Mock implements _i6.ApiClient {
   );
 
   @override
-  _i5.Future<_i3.Response<dynamic>> post(
+  _i7.Future<_i3.Response<dynamic>> post(
     String? path, {
     dynamic data,
     Map<String, dynamic>? queryParameters,
@@ -346,7 +365,7 @@ class MockApiClient extends _i1.Mock implements _i6.ApiClient {
               [path],
               {#data: data, #queryParameters: queryParameters},
             ),
-            returnValue: _i5.Future<_i3.Response<dynamic>>.value(
+            returnValue: _i7.Future<_i3.Response<dynamic>>.value(
               _FakeResponse_2<dynamic>(
                 this,
                 Invocation.method(
@@ -356,7 +375,7 @@ class MockApiClient extends _i1.Mock implements _i6.ApiClient {
                 ),
               ),
             ),
-            returnValueForMissingStub: _i5.Future<_i3.Response<dynamic>>.value(
+            returnValueForMissingStub: _i7.Future<_i3.Response<dynamic>>.value(
               _FakeResponse_2<dynamic>(
                 this,
                 Invocation.method(
@@ -367,10 +386,10 @@ class MockApiClient extends _i1.Mock implements _i6.ApiClient {
               ),
             ),
           )
-          as _i5.Future<_i3.Response<dynamic>>);
+          as _i7.Future<_i3.Response<dynamic>>);
 
   @override
-  _i5.Future<_i3.Response<dynamic>> get(
+  _i7.Future<_i3.Response<dynamic>> get(
     String? path, {
     Map<String, dynamic>? queryParameters,
   }) =>
@@ -380,7 +399,7 @@ class MockApiClient extends _i1.Mock implements _i6.ApiClient {
               [path],
               {#queryParameters: queryParameters},
             ),
-            returnValue: _i5.Future<_i3.Response<dynamic>>.value(
+            returnValue: _i7.Future<_i3.Response<dynamic>>.value(
               _FakeResponse_2<dynamic>(
                 this,
                 Invocation.method(
@@ -390,7 +409,7 @@ class MockApiClient extends _i1.Mock implements _i6.ApiClient {
                 ),
               ),
             ),
-            returnValueForMissingStub: _i5.Future<_i3.Response<dynamic>>.value(
+            returnValueForMissingStub: _i7.Future<_i3.Response<dynamic>>.value(
               _FakeResponse_2<dynamic>(
                 this,
                 Invocation.method(
@@ -401,10 +420,10 @@ class MockApiClient extends _i1.Mock implements _i6.ApiClient {
               ),
             ),
           )
-          as _i5.Future<_i3.Response<dynamic>>);
+          as _i7.Future<_i3.Response<dynamic>>);
 
   @override
-  _i5.Future<_i3.Response<dynamic>> patch(
+  _i7.Future<_i3.Response<dynamic>> patch(
     String? path, {
     dynamic data,
     Map<String, dynamic>? queryParameters,
@@ -415,7 +434,7 @@ class MockApiClient extends _i1.Mock implements _i6.ApiClient {
               [path],
               {#data: data, #queryParameters: queryParameters},
             ),
-            returnValue: _i5.Future<_i3.Response<dynamic>>.value(
+            returnValue: _i7.Future<_i3.Response<dynamic>>.value(
               _FakeResponse_2<dynamic>(
                 this,
                 Invocation.method(
@@ -425,7 +444,7 @@ class MockApiClient extends _i1.Mock implements _i6.ApiClient {
                 ),
               ),
             ),
-            returnValueForMissingStub: _i5.Future<_i3.Response<dynamic>>.value(
+            returnValueForMissingStub: _i7.Future<_i3.Response<dynamic>>.value(
               _FakeResponse_2<dynamic>(
                 this,
                 Invocation.method(
@@ -436,10 +455,10 @@ class MockApiClient extends _i1.Mock implements _i6.ApiClient {
               ),
             ),
           )
-          as _i5.Future<_i3.Response<dynamic>>);
+          as _i7.Future<_i3.Response<dynamic>>);
 
   @override
-  _i5.Future<_i3.Response<dynamic>> delete(
+  _i7.Future<_i3.Response<dynamic>> delete(
     String? path, {
     Map<String, dynamic>? queryParameters,
   }) =>
@@ -449,7 +468,7 @@ class MockApiClient extends _i1.Mock implements _i6.ApiClient {
               [path],
               {#queryParameters: queryParameters},
             ),
-            returnValue: _i5.Future<_i3.Response<dynamic>>.value(
+            returnValue: _i7.Future<_i3.Response<dynamic>>.value(
               _FakeResponse_2<dynamic>(
                 this,
                 Invocation.method(
@@ -459,7 +478,7 @@ class MockApiClient extends _i1.Mock implements _i6.ApiClient {
                 ),
               ),
             ),
-            returnValueForMissingStub: _i5.Future<_i3.Response<dynamic>>.value(
+            returnValueForMissingStub: _i7.Future<_i3.Response<dynamic>>.value(
               _FakeResponse_2<dynamic>(
                 this,
                 Invocation.method(
@@ -470,5 +489,253 @@ class MockApiClient extends _i1.Mock implements _i6.ApiClient {
               ),
             ),
           )
-          as _i5.Future<_i3.Response<dynamic>>);
+          as _i7.Future<_i3.Response<dynamic>>);
+}
+
+/// A class which mocks [NotificationNotifier].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockNotificationNotifier extends _i1.Mock
+    implements _i4.NotificationNotifier {
+  @override
+  _i7.Stream<_i9.InAppNotification> get newNotifications =>
+      (super.noSuchMethod(
+            Invocation.getter(#newNotifications),
+            returnValue: _i7.Stream<_i9.InAppNotification>.empty(),
+            returnValueForMissingStub:
+                _i7.Stream<_i9.InAppNotification>.empty(),
+          )
+          as _i7.Stream<_i9.InAppNotification>);
+
+  @override
+  set stompClient(_i5.StompClient? _stompClient) => super.noSuchMethod(
+    Invocation.setter(#stompClient, _stompClient),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  bool get mounted =>
+      (super.noSuchMethod(
+            Invocation.getter(#mounted),
+            returnValue: false,
+            returnValueForMissingStub: false,
+          )
+          as bool);
+
+  @override
+  _i7.Stream<_i4.NotificationState> get stream =>
+      (super.noSuchMethod(
+            Invocation.getter(#stream),
+            returnValue: _i7.Stream<_i4.NotificationState>.empty(),
+            returnValueForMissingStub:
+                _i7.Stream<_i4.NotificationState>.empty(),
+          )
+          as _i7.Stream<_i4.NotificationState>);
+
+  @override
+  _i4.NotificationState get state =>
+      (super.noSuchMethod(
+            Invocation.getter(#state),
+            returnValue: _FakeNotificationState_3(
+              this,
+              Invocation.getter(#state),
+            ),
+            returnValueForMissingStub: _FakeNotificationState_3(
+              this,
+              Invocation.getter(#state),
+            ),
+          )
+          as _i4.NotificationState);
+
+  @override
+  _i4.NotificationState get debugState =>
+      (super.noSuchMethod(
+            Invocation.getter(#debugState),
+            returnValue: _FakeNotificationState_3(
+              this,
+              Invocation.getter(#debugState),
+            ),
+            returnValueForMissingStub: _FakeNotificationState_3(
+              this,
+              Invocation.getter(#debugState),
+            ),
+          )
+          as _i4.NotificationState);
+
+  @override
+  bool get hasListeners =>
+      (super.noSuchMethod(
+            Invocation.getter(#hasListeners),
+            returnValue: false,
+            returnValueForMissingStub: false,
+          )
+          as bool);
+
+  @override
+  set onError(_i10.ErrorListener? _onError) => super.noSuchMethod(
+    Invocation.setter(#onError, _onError),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  set state(_i4.NotificationState? value) => super.noSuchMethod(
+    Invocation.setter(#state, value),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  _i7.Future<void> markAsRead(String? id) =>
+      (super.noSuchMethod(
+            Invocation.method(#markAsRead, [id]),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
+          )
+          as _i7.Future<void>);
+
+  @override
+  _i7.Future<void> dismiss(String? id) =>
+      (super.noSuchMethod(
+            Invocation.method(#dismiss, [id]),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
+          )
+          as _i7.Future<void>);
+
+  @override
+  _i7.Future<void> dismissAll() =>
+      (super.noSuchMethod(
+            Invocation.method(#dismissAll, []),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
+          )
+          as _i7.Future<void>);
+
+  @override
+  void dispose() => super.noSuchMethod(
+    Invocation.method(#dispose, []),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  bool updateShouldNotify(
+    _i4.NotificationState? old,
+    _i4.NotificationState? current,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#updateShouldNotify, [old, current]),
+            returnValue: false,
+            returnValueForMissingStub: false,
+          )
+          as bool);
+
+  @override
+  _i10.RemoveListener addListener(
+    _i11.Listener<_i4.NotificationState>? listener, {
+    bool? fireImmediately = true,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(
+              #addListener,
+              [listener],
+              {#fireImmediately: fireImmediately},
+            ),
+            returnValue: () {},
+            returnValueForMissingStub: () {},
+          )
+          as _i10.RemoveListener);
+}
+
+/// A class which mocks [StompClient].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockStompClient extends _i1.Mock implements _i5.StompClient {
+  @override
+  _i5.StompConfig get config =>
+      (super.noSuchMethod(
+            Invocation.getter(#config),
+            returnValue: _FakeStompConfig_4(this, Invocation.getter(#config)),
+            returnValueForMissingStub: _FakeStompConfig_4(
+              this,
+              Invocation.getter(#config),
+            ),
+          )
+          as _i5.StompConfig);
+
+  @override
+  bool get connected =>
+      (super.noSuchMethod(
+            Invocation.getter(#connected),
+            returnValue: false,
+            returnValueForMissingStub: false,
+          )
+          as bool);
+
+  @override
+  bool get isActive =>
+      (super.noSuchMethod(
+            Invocation.getter(#isActive),
+            returnValue: false,
+            returnValueForMissingStub: false,
+          )
+          as bool);
+
+  @override
+  void activate() => super.noSuchMethod(
+    Invocation.method(#activate, []),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  void deactivate() => super.noSuchMethod(
+    Invocation.method(#deactivate, []),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  _i5.StompUnsubscribe subscribe({
+    required String? destination,
+    required _i5.StompFrameCallback? callback,
+    Map<String, String>? headers,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#subscribe, [], {
+              #destination: destination,
+              #callback: callback,
+              #headers: headers,
+            }),
+            returnValue: ({Map<String, String>? unsubscribeHeaders}) {},
+            returnValueForMissingStub:
+                ({Map<String, String>? unsubscribeHeaders}) {},
+          )
+          as _i5.StompUnsubscribe);
+
+  @override
+  void send({
+    required String? destination,
+    Map<String, String>? headers,
+    String? body,
+    _i12.Uint8List? binaryBody,
+  }) => super.noSuchMethod(
+    Invocation.method(#send, [], {
+      #destination: destination,
+      #headers: headers,
+      #body: body,
+      #binaryBody: binaryBody,
+    }),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  void ack({required String? id, Map<String, String>? headers}) =>
+      super.noSuchMethod(
+        Invocation.method(#ack, [], {#id: id, #headers: headers}),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void nack({required String? id, Map<String, String>? headers}) =>
+      super.noSuchMethod(
+        Invocation.method(#nack, [], {#id: id, #headers: headers}),
+        returnValueForMissingStub: null,
+      );
 }

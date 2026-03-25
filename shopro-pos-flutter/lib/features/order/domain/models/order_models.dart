@@ -293,6 +293,58 @@ class OrderTicket {
     this.taxSummary = const {},
   });
 
+  OrderTicket copyWith({
+    String? id,
+    String? orderNumber,
+    TicketStatus? status,
+    OrderType? orderType,
+    String? tableId,
+    String? tableDisplay,
+    String? serverId,
+    String? serverName,
+    String? customerProfileId,
+    String? customerName,
+    String? deliveryAddress,
+    int? coverCount,
+    double? subtotal,
+    double? taxAmount,
+    double? tipAmount,
+    double? discountAmount,
+    double? totalAmount,
+    List<OrderItem>? items,
+    List<OrderAuditEntry>? auditTimeline,
+    Map<String, double>? taxSummary,
+    String? ticketSuffix,
+    DateTime? createdAt,
+    DateTime? paidAt,
+  }) {
+    return OrderTicket(
+      id: id ?? this.id,
+      orderNumber: orderNumber ?? this.orderNumber,
+      status: status ?? this.status,
+      orderType: orderType ?? this.orderType,
+      tableId: tableId ?? this.tableId,
+      tableDisplay: tableDisplay ?? this.tableDisplay,
+      serverId: serverId ?? this.serverId,
+      serverName: serverName ?? this.serverName,
+      customerProfileId: customerProfileId ?? this.customerProfileId,
+      customerName: customerName ?? this.customerName,
+      deliveryAddress: deliveryAddress ?? this.deliveryAddress,
+      coverCount: coverCount ?? this.coverCount,
+      subtotal: subtotal ?? this.subtotal,
+      taxAmount: taxAmount ?? this.taxAmount,
+      tipAmount: tipAmount ?? this.tipAmount,
+      discountAmount: discountAmount ?? this.discountAmount,
+      totalAmount: totalAmount ?? this.totalAmount,
+      items: items ?? this.items,
+      auditTimeline: auditTimeline ?? this.auditTimeline,
+      taxSummary: taxSummary ?? this.taxSummary,
+      ticketSuffix: ticketSuffix ?? this.ticketSuffix,
+      createdAt: createdAt ?? this.createdAt,
+      paidAt: paidAt ?? this.paidAt,
+    );
+  }
+
   factory OrderTicket.fromJson(Map<String, dynamic> json) {
     return OrderTicket(
       id: json['id'],

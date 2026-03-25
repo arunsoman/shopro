@@ -42,16 +42,55 @@ class OrderState {
 
 class OrderNotifier extends Notifier<OrderState> {
   void Function()? _unsub;
+  void Function()? _globalUnsub;
 
   @override
   OrderState build() {
-    ref.onDispose(() => _unsub?.call());
+    ref.onDispose(() {
+      _unsub?.call();
+      _globalUnsub?.call();
+    });
+
+    // Subscribe to global order updates to keep allOrders in sync
+    _subscribeToGlobalOrders();
+
     return OrderState.initial();
   }
 
   void setActiveOrder(OrderTicket order) {
     state = state.copyWith(activeOrder: order);
     _subscribeToOrder(order.id);
+  }
+
+  void _subscribeToGlobalOrders() {
+    _globalUnsub?.call();
+    _globalUnsub = null;
+
+    final notificationState = ref.read(notificationProvider);
+    if (!notificationState.isConnected) {
+      _listenForGlobalConnection();
+      return;
+    }
+
+    final stompClient = ref.read(notificationProvider.notifier).stompClient;
+    if (stompClient != null) {
+      final unsubscribe = stompClient.subscribe(
+        destination: '/topic/orders',
+        callback: (frame) {
+          // Any update to the global orders list triggers a refresh
+          fetchActiveOrders();
+        },
+      );
+      _globalUnsub = unsubscribe;
+    }
+  }
+
+  void _listenForGlobalConnection() {
+    ref.listen(notificationProvider, (previous, next) {
+      if (next.isConnected && (previous == null || !previous.isConnected)) {
+        _subscribeToGlobalOrders();
+      }
+    });
   }
 
   void _subscribeToOrder(String orderId) {
@@ -290,6 +329,9 @@ class OrderNotifier extends Notifier<OrderState> {
       if (state.activeOrder?.tableId != null) {
         ref.read(floorPlanProvider.notifier).refresh(); // Real sync
       }
+      
+      // Refresh active orders list
+      fetchActiveOrders();
     } on DioException catch (e) {
       final data = e.response?.data;
       String errorMessage = e.message ?? e.toString();
@@ -309,6 +351,7 @@ class OrderNotifier extends Notifier<OrderState> {
       await repository.cancelOrder(orderId);
       state = state.copyWith(activeOrder: null, isLoading: false);
       ref.read(floorPlanProvider.notifier).refresh();
+      fetchActiveOrders();
     } on DioException catch (e) {
       final data = e.response?.data;
       String errorMessage = e.message ?? e.toString();
@@ -384,6 +427,7 @@ class OrderNotifier extends Notifier<OrderState> {
     _unsub?.call();
     _unsub = null;
     state = state.copyWith(clearActiveOrder: true);
+    fetchActiveOrders(); // Immediately refresh the orders list
   }
 
   Future<void> completePayment(PaymentMethod method) async {
@@ -395,7 +439,8 @@ class OrderNotifier extends Notifier<OrderState> {
     try {
       final repository = ref.read(orderRepositoryProvider);
       await repository.completePayment(orderId, method, amount);
-      // We don't clear here yet, let the UI call clearActiveOrder after showing success
+      // Refresh the orders list to ensure the paid order is gone
+      await fetchActiveOrders();
       state = state.copyWith(isLoading: false);
     } on DioException catch (e) {
       final data = e.response?.data;
