@@ -159,34 +159,29 @@ class OrderItem {
 
   factory OrderItem.fromJson(Map<String, dynamic> json) {
     return OrderItem(
-      id: json['id'],
-      menuItemId: json['menuItemId'],
-      // Backend returns 'itemName', fallback to 'name' for compatibility
-      name: json['itemName'] ?? json['name'],
-      quantity: json['quantity'],
-      unitPrice: (json['unitPrice'] as num).toDouble(),
-      modifierUpchargeTotal: (json['modifierUpchargeTotal'] as num).toDouble(),
-      // Backend returns 'lineTotal', fallback to 'calculatedTotal'
-      calculatedTotal: ((json['lineTotal'] ?? json['calculatedTotal']) as num)
-          .toDouble(),
+      id: json['id']?.toString() ?? '',
+      menuItemId: json['menuItemId']?.toString() ?? '',
+      name: (json['itemName'] ?? json['name'])?.toString() ?? 'Unknown Item',
+      quantity: (json['quantity'] as num?)?.toInt() ?? 0,
+      unitPrice: (json['unitPrice'] as num?)?.toDouble() ?? 0.0,
+      modifierUpchargeTotal: (json['modifierUpchargeTotal'] as num?)?.toDouble() ?? 0.0,
+      calculatedTotal: ((json['lineTotal'] ?? json['calculatedTotal']) as num?)?.toDouble() ?? 0.0,
       status: OrderItemStatus.values.firstWhere(
-        (e) => e.name.toUpperCase() == (json['status'] as String).toUpperCase(),
+        (e) => e.name.toUpperCase() == (json['status']?.toString().toUpperCase() ?? 'PENDING'),
         orElse: () => OrderItemStatus.pending,
       ),
-      customNote: json['customNote'],
+      customNote: json['customNote']?.toString(),
       hasAllergyFlag: json['hasAllergyFlag'] ?? false,
       isSubtraction: json['isSubtraction'] ?? false,
-      courseNumber: json['courseNumber'] ?? 1,
+      courseNumber: (json['courseNumber'] as num?)?.toInt() ?? 1,
       subtractions: const [],
-      firedAt: json['firedAt'] != null ? DateTime.parse(json['firedAt']) : null,
-      modifiers:
-          (json['modifiers'] as List?)
-              ?.map((m) => OrderItemModifier.fromJson(m))
+      firedAt: json['firedAt'] != null ? DateTime.tryParse(json['firedAt'].toString()) : null,
+      modifiers: (json['modifiers'] as List?)
+              ?.map((m) => OrderItemModifier.fromJson(m as Map<String, dynamic>))
               .toList() ??
           const [],
-      taxBreakdowns:
-          (json['taxBreakdowns'] as List?)
-              ?.map((t) => TaxBreakdownEntry.fromJson(t))
+      taxBreakdowns: (json['taxBreakdowns'] as List?)
+              ?.map((t) => TaxBreakdownEntry.fromJson(t as Map<String, dynamic>))
               .toList() ??
           const [],
       isCancellable: json['isCancellable'] ?? true,
@@ -209,11 +204,10 @@ class OrderItemModifier {
 
   factory OrderItemModifier.fromJson(Map<String, dynamic> json) {
     return OrderItemModifier(
-      id: json['id'],
-      // Backend may return 'modifierOptionId' directly
-      modifierOptionId: json['modifierOptionId'] as String,
-      label: json['label'] as String,
-      upchargeAmount: (json['upchargeAmount'] as num).toDouble(),
+      id: json['id']?.toString() ?? '',
+      modifierOptionId: json['modifierOptionId']?.toString() ?? '',
+      label: json['label']?.toString() ?? 'Modifier',
+      upchargeAmount: (json['upchargeAmount'] as num?)?.toDouble() ?? 0.0,
     );
   }
 }
@@ -235,11 +229,13 @@ class OrderAuditEntry {
 
   factory OrderAuditEntry.fromJson(Map<String, dynamic> json) {
     return OrderAuditEntry(
-      id: json['id'],
-      eventType: json['eventType'],
-      details: json['details'],
-      performedBy: json['performedBy'],
-      createdAt: DateTime.parse(json['createdAt']),
+      id: json['id']?.toString() ?? '',
+      eventType: json['eventType']?.toString() ?? 'SYSTEM',
+      details: json['details']?.toString() ?? '',
+      performedBy: json['performedBy']?.toString() ?? 'SYSTEM',
+      createdAt: json['createdAt'] != null 
+          ? DateTime.tryParse(json['createdAt'].toString()) ?? DateTime.now()
+          : DateTime.now(),
     );
   }
 }
@@ -352,43 +348,44 @@ class OrderTicket {
 
   factory OrderTicket.fromJson(Map<String, dynamic> json) {
     return OrderTicket(
-      id: json['id'],
-      orderNumber: json['orderNumber'],
+      id: json['id']?.toString() ?? '',
+      orderNumber: json['orderNumber']?.toString() ?? 'ORD-0000',
       status: TicketStatus.values.firstWhere(
-        (e) => e.name.toUpperCase() == (json['status'] as String).toUpperCase(),
+        (e) => e.name.toUpperCase() == (json['status']?.toString().toUpperCase() ?? 'OPEN'),
         orElse: () => TicketStatus.open,
       ),
       orderType: OrderType.values.firstWhere(
-        (e) =>
-            e.name.toUpperCase() == (json['orderType'] as String).toUpperCase(),
+        (e) => e.name.toUpperCase() == (json['orderType']?.toString().toUpperCase() ?? 'DINE_IN'),
         orElse: () => OrderType.dineIn,
       ),
-      tableId: json['tableId'],
-      // Backend returns 'tableName', fallback to 'tableDisplay'
-      tableDisplay: json['tableName'] ?? json['tableDisplay'],
-      serverId: json['serverId'],
-      serverName: json['serverName'],
-      customerProfileId: json['customerProfileId'],
-      customerName: json['customerName'],
-      deliveryAddress: json['deliveryAddress'],
-      coverCount: json['coverCount'] as int,
-      subtotal: (json['subtotal'] as num).toDouble(),
-      taxAmount: (json['taxAmount'] as num).toDouble(),
-      tipAmount: (json['tipAmount'] as num).toDouble(),
-      discountAmount: (json['discountAmount'] as num).toDouble(),
-      totalAmount: (json['totalAmount'] as num).toDouble(),
-      items: (json['items'] as List).map((i) => OrderItem.fromJson(i)).toList(),
-      auditTimeline:
-          (json['auditTimeline'] as List?)
-              ?.map((a) => OrderAuditEntry.fromJson(a))
+      tableId: json['tableId']?.toString(),
+      tableDisplay: (json['tableName'] ?? json['tableDisplay'])?.toString(),
+      serverId: json['serverId']?.toString() ?? '',
+      serverName: json['serverName']?.toString() ?? 'Staff',
+      customerProfileId: json['customerProfileId']?.toString(),
+      customerName: json['customerName']?.toString(),
+      deliveryAddress: json['deliveryAddress']?.toString(),
+      coverCount: (json['coverCount'] as num?)?.toInt() ?? 1,
+      subtotal: (json['subtotal'] as num?)?.toDouble() ?? 0.0,
+      taxAmount: (json['taxAmount'] as num?)?.toDouble() ?? 0.0,
+      tipAmount: (json['tipAmount'] as num?)?.toDouble() ?? 0.0,
+      discountAmount: (json['discountAmount'] as num?)?.toDouble() ?? 0.0,
+      totalAmount: (json['totalAmount'] as num?)?.toDouble() ?? 0.0,
+      items: (json['items'] as List?)
+              ?.map((i) => OrderItem.fromJson(i as Map<String, dynamic>))
               .toList() ??
           const [],
-      ticketSuffix: json['ticketSuffix'],
-      createdAt: DateTime.parse(json['createdAt']),
-      paidAt: json['paidAt'] != null ? DateTime.parse(json['paidAt']) : null,
-      taxSummary:
-          (json['taxSummary'] as Map<String, dynamic>?)?.map(
-            (k, v) => MapEntry(k, (v as num).toDouble()),
+      auditTimeline: (json['auditTimeline'] as List?)
+              ?.map((a) => OrderAuditEntry.fromJson(a as Map<String, dynamic>))
+              .toList() ??
+          const [],
+      ticketSuffix: json['ticketSuffix']?.toString(),
+      createdAt: json['createdAt'] != null 
+          ? DateTime.tryParse(json['createdAt'].toString()) ?? DateTime.now()
+          : DateTime.now(),
+      paidAt: json['paidAt'] != null ? DateTime.tryParse(json['paidAt'].toString()) : null,
+      taxSummary: (json['taxSummary'] as Map<String, dynamic>?)?.map(
+            (k, v) => MapEntry(k, (v as num?)?.toDouble() ?? 0.0),
           ) ??
           const {},
       isCancellable: json['isCancellable'] ?? true,
