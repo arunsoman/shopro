@@ -87,6 +87,20 @@ public class StaffServiceImpl implements StaffService {
         return toResponse(staffRepository.save(member));
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public boolean validateManagerPin(String pin) {
+        if (pin == null || pin.isEmpty()) return false;
+        List<StaffMember> activeStaff = staffRepository.findByActiveTrue();
+        for (StaffMember member : activeStaff) {
+            if (passwordEncoder.matches(pin, member.getPinHash())) {
+                String roleName = member.getRole().getName().toUpperCase();
+                return List.of("OWNER", "MANAGER", "GENERAL_MANAGER").contains(roleName);
+            }
+        }
+        return false;
+    }
+
     // ---- Helpers ----
 
     private StaffMember getOrThrow(UUID id) {

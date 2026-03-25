@@ -12,4 +12,5 @@ import java.util.UUID;
 public interface KDSTicketItemRepository extends JpaRepository<KDSTicketItem, UUID> {
     List<KDSTicketItem> findByKdsTicket_Id(UUID kdsTicketId);
     List<KDSTicketItem> findByOrderItem_Id(UUID orderItemId);
+    void deleteByKdsTicket_Id(UUID kdsTicketId);
 }

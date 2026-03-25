@@ -133,6 +133,7 @@ function AppContent() {
           {/* ── Public ─────────────────────────────────────────────── */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/denied" element={<AccessDeniedPage />} />
+          <Route path="/studio" element={<LayoutEditorPage />} />
           <Route path="/vendor/rfq/:rfqId" element={<VendorRFQPage />} />
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           {/* ── Protected shell — header + sidebar live inside AppContent wrapper ── */}
@@ -360,12 +361,16 @@ function AppContent() {
   );
 }
 
+import { TooltipProvider } from '@/components/ui/tooltip';
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <AuthProvider>
-          <AppContent />
+          <TooltipProvider>
+            <AppContent />
+          </TooltipProvider>
         </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>

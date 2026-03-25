@@ -344,12 +344,12 @@ class OrderNotifier extends Notifier<OrderState> {
     }
   }
 
-  Future<void> cancelOrder(String orderId) async {
+  Future<void> cancelOrder(String orderId, {String? managerPin}) async {
     state = state.copyWith(isLoading: true);
     try {
       final repository = ref.read(orderRepositoryProvider);
-      await repository.cancelOrder(orderId);
-      state = state.copyWith(activeOrder: null, isLoading: false);
+      await repository.cancelOrder(orderId, managerPin: managerPin);
+      state = state.copyWith(activeOrder: null, isLoading: false, clearActiveOrder: true);
       ref.read(floorPlanProvider.notifier).refresh();
       fetchActiveOrders();
     } on DioException catch (e) {
@@ -364,7 +364,7 @@ class OrderNotifier extends Notifier<OrderState> {
     }
   }
 
-  Future<void> voidOrderItem(String itemId, String reason) async {
+  Future<void> voidOrderItem(String itemId, String reason, {String? managerPin}) async {
     if (state.activeOrder == null) return;
     state = state.copyWith(isLoading: true);
     try {
@@ -373,6 +373,7 @@ class OrderNotifier extends Notifier<OrderState> {
         state.activeOrder!.id,
         itemId,
         reason,
+        managerPin: managerPin,
       );
       state = state.copyWith(activeOrder: updatedOrder, isLoading: false);
     } on DioException catch (e) {

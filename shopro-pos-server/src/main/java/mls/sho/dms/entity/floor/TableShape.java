@@ -54,6 +54,17 @@ public class TableShape extends BaseEntity {
     @Column(name = "shape_type", nullable = false, length = 20)
     private String shapeType = "RECTANGLE";
 
+    /** Rotation in degrees (US-Studio-1.3). */
+    @Column(name = "rotation", nullable = false)
+    private int rotation = 0;
+
+    /** 
+     * Extended properties for the Studio editor (locked, colors, notes, etc).
+     * Stored as JSONB in PostgreSQL.
+     */
+    @Column(name = "extra_props", columnDefinition = "jsonb")
+    private String extraProps;
+
     /** NFC Tag ID for quick table selection (US-10.3). */
     @Column(name = "nfc_tag_id", unique = true, length = 64)
     private String nfcTagId;
@@ -80,6 +91,10 @@ public class TableShape extends BaseEntity {
     public void setHeight(int height) { this.height = height; }
     public String getShapeType() { return shapeType; }
     public void setShapeType(String shapeType) { this.shapeType = shapeType; }
+    public int getRotation() { return rotation; }
+    public void setRotation(int rotation) { this.rotation = rotation; }
+    public String getExtraProps() { return extraProps; }
+    public void setExtraProps(String extraProps) { this.extraProps = extraProps; }
     public String getNfcTagId() { return nfcTagId; }
     public void setNfcTagId(String nfcTagId) { this.nfcTagId = nfcTagId; }
 

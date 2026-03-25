@@ -28,4 +28,7 @@ public interface StaffService {
 
     /** Update a staff member's PIN. */
     StaffMemberResponse updatePin(UUID id, String newPin);
+
+    /** Validate if the given PIN belongs to an active staff member with MANAGER or higher privileges. */
+    boolean validateManagerPin(String pin);
 }

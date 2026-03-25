@@ -12,12 +12,13 @@ abstract class OrderRepository {
     required int guestCount,
     required OrderType orderType,
   });
-  Future<void> cancelOrder(String orderId);
+  Future<void> cancelOrder(String orderId, {String? managerPin});
   Future<OrderTicket> voidOrderItem(
     String orderId,
     String itemId,
-    String reason,
-  );
+    String reason, {
+    String? managerPin,
+  });
   Future<OrderTicket> addOrderItem(
     String orderId,
     Map<String, dynamic> itemData,
@@ -97,19 +98,24 @@ class OrderRepositoryImpl implements OrderRepository {
   }
 
   @override
-  Future<void> cancelOrder(String orderId) async {
-    await _apiClient.post('/orders/$orderId/cancel');
+  Future<void> cancelOrder(String orderId, {String? managerPin}) async {
+    await _apiClient.post(
+      '/orders/$orderId/cancel',
+      queryParameters: managerPin != null ? {'managerPin': managerPin} : null,
+    );
   }
 
   @override
   Future<OrderTicket> voidOrderItem(
     String orderId,
     String itemId,
-    String reason,
-  ) async {
+    String reason, {
+    String? managerPin,
+  }) async {
     final response = await _apiClient.post(
       '/orders/$orderId/items/$itemId/void',
       data: {'reason': reason},
+      queryParameters: managerPin != null ? {'managerPin': managerPin} : null,
     );
     return OrderTicket.fromJson(response.data);
   }

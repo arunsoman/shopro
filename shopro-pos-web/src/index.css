@@ -102,9 +102,24 @@
     --status-inactive-border: #E4E4E7;
     --status-inactive-text: #71717A;
 
-    /* Shadow */
+    /* Editor-specific tokens (Ported from Table Layout Studio) */
+    --editor-panel: #1e2129;
+    --editor-panel-foreground: #cbd5e1;
+    --editor-panel-muted: #282c34;
+    --editor-panel-border: #373e4a;
+    --editor-panel-accent: #00B4D8;
+    --editor-canvas: #f1f5f9;
+    --editor-grid-dot: #cbd5e1;
+
+    /* Studio status colors */
+    --status-studio-available: #10b981;
+    --status-studio-held: #fbbf24;
+    --status-studio-occupied: #ef4444;
+    --status-studio-ordered: #f97316;
+    --status-studio-paying: #3b82f6;
+    --status-studio-dirty: #9ca3af;
+
     --shadow-color: 198 80% 40%;
-    /* HSL for box-shadow tinting */
 
     color-scheme: light;
   }
@@ -187,6 +202,15 @@
     --status-inactive-bg: rgba(39, 39, 42, 0.3);
     --status-inactive-border: #3F3F46;
     --status-inactive-text: #A1A1AA;
+
+    /* Editor-specific tokens (Ported from Table Layout Studio) */
+    --editor-panel: #111827;
+    --editor-panel-foreground: #e5e7eb;
+    --editor-panel-muted: #1f2937;
+    --editor-panel-border: #374151;
+    --editor-panel-accent: #00C9A7;
+    --editor-canvas: #0f172a;
+    --editor-grid-dot: #475569;
 
     --shadow-color: 198 80% 10%;
 

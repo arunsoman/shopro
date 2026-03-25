@@ -33,5 +33,6 @@ public record OrderResponse(
     List<OrderAuditResponse> auditTimeline,
     java.time.Instant createdAt,
     java.time.Instant paidAt,
-    java.util.Map<String, java.math.BigDecimal> taxSummary
+    java.util.Map<String, java.math.BigDecimal> taxSummary,
+    boolean isCancellable
 ) {}

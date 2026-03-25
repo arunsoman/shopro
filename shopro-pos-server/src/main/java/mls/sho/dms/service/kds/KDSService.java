@@ -25,6 +25,8 @@ import mls.sho.dms.application.service.order.OrderService;
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.Set;
+import java.util.HashSet;
 
 @Service
 @lombok.extern.slf4j.Slf4j
@@ -455,6 +457,59 @@ public class KDSService {
                     .stream().map(kdsMapper::toItemResponse).toList();
             return kdsMapper.toResponse(ticket, itemDtos);
         }).collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public boolean areAllTicketsNew(UUID orderId) {
+        List<KDSTicket> tickets = ticketRepository.findByOrderTicket_Id(orderId);
+        if (tickets.isEmpty()) return true; // Not yet sent to KDS
+        return tickets.stream().allMatch(t -> t.getStatus() == KDSTicketStatus.NEW);
+    }
+
+    @Transactional(readOnly = true)
+    public boolean isItemPendingInKDS(UUID orderItemId) {
+        List<KDSTicketItem> items = ticketItemRepository.findByOrderItem_Id(orderItemId);
+        if (items.isEmpty()) return true; // Not yet sent or already voided
+        return items.stream().allMatch(i -> i.getStatus() == KDSItemStatus.PENDING);
+    }
+
+    @Transactional
+    public void voidItemInKDS(UUID orderItemId) {
+        List<KDSTicketItem> items = ticketItemRepository.findByOrderItem_Id(orderItemId);
+        Set<KDSTicket> affectedTickets = new HashSet<>();
+        for (KDSTicketItem item : items) {
+            affectedTickets.add(item.getKdsTicket());
+            ticketItemRepository.delete(item);
+        }
+        
+        for (KDSTicket ticket : affectedTickets) {
+            List<KDSTicketItem> remaining = ticketItemRepository.findByKdsTicket_Id(ticket.getId());
+            if (remaining.isEmpty()) {
+                ticketRepository.delete(ticket);
+                broadcastTicketCancellation(ticket);
+            } else {
+                broadcastTicketToStation(ticket);
+            }
+        }
+    }
+
+    @Transactional
+    public void cancelKDSTickets(UUID orderId) {
+        List<KDSTicket> tickets = ticketRepository.findByOrderTicket_Id(orderId);
+        for (KDSTicket ticket : tickets) {
+            ticketItemRepository.deleteByKdsTicket_Id(ticket.getId());
+            ticketRepository.delete(ticket);
+            broadcastTicketCancellation(ticket);
+        }
+    }
+
+    private void broadcastTicketCancellation(KDSTicket ticket) {
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("type", "TICKET_CANCELLED");
+        payload.put("ticketId", ticket.getId());
+        payload.put("orderId", ticket.getOrderTicket().getId());
+        messagingTemplate.convertAndSend("/topic/kds/station/" + ticket.getStation().getId(), payload);
+        messagingTemplate.convertAndSend("/topic/kds/status", payload);
     }
 
     // --- KDS Station CRUD ---

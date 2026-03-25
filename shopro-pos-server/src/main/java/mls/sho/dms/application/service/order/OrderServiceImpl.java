@@ -3,6 +3,7 @@ package mls.sho.dms.application.service.order;
 import lombok.RequiredArgsConstructor;
 import mls.sho.dms.application.dto.order.*;
 import mls.sho.dms.application.exception.ResourceNotFoundException;
+import mls.sho.dms.application.exception.BusinessRuleException;
 import mls.sho.dms.application.dto.floor.TableShapeResponse;
 import mls.sho.dms.entity.crm.CustomerProfile;
 import mls.sho.dms.entity.floor.TableShape;
@@ -28,6 +29,8 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.security.MessageDigest;
 import java.util.ArrayList;
+import mls.sho.dms.service.kds.KDSService;
+import mls.sho.dms.application.service.staff.StaffService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import java.util.List;
@@ -52,7 +55,8 @@ public class OrderServiceImpl implements OrderService {
     private final CustomerProfileRepository customerProfileRepository;
     private final mls.sho.dms.application.service.crm.LoyaltyService loyaltyService;
     private final RecipeService recipeService;
-    private final mls.sho.dms.service.kds.KDSService kdsService;
+    private final KDSService kdsService;
+    private final StaffService staffService;
     private final OrderAuditLogRepository orderAuditLogRepository;
     private final mls.sho.dms.application.service.core.NotificationEngine notificationEngine;
     private final SimpMessagingTemplate messagingTemplate;
@@ -581,6 +585,9 @@ public class OrderServiceImpl implements OrderService {
                 Collectors.reducing(BigDecimal.ZERO, mls.sho.dms.tax.entity.TaxCalculationResult::getTaxAmount, BigDecimal::add)
             ));
 
+        boolean isCancellable = (ticket.getStatus() == TicketStatus.OPEN || ticket.getStatus() == TicketStatus.SUBMITTED)
+                && kdsService.areAllTicketsNew(ticket.getId());
+
         return new OrderResponse(
             ticket.getId(),
             ticket.getId().toString().substring(0, 8).toUpperCase(), // Simplified order number
@@ -606,7 +613,8 @@ public class OrderServiceImpl implements OrderService {
             auditResponses,
             ticket.getCreatedAt(),
             ticket.getPaidAt(),
-            taxSummary
+            taxSummary,
+            isCancellable
         );
     }
 
@@ -673,7 +681,9 @@ public class OrderServiceImpl implements OrderService {
             item.getCourseNumber(),
             item.getFiredAt(),
             modifierResponses,
-            itemTaxBreakdowns
+            itemTaxBreakdowns,
+            (item.getStatus() == OrderItemStatus.PENDING || item.getStatus() == OrderItemStatus.HELD || item.getStatus() == OrderItemStatus.SENT)
+                && kdsService.isItemPendingInKDS(item.getId())
         );
     }
 
@@ -701,28 +711,43 @@ public class OrderServiceImpl implements OrderService {
         OrderTicket ticket = orderTicketRepository.findById(orderId)
             .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + orderId));
         
-        // TODO: Manager PIN validation for submitted orders
+        if (ticket.getStatus() == TicketStatus.PAID || ticket.getStatus() == TicketStatus.VOIDED) {
+            throw new IllegalStateException("Order is already " + ticket.getStatus());
+        }
+
+        if (ticket.getStatus() == TicketStatus.PARTIALLY_PAID) {
+             throw new IllegalStateException("Cannot cancel an order with partial payments. Revert payments first.");
+        }
+
+        boolean allNew = kdsService.areAllTicketsNew(orderId);
+        if (!allNew) {
+            if (managerPin == null || !staffService.validateManagerPin(managerPin)) {
+                throw new BusinessRuleException("Chef has started cooking. Manager override required to cancel this order.");
+            }
+            log.info("Manager override used to cancel cooking order: {}", orderId);
+        }
+
         ticket.setStatus(TicketStatus.VOIDED);
+        kdsService.cancelKDSTickets(orderId);
         
-        // Update Table status back to AVAILABLE if this was the only active order
+        // Update Table status back to DIRTY
         if (ticket.getTable() != null) {
             TableShape table = ticket.getTable();
             List<OrderTicket> otherActive = orderTicketRepository.findByTableAndStatusIn(table, List.of(TicketStatus.OPEN, TicketStatus.SUBMITTED));
-            if (otherActive.size() <= 1) { // Current ticket is about to be cancelled
-                table.setStatus(mls.sho.dms.entity.floor.TableStatus.DIRTY); // Usually DIRTY if they were seated
+            if (otherActive.size() <= 1) { 
+                table.setStatus(mls.sho.dms.entity.floor.TableStatus.DIRTY);
                 tableShapeRepository.save(table);
             }
         }
         
         orderTicketRepository.save(ticket);
         StaffMember staff = staffMemberRepository.findByFullName(performedBy).orElse(null);
-        recordAuditLog(ticket, "ORDER_CANCELLED", "Order cancelled by " + performedBy, staff);
+        String auditMsg = allNew ? "Order cancelled by " + performedBy : "Order cancelled with Manager Override by " + performedBy;
+        recordAuditLog(ticket, "ORDER_CANCELLED", auditMsg, staff);
         
         OrderResponse response = mapToResponse(ticket);
         messagingTemplate.convertAndSend("/topic/orders/" + orderId, response);
-        if (ticket.getTable() != null) {
-            broadcastTableUpdate(ticket.getTable());
-        }
+        if (ticket.getTable() != null) { broadcastTableUpdate(ticket.getTable()); }
         return response;
     }
 
@@ -734,13 +759,26 @@ public class OrderServiceImpl implements OrderService {
         OrderItem item = orderItemRepository.findById(itemId)
             .orElseThrow(() -> new ResourceNotFoundException("Item not found: " + itemId));
         
-        // TODO: Manager PIN validation for PREPARING/SENT items
+        if (ticket.getStatus() == TicketStatus.PARTIALLY_PAID) {
+             throw new IllegalStateException("Cannot void items on a partially paid order.");
+        }
+
+        boolean isPending = kdsService.isItemPendingInKDS(itemId);
+        if (!isPending) {
+            if (managerPin == null || !staffService.validateManagerPin(managerPin)) {
+                throw new BusinessRuleException("Item is already being prepared. Manager override required to void.");
+            }
+            log.info("Manager override used to void preparing item: {}", itemId);
+        }
+
         item.setStatus(OrderItemStatus.VOIDED);
         orderItemRepository.save(item);
+        kdsService.voidItemInKDS(itemId);
         
         recalculateTicket(ticket);
         StaffMember staff = staffMemberRepository.findByFullName(performedBy).orElse(null);
-        recordAuditLog(ticket, "ITEM_VOIDED", "Item " + item.getMenuItem().getName() + " voided: " + reason, staff);
+        String auditMsg = "Item " + item.getMenuItem().getName() + " voided: " + reason + (isPending ? "" : " (Manager Override)");
+        recordAuditLog(ticket, "ITEM_VOIDED", auditMsg, staff);
         
         OrderResponse response = mapToResponse(ticket);
         messagingTemplate.convertAndSend("/topic/orders/" + orderId, response);
