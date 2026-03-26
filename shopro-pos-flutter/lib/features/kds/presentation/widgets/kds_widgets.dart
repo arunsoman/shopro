@@ -305,20 +305,42 @@ class _KDSItemRow extends ConsumerWidget {
                   Text(
                     '${item.quantity}x ${item.name}',
                     style: TextStyle(
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
                       decoration: isReady ? TextDecoration.lineThrough : null,
                       color: isReady ? Colors.black54 : Colors.black87,
                     ),
                   ),
+                  if (item.quantity > 1 && (item.quantityPending < item.quantity))
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4.0),
+                      child: Wrap(
+                        spacing: 8,
+                        children: [
+                          if (item.quantityPending > 0)
+                            _buildMiniStatus('Pending', item.quantityPending, Colors.grey),
+                          if (item.quantityCooking > 0)
+                            _buildMiniStatus('Cooking', item.quantityCooking, Colors.orange),
+                          if (item.quantityReady > 0)
+                            _buildMiniStatus('Ready', item.quantityReady, Colors.green),
+                        ],
+                      ),
+                    ),
                   if (item.modifiers.isNotEmpty)
-                    Text(
-                      item.modifiers.join(', '),
-                      style: const TextStyle(fontSize: 11, color: Colors.orange, fontWeight: FontWeight.w500),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4.0),
+                      child: Text(
+                        item.modifiers.join(', '),
+                        style: const TextStyle(fontSize: 11, color: Colors.orange, fontWeight: FontWeight.w500),
+                      ),
                     ),
                   if (isCooking)
-                    const Text(
-                      'IN PREP',
-                      style: TextStyle(fontSize: 9, color: Colors.orange, fontWeight: FontWeight.bold, letterSpacing: 1),
+                    const Padding(
+                      padding: EdgeInsets.only(top: 2.0),
+                      child: Text(
+                        'IN PREP',
+                        style: TextStyle(fontSize: 9, color: Colors.orange, fontWeight: FontWeight.bold, letterSpacing: 1),
+                      ),
                     )
                   else if (isPaused)
                     const Text(
@@ -383,6 +405,25 @@ class _KDSItemRow extends ConsumerWidget {
               fallbackStartTime: fallbackStartTime,
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMiniStatus(String label, int count, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Text(
+        '${count} $label',
+        style: TextStyle(
+          fontSize: 9,
+          color: color,
+          fontWeight: FontWeight.bold,
         ),
       ),
     );

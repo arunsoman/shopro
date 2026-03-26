@@ -25,7 +25,11 @@ public interface KDSMapper {
     @Mapping(target = "id", source = "entity.id")
     @Mapping(target = "menuItemId", source = "entity.orderItem.menuItem.id")
     @Mapping(target = "name", source = "entity.orderItem.menuItem.name")
-    @Mapping(target = "quantity", source = "entity.orderItem.quantity")
+    @Mapping(target = "quantity", source = "entity.totalQuantity")
+    @Mapping(target = "quantityPending", source = "entity.quantityPending")
+    @Mapping(target = "quantityCooking", source = "entity.quantityCooking")
+    @Mapping(target = "quantityReady", source = "entity.quantityReady")
+    @Mapping(target = "quantityServed", source = "entity.quantityServed")
     @Mapping(target = "status", source = "entity.status")
     @Mapping(target = "customNote", source = "entity.orderItem.customNote")
     @Mapping(target = "modifiers", ignore = true) // Will support modifiers later

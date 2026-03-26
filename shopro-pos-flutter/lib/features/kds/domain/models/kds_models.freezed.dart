@@ -516,6 +516,10 @@ mixin _$KDSTicketItem {
   String get menuItemId => throw _privateConstructorUsedError;
   String get name => throw _privateConstructorUsedError;
   int get quantity => throw _privateConstructorUsedError;
+  int get quantityPending => throw _privateConstructorUsedError;
+  int get quantityCooking => throw _privateConstructorUsedError;
+  int get quantityReady => throw _privateConstructorUsedError;
+  int get quantityServed => throw _privateConstructorUsedError;
   KDSItemStatus get status => throw _privateConstructorUsedError;
   String? get customNote => throw _privateConstructorUsedError;
   List<String> get modifiers => throw _privateConstructorUsedError;
@@ -545,6 +549,10 @@ abstract class $KDSTicketItemCopyWith<$Res> {
     String menuItemId,
     String name,
     int quantity,
+    int quantityPending,
+    int quantityCooking,
+    int quantityReady,
+    int quantityServed,
     KDSItemStatus status,
     String? customNote,
     List<String> modifiers,
@@ -573,6 +581,10 @@ class _$KDSTicketItemCopyWithImpl<$Res, $Val extends KDSTicketItem>
     Object? menuItemId = null,
     Object? name = null,
     Object? quantity = null,
+    Object? quantityPending = null,
+    Object? quantityCooking = null,
+    Object? quantityReady = null,
+    Object? quantityServed = null,
     Object? status = null,
     Object? customNote = freezed,
     Object? modifiers = null,
@@ -597,6 +609,22 @@ class _$KDSTicketItemCopyWithImpl<$Res, $Val extends KDSTicketItem>
             quantity: null == quantity
                 ? _value.quantity
                 : quantity // ignore: cast_nullable_to_non_nullable
+                      as int,
+            quantityPending: null == quantityPending
+                ? _value.quantityPending
+                : quantityPending // ignore: cast_nullable_to_non_nullable
+                      as int,
+            quantityCooking: null == quantityCooking
+                ? _value.quantityCooking
+                : quantityCooking // ignore: cast_nullable_to_non_nullable
+                      as int,
+            quantityReady: null == quantityReady
+                ? _value.quantityReady
+                : quantityReady // ignore: cast_nullable_to_non_nullable
+                      as int,
+            quantityServed: null == quantityServed
+                ? _value.quantityServed
+                : quantityServed // ignore: cast_nullable_to_non_nullable
                       as int,
             status: null == status
                 ? _value.status
@@ -642,6 +670,10 @@ abstract class _$$KDSTicketItemImplCopyWith<$Res>
     String menuItemId,
     String name,
     int quantity,
+    int quantityPending,
+    int quantityCooking,
+    int quantityReady,
+    int quantityServed,
     KDSItemStatus status,
     String? customNote,
     List<String> modifiers,
@@ -669,6 +701,10 @@ class __$$KDSTicketItemImplCopyWithImpl<$Res>
     Object? menuItemId = null,
     Object? name = null,
     Object? quantity = null,
+    Object? quantityPending = null,
+    Object? quantityCooking = null,
+    Object? quantityReady = null,
+    Object? quantityServed = null,
     Object? status = null,
     Object? customNote = freezed,
     Object? modifiers = null,
@@ -693,6 +729,22 @@ class __$$KDSTicketItemImplCopyWithImpl<$Res>
         quantity: null == quantity
             ? _value.quantity
             : quantity // ignore: cast_nullable_to_non_nullable
+                  as int,
+        quantityPending: null == quantityPending
+            ? _value.quantityPending
+            : quantityPending // ignore: cast_nullable_to_non_nullable
+                  as int,
+        quantityCooking: null == quantityCooking
+            ? _value.quantityCooking
+            : quantityCooking // ignore: cast_nullable_to_non_nullable
+                  as int,
+        quantityReady: null == quantityReady
+            ? _value.quantityReady
+            : quantityReady // ignore: cast_nullable_to_non_nullable
+                  as int,
+        quantityServed: null == quantityServed
+            ? _value.quantityServed
+            : quantityServed // ignore: cast_nullable_to_non_nullable
                   as int,
         status: null == status
             ? _value.status
@@ -731,6 +783,10 @@ class _$KDSTicketItemImpl implements _KDSTicketItem {
     required this.menuItemId,
     required this.name,
     required this.quantity,
+    this.quantityPending = 0,
+    this.quantityCooking = 0,
+    this.quantityReady = 0,
+    this.quantityServed = 0,
     required this.status,
     this.customNote,
     final List<String> modifiers = const [],
@@ -750,6 +806,18 @@ class _$KDSTicketItemImpl implements _KDSTicketItem {
   final String name;
   @override
   final int quantity;
+  @override
+  @JsonKey()
+  final int quantityPending;
+  @override
+  @JsonKey()
+  final int quantityCooking;
+  @override
+  @JsonKey()
+  final int quantityReady;
+  @override
+  @JsonKey()
+  final int quantityServed;
   @override
   final KDSItemStatus status;
   @override
@@ -774,7 +842,7 @@ class _$KDSTicketItemImpl implements _KDSTicketItem {
 
   @override
   String toString() {
-    return 'KDSTicketItem(id: $id, menuItemId: $menuItemId, name: $name, quantity: $quantity, status: $status, customNote: $customNote, modifiers: $modifiers, prepStartedAt: $prepStartedAt, priority: $priority, preparationTimeMinutes: $preparationTimeMinutes)';
+    return 'KDSTicketItem(id: $id, menuItemId: $menuItemId, name: $name, quantity: $quantity, quantityPending: $quantityPending, quantityCooking: $quantityCooking, quantityReady: $quantityReady, quantityServed: $quantityServed, status: $status, customNote: $customNote, modifiers: $modifiers, prepStartedAt: $prepStartedAt, priority: $priority, preparationTimeMinutes: $preparationTimeMinutes)';
   }
 
   @override
@@ -788,6 +856,14 @@ class _$KDSTicketItemImpl implements _KDSTicketItem {
             (identical(other.name, name) || other.name == name) &&
             (identical(other.quantity, quantity) ||
                 other.quantity == quantity) &&
+            (identical(other.quantityPending, quantityPending) ||
+                other.quantityPending == quantityPending) &&
+            (identical(other.quantityCooking, quantityCooking) ||
+                other.quantityCooking == quantityCooking) &&
+            (identical(other.quantityReady, quantityReady) ||
+                other.quantityReady == quantityReady) &&
+            (identical(other.quantityServed, quantityServed) ||
+                other.quantityServed == quantityServed) &&
             (identical(other.status, status) || other.status == status) &&
             (identical(other.customNote, customNote) ||
                 other.customNote == customNote) &&
@@ -811,6 +887,10 @@ class _$KDSTicketItemImpl implements _KDSTicketItem {
     menuItemId,
     name,
     quantity,
+    quantityPending,
+    quantityCooking,
+    quantityReady,
+    quantityServed,
     status,
     customNote,
     const DeepCollectionEquality().hash(_modifiers),
@@ -839,6 +919,10 @@ abstract class _KDSTicketItem implements KDSTicketItem {
     required final String menuItemId,
     required final String name,
     required final int quantity,
+    final int quantityPending,
+    final int quantityCooking,
+    final int quantityReady,
+    final int quantityServed,
     required final KDSItemStatus status,
     final String? customNote,
     final List<String> modifiers,
@@ -858,6 +942,14 @@ abstract class _KDSTicketItem implements KDSTicketItem {
   String get name;
   @override
   int get quantity;
+  @override
+  int get quantityPending;
+  @override
+  int get quantityCooking;
+  @override
+  int get quantityReady;
+  @override
+  int get quantityServed;
   @override
   KDSItemStatus get status;
   @override

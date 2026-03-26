@@ -169,8 +169,6 @@ class MockOrderRepository extends _i1.Mock implements _i5.OrderRepository {
           )
           as _i6.Future<_i2.OrderTicket>);
 
-
-
   @override
   _i6.Future<_i2.OrderTicket> addOrderItem(
     String? orderId,
@@ -285,6 +283,76 @@ class MockOrderRepository extends _i1.Mock implements _i5.OrderRepository {
               _FakeOrderTicket_0(
                 this,
                 Invocation.method(#markAsServed, [orderId]),
+              ),
+            ),
+          )
+          as _i6.Future<_i2.OrderTicket>);
+
+  @override
+  _i6.Future<_i2.OrderTicket> cancelOrder(
+    String? orderId, {
+    String? managerPin,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(
+              #cancelOrder,
+              [orderId],
+              {#managerPin: managerPin},
+            ),
+            returnValue: _i6.Future<_i2.OrderTicket>.value(
+              _FakeOrderTicket_0(
+                this,
+                Invocation.method(
+                  #cancelOrder,
+                  [orderId],
+                  {#managerPin: managerPin},
+                ),
+              ),
+            ),
+            returnValueForMissingStub: _i6.Future<_i2.OrderTicket>.value(
+              _FakeOrderTicket_0(
+                this,
+                Invocation.method(
+                  #cancelOrder,
+                  [orderId],
+                  {#managerPin: managerPin},
+                ),
+              ),
+            ),
+          )
+          as _i6.Future<_i2.OrderTicket>);
+
+  @override
+  _i6.Future<_i2.OrderTicket> voidOrderItem(
+    String? orderId,
+    String? itemId,
+    String? reason, {
+    String? managerPin,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(
+              #voidOrderItem,
+              [orderId, itemId, reason],
+              {#managerPin: managerPin},
+            ),
+            returnValue: _i6.Future<_i2.OrderTicket>.value(
+              _FakeOrderTicket_0(
+                this,
+                Invocation.method(
+                  #voidOrderItem,
+                  [orderId, itemId, reason],
+                  {#managerPin: managerPin},
+                ),
+              ),
+            ),
+            returnValueForMissingStub: _i6.Future<_i2.OrderTicket>.value(
+              _FakeOrderTicket_0(
+                this,
+                Invocation.method(
+                  #voidOrderItem,
+                  [orderId, itemId, reason],
+                  {#managerPin: managerPin},
+                ),
               ),
             ),
           )
