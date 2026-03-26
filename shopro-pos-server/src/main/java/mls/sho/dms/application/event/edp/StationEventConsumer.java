@@ -50,9 +50,10 @@ public class StationEventConsumer {
             OrderItem item = orderItemRepository.findById(orderItemId)
                     .orElseThrow(() -> new RuntimeException("OrderItem not found: " + orderItemId));
 
-            // Legacy Handoff: The current routeOrder expects a list. 
-            // Our EDP is 1-item-per-event, so we wrap it.
-            kdsService.routeOrder(ticket, List.of(item));
+            int unitIndex = Integer.parseInt(event.getPayload().getOrDefault("unitIndex", "1").toString());
+
+            // Route this specific unit to KDS stations
+            kdsService.routeItemUnit(ticket, item, unitIndex);
 
             eventStoreService.updateCheckpoint(CONSUMER_ID, event.getId());
         } catch (Exception e) {

@@ -267,10 +267,22 @@ class KDSNotifier extends StateNotifier<KDSState> {
           .where((i) => i.status != KDSItemStatus.served)
           .toList();
       
-      if (allItems.isEmpty && tableTickets.isNotEmpty) {
-        // If all items in existing tickets are served, we might want to still show the table 
-        // if it's active in floor plan, but without the old ticket items.
+      // Group items of same type + modifiers for Expo aggregation
+      final Map<String, List<KDSTicketItem>> groupedItemsMap = {};
+      for (final item in allItems) {
+        final key = '${item.menuItemId}_${item.modifiers.join(',')}';
+        groupedItemsMap.putIfAbsent(key, () => []).add(item);
       }
+
+      final List<KDSExpoItem> expoItems = groupedItemsMap.entries.map((entry) {
+        final units = entry.value;
+        return KDSExpoItem(
+          menuItemId: units.first.menuItemId,
+          name: units.first.name,
+          units: units,
+          modifiers: units.first.modifiers,
+        );
+      }).toList();
       
       TableInfo? tableInfo;
       try {
@@ -279,7 +291,7 @@ class KDSNotifier extends StateNotifier<KDSState> {
 
       // Use the earliest firedAt or occupancy start if no tickets
       final DateTime occupancyStart = tableTickets.isEmpty 
-          ? DateTime.now() // Ideally this would be seating time from the table entity
+          ? DateTime.now() 
           : tableTickets.map((t) => t.firedAt).reduce((a, b) => a.isBefore(b) ? a : b);
 
       return KDSExpoGroup(
@@ -287,7 +299,7 @@ class KDSNotifier extends StateNotifier<KDSState> {
         occupancyStart: occupancyStart,
         serverName: tableInfo?.assignedStaffName ?? (tableTickets.isNotEmpty ? tableTickets.first.serverName : 'Unknown'),
         guestCount: tableInfo?.capacity,
-        items: allItems,
+        items: expoItems,
         ticketIds: tableTickets.map((t) => t.id).toList(),
       );
     }).toList();

@@ -24,4 +24,10 @@ public interface KDSTicketRepository extends JpaRepository<KDSTicket, UUID> {
 
     List<KDSTicket> findByStation_IdAndStatusInOrderByFiredAtAsc(UUID stationId, List<KDSTicketStatus> statuses);
     List<KDSTicket> findByOrderTicket_Id(UUID orderTicketId);
+    @Query("SELECT t FROM KDSTicket t WHERE t.station.id = :stationId AND t.orderTicket.id = :orderId AND t.status IN :statuses")
+    List<KDSTicket> findByStationAndOrderAndStatusIn(
+            @Param("stationId") UUID stationId,
+            @Param("orderId") UUID orderId,
+            @Param("statuses") List<KDSTicketStatus> statuses
+    );
 }

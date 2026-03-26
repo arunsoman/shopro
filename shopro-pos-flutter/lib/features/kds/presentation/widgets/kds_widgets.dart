@@ -164,11 +164,10 @@ class KDSExpoTableCard extends ConsumerWidget {
                 : ListView.builder(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     itemCount: group.items.length,
-                    itemBuilder: (context, index) => _KDSItemRow(
+                    itemBuilder: (context, index) => _KDSExpoItemRow(
                       item: group.items[index],
                       now: now,
                       fallbackStartTime: group.occupancyStart ?? DateTime.now(),
-                      showActions: false,
                     ),
                   ),
           ),
@@ -383,6 +382,131 @@ class _KDSItemRow extends ConsumerWidget {
               fallbackStartTime: fallbackStartTime,
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _KDSExpoItemRow extends ConsumerWidget {
+  final KDSExpoItem item;
+  final DateTime now;
+  final DateTime fallbackStartTime;
+
+  const _KDSExpoItemRow({
+    required this.item,
+    required this.now,
+    required this.fallbackStartTime,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final totalQuantity = item.units.length;
+    final readyDocs = item.units.where((i) => i.status == KDSItemStatus.ready).toList();
+    final allReady = readyDocs.length == totalQuantity;
+
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: allReady ? Colors.green.withOpacity(0.05) : Colors.white.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: allReady ? Colors.green : Colors.grey.withOpacity(0.2),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                allReady ? Icons.check_circle : Icons.restaurant_menu,
+                color: allReady ? Colors.green : Colors.black54,
+                size: 20,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  '${totalQuantity}x ${item.name}',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    decoration: allReady ? TextDecoration.lineThrough : null,
+                  ),
+                ),
+              ),
+              if (readyDocs.isNotEmpty && !allReady)
+                Text(
+                  '${readyDocs.length} READY',
+                  style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 12),
+                ),
+            ],
+          ),
+          if (item.modifiers.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(left: 32, top: 4),
+              child: Text(
+                item.modifiers.join(', '),
+                style: const TextStyle(fontSize: 12, color: Colors.orange, fontWeight: FontWeight.w500),
+              ),
+            ),
+          const SizedBox(height: 8),
+          // Individual Unit Indicators
+          Padding(
+            padding: const EdgeInsets.only(left: 32),
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: item.units.map((unit) => _buildUnitActionChip(context, ref, unit)).toList(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUnitActionChip(BuildContext context, WidgetRef ref, KDSTicketItem unit) {
+    final isReady = unit.status == KDSItemStatus.ready;
+    final isCooking = unit.status == KDSItemStatus.cooking;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: isReady 
+            ? () => ref.read(kdsProvider.notifier).serveItem(unit)
+            : null,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            color: isReady 
+                ? Colors.green.withOpacity(0.1) 
+                : (isCooking ? Colors.orange.withOpacity(0.1) : Colors.grey.withOpacity(0.1)),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: isReady 
+                  ? Colors.green 
+                  : (isCooking ? Colors.orange : Colors.grey.withOpacity(0.3)),
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'U${unit.unitIndex}',
+                style: TextStyle(
+                  fontSize: 10, 
+                  fontWeight: FontWeight.bold,
+                  color: isReady ? Colors.green : (isCooking ? Colors.orange : Colors.grey),
+                ),
+              ),
+              if (isReady) ...[
+                const SizedBox(width: 4),
+                const Icon(Icons.send_rounded, size: 12, color: Colors.green),
+              ],
+            ],
+          ),
         ),
       ),
     );

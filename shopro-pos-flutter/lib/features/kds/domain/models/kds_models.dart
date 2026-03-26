@@ -71,10 +71,21 @@ class KDSTicketItem with _$KDSTicketItem {
     DateTime? prepStartedAt,
     @Default(0) int priority,
     @Default(10) int preparationTimeMinutes,
+    @Default(1) int unitIndex,
   }) = _KDSTicketItem;
 
   factory KDSTicketItem.fromJson(Map<String, dynamic> json) =>
       _$KDSTicketItemFromJson(json);
+}
+
+@freezed
+class KDSExpoItem with _$KDSExpoItem {
+  const factory KDSExpoItem({
+    required String menuItemId,
+    required String name,
+    required List<KDSTicketItem> units,
+    @Default([]) List<String> modifiers,
+  }) = _KDSExpoItem;
 }
 
 @freezed
@@ -84,7 +95,7 @@ class KDSExpoGroup with _$KDSExpoGroup {
     required DateTime? occupancyStart,
     String? serverName,
     int? guestCount,
-    @Default([]) List<KDSTicketItem> items,
+    @Default([]) List<KDSExpoItem> items,
     @Default([]) List<String> ticketIds,
   }) = _KDSExpoGroup;
 }

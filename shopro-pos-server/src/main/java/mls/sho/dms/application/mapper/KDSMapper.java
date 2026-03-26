@@ -25,11 +25,12 @@ public interface KDSMapper {
     @Mapping(target = "id", source = "entity.id")
     @Mapping(target = "menuItemId", source = "entity.orderItem.menuItem.id")
     @Mapping(target = "name", source = "entity.orderItem.menuItem.name")
-    @Mapping(target = "quantity", source = "entity.orderItem.quantity")
+    @Mapping(target = "quantity", constant = "1")
     @Mapping(target = "status", source = "entity.status")
     @Mapping(target = "customNote", source = "entity.orderItem.customNote")
     @Mapping(target = "modifiers", ignore = true) // Will support modifiers later
     @Mapping(target = "priority", source = "entity.priority")
+    @Mapping(target = "unitIndex", source = "entity.unitIndex")
     @Mapping(target = "preparationTimeMinutes", expression = "java(entity.getOrderItem().getMenuItem().getPreparationTimeMinutes() != null ? entity.getOrderItem().getMenuItem().getPreparationTimeMinutes() : 0)")
     KDSTicketItemResponse toItemResponse(KDSTicketItem entity);
 }

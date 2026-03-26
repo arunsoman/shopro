@@ -13,5 +13,6 @@ public record KDSTicketItemResponse(
     String customNote,
     List<String> modifiers,
     int priority,
-    Integer preparationTimeMinutes
+    Integer preparationTimeMinutes,
+    int unitIndex
 ) {}

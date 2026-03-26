@@ -39,6 +39,10 @@ public class KDSTicketItem extends BaseEntity {
     @Column(name = "ready_at")
     private Instant readyAt;
 
+    /** Tracks which specific unit of the OrderItem this record represents (1-indexed). */
+    @Column(name = "unit_index", nullable = false)
+    private int unitIndex = 1;
+
     public KDSTicket getKdsTicket() { return kdsTicket; }
     public void setKdsTicket(KDSTicket kdsTicket) { this.kdsTicket = kdsTicket; }
     public OrderItem getOrderItem() { return orderItem; }
@@ -49,4 +53,6 @@ public class KDSTicketItem extends BaseEntity {
     public void setPriority(int priority) { this.priority = priority; }
     public Instant getReadyAt() { return readyAt; }
     public void setReadyAt(Instant readyAt) { this.readyAt = readyAt; }
+    public int getUnitIndex() { return unitIndex; }
+    public void setUnitIndex(int unitIndex) { this.unitIndex = unitIndex; }
 }

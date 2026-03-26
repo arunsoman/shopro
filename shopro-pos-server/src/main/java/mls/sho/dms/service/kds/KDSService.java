@@ -78,36 +78,50 @@ public class KDSService {
     }
 
     @Transactional
-    public void routeOrder(OrderTicket orderTicket, List<OrderItem> itemsToRoute) {
-        // Map of Station ID to KDS Ticket
-        Map<UUID, KDSTicket> stationTickets = new HashMap<>();
-        // Map to keep track of items per ticket for DTO mapping
-        Map<UUID, List<KDSTicketItem>> ticketItemsMap = new HashMap<>();
+    public void routeItemUnit(OrderTicket orderTicket, OrderItem orderItem, int unitIndex) {
+        UUID menuItemId = orderItem.getMenuItem().getId();
+        UUID categoryId = orderItem.getMenuItem().getCategory() != null ? orderItem.getMenuItem().getCategory().getId() : null;
+        String itemName = orderItem.getMenuItem().getName();
 
-        log.debug("[KDS] Routing order {} with {} items", orderTicket.getId(), itemsToRoute.size());
-        for (OrderItem orderItem : itemsToRoute) {
-            UUID menuItemId = orderItem.getMenuItem().getId();
-            UUID categoryId = orderItem.getMenuItem().getCategory() != null ? orderItem.getMenuItem().getCategory().getId() : null;
-            String itemName = orderItem.getMenuItem().getName();
+        log.debug("[KDS] Routing unit {} of item {} (Order: {})", unitIndex, itemName, orderTicket.getId());
 
-            log.debug("[KDS] Processing item: {} (ID: {}, Category ID: {})", itemName, menuItemId, categoryId);
+        // Find matching stations
+        List<KDSRoutingRule> matchingRules = new ArrayList<>();
+        matchingRules.addAll(routingRuleRepository.findByTargetTypeAndTargetId(RoutingTargetType.ITEM, menuItemId));
+        if (matchingRules.isEmpty() && categoryId != null) {
+            matchingRules.addAll(routingRuleRepository.findByTargetTypeAndTargetId(RoutingTargetType.CATEGORY, categoryId));
+        }
 
-            // Find matching rules. Specific item rules take precedence over category rules.
-            List<KDSRoutingRule> matchingRules = new ArrayList<>();
-            matchingRules.addAll(routingRuleRepository.findByTargetTypeAndTargetId(RoutingTargetType.ITEM, menuItemId));
+        List<KDSStation> stations = new ArrayList<>(matchingRules.stream().map(KDSRoutingRule::getStation).toList());
+        stations.addAll(stationRepository.findByStationTypeAndOnlineTrue(KDSStationType.EXPO));
+
+        for (KDSStation station : stations) {
+            KDSTicket kdsTicket = findOrCreateTicket(orderTicket, station);
+
+            // Avoid duplicate routing for the same unit
+            boolean alreadyRouted = ticketItemRepository.findByKdsTicket_Id(kdsTicket.getId())
+                    .stream().anyMatch(i -> i.getOrderItem().getId().equals(orderItem.getId()) && i.getUnitIndex() == unitIndex);
             
-            if (matchingRules.isEmpty() && categoryId != null) {
-                matchingRules.addAll(routingRuleRepository.findByTargetTypeAndTargetId(RoutingTargetType.CATEGORY, categoryId));
+            if (alreadyRouted) {
+                log.debug("[KDS] Unit {} already routed to station {}", unitIndex, station.getName());
+                continue;
             }
 
-            log.debug("[KDS] Found {} matching routing rules for item {}", matchingRules.size(), itemName);
+            KDSTicketItem kdsItem = new KDSTicketItem();
+            kdsItem.setKdsTicket(kdsTicket);
+            kdsItem.setOrderItem(orderItem);
+            kdsItem.setUnitIndex(unitIndex);
+            kdsItem.setStatus(KDSItemStatus.PENDING);
+            kdsItem = ticketItemRepository.save(kdsItem);
 
-            // Route to all matching stations
-            for (KDSRoutingRule rule : matchingRules) {
-                KDSStation station = rule.getStation();
-                log.debug("[KDS] Matched station: {} (ID: {}, Online: {})", station.getName(), station.getId(), station.isOnline());
+            broadcastTicketToStation(kdsTicket);
+        }
+    }
 
-                KDSTicket kdsTicket = stationTickets.computeIfAbsent(station.getId(), id -> {
+    private KDSTicket findOrCreateTicket(OrderTicket orderTicket, KDSStation station) {
+        return ticketRepository.findByStationAndOrderAndStatusIn(
+                station.getId(), orderTicket.getId(), Arrays.asList(KDSTicketStatus.NEW, KDSTicketStatus.COOKING))
+                .stream().findFirst().orElseGet(() -> {
                     log.debug("[KDS] Creating new KDS ticket for station: {}", station.getName());
                     KDSTicket t = new KDSTicket();
                     t.setOrderTicket(orderTicket);
@@ -116,66 +130,16 @@ public class KDSService {
                     t.setStatus(KDSTicketStatus.NEW);
                     return ticketRepository.save(t);
                 });
+    }
 
-                // US-5.1: Split into unit-level items for granular tracking (Adversarial Review fix)
-                int quantity = orderItem.getQuantity();
-                log.debug("[KDS] Splitting item {} into {} unit-level records for ticket {}", itemName, quantity, kdsTicket.getId());
-                
-                for (int k = 0; k < quantity; k++) {
-                    KDSTicketItem kdsItem = new KDSTicketItem();
-                    kdsItem.setKdsTicket(kdsTicket);
-                    kdsItem.setOrderItem(orderItem);
-                    kdsItem.setStatus(KDSItemStatus.PENDING);
-                    kdsItem = ticketItemRepository.save(kdsItem);
-                    ticketItemsMap.computeIfAbsent(kdsTicket.getId(), id -> new ArrayList<>()).add(kdsItem);
-                }
+    @Transactional
+    public void routeOrder(OrderTicket orderTicket, List<OrderItem> itemsToRoute) {
+        // Legacy bulk routing method - now delegates to routeItemUnit for consistency
+        for (OrderItem item : itemsToRoute) {
+            for (int i = 1; i <= item.getQuantity(); i++) {
+                routeItemUnit(orderTicket, item, i);
             }
         }
-        
-        log.debug("[KDS] Completed item loop. Total stations to broadcast: {}", stationTickets.size());
-
-        // --- Aggregator (EXPO) Support ---
-        // Automatically route all items to any active EXPO stations
-        List<KDSStation> expoStations = stationRepository.findByStationTypeAndOnlineTrue(KDSStationType.EXPO);
-        for (KDSStation expo : expoStations) {
-            log.debug("[KDS] Routing total order to EXPO station: {}", expo.getName());
-            KDSTicket expoTicket = stationTickets.computeIfAbsent(expo.getId(), id -> {
-                KDSTicket t = new KDSTicket();
-                t.setOrderTicket(orderTicket);
-                t.setStation(expo);
-                t.setFiredAt(Instant.now());
-                t.setStatus(KDSTicketStatus.NEW);
-                return ticketRepository.save(t);
-            });
-
-            for (OrderItem orderItem : itemsToRoute) {
-                int quantity = orderItem.getQuantity();
-                for (int k = 0; k < quantity; k++) {
-                    KDSTicketItem kdsItem = new KDSTicketItem();
-                    kdsItem.setKdsTicket(expoTicket);
-                    kdsItem.setOrderItem(orderItem);
-                    kdsItem.setStatus(KDSItemStatus.PENDING);
-                    ticketItemRepository.save(kdsItem);
-                    ticketItemsMap.computeIfAbsent(expoTicket.getId(), id -> new ArrayList<>()).add(kdsItem);
-                }
-            }
-        }
-        
-        // Broadcast new tickets to each affected KDS station
-        stationTickets.forEach((stationId, ticket) -> {
-            KDSStation station = ticket.getStation();
-            if (station.isOnline()) {
-                String topic = "/topic/kds/station/" + stationId;
-                
-                // Map to DTO to avoid Hibernate proxy serialization issues
-                List<KDSTicketItemResponse> itemDtos = ticketItemsMap.getOrDefault(ticket.getId(), List.of())
-                        .stream().map(kdsMapper::toItemResponse).toList();
-                KDSTicketResponse response = kdsMapper.toResponse(ticket, itemDtos);
-
-                log.debug("[KDS] Broadcasting ticket {} to ONLINE station {} via topic: {}", ticket.getId(), station.getName(), topic);
-                messagingTemplate.convertAndSend(topic, response);
-            }
-        });
     }
 
     @Transactional
@@ -191,10 +155,10 @@ public class KDSService {
         } else if (currentStatus == KDSItemStatus.COOKING) {
             newStatus = KDSItemStatus.PAUSED;
         } else {
-            return item; // Ready or Served items can't be toggled back to cooking/pause via this method
+            return item;
         }
 
-        syncItemStatus(item.getOrderItem().getId(), newStatus, item.getPriority());
+        syncItemStatus(item.getOrderItem().getId(), item.getUnitIndex(), newStatus, item.getPriority());
         return ticketItemRepository.findById(kdsTicketItemId).orElse(item);
     }
 
@@ -203,7 +167,7 @@ public class KDSService {
         KDSTicketItem item = ticketItemRepository.findById(kdsTicketItemId)
                 .orElseThrow(() -> new IllegalArgumentException("Item not found"));
         
-        syncItemStatus(item.getOrderItem().getId(), KDSItemStatus.READY, item.getPriority());
+        syncItemStatus(item.getOrderItem().getId(), item.getUnitIndex(), KDSItemStatus.READY, item.getPriority());
         return ticketItemRepository.findById(kdsTicketItemId).orElse(item);
     }
 
@@ -216,7 +180,7 @@ public class KDSService {
             throw new IllegalStateException("Only READY items can be served");
         }
 
-        syncItemStatus(item.getOrderItem().getId(), KDSItemStatus.SERVED, item.getPriority());
+        syncItemStatus(item.getOrderItem().getId(), item.getUnitIndex(), KDSItemStatus.SERVED, item.getPriority());
         
         // Notify the server
         notifyServer(item);
@@ -237,7 +201,7 @@ public class KDSService {
                         itemName = item.getOrderItem().getMenuItem().getName();
                     }
                     log.debug("[KDS] Serving ready item: {} from ticket: {}", itemName, ticketId);
-                    syncItemStatus(item.getOrderItem().getId(), KDSItemStatus.SERVED, item.getPriority());
+                    syncItemStatus(item.getOrderItem().getId(), item.getUnitIndex(), KDSItemStatus.SERVED, item.getPriority());
                     notifyServer(item);
                 }
             }
@@ -277,8 +241,8 @@ public class KDSService {
         return item;
     }
 
-    private void syncItemStatus(UUID orderItemId, KDSItemStatus newStatus, int priority) {
-        List<KDSTicketItem> sameItems = ticketItemRepository.findByOrderItem_Id(orderItemId);
+    private void syncItemStatus(UUID orderItemId, int unitIndex, KDSItemStatus newStatus, int priority) {
+        List<KDSTicketItem> sameItems = ticketItemRepository.findByOrderItem_IdAndUnitIndex(orderItemId, unitIndex);
         Instant now = Instant.now();
         
         for (KDSTicketItem peerItem : sameItems) {
@@ -301,22 +265,18 @@ public class KDSService {
         }
         
         // --- POS Synchronization (EDP) ---
-        // Instead of directly updating the POS database and broadcasting manually,
-        // we emit an event. The PosStatusConsumer will handle status transitions.
         Map<String, Object> eventData = new HashMap<>();
         eventData.put("orderItemId", orderItemId);
+        eventData.put("unitIndex", unitIndex);
         eventData.put("newStatus", newStatus.name());
         eventData.put("priority", priority);
         
-        // Find the orderId for easier downstream processing
         orderItemRepository.findById(orderItemId).ifPresent(oi -> 
             eventData.put("orderId", oi.getTicket().getId())
         );
 
         edpPublisher.publish("kds.item.status_changed", eventData);
         
-        // Re-evaluate parent ticket status (US-3.7/4.1 Fix)
-        // This is still needed here as it affects KDS ticket status, not just POS.
         orderItemRepository.findById(orderItemId).ifPresent(orderItem -> {
             orderService.updateTicketStatusFromItems(orderItem.getTicket().getId());
         });
@@ -348,7 +308,7 @@ public class KDSService {
             // Sync all items on this ticket to COOKING status across all stations
             List<KDSTicketItem> items = ticketItemRepository.findByKdsTicket_Id(ticket.getId());
             for (KDSTicketItem item : items) {
-                syncItemStatus(item.getOrderItem().getId(), KDSItemStatus.COOKING, item.getPriority());
+                syncItemStatus(item.getOrderItem().getId(), item.getUnitIndex(), KDSItemStatus.COOKING, item.getPriority());
             }
 
             broadcastTicketStatusUpdate(ticket);
@@ -378,7 +338,7 @@ public class KDSService {
         // Sync all items on this ticket to READY status across all stations
         List<KDSTicketItem> items = ticketItemRepository.findByKdsTicket_Id(ticket.getId());
         for (KDSTicketItem item : items) {
-            syncItemStatus(item.getOrderItem().getId(), KDSItemStatus.READY, item.getPriority());
+            syncItemStatus(item.getOrderItem().getId(), item.getUnitIndex(), KDSItemStatus.READY, item.getPriority());
         }
         
         // US-4.1: Transition table to FOOD_DELIVERED if bumped at EXPO
@@ -441,10 +401,35 @@ public class KDSService {
         KDSTicketItem item = ticketItemRepository.findById(itemId)
                 .orElseThrow(() -> new IllegalArgumentException("Item not found"));
         
-        // Sync priority across all stations for this order item
-        syncItemStatus(item.getOrderItem().getId(), item.getStatus(), priority);
+        // Sync priority across all stations for this order item unit
+        syncItemStatus(item.getOrderItem().getId(), item.getUnitIndex(), item.getStatus(), priority);
         
         return ticketItemRepository.findById(itemId).orElse(item);
+    }
+
+    @Transactional(readOnly = true)
+    public boolean areAllUnitsCurrentOrBetter(UUID orderItemId, KDSItemStatus targetStatus) {
+        List<KDSTicketItem> units = ticketItemRepository.findByOrderItem_Id(orderItemId);
+        if (units.isEmpty()) return false;
+        
+        // Ensure we find as many records in KDS as requested in POS
+        Optional<OrderItem> oi = orderItemRepository.findById(orderItemId);
+        if (oi.isPresent() && units.size() < oi.get().getQuantity()) {
+            return false;
+        }
+
+        return units.stream().allMatch(unit -> {
+            if (targetStatus == KDSItemStatus.READY) {
+                return unit.getStatus() == KDSItemStatus.READY || unit.getStatus() == KDSItemStatus.SERVED;
+            }
+            if (targetStatus == KDSItemStatus.SERVED) {
+                return unit.getStatus() == KDSItemStatus.SERVED;
+            }
+            if (targetStatus == KDSItemStatus.COOKING) {
+                return unit.getStatus() == KDSItemStatus.COOKING || unit.getStatus() == KDSItemStatus.READY || unit.getStatus() == KDSItemStatus.SERVED;
+            }
+            return true;
+        });
     }
 
     @Transactional(readOnly = true)

@@ -358,13 +358,17 @@ public class OrderServiceImpl implements OrderService {
             item.setStatus(OrderItemStatus.SENT);
             orderItemRepository.save(item);
             
-            // EDP: Publish order.fire event. Consumers will handle stock and KDS routing.
-            edpPublisher.publish("order.fire", Map.of(
-                "orderId", orderId,
-                "orderItemId", item.getId(),
-                "menuItemId", item.getMenuItem().getId(),
-                "quantity", item.getQuantity()
-            ));
+            // EDP: Publish independent unit-level events for granular tracking (US-5.1)
+            int totalQuantity = item.getQuantity();
+            for (int i = 1; i <= totalQuantity; i++) {
+                edpPublisher.publish("order.fire", Map.of(
+                    "orderId", orderId,
+                    "orderItemId", item.getId(),
+                    "unitIndex", i,
+                    "menuItemId", item.getMenuItem().getId(),
+                    "quantity", 1
+                ));
+            }
         }
 
         if (!pendingItems.isEmpty()) {

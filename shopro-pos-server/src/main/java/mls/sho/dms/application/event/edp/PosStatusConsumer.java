@@ -12,6 +12,7 @@ import mls.sho.dms.application.service.order.OrderService;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import mls.sho.dms.service.kds.KDSService;
 
 import java.util.Map;
 import java.util.UUID;
@@ -27,6 +28,7 @@ public class PosStatusConsumer {
     private final OrderItemRepository orderItemRepository;
     private final OrderService orderService;
     private final EventStoreService eventStoreService;
+    private final KDSService kdsService;
 
     private static final String CONSUMER_NAME = "pos_status_sync";
 
@@ -46,6 +48,16 @@ public class PosStatusConsumer {
 
         orderItemRepository.findById(orderItemId).ifPresent(orderItem -> {
             OrderItemStatus newPosStatus = mapToPosStatus(kdsStatus);
+            
+            // For READY/DELIVERED, only update if ALL units are at least that status
+            if (newPosStatus == OrderItemStatus.READY || newPosStatus == OrderItemStatus.DELIVERED) {
+                boolean allUnitsReady = kdsService.areAllUnitsCurrentOrBetter(orderItemId, kdsStatus);
+                if (!allUnitsReady) {
+                    log.debug("[EDP] Not all units are {} for item {}. Delaying POS update.", kdsStatus, orderItemId);
+                    return; 
+                }
+            }
+
             if (orderItem.getStatus() != newPosStatus) {
                 log.debug("[EDP] Syncing item {} status to {}", orderItemId, newPosStatus);
                 orderItem.setStatus(newPosStatus);

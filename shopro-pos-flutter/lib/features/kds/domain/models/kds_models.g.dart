@@ -84,6 +84,7 @@ _$KDSTicketItemImpl _$$KDSTicketItemImplFromJson(Map<String, dynamic> json) =>
       priority: (json['priority'] as num?)?.toInt() ?? 0,
       preparationTimeMinutes:
           (json['preparationTimeMinutes'] as num?)?.toInt() ?? 10,
+      unitIndex: (json['unitIndex'] as num?)?.toInt() ?? 1,
     );
 
 Map<String, dynamic> _$$KDSTicketItemImplToJson(_$KDSTicketItemImpl instance) =>
@@ -98,6 +99,7 @@ Map<String, dynamic> _$$KDSTicketItemImplToJson(_$KDSTicketItemImpl instance) =>
       'prepStartedAt': instance.prepStartedAt?.toIso8601String(),
       'priority': instance.priority,
       'preparationTimeMinutes': instance.preparationTimeMinutes,
+      'unitIndex': instance.unitIndex,
     };
 
 const _$KDSItemStatusEnumMap = {
