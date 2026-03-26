@@ -219,7 +219,8 @@ class KDSExpoTableCard extends ConsumerWidget {
   }
 
   Widget _buildFooter(BuildContext context, WidgetRef ref, KDSExpoGroup group) {
-    final isReadyToBump = group.items.isNotEmpty && group.items.every((i) => i.status == KDSItemStatus.ready);
+    final isReadyToBump = group.items.isNotEmpty && 
+        group.items.every((i) => i.units.every((u) => u.status == KDSItemStatus.ready));
     
     return Padding(
       padding: const EdgeInsets.all(16),
