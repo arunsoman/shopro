@@ -137,6 +137,8 @@ class OrderItem {
   final List<OrderItemModifier> modifiers;
   final List<TaxBreakdownEntry> taxBreakdowns;
   final bool isCancellable;
+  final int removableQuantity;
+
   OrderItem({
     required this.id,
     required this.menuItemId,
@@ -155,6 +157,7 @@ class OrderItem {
     this.modifiers = const [],
     this.taxBreakdowns = const [],
     this.isCancellable = true,
+    this.removableQuantity = 0,
   });
 
   factory OrderItem.fromJson(Map<String, dynamic> json) {
@@ -185,6 +188,7 @@ class OrderItem {
               .toList() ??
           const [],
       isCancellable: json['isCancellable'] ?? true,
+      removableQuantity: (json['removableQuantity'] as num?)?.toInt() ?? 0,
     );
   }
 }

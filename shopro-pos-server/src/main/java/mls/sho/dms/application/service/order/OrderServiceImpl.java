@@ -285,17 +285,35 @@ public class OrderServiceImpl implements OrderService {
         OrderItem item = orderItemRepository.findById(itemId)
             .orElseThrow(() -> new ResourceNotFoundException("Order item not found: " + itemId));
 
+        int oldQuantity = item.getQuantity();
+
         if (newQuantity <= 0) {
-            orderItemRepository.delete(item);
-        } else {
-            item.setQuantity(newQuantity);
-            orderItemRepository.save(item);
+            return voidOrderItem(orderId, itemId, "Quantity reduced to 0", "STAFF", null);
+        } else if (newQuantity < oldQuantity) {
+            // US-5.1: Partial decrement check
+            if (item.getStatus() != OrderItemStatus.PENDING) {
+                int delta = oldQuantity - newQuantity;
+                int removable = kdsService.getRemovableQuantity(itemId);
+                
+                if (delta > removable) {
+                    throw new mls.sho.dms.application.exception.BusinessRuleException(
+                        "Cannot remove " + delta + " units. Only " + removable + " units are still pending in the kitchen."
+                    );
+                }
+                
+                log.info("Partial decrement for sent item: {} ({} -> {}). Removing {} pending KDS units.", 
+                    itemId, oldQuantity, newQuantity, delta);
+                kdsService.decrementUnits(itemId, delta);
+            }
         }
 
+        item.setQuantity(newQuantity);
+        orderItemRepository.save(item);
+
         recalculateTicket(ticket);
-         OrderResponse response = findById(orderId);
-         messagingTemplate.convertAndSend("/topic/orders/" + orderId, response);
-         return response;
+        OrderResponse response = findById(orderId);
+        messagingTemplate.convertAndSend("/topic/orders/" + orderId, response);
+        return response;
     }
 
     @Override
@@ -770,7 +788,8 @@ public class OrderServiceImpl implements OrderService {
             item.getFiredAt(),
             modifierResponses,
             itemTaxBreakdowns,
-            item.getStatus() != OrderItemStatus.VOIDED && kdsService.isItemPendingInKDS(item.getId())
+            item.getStatus() != OrderItemStatus.VOIDED && kdsService.isItemPendingInKDS(item.getId()),
+            item.getStatus() == OrderItemStatus.PENDING ? item.getQuantity() : kdsService.getRemovableQuantity(item.getId())
         );
     }
 

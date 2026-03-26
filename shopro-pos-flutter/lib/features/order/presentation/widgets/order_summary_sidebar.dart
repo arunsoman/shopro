@@ -156,7 +156,7 @@ class OrderSummarySidebar extends ConsumerWidget {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4),
+          padding: const EdgeInsets.symmetric(vertical: 0),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -166,8 +166,8 @@ class OrderSummarySidebar extends ConsumerWidget {
                 children: [
                   IconButton(
                     icon: Icon(
-                      Icons.keyboard_arrow_up,
-                      size: 14,
+                      Icons.add,
+                      size: 13,
                       color: (!isSent) ? AppColors.primary : AppColors.primary,
                     ),
                     onPressed: (!isSent)
@@ -191,7 +191,7 @@ class OrderSummarySidebar extends ConsumerWidget {
                   ),
                   IconButton(
                     icon: Icon(
-                      Icons.keyboard_arrow_down,
+                      Icons.remove,
                       size: 14,
                       color: (!isSent) ? AppColors.primary : AppColors.primary,
                     ),
@@ -656,6 +656,49 @@ class OrderSummarySidebar extends ConsumerWidget {
             },
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
             child: const Text('VOID ITEM'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmPartialDecrement(
+    BuildContext context,
+    WidgetRef ref,
+    OrderItem item,
+  ) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Reduce Quantity?'),
+        content: Text(
+          'This item has already been sent to the kitchen. '
+          'We will attempt to remove 1 unit from the preparation queue.\n\n'
+          'Status: ${item.removableQuantity} units still pending.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('CANCEL'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              ref
+                  .read(orderProvider.notifier)
+                  .updateItemQuantity(item.id, item.quantity - 1)
+                  .catchError((e) {
+                    if (!context.mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(e.toString()),
+                        backgroundColor: AppColors.error,
+                      ),
+                    );
+                  });
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+            child: const Text('REDUCE QUANTITY'),
           ),
         ],
       ),

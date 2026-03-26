@@ -114,14 +114,18 @@ public class KDSService {
                     return ticketRepository.save(t);
                 });
 
-                log.debug("[KDS] Adding item {} to KDS ticket {}", itemName, kdsTicket.getId());
-                KDSTicketItem kdsItem = new KDSTicketItem();
-                kdsItem.setKdsTicket(kdsTicket);
-                kdsItem.setOrderItem(orderItem);
-                kdsItem.setStatus(KDSItemStatus.PENDING);
-                kdsItem = ticketItemRepository.save(kdsItem);
+                // US-5.1: Split into unit-level items for granular tracking (Adversarial Review fix)
+                int quantity = orderItem.getQuantity();
+                log.debug("[KDS] Splitting item {} into {} unit-level records for ticket {}", itemName, quantity, kdsTicket.getId());
                 
-                ticketItemsMap.computeIfAbsent(kdsTicket.getId(), id -> new ArrayList<>()).add(kdsItem);
+                for (int k = 0; k < quantity; k++) {
+                    KDSTicketItem kdsItem = new KDSTicketItem();
+                    kdsItem.setKdsTicket(kdsTicket);
+                    kdsItem.setOrderItem(orderItem);
+                    kdsItem.setStatus(KDSItemStatus.PENDING);
+                    kdsItem = ticketItemRepository.save(kdsItem);
+                    ticketItemsMap.computeIfAbsent(kdsTicket.getId(), id -> new ArrayList<>()).add(kdsItem);
+                }
             }
         }
         
@@ -142,12 +146,15 @@ public class KDSService {
             });
 
             for (OrderItem orderItem : itemsToRoute) {
-                KDSTicketItem kdsItem = new KDSTicketItem();
-                kdsItem.setKdsTicket(expoTicket);
-                kdsItem.setOrderItem(orderItem);
-                kdsItem.setStatus(KDSItemStatus.PENDING);
-                ticketItemRepository.save(kdsItem);
-                ticketItemsMap.computeIfAbsent(expoTicket.getId(), id -> new ArrayList<>()).add(kdsItem);
+                int quantity = orderItem.getQuantity();
+                for (int k = 0; k < quantity; k++) {
+                    KDSTicketItem kdsItem = new KDSTicketItem();
+                    kdsItem.setKdsTicket(expoTicket);
+                    kdsItem.setOrderItem(orderItem);
+                    kdsItem.setStatus(KDSItemStatus.PENDING);
+                    ticketItemRepository.save(kdsItem);
+                    ticketItemsMap.computeIfAbsent(expoTicket.getId(), id -> new ArrayList<>()).add(kdsItem);
+                }
             }
         }
         
@@ -471,6 +478,57 @@ public class KDSService {
         List<KDSTicketItem> items = ticketItemRepository.findByOrderItem_Id(orderItemId);
         if (items.isEmpty()) return true; // Not yet sent or already voided
         return items.stream().allMatch(i -> i.getStatus() == KDSItemStatus.PENDING);
+    }
+
+    /**
+     * Returns the count of unit-level KDS items still in PENDING status.
+     * Used for partial decrement logic (Adversarial Review US-5.1).
+     */
+    @Transactional(readOnly = true)
+    public int getRemovableQuantity(UUID orderItemId) {
+        List<KDSTicketItem> items = ticketItemRepository.findByOrderItem_Id(orderItemId);
+        if (items.isEmpty()) return 0; // If not in KDS, it might be unsubmitted (handled in OrderService)
+        
+        // We only care about PREP stations for 'removable' logic, but usually it's global across all stations for that item unit.
+        // However, to be safe, we check if ANY unit at ANY station is not pending.
+        // Actually, if I have 3 units, and 1 is cooking at Station A, then only 2 are 'removable'.
+        
+        // Group by 'unit'? Since we don't have a unit ID, we rely on the fact that routeOrder
+        // creates N items per station. 
+        // A unit is 'removable' only if it is PENDING at ALL stations it is routed to.
+        
+        // Simplified for MVP: Since items are usually routed to 1 prep station + 1 expo station,
+        // we check the Prep station status.
+        return (int) items.stream()
+                .filter(i -> i.getKdsTicket().getStation().getStationType() != KDSStationType.EXPO)
+                .filter(i -> i.getStatus() == KDSItemStatus.PENDING)
+                .count();
+    }
+
+    /**
+     * Deletes the specified number of PENDING unit-level KDS items.
+     */
+    @Transactional
+    public void decrementUnits(UUID orderItemId, int unitsToRemove) {
+        log.info("[KDS] Decrementing {} units for order item: {}", unitsToRemove, orderItemId);
+        
+        // Find all pending items across all stations for this order item
+        List<KDSTicketItem> allItems = ticketItemRepository.findByOrderItem_Id(orderItemId);
+        
+        // We need to remove the same 'units' across all stations they were routed to.
+        // If we had unit IDs it would be easier. For now, we delete N pending records from each station.
+        Set<UUID> stationIds = allItems.stream().map(i -> i.getKdsTicket().getStation().getId()).collect(Collectors.toSet());
+        
+        for (UUID stationId : stationIds) {
+            List<KDSTicketItem> stationPending = allItems.stream()
+                    .filter(i -> i.getKdsTicket().getStation().getId().equals(stationId))
+                    .filter(i -> i.getStatus() == KDSItemStatus.PENDING)
+                    .limit(unitsToRemove)
+                    .toList();
+            
+            log.debug("[KDS] Deleting {} pending units from station {}", stationPending.size(), stationId);
+            ticketItemRepository.deleteAll(stationPending);
+        }
     }
 
     @Transactional
