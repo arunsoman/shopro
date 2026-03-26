@@ -168,13 +168,11 @@ class OrderSummarySidebar extends ConsumerWidget {
                     icon: Icon(
                       Icons.add,
                       size: 13,
-                      color: (!isSent) ? AppColors.primary : AppColors.primary,
+                      color: AppColors.primary,
                     ),
-                    onPressed: (!isSent)
-                        ? () => ref
-                              .read(orderProvider.notifier)
-                              .updateItemQuantity(item.id, item.quantity + 1)
-                        : null,
+                    onPressed: () => ref
+                        .read(orderProvider.notifier)
+                        .updateItemQuantity(item.id, item.quantity + 1),
                     padding: EdgeInsets.zero,
                     style: IconButton.styleFrom(
                       minimumSize: Size.zero,
@@ -183,22 +181,30 @@ class OrderSummarySidebar extends ConsumerWidget {
                   ),
                   Text(
                     '${item.quantity}x',
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 13,
-                      color: (!isSent) ? AppColors.secondary : AppColors.secondary,
+                      color: AppColors.secondary,
                     ),
                   ),
                   IconButton(
                     icon: Icon(
                       Icons.remove,
                       size: 14,
-                      color: (!isSent) ? AppColors.primary : AppColors.primary,
+                      color: (!isSent || item.removableQuantity > 0)
+                          ? AppColors.primary
+                          : AppColors.lightMuted,
                     ),
-                    onPressed: (!isSent)
-                        ? () => ref
-                              .read(orderProvider.notifier)
-                              .updateItemQuantity(item.id, item.quantity - 1)
+                    onPressed: (!isSent || item.removableQuantity > 0)
+                        ? () {
+                            if (isSent) {
+                              _confirmPartialDecrement(context, ref, item);
+                            } else {
+                              ref
+                                  .read(orderProvider.notifier)
+                                  .updateItemQuantity(item.id, item.quantity - 1);
+                            }
+                          }
                         : null,
                     padding: EdgeInsets.zero,
                     style: IconButton.styleFrom(
