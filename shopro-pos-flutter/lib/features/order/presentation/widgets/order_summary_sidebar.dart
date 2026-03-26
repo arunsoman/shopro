@@ -186,7 +186,7 @@ class OrderSummarySidebar extends ConsumerWidget {
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 13,
-                      color: (!isSent) ? AppColors.primary : AppColors.primary,
+                      color: (!isSent) ? AppColors.secondary : AppColors.secondary,
                     ),
                   ),
                   IconButton(
