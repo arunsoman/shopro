@@ -42,6 +42,9 @@ public class OrderAuditLog {
     @Column(name = "device_jkt")
     private String deviceJkt;
 
+    @Column(name = "interaction_id")
+    private String interactionId;
+
     public OrderAuditLog(OrderTicket order, String eventType, String details, StaffMember performedBy) {
         this.order = order;
         this.eventType = eventType;

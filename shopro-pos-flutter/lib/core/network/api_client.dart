@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'network_config.dart';
 import '../security/dpop_service.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
+import 'package:uuid/uuid.dart';
 
 class ApiClient {
   late final Dio dio;
@@ -32,7 +33,11 @@ class ApiClient {
             options.headers['X-Staff-Id'] = authState.staffId;
           }
 
-          // 2. Generate DPoP proof
+          // 2. Inject FAPI Interaction ID for correlation
+          final interactionId = const Uuid().v4();
+          options.headers['x-fapi-interaction-id'] = interactionId;
+
+          // 3. Generate DPoP proof
           final htm = options.method;
           // Calculate HTU robustly using Dio's resolved URI
           // This ensures no double-slashes or missing slashes

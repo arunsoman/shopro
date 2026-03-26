@@ -18,6 +18,7 @@ public class WebConfig implements WebMvcConfigurer {
     private final FloorPlanPermissionInterceptor floorPlanPermissionInterceptor;
     private final StaffAuthenticationInterceptor staffAuthenticationInterceptor;
     private final MarketplaceAuthenticationInterceptor marketplaceAuthenticationInterceptor;
+    private final FAPIInterceptor fapiInterceptor;
 
     @Override
     public void addResourceHandlers(org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry registry) {
@@ -27,6 +28,9 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(fapiInterceptor)
+                .addPathPatterns("/api/v1/**");
+
         registry.addInterceptor(floorPlanPermissionInterceptor)
                 .addPathPatterns("/api/v1/floor-plan/**");
         

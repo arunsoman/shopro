@@ -95,8 +95,10 @@ public class DPoPFilter extends OncePerRequestFilter {
             } else if (shouldEnforce) {
                 String error = (result != null) ? result.error() : "invalid_dpop_proof";
                 String message = (result != null) ? result.message() : "A valid DPoP proof is required for this operation.";
+                String interactionId = (String) request.getAttribute("x-fapi-interaction-id");
                 
-                log.warn("DPoPFilter rejecting request: {} (code={}) for path={}, method={}", message, error, path, method);
+                log.warn("DPoPFilter rejecting request: {} (code={}) for path={}, method={}, interactionId={}", 
+                    message, error, path, method, interactionId);
                 
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.setContentType("application/json");

@@ -774,13 +774,15 @@ public class OrderServiceImpl implements OrderService {
                 HttpServletRequest request = attributes.getRequest();
                 String jkt = (String) request.getAttribute("bound_dpop_jkt");
                 auditLog.setDeviceJkt(jkt);
-                
                 String dpop = request.getHeader("DPoP");
                 if (dpop != null) {
                     MessageDigest digest = MessageDigest.getInstance("SHA-256");
                     byte[] hash = digest.digest(dpop.getBytes(java.nio.charset.StandardCharsets.UTF_8));
                     auditLog.setSignatureHash(java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(hash));
                 }
+
+                String interactionId = (String) request.getAttribute("x-fapi-interaction-id");
+                auditLog.setInteractionId(interactionId);
             }
         } catch (Exception e) {
             log.warn("Failed to capture FAPI audit metadata: {}", e.getMessage());
