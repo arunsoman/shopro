@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stomp_dart_client/stomp_dart_client.dart';
 import 'package:http/http.dart' as http;
 import '../../../../core/network/network_config.dart';
+import '../../../../core/edp/edp_bus.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../data/models/notification_model.dart';
 
@@ -73,6 +74,9 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
         url: NetworkConfig.wsUrl,
         onConnect: (frame) {
           state = state.copyWith(isConnected: true);
+          
+          // EDP: Recover missed events upon reconnection
+          _ref.read(edpBusProvider).sync();
 
           // Subscribe to User-specific notifications
           stompClient?.subscribe(

@@ -11,13 +11,16 @@ import mls.sho.dms.repository.floor.SectionRepository;
 import mls.sho.dms.repository.floor.TableShapeRepository;
 import mls.sho.dms.repository.floor.WaitlistEntryRepository;
 import mls.sho.dms.service.tableside.TablesideService;
+import mls.sho.dms.service.edp.EdpPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -33,6 +36,7 @@ public class FloorPlanServiceImpl implements FloorPlanService {
     private final mls.sho.dms.application.service.core.NotificationEngine notificationEngine;
     private final org.springframework.messaging.simp.SimpMessagingTemplate messagingTemplate;
     private final TablesideService tablesideService;
+    private final EdpPublisher edpPublisher;
 
     private static final int RESERVATION_HOLD_WINDOW_MINS = 15;
 
@@ -162,6 +166,13 @@ public class FloorPlanServiceImpl implements FloorPlanService {
         
         // Broadcast table update to all clients
         messagingTemplate.convertAndSend("/topic/tables", tableResponse);
+        
+        // Emit EDP event
+        Map<String, Object> eventData = new java.util.HashMap<>();
+        eventData.put("tableId", table.getId());
+        eventData.put("newStatus", table.getStatus().name());
+        eventData.put("tableName", table.getName());
+        edpPublisher.publish("table.status_changed", eventData);
 
         // Notify Servers via in-app notification engine
         notificationEngine.sendNotification(
@@ -203,6 +214,13 @@ public class FloorPlanServiceImpl implements FloorPlanService {
         // Broadcast table update
         messagingTemplate.convertAndSend("/topic/tables", tableResponse);
 
+        // Emit EDP event
+        Map<String, Object> eventData = new java.util.HashMap<>();
+        eventData.put("tableId", saved.getId());
+        eventData.put("newStatus", saved.getStatus().name());
+        eventData.put("tableName", saved.getName());
+        edpPublisher.publish("table.status_changed", eventData);
+
         // Notify Hosts
         notificationEngine.sendNotification(
             "TABLE_VACANT",
@@ -231,6 +249,13 @@ public class FloorPlanServiceImpl implements FloorPlanService {
 
         // Broadcast table update
         messagingTemplate.convertAndSend("/topic/tables", tableResponse);
+
+        // Emit EDP event
+        Map<String, Object> eventData = new java.util.HashMap<>();
+        eventData.put("tableId", saved.getId());
+        eventData.put("newStatus", saved.getStatus().name());
+        eventData.put("tableName", saved.getName());
+        edpPublisher.publish("table.status_changed", eventData);
 
         // If manually setting to OCCUPIED, notify servers too
         if (status == TableStatus.OCCUPIED) {
@@ -270,6 +295,13 @@ public class FloorPlanServiceImpl implements FloorPlanService {
                 
                 // Broadcast the change to the floor plan
                 messagingTemplate.convertAndSend("/topic/tables", mapToTableShapeResponse(saved));
+                
+                // Emit EDP event
+                Map<String, Object> eventData = new java.util.HashMap<>();
+                eventData.put("tableId", saved.getId());
+                eventData.put("newStatus", saved.getStatus().name());
+                eventData.put("tableName", saved.getName());
+                edpPublisher.publish("table.status_changed", eventData);
             }
         }
     }

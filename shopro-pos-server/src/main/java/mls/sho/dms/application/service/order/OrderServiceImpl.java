@@ -16,6 +16,7 @@ import mls.sho.dms.repository.menu.MenuItemRepository;
 import mls.sho.dms.repository.menu.ModifierOptionRepository;
 import mls.sho.dms.repository.order.*;
 import mls.sho.dms.repository.staff.StaffRepository;
+import mls.sho.dms.service.edp.EdpPublisher;
 import mls.sho.dms.application.service.inventory.RecipeService;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -32,7 +33,9 @@ import mls.sho.dms.service.kds.KDSService;
 import mls.sho.dms.application.service.staff.StaffService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -58,6 +61,7 @@ public class OrderServiceImpl implements OrderService {
     private final StaffService staffService;
     private final OrderAuditLogRepository orderAuditLogRepository;
     private final mls.sho.dms.application.service.core.NotificationEngine notificationEngine;
+    private final EdpPublisher edpPublisher;
     private final SimpMessagingTemplate messagingTemplate;
 
     // Advanced Tax Integration (Legacy dependency removed as per user module request)
@@ -116,6 +120,14 @@ public class OrderServiceImpl implements OrderService {
         ticket = orderTicketRepository.save(ticket);
         recordAuditLog(ticket, "ORDER_CREATED", "Order started for " + request.orderType(), server);
         
+        // Emit EDP event
+        Map<String, Object> eventData = new HashMap<>();
+        eventData.put("orderId", ticket.getId());
+        eventData.put("tableId", ticket.getTable() != null ? ticket.getTable().getId() : null);
+        eventData.put("type", ticket.getOrderType().name());
+        eventData.put("serverId", server.getId());
+        edpPublisher.publish("order.created", eventData);
+
         if (ticket.getTable() != null) {
             broadcastTableUpdate(ticket.getTable());
         }
@@ -166,6 +178,13 @@ public class OrderServiceImpl implements OrderService {
         OrderTicket saved = orderTicketRepository.save(ticket);
         recordAuditLog(saved, "ORDER_CANCELLED", "Order cancelled by " + performedBy, null);
         
+        // Emit EDP event
+        Map<String, Object> eventData = new HashMap<>();
+        eventData.put("orderId", saved.getId());
+        eventData.put("reason", "Order voided");
+        eventData.put("performedBy", performedBy);
+        edpPublisher.publish("order.cancel", eventData);
+
         OrderResponse response = mapToResponse(saved);
         messagingTemplate.convertAndSend("/topic/orders/" + orderId, "REFRESH");
         return response;
@@ -210,6 +229,14 @@ public class OrderServiceImpl implements OrderService {
         OrderTicket saved = orderTicketRepository.save(ticket);
         
         recordAuditLog(saved, "ITEM_VOIDED", "Item " + item.getMenuItem().getName() + " voided. Reason: " + reason, null);
+        
+        // Emit EDP event
+        Map<String, Object> eventData = new HashMap<>();
+        eventData.put("orderId", orderId);
+        eventData.put("orderItemId", itemId);
+        eventData.put("reason", reason);
+        eventData.put("performedBy", performedBy);
+        edpPublisher.publish("order.item_void", eventData);
         
         OrderResponse response = mapToResponse(saved);
         messagingTemplate.convertAndSend("/topic/orders/" + orderId, "REFRESH");
@@ -330,7 +357,14 @@ public class OrderServiceImpl implements OrderService {
         for (OrderItem item : pendingItems) {
             item.setStatus(OrderItemStatus.SENT);
             orderItemRepository.save(item);
-            recipeService.depleteForOrderItem(item); // Real-time stock depletion
+            
+            // EDP: Publish order.fire event. Consumers will handle stock and KDS routing.
+            edpPublisher.publish("order.fire", Map.of(
+                "orderId", orderId,
+                "orderItemId", item.getId(),
+                "menuItemId", item.getMenuItem().getId(),
+                "quantity", item.getQuantity()
+            ));
         }
 
         if (!pendingItems.isEmpty()) {
@@ -346,16 +380,11 @@ public class OrderServiceImpl implements OrderService {
                 broadcastTableUpdate(table);
             }
             
-            // Route the items to KDS stations
-            log.debug("Handing off {} items to KDSService for routing", pendingItems.size());
-            kdsService.routeOrder(ticket, pendingItems);
             recordAuditLog(ticket, "KITCHEN_SENT", "Items sent to kitchen: " + pendingItems.size(), ticket.getServer());
-        } else {
-            log.debug("No pending items found for order {} when sending to kitchen", orderId);
         }
 
         OrderResponse response = findById(orderId);
-        messagingTemplate.convertAndSend("/topic/orders/" + orderId, response);
+        // WS broadcasting is now handled by WebSocketRelayConsumer via EdpPublisher
         return response;
     }
 
@@ -453,6 +482,14 @@ public class OrderServiceImpl implements OrderService {
         }
 
         orderTicketRepository.save(ticket);
+        
+        // Emit EDP event
+        Map<String, Object> eventData = new HashMap<>();
+        eventData.put("orderId", ticket.getId());
+        eventData.put("totalAmount", ticket.getSubtotal());
+        eventData.put("paymentMethod", "CASH"); // Default if not specified in this method
+        edpPublisher.publish("order.payment_completed", eventData);
+
         OrderResponse response = mapToResponse(ticket);
         messagingTemplate.convertAndSend("/topic/orders/" + orderId, response);
         

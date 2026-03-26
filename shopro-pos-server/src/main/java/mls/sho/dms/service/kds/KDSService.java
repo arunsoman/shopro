@@ -21,7 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.context.annotation.Lazy;
 import mls.sho.dms.application.service.order.OrderService;
-
+import mls.sho.dms.service.edp.EdpPublisher;
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -45,6 +45,7 @@ public class KDSService {
     private final StaffRepository staffRepo;
     private final TableShapeRepository tableShapeRepository;
     private final OrderService orderService;
+    private final EdpPublisher edpPublisher;
 
     public KDSService(KDSStationRepository stationRepository,
                       KDSRoutingRuleRepository routingRuleRepository,
@@ -58,7 +59,8 @@ public class KDSService {
                       OrderItemRepository orderItemRepository,
                       StaffRepository staffRepo,
                       TableShapeRepository tableShapeRepository,
-                      @Lazy OrderService orderService) {
+                      @Lazy OrderService orderService,
+                      EdpPublisher edpPublisher) {
         this.stationRepository = stationRepository;
         this.routingRuleRepository = routingRuleRepository;
         this.ticketRepository = ticketRepository;
@@ -72,6 +74,7 @@ public class KDSService {
         this.staffRepo = staffRepo;
         this.tableShapeRepository = tableShapeRepository;
         this.orderService = orderService;
+        this.edpPublisher = edpPublisher;
     }
 
     @Transactional
@@ -297,32 +300,25 @@ public class KDSService {
             broadcastTicketToStation(ticket);
         }
         
-        // --- POS Synchronization ---
-        orderItemRepository.findById(orderItemId).ifPresent(orderItem -> {
-            boolean changed = false;
-            if (newStatus == KDSItemStatus.READY && orderItem.getStatus() != OrderItemStatus.READY) {
-                orderItem.setStatus(OrderItemStatus.READY);
-                changed = true;
-            } else if (newStatus == KDSItemStatus.SERVED && orderItem.getStatus() != OrderItemStatus.DELIVERED) {
-                orderItem.setStatus(OrderItemStatus.DELIVERED);
-                changed = true;
-            }
+        // --- POS Synchronization (EDP) ---
+        // Instead of directly updating the POS database and broadcasting manually,
+        // we emit an event. The PosStatusConsumer will handle status transitions.
+        Map<String, Object> eventData = new HashMap<>();
+        eventData.put("orderItemId", orderItemId);
+        eventData.put("newStatus", newStatus.name());
+        eventData.put("priority", priority);
+        
+        // Find the orderId for easier downstream processing
+        orderItemRepository.findById(orderItemId).ifPresent(oi -> 
+            eventData.put("orderId", oi.getTicket().getId())
+        );
 
-            if (changed) {
-                orderItemRepository.save(orderItem);
-                
-                // Broadcast update to POS Order management screens
-                Map<String, Object> payload = new HashMap<>();
-                payload.put("type", "STATUS_UPDATE");
-                payload.put("orderId", orderItem.getTicket().getId());
-                payload.put("itemId", orderItemId);
-                payload.put("status", orderItem.getStatus().name());
-                
-                messagingTemplate.convertAndSend("/topic/orders/" + orderItem.getTicket().getId(), payload);
-                
-                // Re-evaluate parent ticket status (US-3.7/4.1 Fix)
-                orderService.updateTicketStatusFromItems(orderItem.getTicket().getId());
-            }
+        edpPublisher.publish("kds.item.status_changed", eventData);
+        
+        // Re-evaluate parent ticket status (US-3.7/4.1 Fix)
+        // This is still needed here as it affects KDS ticket status, not just POS.
+        orderItemRepository.findById(orderItemId).ifPresent(orderItem -> {
+            orderService.updateTicketStatusFromItems(orderItem.getTicket().getId());
         });
 
         if (newStatus == KDSItemStatus.READY) {

@@ -37,74 +37,90 @@ class OrderSummarySidebar extends ConsumerWidget {
       itemsByCourse.putIfAbsent(item.courseNumber, () => []).add(item);
     }
 
+    final orderState = ref.watch(orderProvider);
+    final isLoading = orderState.isLoading;
+
     return Container(
       width: 350,
       decoration: const BoxDecoration(
         color: Colors.white,
         border: Border(left: BorderSide(color: AppColors.lightBorder)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Stack(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
-                      'Order Summary',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                      ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Order Summary',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                          ),
+                        ),
+                        Text(
+                          'Order #${order!.orderNumber}',
+                          style: const TextStyle(
+                            color: AppColors.lightMuted,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
                     ),
-                    Text(
-                      'Order #${order!.orderNumber}',
-                      style: const TextStyle(
-                        color: AppColors.lightMuted,
-                        fontSize: 12,
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.sm,
+                        vertical: AppSpacing.xs,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                      ),
+                      child: Text(
+                        '${order!.items.length} Items',
+                        style: const TextStyle(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
                       ),
                     ),
                   ],
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.sm,
-                    vertical: AppSpacing.xs,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                  ),
-                  child: Text(
-                    '${order!.items.length} Items',
-                    style: const TextStyle(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    ),
-                  ),
+              ),
+              const Divider(height: 1),
+              Expanded(
+                child: ListView.builder(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  itemCount: itemsByCourse.keys.length,
+                  itemBuilder: (context, index) {
+                    final courseNum = itemsByCourse.keys.elementAt(index);
+                    final items = itemsByCourse[courseNum]!;
+                    return _buildCourseGroup(context, ref, courseNum, items);
+                  },
                 ),
-              ],
-            ),
+              ),
+              const Divider(height: 1),
+              _buildFooter(context, ref),
+            ],
           ),
-          const Divider(height: 1),
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              itemCount: itemsByCourse.keys.length,
-              itemBuilder: (context, index) {
-                final courseNum = itemsByCourse.keys.elementAt(index);
-                final items = itemsByCourse[courseNum]!;
-                return _buildCourseGroup(context, ref, courseNum, items);
-              },
+          if (isLoading)
+            Positioned.fill(
+              child: Container(
+                color: Colors.white.withValues(alpha: 0.5),
+                child: const Center(
+                  child: CircularProgressIndicator(),
+                ),
+              ),
             ),
-          ),
-          const Divider(height: 1),
-          _buildFooter(context, ref),
         ],
       ),
     );

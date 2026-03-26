@@ -8,6 +8,8 @@ import 'package:shopro_pos_flutter/features/menu/domain/models/menu_models.dart'
 import 'package:shopro_pos_flutter/features/menu/presentation/providers/menu_provider.dart';
 import 'package:shopro_pos_flutter/features/floor_plan/presentation/providers/floor_plan_provider.dart';
 import 'package:shopro_pos_flutter/features/notifications/presentation/providers/notification_provider.dart';
+import 'package:shopro_pos_flutter/core/edp/edp_event.dart';
+import 'package:shopro_pos_flutter/core/edp/edp_bus.dart';
 
 class OrderState {
   final OrderTicket? activeOrder;
@@ -135,10 +137,21 @@ class OrderNotifier extends Notifier<OrderState> {
 
   void _handleOrderUpdate(Map<String, dynamic> data) {
     debugPrint('[OrderWatcher] Received update: $data');
-    final orderId = data['orderId'] ?? state.activeOrder?.id;
-    if (orderId != null) {
+    
+    String? orderId;
+    // Handle EDP EventStore format (event + payload)
+    if (data.containsKey('eventType') && data.containsKey('payload')) {
+      final payload = data['payload'] as Map<String, dynamic>;
+      orderId = payload['orderId']?.toString();
+    } else {
+      // Handle legacy or direct format
+      orderId = data['orderId']?.toString();
+    }
+
+    final finalOrderId = orderId ?? state.activeOrder?.id;
+    if (finalOrderId != null) {
       // Simple strategy: reload the whole order to ensure we have consistent status
-      loadOrder(orderId.toString());
+      loadOrder(finalOrderId);
     }
   }
 
@@ -165,19 +178,24 @@ class OrderNotifier extends Notifier<OrderState> {
 
     state = state.copyWith(isLoading: true);
     try {
-      final repository = ref.read(orderRepositoryProvider);
-      final updatedOrder = await repository.fireCourse(
-        state.activeOrder!.id,
-        courseNumber,
-      );
-      state = state.copyWith(activeOrder: updatedOrder, isLoading: false);
-    } on DioException catch (e) {
-      final data = e.response?.data;
-      String errorMessage = e.message ?? e.toString();
-      if (data is Map && data.containsKey('message')) {
-        errorMessage = data['message'];
+      final edpBus = ref.read(edpBusProvider);
+      
+      // In a real scenario, we would loop through items in this course. 
+      // For this pilot, we'll send a signal for the course fire.
+      final itemsInCourse = state.activeOrder!.items
+          .where((i) => i.courseNumber == courseNumber && i.status == OrderItemStatus.held);
+
+      for (final item in itemsInCourse) {
+        await edpBus.publish(EdpEvent.orderFire(
+          orderId: state.activeOrder!.id,
+          orderItemId: item.id,
+          menuItemId: item.menuItemId,
+          quantity: item.quantity,
+        ));
       }
-      state = state.copyWith(isLoading: false, error: errorMessage);
+
+      state = state.copyWith(isLoading: false);
+      // We don't need to manually reload; the WebSocketRelayConsumer will broadcast the update.
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
     }
