@@ -38,7 +38,9 @@ public class StationEventConsumer {
         // Always Acknowledge to prevent stalling the entire system
         eventStoreService.updateCheckpoint(CONSUMER_ID, event.getId());
 
-        if (!"order.created".equals(event.getEventType()) && !"order.fire".equals(event.getEventType())) {
+        if (!"order.created".equals(event.getEventType()) && 
+            !"order.fire".equals(event.getEventType()) &&
+            !"order.item_decrement".equals(event.getEventType())) {
             return;
         }
 
@@ -47,6 +49,12 @@ public class StationEventConsumer {
             UUID orderId = UUID.fromString(payload.get("orderId").toString());
             UUID orderItemId = UUID.fromString(payload.get("orderItemId").toString());
             int unitIndex = Integer.parseInt(payload.getOrDefault("unitIndex", "1").toString());
+
+            if ("order.item_decrement".equals(event.getEventType())) {
+                log.info("[KDS] Handling decrement for item {} unit {}", orderItemId, unitIndex);
+                kdsService.decrementSpecificUnit(orderItemId, unitIndex);
+                return;
+            }
 
             OrderTicket ticket = orderTicketRepository.findById(orderId)
                     .orElseThrow(() -> new RuntimeException("Order not found: " + orderId));

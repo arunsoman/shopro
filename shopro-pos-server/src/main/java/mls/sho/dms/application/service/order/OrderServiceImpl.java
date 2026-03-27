@@ -307,7 +307,7 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     public OrderResponse updateItemQuantity(UUID orderId, UUID itemId, int newQuantity) {
         OrderTicket ticket = orderTicketRepository.findById(orderId)
-            .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + orderId));
+            .orElseThrow(() -> new ResourceNotFoundException("Order found: " + orderId));
 
         OrderItem item = orderItemRepository.findById(itemId)
             .orElseThrow(() -> new ResourceNotFoundException("Order item not found: " + itemId));
@@ -328,9 +328,25 @@ public class OrderServiceImpl implements OrderService {
                     );
                 }
                 
-                log.info("Partial decrement for sent item: {} ({} -> {}). Removing {} pending KDS units.", 
+                log.info("Partial decrement for sent item: {} ({} -> {}). Removing {} targeted KDS units.", 
                     itemId, oldQuantity, newQuantity, delta);
-                kdsService.decrementUnits(itemId, delta);
+                
+                // Stack-based decrement Logic: Target specific unitIndices
+                for (int i = 0; i < delta; i++) {
+                    int unitIndexToRemove = oldQuantity - i;
+                    
+                    // Directly call KDS service for immediate sync
+                    kdsService.decrementSpecificUnit(itemId, unitIndexToRemove);
+                    
+                    // Publish EDP event for formal audit and catch-up
+                    edpPublisher.publish("order.item_decrement", Map.of(
+                        "orderId", orderId,
+                        "orderItemId", itemId,
+                        "unitIndex", unitIndexToRemove,
+                        "newQuantity", newQuantity,
+                        "timestamp", java.time.Instant.now().toString()
+                    ));
+                }
             }
         }
 
@@ -339,18 +355,6 @@ public class OrderServiceImpl implements OrderService {
 
         recalculateTicket(ticket);
         OrderResponse response = findById(orderId);
-        
-        // Emit EDP event for decrement
-        if (newQuantity < oldQuantity) {
-            Map<String, Object> eventData = new HashMap<>();
-            eventData.put("orderId", orderId);
-            eventData.put("orderItemId", itemId);
-            eventData.put("oldQuantity", oldQuantity);
-            eventData.put("newQuantity", newQuantity);
-            eventData.put("delta", oldQuantity - newQuantity);
-            edpPublisher.publish("order.item_decrement", eventData);
-        }
-
         messagingTemplate.convertAndSend("/topic/orders/" + orderId, response);
         return response;
     }

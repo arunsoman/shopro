@@ -176,9 +176,20 @@ class KDSNotifier extends StateNotifier<KDSState> {
     final isExpo = currentStation.stationType == KDSStationType.expo;
 
     final index = currentTickets.indexWhere((t) => t.id == updatedTicket.id);
+    
+    // If ticket is empty, remove it
+    if (updatedTicket.items.isEmpty) {
+      if (index != -1) {
+        currentTickets.removeAt(index);
+        state = state.copyWith(tickets: currentTickets);
+        _updateAggregates();
+      }
+      return;
+    }
+
     if (index != -1) {
       // For non-expo stations, remove if bumped or ready
-      // For expo, we only remove if it's explicitly bumped for EXPO (backend logic should handle this usually, but we safeguard)
+      // For expo, we only remove if it's explicitly bumped for EXPO
       if (!isExpo && (updatedTicket.status == KDSTicketStatus.bumped ||
           updatedTicket.status == KDSTicketStatus.ready)) {
         currentTickets.removeAt(index);
