@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -28,7 +29,6 @@ public class StationEventConsumer {
     private final OrderTicketRepository orderTicketRepository;
     private final OrderItemRepository orderItemRepository;
     private final EventStoreService eventStoreService;
-    private final StationService stationService;
 
     private static final String CONSUMER_ID = "STATION_ROUTER";
 
@@ -43,10 +43,19 @@ public class StationEventConsumer {
         }
 
         try {
+            Map<String, Object> payload = event.getPayload();
+            UUID orderId = UUID.fromString(payload.get("orderId").toString());
+            UUID orderItemId = UUID.fromString(payload.get("orderItemId").toString());
+            int unitIndex = Integer.parseInt(payload.getOrDefault("unitIndex", "1").toString());
+
+            OrderTicket ticket = orderTicketRepository.findById(orderId)
+                    .orElseThrow(() -> new RuntimeException("Order not found: " + orderId));
+            
+            OrderItem item = orderItemRepository.findById(orderItemId)
+                    .orElseThrow(() -> new RuntimeException("OrderItem not found: " + orderItemId));
+
             // Route this specific unit to KDS stations
             kdsService.routeItemUnit(ticket, item, unitIndex);
-
-            eventStoreService.updateCheckpoint(CONSUMER_ID, event.getId());
         } catch (Exception e) {
             log.error("Failed to route item for event {}: {}", event.getId(), e.getMessage());
         }
