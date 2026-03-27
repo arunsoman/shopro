@@ -336,7 +336,7 @@ public class OrderServiceImpl implements OrderService {
                     int unitIndexToRemove = oldQuantity - i;
                     
                     // Directly call KDS service for immediate sync
-                    kdsService.decrementSpecificUnit(itemId, unitIndexToRemove);
+                    kdsService.decrementSpecificUnit(itemId, unitIndexToRemove, null);
                     
                     // Publish EDP event for formal audit and catch-up
                     edpPublisher.publish("order.item_decrement", Map.of(

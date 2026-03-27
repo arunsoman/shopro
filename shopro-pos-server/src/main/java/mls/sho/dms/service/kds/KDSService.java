@@ -78,7 +78,7 @@ public class KDSService {
     }
 
     @Transactional
-    public void routeItemUnit(OrderTicket orderTicket, OrderItem orderItem, int unitIndex) {
+    public void routeItemUnit(OrderTicket orderTicket, OrderItem orderItem, int unitIndex, Instant firedAt) {
         UUID menuItemId = orderItem.getMenuItem().getId();
         UUID categoryId = orderItem.getMenuItem().getCategory() != null ? orderItem.getMenuItem().getCategory().getId() : null;
         String itemName = orderItem.getMenuItem().getName();
@@ -111,6 +111,7 @@ public class KDSService {
             kdsItem.setKdsTicket(kdsTicket);
             kdsItem.setOrderItem(orderItem);
             kdsItem.setUnitIndex(unitIndex);
+            kdsItem.setFiredAt(firedAt != null ? firedAt : Instant.now());
             kdsItem.setStatus(KDSItemStatus.PENDING);
             kdsItem = ticketItemRepository.save(kdsItem);
 
@@ -137,7 +138,7 @@ public class KDSService {
         // Legacy bulk routing method - now delegates to routeItemUnit for consistency
         for (OrderItem item : itemsToRoute) {
             for (int i = 1; i <= item.getQuantity(); i++) {
-                routeItemUnit(orderTicket, item, i);
+                routeItemUnit(orderTicket, item, i, Instant.now());
             }
         }
     }
@@ -385,7 +386,10 @@ public class KDSService {
         messagingTemplate.convertAndSend(posTopic, message);
         
         // Broadcast order update to POS for this specific order
-        messagingTemplate.convertAndSend("/topic/orders/" + orderId, "REFRESH");
+        Map<String, Object> refreshSignal = new HashMap<>();
+        refreshSignal.put("type", "REFRESH");
+        refreshSignal.put("orderId", orderId);
+        messagingTemplate.convertAndSend("/topic/orders/" + orderId, refreshSignal);
         if (ticket.getOrderTicket().getTable() != null) {
             broadcastTableUpdate(ticket.getOrderTicket().getTable());
         }
@@ -492,21 +496,33 @@ public class KDSService {
      * Returns "OK" if deleted, or the current status name if it has already been started.
      */
     @Transactional
-    public String decrementSpecificUnit(UUID orderItemId, int unitIndex) {
-        log.info("[KDS] Request to decrement specific unit {} for order item: {}", unitIndex, orderItemId);
+    public String decrementSpecificUnit(UUID orderItemId, int unitIndex, Instant firedAt) {
+        log.info("[KDS] Request to decrement specific unit {} for order item: {} (Fired: {})", unitIndex, orderItemId, firedAt);
         
-        List<KDSTicketItem> units = ticketItemRepository.findByOrderItem_IdAndUnitIndex(orderItemId, unitIndex);
+        Optional<KDSTicketItem> unitOpt = (firedAt != null) 
+            ? ticketItemRepository.findByOrderItem_IdAndUnitIndexAndFiredAt(orderItemId, unitIndex, firedAt)
+            : ticketItemRepository.findByOrderItem_IdAndUnitIndex(orderItemId, unitIndex).stream().findFirst();
         
-        if (units.isEmpty()) {
-            log.debug("[KDS] No matching unit {} found for item {}", unitIndex, orderItemId);
+        if (unitOpt.isEmpty()) {
+            log.debug("[KDS] No matching unit {} found for item {} with timestamp {}", unitIndex, orderItemId, firedAt);
             return "NOT_FOUND";
         }
 
-        // Check if ANY unit at ANY station has moved past PENDING
-        boolean allPending = units.stream().allMatch(i -> i.getStatus() == KDSItemStatus.PENDING);
+        KDSTicketItem unit = unitOpt.get();
+        List<KDSTicketItem> units = ticketItemRepository.findByOrderItem_IdAndUnitIndex(orderItemId, unitIndex);
+        
+        // We actually want to delete THIS SPECIFIC unit across all stations (Prep + Expo)
+        // But the user's requirement is to match timestamp.
+        // If we have multiples with the same timestamp (very rare but possible if fired in same ms), we handle them together.
+        List<KDSTicketItem> matchingUnits = units.stream()
+            .filter(u -> (firedAt == null) || (u.getFiredAt() != null && u.getFiredAt().equals(firedAt)))
+            .toList();
+        
+        // Check if ANY of these specific units at ANY station has moved past PENDING
+        boolean allPending = matchingUnits.stream().allMatch(i -> i.getStatus() == KDSItemStatus.PENDING);
         
         if (!allPending) {
-            KDSItemStatus currentStatus = units.stream()
+            KDSItemStatus currentStatus = matchingUnits.stream()
                 .filter(i -> i.getStatus() != KDSItemStatus.PENDING)
                 .findFirst().map(KDSTicketItem::getStatus).orElse(KDSItemStatus.PENDING);
             
@@ -515,12 +531,12 @@ public class KDSService {
             return currentStatus.name();
         }
 
-        Set<KDSTicket> affectedTickets = units.stream()
+        Set<KDSTicket> affectedTickets = matchingUnits.stream()
                 .map(KDSTicketItem::getKdsTicket)
                 .collect(Collectors.toSet());
 
-        ticketItemRepository.deleteAll(units);
-        log.debug("[KDS] Decrement APPROVED for unit {} of item {}.", unitIndex, orderItemId);
+        ticketItemRepository.deleteAll(matchingUnits);
+        log.debug("[KDS] Decrement APPROVED for unit {} of item {} (Timestamp match).", unitIndex, orderItemId);
 
         for (KDSTicket ticket : affectedTickets) {
             // Check if ticket is now empty

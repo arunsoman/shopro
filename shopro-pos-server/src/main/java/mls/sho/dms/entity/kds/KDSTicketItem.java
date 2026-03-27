@@ -43,6 +43,10 @@ public class KDSTicketItem extends BaseEntity {
     @Column(name = "unit_index", nullable = false)
     private int unitIndex = 1;
 
+    /** Timestamp when this unit was fired from the POS. Used for unique identification. */
+    @Column(name = "fired_at")
+    private Instant firedAt;
+
     public KDSTicket getKdsTicket() { return kdsTicket; }
     public void setKdsTicket(KDSTicket kdsTicket) { this.kdsTicket = kdsTicket; }
     public OrderItem getOrderItem() { return orderItem; }
@@ -55,4 +59,6 @@ public class KDSTicketItem extends BaseEntity {
     public void setReadyAt(Instant readyAt) { this.readyAt = readyAt; }
     public int getUnitIndex() { return unitIndex; }
     public void setUnitIndex(int unitIndex) { this.unitIndex = unitIndex; }
+    public Instant getFiredAt() { return firedAt; }
+    public void setFiredAt(Instant firedAt) { this.firedAt = firedAt; }
 }

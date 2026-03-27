@@ -134,10 +134,20 @@ class OrderNotifier extends Notifier<OrderState> {
         destination: '/topic/orders/$orderId',
         callback: (frame) {
           if (frame.body != null) {
+            final body = frame.body!;
+            if (body == 'REFRESH') {
+                debugPrint('[OrderWatcher] Received raw REFRESH signal.');
+                _debouncedLoadOrder(orderId);
+                return;
+            }
             try {
-              _handleOrderUpdate(json.decode(frame.body!));
+              _handleOrderUpdate(json.decode(body));
             } catch (e) {
-              debugPrint('Error handling order update: $e');
+              debugPrint('Error handling order update (possibly non-JSON): $e');
+              // If it's not JSON but contains REFRESH, treat it as one
+              if (body.contains('REFRESH')) {
+                  _debouncedLoadOrder(orderId);
+              }
             }
           }
         },
@@ -390,15 +400,17 @@ class OrderNotifier extends Notifier<OrderState> {
 
     if (newQuantity > oldQuantity) {
       // Increment logic: Create and store a prospective fire event
+      final timestamp = DateTime.now().toIso8601String();
       final fireEvent = EdpEvent.orderFire(
         orderId: state.activeOrder!.id,
         orderItemId: itemId,
         menuItemId: item.menuItemId,
         quantity: 1,
         unitIndex: newQuantity,
+        timestamp: timestamp,
       );
       _fireEventStacks.putIfAbsent(itemId, () => []).add(fireEvent);
-      debugPrint('[LIFO] Added fire event for unit $newQuantity to stack.');
+      debugPrint('[LIFO] Added fire event for unit $newQuantity with timestamp $timestamp to stack.');
     } else if (newQuantity < oldQuantity && isSent) {
       // Decrement logic: Pop last fire event and publish decrement
       final stack = _fireEventStacks[itemId];
@@ -406,10 +418,13 @@ class OrderNotifier extends Notifier<OrderState> {
         final lastFire = stack.removeLast();
         final decrementEvent = lastFire.copyAsDecrement();
         
+        final firedTimestamp = lastFire.payload['timestamp'];
+        final unitIdx = lastFire.payload['unitIndex'];
+        
         // Push that event to the bus
         final edpBus = ref.read(edpBusProvider);
         await edpBus.publish(decrementEvent);
-        debugPrint('[LIFO] Popped fire event and published decrement for unit ${lastFire.payload['unitIndex']}.');
+        debugPrint('[LIFO] Popped fire event and published decrement for unit $unitIdx with matched timestamp $firedTimestamp.');
         
         // Optimistic UI update: Decrement locally and wait for KDS Confirmation (OK/KO)
         final updatedItems = state.activeOrder!.items.map((i) {
@@ -606,6 +621,7 @@ class OrderNotifier extends Notifier<OrderState> {
         final stack = _fireEventStacks.putIfAbsent(item.id, () => []);
         // Synthesize stack if empty or inconsistent
         if (stack.length < item.quantity) {
+          final timestamp = item.firedAt?.toIso8601String() ?? DateTime.now().toIso8601String();
           for (int i = stack.length + 1; i <= item.quantity; i++) {
             stack.add(EdpEvent.orderFire(
               orderId: order.id,
@@ -613,6 +629,7 @@ class OrderNotifier extends Notifier<OrderState> {
               menuItemId: item.menuItemId,
               quantity: 1,
               unitIndex: i,
+              timestamp: timestamp,
             ));
           }
         }

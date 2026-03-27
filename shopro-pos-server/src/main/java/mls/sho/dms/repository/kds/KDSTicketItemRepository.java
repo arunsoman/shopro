@@ -13,6 +13,7 @@ public interface KDSTicketItemRepository extends JpaRepository<KDSTicketItem, UU
     List<KDSTicketItem> findByKdsTicket_Id(UUID kdsTicketId);
     List<KDSTicketItem> findByOrderItem_Id(UUID orderItemId);
     List<KDSTicketItem> findByOrderItem_IdAndUnitIndex(UUID orderItemId, int unitIndex);
+    java.util.Optional<KDSTicketItem> findByOrderItem_IdAndUnitIndexAndFiredAt(UUID orderItemId, int unitIndex, java.time.Instant firedAt);
     long countByKdsTicket_Id(UUID kdsTicketId);
     void deleteByKdsTicket_Id(UUID kdsTicketId);
 }

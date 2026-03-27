@@ -22,6 +22,7 @@ class EdpEvent {
     required String menuItemId,
     required int quantity,
     int? unitIndex,
+    String? timestamp, // Optional override, otherwise uses now
   }) {
     return EdpEvent(
       type: 'order.fire',
@@ -30,6 +31,7 @@ class EdpEvent {
         'orderItemId': orderItemId,
         'menuItemId': menuItemId,
         'quantity': quantity,
+        'timestamp': timestamp ?? DateTime.now().toIso8601String(),
         if (unitIndex != null) 'unitIndex': unitIndex,
       },
     );
@@ -40,6 +42,7 @@ class EdpEvent {
     required String orderItemId,
     required String menuItemId,
     required int unitIndex,
+    required String timestamp, // Mandatory for matching
   }) {
     return EdpEvent(
       type: 'order.item_decrement',
@@ -48,7 +51,8 @@ class EdpEvent {
         'orderItemId': orderItemId,
         'menuItemId': menuItemId,
         'unitIndex': unitIndex,
-        'quantity': 1, // Single unit decrement
+        'timestamp': timestamp,
+        'quantity': 1,
       },
     );
   }
@@ -56,7 +60,9 @@ class EdpEvent {
   EdpEvent copyAsDecrement() {
     return EdpEvent(
       type: 'order.item_decrement',
-      payload: Map<String, dynamic>.from(payload)..['quantity'] = 1,
+      payload: Map<String, dynamic>.from(payload)
+        ..['type'] = 'order.item_decrement'
+        ..['quantity'] = 1,
     );
   }
 

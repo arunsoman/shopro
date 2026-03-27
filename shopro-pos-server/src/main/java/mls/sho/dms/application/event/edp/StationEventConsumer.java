@@ -52,15 +52,17 @@ public class StationEventConsumer {
             UUID orderId = UUID.fromString(payload.get("orderId").toString());
             UUID orderItemId = UUID.fromString(payload.get("orderItemId").toString());
             int unitIndex = Integer.parseInt(payload.getOrDefault("unitIndex", "1").toString());
+            String timestampStr = payload.containsKey("timestamp") ? payload.get("timestamp").toString() : null;
+            java.time.Instant firedAt = timestampStr != null ? java.time.Instant.parse(timestampStr) : null;
 
             if ("order.item_decrement".equals(event.getEventType())) {
-                log.info("[KDS] Handling decrement for item {} unit {}", orderItemId, unitIndex);
-                String result = kdsService.decrementSpecificUnit(orderItemId, unitIndex);
+                log.info("[KDS] Handling decrement for item {} unit {} (timestamp: {})", orderItemId, unitIndex, firedAt);
+                String result = kdsService.decrementSpecificUnit(orderItemId, unitIndex, firedAt);
                 
                 // Construct result payload by copying original
                 Map<String, Object> resultPayload = new HashMap<>(payload);
                 resultPayload.put("status", result);
-                resultPayload.put("timestamp", java.time.Instant.now().toString());
+                resultPayload.put("resultTimestamp", java.time.Instant.now().toString());
 
                 if ("OK".equals(result)) {
                     log.info("[KDS] Decrement SUCCESS for item {} unit {}. Updating Order and publishing OK.", orderItemId, unitIndex);
@@ -84,7 +86,7 @@ public class StationEventConsumer {
                     .orElseThrow(() -> new RuntimeException("OrderItem not found: " + orderItemId));
 
             // Route this specific unit to KDS stations
-            kdsService.routeItemUnit(ticket, item, unitIndex);
+            kdsService.routeItemUnit(ticket, item, unitIndex, firedAt);
         } catch (Exception e) {
             log.error("Failed to route item for event {}: {}", event.getId(), e.getMessage());
         }
