@@ -514,6 +514,7 @@ KDSTicketItem _$KDSTicketItemFromJson(Map<String, dynamic> json) {
 mixin _$KDSTicketItem {
   String get id => throw _privateConstructorUsedError;
   String get menuItemId => throw _privateConstructorUsedError;
+  String get orderItemId => throw _privateConstructorUsedError;
   String get name => throw _privateConstructorUsedError;
   int get quantity => throw _privateConstructorUsedError;
   KDSItemStatus get status => throw _privateConstructorUsedError;
@@ -544,6 +545,7 @@ abstract class $KDSTicketItemCopyWith<$Res> {
   $Res call({
     String id,
     String menuItemId,
+    String orderItemId,
     String name,
     int quantity,
     KDSItemStatus status,
@@ -573,6 +575,7 @@ class _$KDSTicketItemCopyWithImpl<$Res, $Val extends KDSTicketItem>
   $Res call({
     Object? id = null,
     Object? menuItemId = null,
+    Object? orderItemId = null,
     Object? name = null,
     Object? quantity = null,
     Object? status = null,
@@ -592,6 +595,10 @@ class _$KDSTicketItemCopyWithImpl<$Res, $Val extends KDSTicketItem>
             menuItemId: null == menuItemId
                 ? _value.menuItemId
                 : menuItemId // ignore: cast_nullable_to_non_nullable
+                      as String,
+            orderItemId: null == orderItemId
+                ? _value.orderItemId
+                : orderItemId // ignore: cast_nullable_to_non_nullable
                       as String,
             name: null == name
                 ? _value.name
@@ -647,6 +654,7 @@ abstract class _$$KDSTicketItemImplCopyWith<$Res>
   $Res call({
     String id,
     String menuItemId,
+    String orderItemId,
     String name,
     int quantity,
     KDSItemStatus status,
@@ -675,6 +683,7 @@ class __$$KDSTicketItemImplCopyWithImpl<$Res>
   $Res call({
     Object? id = null,
     Object? menuItemId = null,
+    Object? orderItemId = null,
     Object? name = null,
     Object? quantity = null,
     Object? status = null,
@@ -694,6 +703,10 @@ class __$$KDSTicketItemImplCopyWithImpl<$Res>
         menuItemId: null == menuItemId
             ? _value.menuItemId
             : menuItemId // ignore: cast_nullable_to_non_nullable
+                  as String,
+        orderItemId: null == orderItemId
+            ? _value.orderItemId
+            : orderItemId // ignore: cast_nullable_to_non_nullable
                   as String,
         name: null == name
             ? _value.name
@@ -742,6 +755,7 @@ class _$KDSTicketItemImpl implements _KDSTicketItem {
   const _$KDSTicketItemImpl({
     required this.id,
     required this.menuItemId,
+    required this.orderItemId,
     required this.name,
     required this.quantity,
     required this.status,
@@ -760,6 +774,8 @@ class _$KDSTicketItemImpl implements _KDSTicketItem {
   final String id;
   @override
   final String menuItemId;
+  @override
+  final String orderItemId;
   @override
   final String name;
   @override
@@ -791,7 +807,7 @@ class _$KDSTicketItemImpl implements _KDSTicketItem {
 
   @override
   String toString() {
-    return 'KDSTicketItem(id: $id, menuItemId: $menuItemId, name: $name, quantity: $quantity, status: $status, customNote: $customNote, modifiers: $modifiers, prepStartedAt: $prepStartedAt, priority: $priority, preparationTimeMinutes: $preparationTimeMinutes, unitIndex: $unitIndex)';
+    return 'KDSTicketItem(id: $id, menuItemId: $menuItemId, orderItemId: $orderItemId, name: $name, quantity: $quantity, status: $status, customNote: $customNote, modifiers: $modifiers, prepStartedAt: $prepStartedAt, priority: $priority, preparationTimeMinutes: $preparationTimeMinutes, unitIndex: $unitIndex)';
   }
 
   @override
@@ -802,6 +818,8 @@ class _$KDSTicketItemImpl implements _KDSTicketItem {
             (identical(other.id, id) || other.id == id) &&
             (identical(other.menuItemId, menuItemId) ||
                 other.menuItemId == menuItemId) &&
+            (identical(other.orderItemId, orderItemId) ||
+                other.orderItemId == orderItemId) &&
             (identical(other.name, name) || other.name == name) &&
             (identical(other.quantity, quantity) ||
                 other.quantity == quantity) &&
@@ -828,6 +846,7 @@ class _$KDSTicketItemImpl implements _KDSTicketItem {
     runtimeType,
     id,
     menuItemId,
+    orderItemId,
     name,
     quantity,
     status,
@@ -857,6 +876,7 @@ abstract class _KDSTicketItem implements KDSTicketItem {
   const factory _KDSTicketItem({
     required final String id,
     required final String menuItemId,
+    required final String orderItemId,
     required final String name,
     required final int quantity,
     required final KDSItemStatus status,
@@ -875,6 +895,8 @@ abstract class _KDSTicketItem implements KDSTicketItem {
   String get id;
   @override
   String get menuItemId;
+  @override
+  String get orderItemId;
   @override
   String get name;
   @override

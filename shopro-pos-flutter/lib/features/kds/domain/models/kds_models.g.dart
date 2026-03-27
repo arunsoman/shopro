@@ -69,6 +69,7 @@ _$KDSTicketItemImpl _$$KDSTicketItemImplFromJson(Map<String, dynamic> json) =>
     _$KDSTicketItemImpl(
       id: json['id'] as String,
       menuItemId: json['menuItemId'] as String,
+      orderItemId: json['orderItemId'] as String,
       name: json['name'] as String,
       quantity: (json['quantity'] as num).toInt(),
       status: $enumDecode(_$KDSItemStatusEnumMap, json['status']),
@@ -91,6 +92,7 @@ Map<String, dynamic> _$$KDSTicketItemImplToJson(_$KDSTicketItemImpl instance) =>
     <String, dynamic>{
       'id': instance.id,
       'menuItemId': instance.menuItemId,
+      'orderItemId': instance.orderItemId,
       'name': instance.name,
       'quantity': instance.quantity,
       'status': _$KDSItemStatusEnumMap[instance.status]!,
