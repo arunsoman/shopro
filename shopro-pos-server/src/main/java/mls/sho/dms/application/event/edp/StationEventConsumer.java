@@ -28,30 +28,21 @@ public class StationEventConsumer {
     private final OrderTicketRepository orderTicketRepository;
     private final OrderItemRepository orderItemRepository;
     private final EventStoreService eventStoreService;
+    private final StationService stationService;
 
     private static final String CONSUMER_ID = "STATION_ROUTER";
 
     @EventListener
     @Transactional
     public void onEvent(EventStore event) {
-        if (!"order.fire".equals(event.getEventType())) {
+        // Always Acknowledge to prevent stalling the entire system
+        eventStoreService.updateCheckpoint(CONSUMER_ID, event.getId());
+
+        if (!"order.created".equals(event.getEventType()) && !"order.fire".equals(event.getEventType())) {
             return;
         }
 
-        log.info("StationConsumer processing order.fire (Event ID: {})", event.getId());
-
         try {
-            UUID orderId = UUID.fromString(event.getPayload().get("orderId").toString());
-            UUID orderItemId = UUID.fromString(event.getPayload().get("orderItemId").toString());
-
-            OrderTicket ticket = orderTicketRepository.findById(orderId)
-                    .orElseThrow(() -> new RuntimeException("Order not found: " + orderId));
-            
-            OrderItem item = orderItemRepository.findById(orderItemId)
-                    .orElseThrow(() -> new RuntimeException("OrderItem not found: " + orderItemId));
-
-            int unitIndex = Integer.parseInt(event.getPayload().getOrDefault("unitIndex", "1").toString());
-
             // Route this specific unit to KDS stations
             kdsService.routeItemUnit(ticket, item, unitIndex);
 

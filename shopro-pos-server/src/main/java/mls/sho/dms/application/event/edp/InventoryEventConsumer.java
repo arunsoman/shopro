@@ -33,6 +33,11 @@ public class InventoryEventConsumer {
     @EventListener
     @Transactional
     public void onEvent(EventStore event) {
+        log.trace("InventoryConsumer saw event (ID: {})", event.getId());
+        
+        // Always Acknowledge to prevent stalling the entire system
+        eventStoreService.updateCheckpoint(CONSUMER_ID, event.getId());
+
         if (!"order.fire".equals(event.getEventType())) {
             return;
         }
@@ -45,9 +50,6 @@ public class InventoryEventConsumer {
                     .orElseThrow(() -> new RuntimeException("OrderItem not found: " + orderItemId));
 
             recipeService.depleteForOrderItem(item);
-            
-            // Mark the event as processed locally
-            eventStoreService.updateCheckpoint(CONSUMER_ID, event.getId());
         } catch (Exception e) {
             log.error("Failed to deplete inventory for event {}: {}", event.getId(), e.getMessage());
             // In a robust system, we would move this to a DLQ or retry queue.

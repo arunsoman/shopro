@@ -22,12 +22,20 @@ public class WebSocketRelayConsumer {
 
     private final SimpMessagingTemplate messagingTemplate;
     private final EventStoreService eventStoreService;
+    private long lastSentEventId = -1L;
 
     private static final String CONSUMER_ID = "WEBSOCKET_RELAY";
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onEvent(EventStore event) {
+        // Optimization: Defensive check against catch-up re-pulses
+        if (event.getId() <= lastSentEventId) {
+            log.trace("Skipping relay for already-sent event ID: {}", event.getId());
+            return;
+        }
+        
         log.debug("Relaying event {} (ID: {}) to WebSockets", event.getEventType(), event.getId());
+        lastSentEventId = event.getId();
 
         String destination = resolveDestination(event);
         if (destination != null) {

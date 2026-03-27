@@ -46,10 +46,18 @@ public class EventStoreService {
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void updateCheckpoint(String consumerId, Long lastEventId) {
         log.debug("Updating checkpoint for consumer {} to {}", consumerId, lastEventId);
+        
         EventConsumerCheckpoint checkpoint = checkpointRepository.findById(consumerId)
                 .orElse(new EventConsumerCheckpoint(consumerId, 0L, Instant.now()));
         
-        checkpoint.setLastProcessedEventId(lastEventId);
-        checkpointRepository.save(checkpoint);
+        // Monotonic rule: Never regress the checkpoint. 
+        // We only move forward.
+        if (lastEventId > checkpoint.getLastProcessedEventId()) {
+            checkpoint.setLastProcessedEventId(lastEventId);
+            checkpointRepository.save(checkpoint);
+        } else {
+            log.trace("Skipping checkpoint update for {}: {} is not > {}", 
+                consumerId, lastEventId, checkpoint.getLastProcessedEventId());
+        }
     }
 }

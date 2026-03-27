@@ -48,7 +48,8 @@ class OrderNotifier extends Notifier<OrderState> {
   void Function()? _globalUnsub;
   Timer? _globalRefreshTimer;
   Timer? _activeOrderRefreshTimer;
-  int? _lastHandledEventId;
+  final Set<int> _processedEventIds = {};
+  static const int _maxEventBufferSize = 20;
 
   @override
   OrderState build() {
@@ -161,11 +162,18 @@ class OrderNotifier extends Notifier<OrderState> {
     // Deduplication check: Don't process the same event ID twice
     if (data.containsKey('id')) {
       final seqId = data['id'] is int ? data['id'] as int : int.tryParse(data['id'].toString());
-      if (seqId != null && _lastHandledEventId == seqId) {
-        debugPrint('[OrderWatcher] Skipping duplicate event: $seqId');
-        return;
+      if (seqId != null) {
+        if (_processedEventIds.contains(seqId)) {
+          debugPrint('[OrderWatcher] Skipping already processed event: $seqId');
+          return;
+        }
+        
+        // Add to buffer and prune old entries
+        _processedEventIds.add(seqId);
+        if (_processedEventIds.length > _maxEventBufferSize) {
+          _processedEventIds.remove(_processedEventIds.first);
+        }
       }
-      _lastHandledEventId = seqId;
     }
 
     // Optimization: Check if the message contains the full order payload
