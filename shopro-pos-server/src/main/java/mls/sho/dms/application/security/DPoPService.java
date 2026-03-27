@@ -169,6 +169,20 @@ public class DPoPService {
         }
     }
 
+    
+    /**
+     * Calculates the SHA-256 thumbprint (JKT) of a JWK for DPoP verification.
+     */
+    public String calculateJkt(Map<String, Object> jwkMap) {
+        try {
+            com.nimbusds.jose.jwk.JWK jwk = com.nimbusds.jose.jwk.JWK.parse(jwkMap);
+            return jwk.computeThumbprint().toString();
+        } catch (Exception e) {
+            log.error("Failed to calculate JWK thumbprint: {}", e.getMessage());
+            throw new RuntimeException("Thumbprint calculation failed", e);
+        }
+    }
+
     /**
      * Records a new device binding after successful initial authentication.
      */

@@ -138,7 +138,23 @@ class KDSNotifier extends StateNotifier<KDSState> {
             callback: (frame) {
               if (frame.body != null) {
                 final Map<String, dynamic> data = jsonDecode(frame.body!);
-                _onTicketUpdate(data);
+                
+                // Handle enveloped updates (e.g. TICKET_UPDATED, TICKET_CANCELLED)
+                if (data.containsKey('type')) {
+                  final String type = data['type'];
+                  if (type == 'TICKET_UPDATED' && data.containsKey('ticket')) {
+                    _onTicketUpdate(data['ticket']);
+                  } else if (type == 'TICKET_CANCELLED' && data.containsKey('ticketId')) {
+                    final String ticketId = data['ticketId'];
+                    state = state.copyWith(
+                      tickets: state.tickets.where((t) => t.id != ticketId).toList(),
+                    );
+                    _updateAggregates();
+                  }
+                } else {
+                  // Direct KDSTicket broadcast
+                  _onTicketUpdate(data);
+                }
               }
             },
           );

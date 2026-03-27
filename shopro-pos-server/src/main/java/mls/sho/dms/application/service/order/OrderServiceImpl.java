@@ -339,6 +339,18 @@ public class OrderServiceImpl implements OrderService {
 
         recalculateTicket(ticket);
         OrderResponse response = findById(orderId);
+        
+        // Emit EDP event for decrement
+        if (newQuantity < oldQuantity) {
+            Map<String, Object> eventData = new HashMap<>();
+            eventData.put("orderId", orderId);
+            eventData.put("orderItemId", itemId);
+            eventData.put("oldQuantity", oldQuantity);
+            eventData.put("newQuantity", newQuantity);
+            eventData.put("delta", oldQuantity - newQuantity);
+            edpPublisher.publish("order.item_decrement", eventData);
+        }
+
         messagingTemplate.convertAndSend("/topic/orders/" + orderId, response);
         return response;
     }

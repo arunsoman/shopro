@@ -509,6 +509,30 @@ public class KDSService {
             
             log.debug("[KDS] Deleting {} pending units from station {}", stationPending.size(), stationId);
             ticketItemRepository.deleteAll(stationPending);
+            
+            // Broadcast the updated ticket to the station
+            stationRepository.findById(stationId).ifPresent(station -> {
+                // Find the specific ticket that was modified
+                Set<KDSTicket> affectedTickets = stationPending.stream()
+                        .map(KDSTicketItem::getKdsTicket)
+                        .collect(Collectors.toSet());
+                
+                for (KDSTicket ticket : affectedTickets) {
+                    broadcastTicketToStation(ticket);
+                    
+                    // Force a local state refresh event with FULL TICKET payload
+                    List<KDSTicketItemResponse> itemDtos = ticketItemRepository.findByKdsTicket_Id(ticket.getId())
+                            .stream().map(kdsMapper::toItemResponse).toList();
+                    KDSTicketResponse fullTicket = kdsMapper.toResponse(ticket, itemDtos);
+
+                    Map<String, Object> payload = new HashMap<>();
+                    payload.put("type", "TICKET_UPDATED");
+                    payload.put("ticketId", ticket.getId());
+                    payload.put("orderId", ticket.getOrderTicket().getId());
+                    payload.put("ticket", fullTicket);
+                    messagingTemplate.convertAndSend("/topic/kds/station/" + stationId, payload);
+                }
+            });
         }
     }
 
