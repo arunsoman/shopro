@@ -479,20 +479,7 @@ class OrderSummarySidebar extends ConsumerWidget {
           if (order!.status != TicketStatus.paid &&
               order!.status != TicketStatus.voided &&
               !hasSentItems)
-            SizedBox(
-              width: double.infinity,
-              child: TextButton(
-                onPressed: () => _handleCancelOrder(context, ref),
-                style: TextButton.styleFrom(
-                  foregroundColor: AppColors.error,
-                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-                ),
-                child: const Text(
-                  'CANCEL ORDER',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                ),
-              ),
-            ),
+          const SizedBox(height: AppSpacing.md),
         ],
       ),
     );
@@ -511,92 +498,6 @@ class OrderSummarySidebar extends ConsumerWidget {
           Text(
             '\$${amount.toStringAsFixed(2)}',
             style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _handleCancelOrder(BuildContext context, WidgetRef ref) {
-    if (order == null) return;
-
-    if (order!.status == TicketStatus.open) {
-      _confirmClear(context, ref);
-      return;
-    }
-
-    if (order!.isCancellable) {
-      _confirmCancel(context, ref);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('This order cannot be cancelled (e.g. already paid)'),
-        ),
-      );
-    }
-  }
-
-  void _confirmClear(BuildContext context, WidgetRef ref) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Clear Order?'),
-        content: const Text(
-          'This will remove all items from this unsubmitted order. This action cannot be undone.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              ref.read(orderProvider.notifier).cancelOrder();
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Clear All'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _confirmCancel(
-    BuildContext context,
-    WidgetRef ref, {
-    String? managerPin,
-  }) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Cancel Order'),
-        content: const Text(
-          'Are you sure you want to cancel this entire order? This cannot be undone.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('NO, KEEP IT'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ref
-                  .read(orderProvider.notifier)
-                  .cancelOrder(managerPin: managerPin)
-                  .catchError((e) {
-                    if (!context.mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(e.toString()),
-                        backgroundColor: AppColors.error,
-                      ),
-                    );
-                  });
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
-            child: const Text('YES, CANCEL ORDER'),
           ),
         ],
       ),
