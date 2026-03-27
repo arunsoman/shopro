@@ -19,7 +19,7 @@ class EdpBus {
   /// External publish to backend
   Future<void> publish(EdpEvent event) async {
     try {
-      await _api.post('events', data: event.toJson());
+      await _api.post('/events', data: event.toJson());
     } catch (e) {
       // Logic for offline queueing could be added here in the future
       rethrow;
@@ -39,7 +39,7 @@ class EdpBus {
     final sinceId = _lastSeenEventId ?? 0;
 
     try {
-      final response = await _api.get('events/catchup', 
+      final response = await _api.get('/events/catchup', 
         queryParameters: {'sinceId': sinceId});
       
       if (response.data is List) {
