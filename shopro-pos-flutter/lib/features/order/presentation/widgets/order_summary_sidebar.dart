@@ -324,20 +324,20 @@ class OrderSummarySidebar extends ConsumerWidget {
                         ),
                       ),
                     ),
-                  if (item.status == OrderItemStatus.pending)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8),
-                      child: IconButton(
-                        icon: const Icon(
-                          Icons.delete_outline,
-                          color: AppColors.error,
-                          size: 24,
-                        ),
-                        onPressed: () => _handleVoidItem(context, ref, item),
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                      ),
-                    ),
+                  // if (item.status == OrderItemStatus.pending)
+                  //   Padding(
+                  //     padding: const EdgeInsets.only(top: 8),
+                  //     // child: IconButton(
+                  //     //   icon: const Icon(
+                  //     //     Icons.delete_outline,
+                  //     //     color: AppColors.error,
+                  //     //     size: 24,
+                  //     //   ),
+                  //     //   onPressed: () => _handleVoidItem(context, ref, item),
+                  //     //   padding: EdgeInsets.zero,
+                  //     //   constraints: const BoxConstraints(),
+                  //     // ),
+                  //   ),
                 ],
               ),
             ],

@@ -11,7 +11,7 @@ import java.util.Map;
  * Gateway for receiving events from external systems (Flutter/React).
  */
 @RestController
-@RequestMapping("/api/events")
+@RequestMapping("/api/v1/events")
 @RequiredArgsConstructor
 @Slf4j
 public class EventController {
