@@ -201,9 +201,10 @@ class OrderNotifier extends Notifier<OrderState> {
     }
 
     String? orderId;
+    String? type;
     // Handle EDP EventStore format (event + payload)
     if (data.containsKey('eventType') && data.containsKey('payload')) {
-      final type = data['eventType']?.toString();
+      type = data['eventType']?.toString();
       final payload = data['payload'] as Map<String, dynamic>;
       
       if (type == 'order.item_decrement_ko') {
@@ -226,9 +227,13 @@ class OrderNotifier extends Notifier<OrderState> {
 
     final finalOrderId = orderId ?? state.activeOrder?.id;
     if (finalOrderId != null) {
-      // If we couldn't parse the order directly, we load it.
-      // Optimization: Debounce specific order fetches from WebSocket events
-      // to avoid API flood on multiple unit updates (e.g. KDS bump).
+      // Optimization: Skip reloads for intermediate 'firing' or 'decrementing' events
+      // to avoid UI flicker (1 -> 0 -> 1) while waiting for final KDS confirmation.
+      if (type == 'order.fire' || type == 'order.item_decrement') {
+          debugPrint('[OrderWatcher] Skipping reload for intermediate event: $type');
+          return;
+      }
+
       if (finalOrderId == state.activeOrder?.id) {
         _debouncedLoadOrder(finalOrderId);
       }
