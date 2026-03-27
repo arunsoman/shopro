@@ -47,6 +47,8 @@ services:
       context: ./shopro-pos-web
       dockerfile: Dockerfile
     container_name: shopro-web-pos
+    volumes:
+      - ./uploads/menu-items:/app/assets/menu-items:ro
     ports:
       - "5173:80"
     depends_on:
