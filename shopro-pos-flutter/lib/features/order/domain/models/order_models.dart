@@ -191,6 +191,48 @@ class OrderItem {
       removableQuantity: (json['removableQuantity'] as num?)?.toInt() ?? 0,
     );
   }
+
+  OrderItem copyWith({
+    String? id,
+    String? menuItemId,
+    String? name,
+    int? quantity,
+    double? unitPrice,
+    double? modifierUpchargeTotal,
+    double? calculatedTotal,
+    OrderItemStatus? status,
+    String? customNote,
+    bool? hasAllergyFlag,
+    bool? isSubtraction,
+    int? courseNumber,
+    List<String>? subtractions,
+    DateTime? firedAt,
+    List<OrderItemModifier>? modifiers,
+    List<TaxBreakdownEntry>? taxBreakdowns,
+    bool? isCancellable,
+    int? removableQuantity,
+  }) {
+    return OrderItem(
+      id: id ?? this.id,
+      menuItemId: menuItemId ?? this.menuItemId,
+      name: name ?? this.name,
+      quantity: quantity ?? this.quantity,
+      unitPrice: unitPrice ?? this.unitPrice,
+      modifierUpchargeTotal: modifierUpchargeTotal ?? this.modifierUpchargeTotal,
+      calculatedTotal: calculatedTotal ?? this.calculatedTotal,
+      status: status ?? this.status,
+      customNote: customNote ?? this.customNote,
+      hasAllergyFlag: hasAllergyFlag ?? this.hasAllergyFlag,
+      isSubtraction: isSubtraction ?? this.isSubtraction,
+      courseNumber: courseNumber ?? this.courseNumber,
+      subtractions: subtractions ?? this.subtractions,
+      firedAt: firedAt ?? this.firedAt,
+      modifiers: modifiers ?? this.modifiers,
+      taxBreakdowns: taxBreakdowns ?? this.taxBreakdowns,
+      isCancellable: isCancellable ?? this.isCancellable,
+      removableQuantity: removableQuantity ?? this.removableQuantity,
+    );
+  }
 }
 
 class OrderItemModifier {

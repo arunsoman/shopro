@@ -58,4 +58,10 @@ public interface OrderService {
 
     /** Re-evaluate and update ticket status based on individual item statuses (READY, DELIVERED). */
     OrderResponse updateTicketStatusFromItems(UUID ticketId);
+
+    /** 
+     * Processes a decrement that has been confirmed by the KDS.
+     * Updates the OrderItem quantity and recalculates totals.
+     */
+    void processConfirmedDecrement(UUID orderId, UUID orderItemId, int quantityToSubstract);
 }

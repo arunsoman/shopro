@@ -410,6 +410,17 @@ class OrderNotifier extends Notifier<OrderState> {
         final edpBus = ref.read(edpBusProvider);
         await edpBus.publish(decrementEvent);
         debugPrint('[LIFO] Popped fire event and published decrement for unit ${lastFire.payload['unitIndex']}.');
+        
+        // Optimistic UI update: Decrement locally and wait for KDS Confirmation (OK/KO)
+        final updatedItems = state.activeOrder!.items.map((i) {
+          if (i.id == itemId) {
+            return i.copyWith(quantity: newQuantity);
+          }
+          return i;
+        }).toList();
+        state = state.copyWith(activeOrder: state.activeOrder!.copyWith(items: updatedItems));
+        
+        return; // Skip the direct API PATCH for sent items; we wait for the OK event to reload the DB state
       }
     }
 

@@ -940,4 +940,27 @@ public class OrderServiceImpl implements OrderService {
         );
         messagingTemplate.convertAndSend("/topic/tables", tableResponse);
     }
+
+    @Override
+    @Transactional
+    public void processConfirmedDecrement(UUID orderId, UUID orderItemId, int quantityToSubstract) {
+        OrderTicket ticket = orderTicketRepository.findById(orderId)
+            .orElseThrow(() -> new ResourceNotFoundException("Order found: " + orderId));
+
+        OrderItem item = orderItemRepository.findById(orderItemId)
+            .orElseThrow(() -> new ResourceNotFoundException("Order item not found: " + orderItemId));
+
+        int newQuantity = item.getQuantity() - quantityToSubstract;
+        
+        if (newQuantity <= 0) {
+            voidOrderItem(orderId, orderItemId, "Confirmed KDS decrement", "SYSTEM", null);
+        } else {
+            item.setQuantity(newQuantity);
+            orderItemRepository.save(item);
+            recalculateTicket(ticket);
+            
+            OrderResponse response = findById(orderId);
+            messagingTemplate.convertAndSend("/topic/orders/" + orderId, response);
+        }
+    }
 }

@@ -2,6 +2,7 @@ package mls.sho.dms.application.event.edp;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import mls.sho.dms.application.service.order.OrderService;
 import mls.sho.dms.entity.edp.EventStore;
 import mls.sho.dms.entity.order.OrderItem;
 import mls.sho.dms.entity.order.OrderTicket;
@@ -30,6 +31,7 @@ public class StationEventConsumer {
     private final OrderTicketRepository orderTicketRepository;
     private final OrderItemRepository orderItemRepository;
     private final EventStoreService eventStoreService;
+    private final OrderService orderService;
 
     private static final String CONSUMER_ID = "STATION_ROUTER";
 
@@ -61,7 +63,11 @@ public class StationEventConsumer {
                 resultPayload.put("timestamp", java.time.Instant.now().toString());
 
                 if ("OK".equals(result)) {
-                    log.info("[KDS] Decrement SUCCESS for item {} unit {}. Publishing OK.", orderItemId, unitIndex);
+                    log.info("[KDS] Decrement SUCCESS for item {} unit {}. Updating Order and publishing OK.", orderItemId, unitIndex);
+                    
+                    // FORMAL DB UPDATE: Now that KDS has confirmed, we decrease the quantity in the order tables
+                    orderService.processConfirmedDecrement(orderId, orderItemId, 1);
+                    
                     eventStoreService.append("order.item_decrement_ok", resultPayload);
                 } else {
                     log.warn("[KDS] Decrement FAILED for item {} unit {} (Reason: {}). Publishing KO.", 
