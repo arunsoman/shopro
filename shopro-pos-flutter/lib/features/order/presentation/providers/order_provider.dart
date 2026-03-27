@@ -50,6 +50,7 @@ class OrderNotifier extends Notifier<OrderState> {
   Timer? _activeOrderRefreshTimer;
   final Set<int> _processedEventIds = {};
   static const int _maxEventBufferSize = 20;
+  final Map<String, List<EdpEvent>> _fireEventStacks = {};
 
   @override
   OrderState build() {
@@ -181,6 +182,7 @@ class OrderNotifier extends Notifier<OrderState> {
     try {
       if (data.containsKey('id') && data.containsKey('status') && data.containsKey('items')) {
         final updatedOrder = OrderTicket.fromJson(data);
+        _initializeEventStacks(updatedOrder);
         state = state.copyWith(activeOrder: updatedOrder, isLoading: false);
         return;
       }
@@ -191,7 +193,24 @@ class OrderNotifier extends Notifier<OrderState> {
     String? orderId;
     // Handle EDP EventStore format (event + payload)
     if (data.containsKey('eventType') && data.containsKey('payload')) {
+      final type = data['eventType']?.toString();
       final payload = data['payload'] as Map<String, dynamic>;
+      
+      if (type == 'order.item_decrement_ko') {
+          final itemName = payload['menuItemId']?.toString() ?? 'Item';
+          debugPrint('[OrderWatcher] Decrement REJECTED by Kitchen for $itemName');
+          state = state.copyWith(error: '⚠️ Cannot cancel - Chef has already started cooking!');
+          // Force a reload to revert the optimistic decrement
+          _debouncedLoadOrder(payload['orderId'].toString());
+          return;
+      }
+      
+      if (type == 'order.item_decrement_ok') {
+          debugPrint('[OrderWatcher] Decrement APPROVED by Kitchen.');
+          _debouncedLoadOrder(payload['orderId'].toString());
+          return;
+      }
+
       orderId = payload['orderId']?.toString();
     }
 
@@ -211,6 +230,7 @@ class OrderNotifier extends Notifier<OrderState> {
     try {
       final repository = ref.read(orderRepositoryProvider);
       final order = await repository.getOrder(orderId);
+      _initializeEventStacks(order);
       state = state.copyWith(activeOrder: order, isLoading: false);
     } on DioException catch (e) {
       final data = e.response?.data;
@@ -363,6 +383,35 @@ class OrderNotifier extends Notifier<OrderState> {
 
   Future<void> updateItemQuantity(String itemId, int newQuantity) async {
     if (state.activeOrder == null) return;
+
+    final item = state.activeOrder!.items.firstWhere((i) => i.id == itemId);
+    final oldQuantity = item.quantity;
+    final isSent = item.status != OrderItemStatus.pending;
+
+    if (newQuantity > oldQuantity) {
+      // Increment logic: Create and store a prospective fire event
+      final fireEvent = EdpEvent.orderFire(
+        orderId: state.activeOrder!.id,
+        orderItemId: itemId,
+        menuItemId: item.menuItemId,
+        quantity: 1,
+        unitIndex: newQuantity,
+      );
+      _fireEventStacks.putIfAbsent(itemId, () => []).add(fireEvent);
+      debugPrint('[LIFO] Added fire event for unit $newQuantity to stack.');
+    } else if (newQuantity < oldQuantity && isSent) {
+      // Decrement logic: Pop last fire event and publish decrement
+      final stack = _fireEventStacks[itemId];
+      if (stack != null && stack.isNotEmpty) {
+        final lastFire = stack.removeLast();
+        final decrementEvent = lastFire.copyAsDecrement();
+        
+        // Push that event to the bus
+        final edpBus = ref.read(edpBusProvider);
+        await edpBus.publish(decrementEvent);
+        debugPrint('[LIFO] Popped fire event and published decrement for unit ${lastFire.payload['unitIndex']}.');
+      }
+    }
 
     state = state.copyWith(isLoading: true);
     try {
@@ -537,6 +586,26 @@ class OrderNotifier extends Notifier<OrderState> {
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
       rethrow;
+    }
+  }
+
+  void _initializeEventStacks(OrderTicket order) {
+    for (final item in order.items) {
+      if (item.status != OrderItemStatus.pending && item.status != OrderItemStatus.voided) {
+        final stack = _fireEventStacks.putIfAbsent(item.id, () => []);
+        // Synthesize stack if empty or inconsistent
+        if (stack.length < item.quantity) {
+          for (int i = stack.length + 1; i <= item.quantity; i++) {
+            stack.add(EdpEvent.orderFire(
+              orderId: order.id,
+              orderItemId: item.id,
+              menuItemId: item.menuItemId,
+              quantity: 1,
+              unitIndex: i,
+            ));
+          }
+        }
+      }
     }
   }
 }

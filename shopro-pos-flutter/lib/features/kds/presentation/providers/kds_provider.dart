@@ -66,6 +66,16 @@ class KDSNotifier extends StateNotifier<KDSState> {
     // Listen for EDP events
     _ref.read(edpBusProvider).events.listen((event) {
       if (mounted) {
+        if (event.type == 'order.item_decrement_ko') {
+          // If a decrement was rejected, we MUST refresh the station tickets
+          // because the reducer might have removed it optimistically.
+          debugPrint('[KDS] Decrement REJECTED. Refreshing station data...');
+          if (state.currentStationId != null) {
+            selectStation(state.currentStationId!);
+          }
+          return;
+        }
+
         state = _reducer.reduce(state, event);
         _updateAggregates();
       }

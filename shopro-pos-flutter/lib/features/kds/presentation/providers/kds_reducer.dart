@@ -9,9 +9,32 @@ class KdsReducer extends EdpReducer<KDSState> {
     switch (event.type) {
       case 'kds.item.status_changed':
         return _handleItemStatusChanged(state, event);
+      case 'order.item_decrement':
+        return _handleOrderItemDecrement(state, event);
       default:
         return state;
     }
+  }
+
+  KDSState _handleOrderItemDecrement(KDSState state, EdpEvent event) {
+    final payload = event.payload;
+    final orderItemId = payload['orderItemId']?.toString();
+    final unitIndex = payload['unitIndex'] as int?;
+
+    if (orderItemId == null || unitIndex == null) return state;
+
+    // Remove the specific unit from tickets
+    final updatedTickets = state.tickets.map((ticket) {
+      final filteredItems = ticket.items.where((item) {
+        // Match the specific order row (orderItemId) and the specific unit index
+        return !(item.orderItemId == orderItemId && item.unitIndex == unitIndex);
+      }).toList();
+
+      if (filteredItems.length == ticket.items.length) return ticket;
+      return ticket.copyWith(items: filteredItems);
+    }).where((ticket) => ticket.items.isNotEmpty).toList();
+
+    return state.copyWith(tickets: updatedTickets);
   }
 
   KDSState _handleItemStatusChanged(KDSState state, EdpEvent event) {

@@ -21,6 +21,7 @@ class EdpEvent {
     required String orderItemId,
     required String menuItemId,
     required int quantity,
+    int? unitIndex,
   }) {
     return EdpEvent(
       type: 'order.fire',
@@ -29,7 +30,33 @@ class EdpEvent {
         'orderItemId': orderItemId,
         'menuItemId': menuItemId,
         'quantity': quantity,
+        if (unitIndex != null) 'unitIndex': unitIndex,
       },
+    );
+  }
+
+  factory EdpEvent.itemDecrement({
+    required String orderId,
+    required String orderItemId,
+    required String menuItemId,
+    required int unitIndex,
+  }) {
+    return EdpEvent(
+      type: 'order.item_decrement',
+      payload: {
+        'orderId': orderId,
+        'orderItemId': orderItemId,
+        'menuItemId': menuItemId,
+        'unitIndex': unitIndex,
+        'quantity': 1, // Single unit decrement
+      },
+    );
+  }
+
+  EdpEvent copyAsDecrement() {
+    return EdpEvent(
+      type: 'order.item_decrement',
+      payload: Map<String, dynamic>.from(payload)..['quantity'] = 1,
     );
   }
 
@@ -52,6 +79,20 @@ class EdpEvent {
         'occurredAt': occurredAt.toIso8601String(),
         if (seqId != null) 'id': seqId,
       };
+
+  factory EdpEvent.orderItemDecrementOk(Map<String, dynamic> payload) {
+    return EdpEvent(
+      type: 'order.item_decrement_ok',
+      payload: payload,
+    );
+  }
+
+  factory EdpEvent.orderItemDecrementKo(Map<String, dynamic> payload) {
+    return EdpEvent(
+      type: 'order.item_decrement_ko',
+      payload: payload,
+    );
+  }
 
   factory EdpEvent.fromJson(Map<String, dynamic> json) {
     return EdpEvent(

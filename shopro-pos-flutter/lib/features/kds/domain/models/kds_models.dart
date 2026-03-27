@@ -63,6 +63,7 @@ class KDSTicketItem with _$KDSTicketItem {
   const factory KDSTicketItem({
     required String id,
     required String menuItemId,
+    required String orderItemId,
     required String name,
     required int quantity,
     required KDSItemStatus status,

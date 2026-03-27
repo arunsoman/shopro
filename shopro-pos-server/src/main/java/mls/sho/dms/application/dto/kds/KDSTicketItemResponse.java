@@ -7,6 +7,7 @@ import mls.sho.dms.entity.kds.KDSItemStatus;
 public record KDSTicketItemResponse(
     UUID id,
     UUID menuItemId,
+    UUID orderItemId,
     String name,
     Integer quantity,
     KDSItemStatus status,

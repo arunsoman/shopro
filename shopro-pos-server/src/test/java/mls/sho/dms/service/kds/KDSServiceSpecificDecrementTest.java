@@ -70,7 +70,10 @@ public class KDSServiceSpecificDecrementTest {
         kdsService.decrementSpecificUnit(itemId, unitIndex);
 
         // 3. Verify deletion of item
-        verify(ticketItemRepository).deleteAll(argThat(list -> list.contains(item)));
+        verify(ticketItemRepository).deleteAll(argThat(iterable -> {
+            List<KDSTicketItem> list = (List<KDSTicketItem>) iterable;
+            return list.contains(item);
+        }));
 
         // 4. Verify cleanup of ticket
         verify(ticketRepository).delete(ticket);

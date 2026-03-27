@@ -41,6 +41,7 @@ void main() {
         KDSTicketItem(
           id: 'item-1',
           menuItemId: 'menu-1',
+          orderItemId: 'order-item-1',
           name: 'Burger',
           quantity: 1,
           status: KDSItemStatus.pending,

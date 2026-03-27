@@ -343,8 +343,8 @@ public class OrderServiceImpl implements OrderService {
                         "orderId", orderId,
                         "orderItemId", itemId,
                         "unitIndex", unitIndexToRemove,
-                        "newQuantity", newQuantity,
-                        "timestamp", java.time.Instant.now().toString()
+                        "menuItemId", item.getMenuItem().getId(),
+                        "quantity", 1
                     ));
                 }
             }

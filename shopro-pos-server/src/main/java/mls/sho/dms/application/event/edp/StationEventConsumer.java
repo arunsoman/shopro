@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 import java.util.UUID;
 
 /**
@@ -52,7 +53,21 @@ public class StationEventConsumer {
 
             if ("order.item_decrement".equals(event.getEventType())) {
                 log.info("[KDS] Handling decrement for item {} unit {}", orderItemId, unitIndex);
-                kdsService.decrementSpecificUnit(orderItemId, unitIndex);
+                String result = kdsService.decrementSpecificUnit(orderItemId, unitIndex);
+                
+                // Construct result payload by copying original
+                Map<String, Object> resultPayload = new HashMap<>(payload);
+                resultPayload.put("status", result);
+                resultPayload.put("timestamp", java.time.Instant.now().toString());
+
+                if ("OK".equals(result)) {
+                    log.info("[KDS] Decrement SUCCESS for item {} unit {}. Publishing OK.", orderItemId, unitIndex);
+                    eventStoreService.append("order.item_decrement_ok", resultPayload);
+                } else {
+                    log.warn("[KDS] Decrement FAILED for item {} unit {} (Reason: {}). Publishing KO.", 
+                        orderItemId, unitIndex, result);
+                    eventStoreService.append("order.item_decrement_ko", resultPayload);
+                }
                 return;
             }
 

@@ -24,6 +24,7 @@ public interface KDSMapper {
 
     @Mapping(target = "id", source = "entity.id")
     @Mapping(target = "menuItemId", source = "entity.orderItem.menuItem.id")
+    @Mapping(target = "orderItemId", source = "entity.orderItem.id")
     @Mapping(target = "name", source = "entity.orderItem.menuItem.name")
     @Mapping(target = "quantity", constant = "1")
     @Mapping(target = "status", source = "entity.status")

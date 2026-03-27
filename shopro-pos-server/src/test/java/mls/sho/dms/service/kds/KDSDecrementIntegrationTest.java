@@ -92,7 +92,7 @@ public class KDSDecrementIntegrationTest {
         
         when(orderItemRepository.findById(itemId)).thenReturn(Optional.of(item));
         when(orderTicketRepository.findById(orderId)).thenReturn(Optional.of(ticket));
-        when(orderItemRepository.findByTicketAndStatusNotOrderByCreatedAtAsc(eq(ticket), eq(OrderItemStatus.VOIDED)))
+        when(orderItemRepository.findByTicketAndStatusNotOrderByCreatedAtAsc(any(OrderTicket.class), eq(OrderItemStatus.VOIDED)))
             .thenReturn(new ArrayList<>(java.util.List.of(item)));
         when(kdsService.getRemovableQuantity(itemId)).thenReturn(3);
 
@@ -111,6 +111,7 @@ public class KDSDecrementIntegrationTest {
         List<Object[]> ruleData = new ArrayList<>();
         ruleData.add(new Object[]{mockRule, null}); // Rule at 0, Override at 1
         when(taxRuleRepository.findActiveRulesWithOverridesForVenue(any())).thenReturn(ruleData);
+        when(kdsService.decrementSpecificUnit(any(), anyInt())).thenReturn("OK");
 
         // 2. Decrement Quantity from 3 to 2
         orderService.updateItemQuantity(orderId, itemId, 2);
@@ -120,7 +121,58 @@ public class KDSDecrementIntegrationTest {
         
         // 4. Verify EDP event with unitIndex 3
         verify(edpPublisher).publish(eq("order.item_decrement"), argThat(payload -> 
-            payload.get("unitIndex").equals(3) && payload.get("newQuantity").equals(2)
+            payload.get("unitIndex").equals(3) && 
+            payload.get("quantity").equals(1) &&
+            payload.get("menuItemId").equals(menuItem.getId())
         ));
+    }
+
+    @Test
+    public void testDecrementRejectedWhenAlreadyCooking() {
+        // 1. Setup Order with Quantity 1
+        UUID orderId = UUID.randomUUID();
+        UUID itemId = UUID.randomUUID();
+        
+        OrderTicket ticket = new OrderTicket();
+        ticket.setId(orderId);
+        ticket.setOrderType(OrderType.DINE_IN);
+        
+        OrderItem item = new OrderItem();
+        item.setId(itemId);
+        item.setQuantity(1);
+        item.setStatus(OrderItemStatus.SENT);
+        item.setTicket(ticket);
+        item.setMenuItem(new MenuItem());
+        
+        when(orderItemRepository.findById(itemId)).thenReturn(Optional.of(item));
+        when(orderTicketRepository.findById(orderId)).thenReturn(Optional.of(ticket));
+        when(kdsService.getRemovableQuantity(itemId)).thenReturn(1);
+        when(kdsService.decrementSpecificUnit(eq(itemId), eq(1))).thenReturn("COOKING");
+
+        // 2. Setup Tax (Required)
+        VenueCountryAssignment assignment = mock(VenueCountryAssignment.class);
+        Country country = new Country();
+        country.setTaxIncluded(false);
+        when(assignment.getCountry()).thenReturn(country);
+        when(venueCountryAssignmentRepository.findByVenueIdAndActiveTrue(any())).thenReturn(Optional.of(assignment));
+        
+        mls.sho.dms.tax.entity.TaxRule mockRule = mock(mls.sho.dms.tax.entity.TaxRule.class);
+        when(mockRule.getDefaultRate()).thenReturn(BigDecimal.valueOf(0.05));
+        when(mockRule.isAppliesToDineIn()).thenReturn(true); 
+        List<Object[]> ruleData = new ArrayList<>();
+        ruleData.add(new Object[]{mockRule, null});
+        when(taxRuleRepository.findActiveRulesWithOverridesForVenue(any())).thenReturn(ruleData);
+        
+        // 3. Attempt Decrement
+        orderService.updateItemQuantity(orderId, itemId, 0);
+        
+        // 4. Verify kdsService was called with index 1
+        verify(kdsService).decrementSpecificUnit(eq(itemId), eq(1));
+        
+        // 5. Verify order.item_decrement event was still published (to initiate the protocol)
+        verify(edpPublisher).publish(eq("order.item_decrement"), anyMap());
+        
+        // Note: The actual blocking happens in StationEventConsumer/Frontend, 
+        // OrderService just initiates the request in this async architecture.
     }
 }

@@ -487,21 +487,32 @@ public class KDSService {
     }
 
     /**
-     * Deletes a specific PENDING unit-level KDS item across all stations.
-     * Cleans up empty tickets and broadcasts updates.
+     * Attempts to delete a specific unit-level KDS item.
+     * Only succeeds if the item is still in PENDING status.
+     * Returns "OK" if deleted, or the current status name if it has already been started.
      */
     @Transactional
-    public void decrementSpecificUnit(UUID orderItemId, int unitIndex) {
-        log.info("[KDS] Decrementing specific unit {} for order item: {}", unitIndex, orderItemId);
+    public String decrementSpecificUnit(UUID orderItemId, int unitIndex) {
+        log.info("[KDS] Request to decrement specific unit {} for order item: {}", unitIndex, orderItemId);
         
-        List<KDSTicketItem> units = ticketItemRepository.findByOrderItem_Id(orderItemId)
-                .stream()
-                .filter(i -> i.getUnitIndex() == unitIndex && i.getStatus() == KDSItemStatus.PENDING)
-                .toList();
+        List<KDSTicketItem> units = ticketItemRepository.findByOrderItem_IdAndUnitIndex(orderItemId, unitIndex);
         
         if (units.isEmpty()) {
-            log.debug("[KDS] No matching pending unit {} found for item {}", unitIndex, orderItemId);
-            return;
+            log.debug("[KDS] No matching unit {} found for item {}", unitIndex, orderItemId);
+            return "NOT_FOUND";
+        }
+
+        // Check if ANY unit at ANY station has moved past PENDING
+        boolean allPending = units.stream().allMatch(i -> i.getStatus() == KDSItemStatus.PENDING);
+        
+        if (!allPending) {
+            KDSItemStatus currentStatus = units.stream()
+                .filter(i -> i.getStatus() != KDSItemStatus.PENDING)
+                .findFirst().map(KDSTicketItem::getStatus).orElse(KDSItemStatus.PENDING);
+            
+            log.warn("[KDS] Decrement REJECTED for unit {} of item {}. Current status: {}", 
+                unitIndex, orderItemId, currentStatus);
+            return currentStatus.name();
         }
 
         Set<KDSTicket> affectedTickets = units.stream()
@@ -509,6 +520,7 @@ public class KDSService {
                 .collect(Collectors.toSet());
 
         ticketItemRepository.deleteAll(units);
+        log.debug("[KDS] Decrement APPROVED for unit {} of item {}.", unitIndex, orderItemId);
 
         for (KDSTicket ticket : affectedTickets) {
             // Check if ticket is now empty
@@ -517,17 +529,13 @@ public class KDSService {
             if (remainingItems == 0) {
                 log.info("[KDS] Ticket {} is now empty. Deleting.", ticket.getId());
                 ticketRepository.delete(ticket);
-                
-                // Broadcast TICKET_CANCELLED to clear it from UI
-                Map<String, Object> payload = new HashMap<>();
-                payload.put("type", "TICKET_CANCELLED");
-                payload.put("ticketId", ticket.getId());
-                messagingTemplate.convertAndSend("/topic/kds/station/" + ticket.getStation().getId(), payload);
+                broadcastTicketCancellation(ticket); // Use centralized broadcast
             } else {
-                // Just broadcast update for the remaining items
-                broadcastTicketUpdate(ticket);
+                broadcastTicketToStation(ticket); // Use centralized broadcast
             }
         }
+        
+        return "OK";
     }
 
     private void broadcastTicketUpdate(KDSTicket ticket) {
