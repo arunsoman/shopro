@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -45,12 +46,14 @@ class OrderState {
 class OrderNotifier extends Notifier<OrderState> {
   void Function()? _unsub;
   void Function()? _globalUnsub;
+  Timer? _refreshTimer;
 
   @override
   OrderState build() {
     ref.onDispose(() {
       _unsub?.call();
       _globalUnsub?.call();
+      _refreshTimer?.cancel();
     });
 
     // Subscribe to global order updates to keep allOrders in sync
@@ -79,12 +82,19 @@ class OrderNotifier extends Notifier<OrderState> {
       final unsubscribe = stompClient.subscribe(
         destination: '/topic/orders',
         callback: (frame) {
-          // Any update to the global orders list triggers a refresh
-          fetchActiveOrders();
+          // Optimization: Use debouncing to avoid API flood on multiple rapid updates
+          _debouncedFetchActiveOrders();
         },
       );
       _globalUnsub = unsubscribe;
     }
+  }
+
+  void _debouncedFetchActiveOrders() {
+    _refreshTimer?.cancel();
+    _refreshTimer = Timer(const Duration(milliseconds: 500), () {
+      fetchActiveOrders();
+    });
   }
 
   void _listenForGlobalConnection() {
@@ -138,6 +148,22 @@ class OrderNotifier extends Notifier<OrderState> {
   void _handleOrderUpdate(Map<String, dynamic> data) {
     debugPrint('[OrderWatcher] Received update: $data');
     
+    // Optimization: Check if the message contains the full order payload
+    // To avoid an extra GET request if the data is already here.
+    try {
+      if (data.containsKey('id') && data.containsKey('status') && data.containsKey('items')) {
+        final updatedOrder = OrderTicket.fromJson(data);
+        state = state.copyWith(
+          activeOrder: updatedOrder,
+          // Also update it in the allOrders list if present
+          allOrders: state.allOrders.map((o) => o.id == updatedOrder.id ? updatedOrder : o).toList(),
+        );
+        return;
+      }
+    } catch (e) {
+      debugPrint('Error parsing order payload from WS: $e');
+    }
+
     String? orderId;
     // Handle EDP EventStore format (event + payload)
     if (data.containsKey('eventType') && data.containsKey('payload')) {
@@ -150,8 +176,12 @@ class OrderNotifier extends Notifier<OrderState> {
 
     final finalOrderId = orderId ?? state.activeOrder?.id;
     if (finalOrderId != null) {
-      // Simple strategy: reload the whole order to ensure we have consistent status
-      loadOrder(finalOrderId);
+      // If we couldn't parse the order directly, we load it.
+      // We don't debounce here because specific order updates are usually high priority
+      // but we do ensure we only fetch if it's the active order.
+      if (finalOrderId == state.activeOrder?.id) {
+        loadOrder(finalOrderId);
+      }
     }
   }
 
