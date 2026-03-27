@@ -46,14 +46,17 @@ class OrderState {
 class OrderNotifier extends Notifier<OrderState> {
   void Function()? _unsub;
   void Function()? _globalUnsub;
-  Timer? _refreshTimer;
+  Timer? _globalRefreshTimer;
+  Timer? _activeOrderRefreshTimer;
+  int? _lastHandledEventId;
 
   @override
   OrderState build() {
     ref.onDispose(() {
       _unsub?.call();
       _globalUnsub?.call();
-      _refreshTimer?.cancel();
+      _globalRefreshTimer?.cancel();
+      _activeOrderRefreshTimer?.cancel();
     });
 
     // Subscribe to global order updates to keep allOrders in sync
@@ -91,9 +94,16 @@ class OrderNotifier extends Notifier<OrderState> {
   }
 
   void _debouncedFetchActiveOrders() {
-    _refreshTimer?.cancel();
-    _refreshTimer = Timer(const Duration(milliseconds: 500), () {
+    _globalRefreshTimer?.cancel();
+    _globalRefreshTimer = Timer(const Duration(milliseconds: 500), () {
       fetchActiveOrders();
+    });
+  }
+
+  void _debouncedLoadOrder(String orderId) {
+    _activeOrderRefreshTimer?.cancel();
+    _activeOrderRefreshTimer = Timer(const Duration(milliseconds: 500), () {
+      loadOrder(orderId);
     });
   }
 
@@ -148,20 +158,26 @@ class OrderNotifier extends Notifier<OrderState> {
   void _handleOrderUpdate(Map<String, dynamic> data) {
     debugPrint('[OrderWatcher] Received update: $data');
     
+    // Deduplication check: Don't process the same event ID twice
+    if (data.containsKey('id')) {
+      final seqId = data['id'] is int ? data['id'] as int : int.tryParse(data['id'].toString());
+      if (seqId != null && _lastHandledEventId == seqId) {
+        debugPrint('[OrderWatcher] Skipping duplicate event: $seqId');
+        return;
+      }
+      _lastHandledEventId = seqId;
+    }
+
     // Optimization: Check if the message contains the full order payload
     // To avoid an extra GET request if the data is already here.
     try {
       if (data.containsKey('id') && data.containsKey('status') && data.containsKey('items')) {
         final updatedOrder = OrderTicket.fromJson(data);
-        state = state.copyWith(
-          activeOrder: updatedOrder,
-          // Also update it in the allOrders list if present
-          allOrders: state.allOrders.map((o) => o.id == updatedOrder.id ? updatedOrder : o).toList(),
-        );
+        state = state.copyWith(activeOrder: updatedOrder, isLoading: false);
         return;
       }
     } catch (e) {
-      debugPrint('Error parsing order payload from WS: $e');
+      debugPrint('[OrderWatcher] Error parsing inline order: $e');
     }
 
     String? orderId;
@@ -169,18 +185,15 @@ class OrderNotifier extends Notifier<OrderState> {
     if (data.containsKey('eventType') && data.containsKey('payload')) {
       final payload = data['payload'] as Map<String, dynamic>;
       orderId = payload['orderId']?.toString();
-    } else {
-      // Handle legacy or direct format
-      orderId = data['orderId']?.toString();
     }
 
     final finalOrderId = orderId ?? state.activeOrder?.id;
     if (finalOrderId != null) {
       // If we couldn't parse the order directly, we load it.
-      // We don't debounce here because specific order updates are usually high priority
-      // but we do ensure we only fetch if it's the active order.
+      // Optimization: Debounce specific order fetches from WebSocket events
+      // to avoid API flood on multiple unit updates (e.g. KDS bump).
       if (finalOrderId == state.activeOrder?.id) {
-        loadOrder(finalOrderId);
+        _debouncedLoadOrder(finalOrderId);
       }
     }
   }

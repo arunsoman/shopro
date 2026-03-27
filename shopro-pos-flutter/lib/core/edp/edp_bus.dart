@@ -36,11 +36,11 @@ class EdpBus {
 
   /// Recover missed events from the server
   Future<void> sync() async {
-    if (_lastSeenEventId == null) return;
+    final sinceId = _lastSeenEventId ?? 0;
 
     try {
       final response = await _api.get('/api/events/catchup', 
-        queryParameters: {'sinceId': _lastSeenEventId});
+        queryParameters: {'sinceId': sinceId});
       
       if (response.data is List) {
         final List<dynamic> eventsJson = response.data;

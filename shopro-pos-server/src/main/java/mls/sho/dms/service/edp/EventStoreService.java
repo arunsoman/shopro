@@ -43,7 +43,7 @@ public class EventStoreService {
         return eventStoreRepository.findEventsAfter(lastId);
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void updateCheckpoint(String consumerId, Long lastEventId) {
         log.debug("Updating checkpoint for consumer {} to {}", consumerId, lastEventId);
         EventConsumerCheckpoint checkpoint = checkpointRepository.findById(consumerId)
