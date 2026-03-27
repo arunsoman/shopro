@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -8,7 +9,8 @@ import '../../../../core/theme/app_theme.dart';
 import '../providers/order_provider.dart';
 import '../../../floor_plan/presentation/providers/floor_plan_provider.dart';
 import '../../domain/models/order_models.dart';
-import '../../domain/repositories/order_repository.dart';
+import '../../../../core/hardware/printer_service.dart';
+import 'package:shopro_pos_flutter/features/order/domain/repositories/order_repository.dart';
 
 class CheckoutScreen extends ConsumerStatefulWidget {
   const CheckoutScreen({super.key});
@@ -22,6 +24,18 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   bool _isProcessing = false;
   String? _processingStatus;
 
+  Map<String, List<OrderItem>> _groupItemsByTax(List<OrderItem> items) {
+    final Map<String, List<OrderItem>> groups = {};
+    for (final item in items) {
+      final taxKey = item.taxBreakdowns.isEmpty 
+          ? 'EXEMPT' 
+          : item.taxBreakdowns.map((t) => '${t.ruleName} (${(t.rate * 100).toStringAsFixed(0)}%)').join(' + ');
+      
+      groups.putIfAbsent(taxKey, () => []).add(item);
+    }
+    return groups;
+  }
+
   @override
   Widget build(BuildContext context) {
     final orderState = ref.watch(orderProvider);
@@ -34,6 +48,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       );
     }
 
+    final activeItems = order.items.where((i) => i.status != OrderItemStatus.voided).toList();
+    final groupedItems = _groupItemsByTax(activeItems);
+
     return Theme(
       data: AppTheme.emeraldTerminal,
       child: Scaffold(
@@ -41,7 +58,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
           children: [
             Row(
               children: [
-                // Left Side: Giant Order List (70%)
+                // Left Side: Structured Receipt View (70%)
                 Expanded(
                   flex: 7,
                   child: Container(
@@ -50,52 +67,103 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildHeader(context, order.orderNumber),
+                        _buildHeader(context, order),
                         const SizedBox(height: AppSpacing.xl),
                         Expanded(
-                          child: ListView.separated(
-                            itemCount: order.items.length,
-                            separatorBuilder: (context, index) => const Divider(color: AppColors.emeraldMuted, height: 32),
-                            itemBuilder: (context, index) {
-                              final item = order.items[index];
-                              return Row(
+                          child: ListView.builder(
+                            itemCount: groupedItems.length,
+                            itemBuilder: (context, groupIndex) {
+                              final taxLabel = groupedItems.keys.elementAt(groupIndex);
+                              final items = groupedItems[taxLabel]!;
+                              final groupSubtotal = items.fold<double>(0, (sum, item) => sum + item.calculatedTotal);
+
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    '${item.quantity}x',
-                                    style: GoogleFonts.jetBrainsMono(
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColors.emeraldAccent,
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.emeraldAccent.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(4),
+                                      border: Border.all(color: AppColors.emeraldAccent.withOpacity(0.3)),
+                                    ),
+                                    child: Text(
+                                      taxLabel.toUpperCase(),
+                                      style: GoogleFonts.jetBrainsMono(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColors.emeraldAccent,
+                                        letterSpacing: 1.2,
+                                      ),
                                     ),
                                   ),
-                                  const SizedBox(width: 24),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                  const SizedBox(height: 16),
+                                  ...items.map((item) => Padding(
+                                    padding: const EdgeInsets.only(bottom: 16),
+                                    child: Row(
                                       children: [
+                                        SizedBox(
+                                          width: 60,
+                                          child: Text(
+                                            '${item.quantity}x',
+                                            style: GoogleFonts.jetBrainsMono(
+                                              fontSize: 20,
+                                              fontWeight: FontWeight.bold,
+                                              color: AppColors.emeraldAccent,
+                                            ),
+                                          ),
+                                        ),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                item.name.toUpperCase(),
+                                                style: GoogleFonts.syne(
+                                                  fontSize: 18,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: AppColors.emeraldOffWhite,
+                                                ),
+                                              ),
+                                              if (item.modifiers.isNotEmpty)
+                                                Text(
+                                                  item.modifiers.map((m) => m.label).join(', '),
+                                                  style: TextStyle(color: AppColors.emeraldOffWhite.withOpacity(0.5), fontSize: 13),
+                                                ),
+                                            ],
+                                          ),
+                                        ),
                                         Text(
-                                          item.name.toUpperCase(),
-                                          style: GoogleFonts.syne(
-                                            fontSize: 20,
-                                            fontWeight: FontWeight.bold,
+                                          '\$${item.calculatedTotal.toStringAsFixed(2)}',
+                                          style: GoogleFonts.jetBrainsMono(
+                                            fontSize: 18,
                                             color: AppColors.emeraldOffWhite,
                                           ),
                                         ),
-                                        if (item.modifiers.isNotEmpty)
-                                          Text(
-                                            item.modifiers.map((m) => m.label).join(', '),
-                                            style: const TextStyle(color: Colors.grey, fontSize: 14),
-                                          ),
+                                      ],
+                                    ),
+                                  )),
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 8, bottom: 32),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.end,
+                                      children: [
+                                        Text(
+                                          'GROUP SUBTOTAL: ',
+                                          style: GoogleFonts.jetBrainsMono(fontSize: 12, color: AppColors.emeraldMuted),
+                                        ),
+                                        Text(
+                                          '\$${groupSubtotal.toStringAsFixed(2)}',
+                                          style: GoogleFonts.jetBrainsMono(fontSize: 14, color: AppColors.emeraldOffWhite, fontWeight: FontWeight.bold),
+                                        ),
                                       ],
                                     ),
                                   ),
-                                  Text(
-                                    '\$${item.calculatedTotal.toStringAsFixed(2)}',
-                                    style: GoogleFonts.jetBrainsMono(
-                                      fontSize: 20,
-                                      color: AppColors.emeraldOffWhite,
+                                  if (groupIndex < groupedItems.length - 1)
+                                    const Padding(
+                                      padding: EdgeInsets.only(bottom: 24),
+                                      child: Divider(color: AppColors.emeraldMuted, thickness: 1, height: 1),
                                     ),
-                                  ),
                                 ],
                               );
                             },
@@ -115,12 +183,13 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       const Text(
-                        'PAYMENT',
+                        'PAYMENT METHOD',
                         style: TextStyle(
                           fontFamily: 'Syne',
                           color: Colors.grey,
                           letterSpacing: 2,
-                          fontSize: 12,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -137,27 +206,30 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
               ],
             ),
             if (_isProcessing)
-              Container(
-                color: Colors.black.withOpacity(0.7),
-                child: Center(
-                  child: Card(
-                    color: AppColors.emeraldSurface,
-                    child: Padding(
-                      padding: const EdgeInsets.all(32.0),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const CircularProgressIndicator(color: AppColors.emeraldAccent),
-                          const SizedBox(height: 24),
-                          Text(
-                            _processingStatus ?? 'Processing...',
-                            style: GoogleFonts.syne(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w500,
-                              color: AppColors.emeraldOffWhite,
+              BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
+                child: Container(
+                  color: Colors.black.withOpacity(0.8),
+                  child: Center(
+                    child: Card(
+                      color: AppColors.emeraldSurface,
+                      child: Padding(
+                        padding: const EdgeInsets.all(32.0),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const CircularProgressIndicator(color: AppColors.emeraldAccent),
+                            const SizedBox(height: 24),
+                            Text(
+                              _processingStatus ?? 'Processing...',
+                              style: GoogleFonts.syne(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w500,
+                                color: AppColors.emeraldOffWhite,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -173,8 +245,10 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     return Column(
       children: [
         _totalRow('SUBTOTAL', order.subtotal),
-        _totalRow('TAX (HST 13%)', order.taxSummary['HST'] ?? 0.0),
-        _totalRow('TAX (GST 5%)', order.taxSummary['GST'] ?? 0.0),
+        if (order.discountAmount > 0)
+          _totalRow('DISCOUNT', -order.discountAmount, isDiscount: true),
+        const SizedBox(height: 8),
+        ...order.taxSummary.entries.map((e) => _totalRow('TAX (${e.key})', e.value)),
         const SizedBox(height: 16),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -193,16 +267,20 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     );
   }
 
-  Widget _totalRow(String label, double amount) {
+  Widget _totalRow(String label, double amount, {bool isDiscount = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(color: Colors.grey, fontSize: 13)),
+          Text(label, style: TextStyle(color: isDiscount ? AppColors.emeraldAccent : Colors.grey, fontSize: 13)),
           Text(
-            '\$${amount.toStringAsFixed(2)}',
-            style: GoogleFonts.jetBrainsMono(color: AppColors.emeraldOffWhite, fontSize: 14),
+            '${amount < 0 ? "-" : ""}\$${amount.abs().toStringAsFixed(2)}',
+            style: GoogleFonts.jetBrainsMono(
+              color: isDiscount ? AppColors.emeraldAccent : AppColors.emeraldOffWhite, 
+              fontSize: 14,
+              fontWeight: isDiscount ? FontWeight.bold : FontWeight.normal,
+            ),
           ),
         ],
       ),
@@ -245,7 +323,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     );
   }
 
-  Widget _buildHeader(BuildContext context, String orderNum) {
+  Widget _buildHeader(BuildContext context, OrderTicket order) {
+    final orderNum = order.orderNumber;
     return Row(
       children: [
         IconButton(
@@ -265,7 +344,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
               ),
             ),
             Text(
-              'ORDER #$orderNum • TABLE ${orderNum.split("-").last} • SARAH M.',
+              'ORDER #$orderNum • TABLE ${order.tableDisplay ?? orderNum.split("-").last} • ${order.serverName.toUpperCase()}',
               style: GoogleFonts.jetBrainsMono(fontSize: 14, color: AppColors.emeraldAccent),
             ),
           ],
@@ -311,6 +390,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   }
 
   Future<void> _processPayment(String orderId) async {
+    final order = ref.read(orderProvider).activeOrder;
+    if (order == null) return;
+
     setState(() {
       _isProcessing = true;
       _processingStatus = _selectedMethod == PaymentMethod.mipay
@@ -320,7 +402,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
 
     try {
       if (_selectedMethod == PaymentMethod.mipay) {
-        const phoneNumber = '+1 234 567 890';
+        final phoneNumber = order.customerName ?? 'Customer'; // Using name as placeholder if phone missing
         final repository = ref.read(orderRepositoryProvider);
         await repository.initiateMiPay(orderId, phoneNumber);
 
@@ -329,7 +411,6 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         setState(() => _processingStatus = 'Confirming payment receipt...');
         await Future.delayed(const Duration(seconds: 1));
       } else {
-        // Collect Payment for Cash/Card/Digital
         await ref.read(orderProvider.notifier).completePayment(_selectedMethod);
       }
 
@@ -340,13 +421,14 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             backgroundColor: AppColors.emeraldAccent,
           ),
         );
-
-        // Clear active order so it doesn't linger
         ref.read(orderProvider.notifier).clearActiveOrder();
+        
+        // Trigger hardware print & cut on NEXGO EF60
+        PrinterService().printReceipt(order).catchError((e) {
+          debugPrint('Printer failed: $e');
+        });
 
-        // Optimistic refresh of floor plan
         ref.read(floorPlanProvider.notifier).refresh();
-
         context.go('/floor-plan');
       }
     } catch (e) {
