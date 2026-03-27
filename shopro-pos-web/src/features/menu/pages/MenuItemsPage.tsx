@@ -16,6 +16,7 @@ export function MenuItemsPage() {
 
     const [activeTab, setActiveTab] = useState<"LIVE" | "DRAFT">("LIVE");
     const [isCreating, setIsCreating] = useState(false);
+    const [editingItem, setEditingItem] = useState<MenuItemResponse | null>(null);
 
     const isLoading = draftsLoading || publishedLoading;
     const displayItems = activeTab === "LIVE" ? published || [] : drafts || [];
@@ -30,17 +31,26 @@ export function MenuItemsPage() {
     };
 
     const handleEdit = (item: MenuItemResponse) => {
-        console.log("Edit Item", item);
+        setEditingItem(item);
+        setIsCreating(false);
     };
 
-    if (isCreating) {
+    if (isCreating || editingItem) {
         return (
             <div className="space-y-6">
                 <div className="flex items-center justify-between border-b pb-4">
-                    <h1 className="text-2xl font-bold tracking-tight">{t('menu.createItemHeader')}</h1>
-                    <Button variant="ghost" onClick={() => setIsCreating(false)}>{t('common.cancel')}</Button>
+                    <h1 className="text-2xl font-bold tracking-tight">
+                        {isCreating ? t('menu.createItemHeader') : t('menu.editItemHeader', { name: editingItem?.name })}
+                    </h1>
+                    <Button variant="ghost" onClick={() => { setIsCreating(false); setEditingItem(null); }}>
+                        {t('common.cancel')}
+                    </Button>
                 </div>
-                <MenuItemForm categories={categories || []} onComplete={() => setIsCreating(false)} />
+                <MenuItemForm
+                    categories={categories || []}
+                    item={editingItem || undefined}
+                    onComplete={() => { setIsCreating(false); setEditingItem(null); }}
+                />
             </div>
         );
     }

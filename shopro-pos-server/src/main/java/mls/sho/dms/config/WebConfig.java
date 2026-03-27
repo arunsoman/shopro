@@ -21,8 +21,8 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry registry) {
-        registry.addResourceHandler("/api/v1/uploads/**")
-                .addResourceLocations("file:/app/uploads/");
+        registry.addResourceHandler("/menu/items/**")
+                .addResourceLocations("file:/app/uploads/menu-items/");
     }
 
     @Override
@@ -32,7 +32,7 @@ public class WebConfig implements WebMvcConfigurer {
         
         registry.addInterceptor(staffAuthenticationInterceptor)
                 .addPathPatterns("/api/v1/**")
-                .excludePathPatterns("/api/v1/marketplace/**", "/api/v1/uploads/**"); // Exclude uploads from auth
+                .excludePathPatterns("/api/v1/marketplace/**", "/menu/items/**"); // Exclude uploads from auth
 
         registry.addInterceptor(marketplaceAuthenticationInterceptor)
                 .addPathPatterns("/api/v1/marketplace/**");

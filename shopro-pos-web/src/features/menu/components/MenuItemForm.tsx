@@ -1,65 +1,84 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useCreateMenuItem, useUploadMenuItemPhoto } from "../hooks/useMenuItems";
+import { useCreateMenuItem, useUpdateMenuItem, useUploadMenuItemPhoto } from "../hooks/useMenuItems";
 import { useModifierGroups } from "../hooks/useModifiers";
 import { CreateMenuItemRequestSchema } from "../schema/menuSchema";
-import type { CreateMenuItemRequest, MenuCategoryResponse } from "../schema/menuSchema";
+import type { CreateMenuItemRequest, MenuCategoryResponse, MenuItemResponse } from "../schema/menuSchema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { Image as ImageIcon, X } from "lucide-react";
 
 interface MenuItemFormProps {
     categories: MenuCategoryResponse[];
     onComplete: () => void;
+    item?: MenuItemResponse;
 }
 
-export function MenuItemForm({ categories, onComplete }: MenuItemFormProps) {
+export function MenuItemForm({ categories, onComplete, item }: MenuItemFormProps) {
     const { t } = useTranslation();
     const createItem = useCreateMenuItem();
+    const updateItem = useUpdateMenuItem();
     const uploadPhoto = useUploadMenuItemPhoto();
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [previewUrl, setPreviewUrl] = useState<string | null>(item?.photoUrl || null);
 
     const form = useForm<CreateMenuItemRequest>({
         resolver: zodResolver(CreateMenuItemRequestSchema),
         defaultValues: {
-            name: "",
-            description: "",
-            basePrice: 0,
-            categoryId: "",
-            photoUrl: "",
-            modifierGroupIds: [],
+            name: item?.name || "",
+            description: item?.description || "",
+            basePrice: item?.basePrice || 0,
+            categoryId: item?.categoryId || "",
+            photoUrl: item?.photoUrl || "",
+            modifierGroupIds: [], // Current backend doesn't return these in MenuItemResponse yet, needs careful handling if needed
         },
     });
 
     const { data: modifierGroups } = useModifierGroups();
 
+    const isEditing = !!item;
+
     const onSubmit = async (data: CreateMenuItemRequest) => {
         try {
-            const newItem = await createItem.mutateAsync(data);
+            let itemId = item?.id;
 
-            if (selectedFile) {
-                await uploadPhoto.mutateAsync({ id: newItem.id, file: selectedFile });
+            if (isEditing && itemId) {
+                await updateItem.mutateAsync({ id: itemId, data });
+            } else {
+                const newItem = await createItem.mutateAsync(data);
+                itemId = newItem.id;
+            }
+
+            if (selectedFile && itemId) {
+                await uploadPhoto.mutateAsync({ id: itemId, file: selectedFile });
             }
 
             onComplete();
         } catch (err: any) {
             if (err.details) {
-                // Map backend validation errors (e.g., from DuplicateName logic or Jakarta)
                 Object.entries(err.details).forEach(([field, messages]) => {
                     form.setError(field as any, { type: "server", message: (messages as string[])[0] });
                 });
             } else {
-                form.setError("root", { type: "server", message: err.message || t('menu.failedToCreate') });
+                form.setError("root", { type: "server", message: err.message || t('menu.failedToSave') });
             }
         }
     };
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
-            setSelectedFile(e.target.files[0]);
+            const file = e.target.files[0];
+            setSelectedFile(file);
+            setPreviewUrl(URL.createObjectURL(file));
         }
+    };
+
+    const clearFile = () => {
+        setSelectedFile(null);
+        setPreviewUrl(item?.photoUrl || null);
     };
 
     return (
@@ -93,22 +112,34 @@ export function MenuItemForm({ categories, onComplete }: MenuItemFormProps) {
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="photoFile">{t('menu.itemPhoto')} ({t('common.optional')})</Label>
-                    <div className="flex items-center gap-4">
-                        <Input
-                            id="photoFile"
-                            type="file"
-                            accept="image/jpeg,image/png"
-                            onChange={handleFileChange}
-                            className="cursor-pointer"
-                        />
-                        {selectedFile && (
-                            <div className="text-xs text-muted-foreground truncate max-w-[150px]">
-                                {selectedFile.name}
-                            </div>
-                        )}
+                    <Label htmlFor="photoFile">{t('menu.itemPhoto')}</Label>
+                    <div className="flex flex-col gap-4">
+                        <div className="relative flex h-32 w-48 items-center justify-center overflow-hidden rounded-md border-2 border-dashed border-muted bg-muted/5">
+                            {previewUrl ? (
+                                <>
+                                    <img src={previewUrl} alt="Preview" className="h-full w-full object-cover" />
+                                    <button
+                                        type="button"
+                                        onClick={clearFile}
+                                        className="absolute right-1 top-1 rounded-full bg-red-500 p-1 text-white hover:bg-red-600"
+                                    >
+                                        <X size={12} />
+                                    </button>
+                                </>
+                            ) : (
+                                <ImageIcon size={24} className="text-muted-foreground opacity-30" />
+                            )}
+                        </div>
+                        <div className="flex items-center gap-4">
+                            <Input
+                                id="photoFile"
+                                type="file"
+                                accept="image/jpeg,image/png"
+                                onChange={handleFileChange}
+                                className="cursor-pointer"
+                            />
+                        </div>
                     </div>
-                    <p className="text-[10px] text-muted-foreground">{t('menu.photoFormat')}</p>
                 </div>
 
                 <div className="space-y-2">
@@ -152,8 +183,8 @@ export function MenuItemForm({ categories, onComplete }: MenuItemFormProps) {
             )}
 
             <div className="flex justify-end pt-4">
-                <Button type="submit" disabled={createItem.isPending || uploadPhoto.isPending}>
-                    {createItem.isPending || uploadPhoto.isPending ? t('common.processing') : t('menu.createItem')}
+                <Button type="submit" disabled={createItem.isPending || updateItem.isPending || uploadPhoto.isPending}>
+                    {createItem.isPending || updateItem.isPending || uploadPhoto.isPending ? t('common.processing') : (isEditing ? t('common.saveChanges') : t('menu.createItem'))}
                 </Button>
             </div>
         </form>

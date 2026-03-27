@@ -472,30 +472,30 @@ VALUES
 INSERT INTO menu_item (id, category_id, name, description, base_price, photo_url, status, created_at, updated_at, version)
 VALUES 
 -- Starters
-('d1000000-0000-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000001', 'Crispy Calamari', 'Fried golden brown with aioli.', 12.00, 'https://images.unsplash.com/photo-1590594507435-06775f0a0c4f?auto=format&fit=crop&q=80&w=1024', 'PUBLISHED', NOW(), NOW(), 0),
-('d1000010-0000-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000001', 'Caesar Salad', 'Romaine, croutons, parmesan.', 14.50, 'https://images.unsplash.com/photo-1550304943-4f24f54ddde9?auto=format&fit=crop&q=80&w=1024', 'PUBLISHED', NOW(), NOW(), 0),
-('d1000010-0000-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000001', 'Quesadillas', 'Chicken, peppers, cheese.', 10.00, 'https://images.unsplash.com/photo-1599974579688-8dbdd335c77f?auto=format&fit=crop&q=80&w=1024', 'PUBLISHED', NOW(), NOW(), 0),
-('d1000010-0000-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000001', 'Truffle Fries', 'Parmesan and herb garnish.', 9.00, '/api/v1/media/menu-items/truffle_fries_jpg_1772537607878.png', 'PUBLISHED', NOW(), NOW(), 0),
-('d1000010-0000-0000-0000-000000000004', 'a1000000-0000-0000-0000-000000000001', 'Garlic Shrimp', 'Sizzling butter and herbs.', 16.00, '/api/v1/media/menu-items/garlic_shrimp_jpg_1772537627472.png', 'PUBLISHED', NOW(), NOW(), 0),
+('d1000000-0000-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000001', 'Crispy Calamari', 'Fried golden brown with aioli.', 12.00, '/menu/items/crispy-calamari.png', 'PUBLISHED', NOW(), NOW(), 0),
+('d1000010-0000-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000001', 'Caesar Salad', 'Romaine, croutons, parmesan.', 14.50, '/menu/items/caesar-salad.png', 'PUBLISHED', NOW(), NOW(), 0),
+('d1000010-0000-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000001', 'Quesadillas', 'Chicken, peppers, cheese.', 10.00, '/menu/items/quesadillas.png', 'PUBLISHED', NOW(), NOW(), 0),
+('d1000010-0000-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000001', 'Truffle Fries', 'Parmesan and herb garnish.', 9.00, '/menu/items/truffle-fries.png', 'PUBLISHED', NOW(), NOW(), 0),
+('d1000010-0000-0000-0000-000000000004', 'a1000000-0000-0000-0000-000000000001', 'Garlic Shrimp', 'Sizzling butter and herbs.', 16.00, '/menu/items/garlic-shrimp.png', 'PUBLISHED', NOW(), NOW(), 0),
 
 -- Burgers
-('d1000000-0000-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000002', 'Classic Smash Burger', 'American cheese, special sauce.', 17.50, 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&q=80&w=1024', 'PUBLISHED', NOW(), NOW(), 0),
-('d1000020-0000-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000002', 'BBQ Brisket Burger', 'Juicy beef, melted cheddar.', 22.00, '/api/v1/media/menu-items/brisket_burger_jpg_1772537657313.png', 'PUBLISHED', NOW(), NOW(), 0),
-('d1000020-0000-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000002', 'Mushroom Burger', 'Portobello and avocado.', 19.50, '/api/v1/media/menu-items/mushroom_burger_jpg_1772537679240.png', 'PUBLISHED', NOW(), NOW(), 0),
-('d1000020-0000-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000002', 'Falafel Burger', 'Chickpea patty, tahini.', 16.50, 'https://images.unsplash.com/photo-1525059696034-4967a8e1dca2?auto=format&fit=crop&q=80&w=1024', 'PUBLISHED', NOW(), NOW(), 0),
+('d1000000-0000-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000002', 'Classic Smash Burger', 'American cheese, special sauce.', 17.50, '/menu/items/classic-smash-burger.png', 'PUBLISHED', NOW(), NOW(), 0),
+('d1000020-0000-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000002', 'BBQ Brisket Burger', 'Juicy beef, melted cheddar.', 22.00, '/menu/items/bbq-brisket-burger.png', 'PUBLISHED', NOW(), NOW(), 0),
+('d1000020-0000-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000002', 'Mushroom Burger', 'Portobello and avocado.', 19.50, '/menu/items/mushroom-burger.png', 'PUBLISHED', NOW(), NOW(), 0),
+('d1000020-0000-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000002', 'Falafel Burger', 'Chickpea patty, tahini.', 16.50, '/menu/items/falafel-burger.png', 'PUBLISHED', NOW(), NOW(), 0),
 
 -- Mains
-('d1000000-0000-0000-0000-000000000005', 'a1000000-0000-0000-0000-000000000003', 'Ribeye Steak', 'Grain-fed 300g.', 45.00, 'https://images.unsplash.com/photo-1546964124-0cce43429215?auto=format&fit=crop&q=80&w=1024', 'PUBLISHED', NOW(), NOW(), 0),
-('d1000030-0000-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000003', 'Grilled Salmon', 'Lemon butter and asparagus.', 34.00, '/api/v1/media/menu-items/salmon_main_jpg_1772537697260.png', 'PUBLISHED', NOW(), NOW(), 0),
-('d1000030-0000-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000003', 'Lamb Shank', 'Slow-roasted with rosemary.', 38.50, '/api/v1/media/menu-items/lamb_shank_jpg_1772537730593.png', 'PUBLISHED', NOW(), NOW(), 0),
-('d1000030-0000-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000003', 'Chicken Alfredo', 'Creamy sauce and pasta.', 28.00, 'https://images.unsplash.com/photo-1645112481338-3560e9bcad5d?auto=format&fit=crop&q=80&w=1024', 'PUBLISHED', NOW(), NOW(), 0),
-('d1000030-0000-0000-0000-000000000004', 'a1000000-0000-0000-0000-000000000003', 'Fish and Chips', 'Beer battered with tartar.', 24.00, 'https://images.unsplash.com/photo-1524339102451-897f2560567a?auto=format&fit=crop&q=80&w=1024', 'PUBLISHED', NOW(), NOW(), 0),
+('d1000000-0000-0000-0000-000000000005', 'a1000000-0000-0000-0000-000000000003', 'Ribeye Steak', 'Grain-fed 300g.', 45.00, '/menu/items/ribeye-steak.png', 'PUBLISHED', NOW(), NOW(), 0),
+('d1000030-0000-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000003', 'Grilled Salmon', 'Lemon butter and asparagus.', 34.00, '/menu/items/grilled-salmon.png', 'PUBLISHED', NOW(), NOW(), 0),
+('d1000030-0000-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000003', 'Lamb Shank', 'Slow-roasted with rosemary.', 38.50, '/menu/items/lamb-shank.png', 'PUBLISHED', NOW(), NOW(), 0),
+('d1000030-0000-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000003', 'Chicken Alfredo', 'Creamy sauce and pasta.', 28.00, '/menu/items/chicken-alfredo.png', 'PUBLISHED', NOW(), NOW(), 0),
+('d1000030-0000-0000-0000-000000000004', 'a1000000-0000-0000-0000-000000000003', 'Fish and Chips', 'Beer battered with tartar.', 24.00, '/menu/items/fish-and-chips.png', 'PUBLISHED', NOW(), NOW(), 0),
 
 -- Drinks
-('d1000040-0000-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000004', 'Passion Mojito', 'Fresh passion fruit and mint.', 12.00, '/api/v1/media/menu-items/passion_mojito_jpg_1772537754674.png', 'PUBLISHED', NOW(), NOW(), 0),
-('d1000040-0000-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000004', 'Iced Macchiato', 'Espresso with caramel.', 6.50, '/api/v1/media/menu-items/iced_macchiato_jpg_1772537772518.png', 'PUBLISHED', NOW(), NOW(), 0),
-('d1000040-0000-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000004', 'Espresso', 'Rich single shot.', 4.00, 'https://images.unsplash.com/photo-1510591509098-f4fdc6d0ff04?auto=format&fit=crop&q=80&w=1024', 'PUBLISHED', NOW(), NOW(), 0),
-('d1000040-0000-0000-0000-000000000004', 'a1000000-0000-0000-0000-000000000004', 'Fresh Orange Juice', 'Cold pressed oranges.', 5.50, 'https://images.unsplash.com/photo-1551024709-8f23befc6f87?auto=format&fit=crop&q=80&w=1024', 'PUBLISHED', NOW(), NOW(), 0);
+('d1000040-0000-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000004', 'Passion Mojito', 'Fresh passion fruit and mint.', 12.00, '/menu/items/passion-mojito.png', 'PUBLISHED', NOW(), NOW(), 0),
+('d1000040-0000-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000004', 'Iced Macchiato', 'Espresso with caramel.', 6.50, '/menu/items/iced-macchiato.png', 'PUBLISHED', NOW(), NOW(), 0),
+('d1000040-0000-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000004', 'Espresso', 'Rich single shot.', 4.00, '/menu/items/espresso.png', 'PUBLISHED', NOW(), NOW(), 0),
+('d1000040-0000-0000-0000-000000000004', 'a1000000-0000-0000-0000-000000000004', 'Fresh Orange Juice', 'Cold pressed oranges.', 5.50, '/menu/items/fresh-orange-juice.png', 'PUBLISHED', NOW(), NOW(), 0);
 
 -- 6. Link Items to Modifier Groups
 INSERT INTO menu_item_modifier_group (id, menu_item_id, modifier_group_id, display_order, created_at, updated_at, version)

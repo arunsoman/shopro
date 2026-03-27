@@ -34,4 +34,7 @@ public class Food {
 
     @Column(name = "super_group", length = 100)
     private String superGroup;
+
+    @Column(name = "image_url", length = 1024)
+    private String photoUrl;
 }

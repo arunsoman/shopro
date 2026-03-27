@@ -39,7 +39,7 @@ services:
       retries: 15
       start_period: 120s
     volumes:
-      - ./uploads:/app/uploads
+      - ./uploads:/app/uploads:ro
     restart: always
 
   web-pos:

@@ -24,9 +24,15 @@ public class LocalDocumentStorageServiceImpl implements DocumentStorageService {
     @PostConstruct
     public void init() {
         try {
-            Files.createDirectories(Paths.get(uploadDir));
+            Path path = Paths.get(uploadDir);
+            if (!Files.exists(path)) {
+                Files.createDirectories(path);
+            }
         } catch (IOException e) {
-            throw new RuntimeException("Could not initialize invoice storage directory", e);
+            // If it's a read-only filesystem but the directory already exists (e.g. via mount), we can continue
+            if (!Files.exists(Paths.get(uploadDir))) {
+                throw new RuntimeException("Could not initialize invoice storage directory", e);
+            }
         }
     }
 

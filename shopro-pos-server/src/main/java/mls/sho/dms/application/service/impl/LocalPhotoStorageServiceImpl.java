@@ -25,9 +25,15 @@ public class LocalPhotoStorageServiceImpl implements PhotoStorageService {
     @PostConstruct
     public void init() {
         try {
-            Files.createDirectories(Paths.get(uploadDir));
+            Path path = Paths.get(uploadDir);
+            if (!Files.exists(path)) {
+                Files.createDirectories(path);
+            }
         } catch (IOException e) {
-            throw new RuntimeException("Could not initialize storage directory", e);
+            // If it's a read-only filesystem but the directory already exists (e.g. via mount), we can continue
+            if (!Files.exists(Paths.get(uploadDir))) {
+                throw new RuntimeException("Could not initialize storage directory", e);
+            }
         }
     }
 
@@ -45,7 +51,7 @@ public class LocalPhotoStorageServiceImpl implements PhotoStorageService {
         try {
             Files.copy(file.getInputStream(), filePath);
             // Return relative path (will be handled by client or proxied)
-            return "/api/v1/media/menu-items/" + filename;
+            return "/menu/items/" + filename;
         } catch (IOException e) {
             throw new BusinessRuleException("Failed to store photo: " + e.getMessage());
         }
@@ -53,7 +59,7 @@ public class LocalPhotoStorageServiceImpl implements PhotoStorageService {
 
     @Override
     public void deletePhoto(String url) {
-        if (url == null || !url.contains("/media/menu-items/")) return;
+        if (url == null || !url.contains("/menu/items/")) return;
         
         String filename = url.substring(url.lastIndexOf("/") + 1);
         Path filePath = Paths.get(uploadDir).resolve(filename);

@@ -18,10 +18,4 @@ public class AppConfig implements WebMvcConfigurer {
         return new BCryptPasswordEncoder(10);
     }
 
-    @Override
-    public void addResourceHandlers(org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry registry) {
-         registry.addResourceHandler("/api/v1/media/menu-items/**")
-                .addResourceLocations("file:" + uploadDir + "/");
-    }
-
 }

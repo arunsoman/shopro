@@ -5,7 +5,7 @@ import { LoadingBoundary } from './LoadingBoundary';
 
 const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
-    <div className="flex min-h-screen bg-[var(--bg-app)] text-[var(--text-primary)] transition-colors duration-300">
+    <div className="flex min-h-screen bg-(--bg-app) text-(--text-primary) transition-colors duration-300">
       {/* Sidebar */}
       <aside className="fixed left-0 top-0 h-full w-72 bg-[var(--bg-card)] border-r border-[var(--border-color)] p-8 flex flex-col gap-10 z-20 glass">
         <div className="flex items-center gap-4">

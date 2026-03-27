@@ -172,8 +172,8 @@ export default function POSplit() {
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-12 items-start font-black italic uppercase leading-none">
         {/* Unassigned Items Column */}
         <div className="xl:col-span-4 space-y-4">
-          <div className="bg-(--sp-bg-2) p-6 rounded-[12px] border border-(--sp-border) shadow-sm sticky top-6">
-            <h2 className="text-[18px] font-medium mb-6 flex items-center justify-between text-(--sp-text-0)">
+          <div className="bg-(--sp-bg-2) p-6  border border-(--sp-border) shadow-sm sticky top-6">
+            <h2 className="text-[18px] font-medium mb-6 rounded-[12px]flex items-center justify-between text-(--sp-text-0)">
               Awaiting Routing
               <span className="text-[10px] text-emerald-500 font-bold tracking-[0.06em] bg-emerald-500/5 px-2 py-0.5 rounded-[4px] border border-emerald-500/10 uppercase">{unassignedItems.length} SKU Node</span>
             </h2>
