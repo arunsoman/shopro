@@ -25,7 +25,6 @@ import Settings from './pages/restaurant/Settings';
 import AutoPORules from './pages/restaurant/AutoPORules';
 import AutoPOSchedules from './pages/restaurant/AutoPOSchedules';
 import AutoPOActivity from './pages/restaurant/AutoPOActivity';
-import InventoryPrediction from './pages/restaurant/InventoryPrediction';
 import OperatorDashboard from './pages/operator/Dashboard';
 import POInbox from './pages/operator/POInbox';
 import POReview from './pages/operator/POReview';
@@ -113,7 +112,6 @@ function App() {
               <Route path="auto-po/rules" element={<AutoPORules />} />
               <Route path="auto-po/schedules" element={<AutoPOSchedules />} />
               <Route path="auto-po/activity" element={<AutoPOActivity />} />
-              <Route path="inventory-prediction" element={<InventoryPrediction />} />
               <Route path="*" element={<Navigate to="/restaurant/dashboard" replace />} />
             </Routes>
           </RestaurantShell>

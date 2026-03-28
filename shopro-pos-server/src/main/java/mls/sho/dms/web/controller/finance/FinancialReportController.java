@@ -8,10 +8,12 @@ import mls.sho.dms.application.dto.finance.JournalEntryResponse;
 import mls.sho.dms.application.dto.finance.PnLResponse;
 import mls.sho.dms.application.service.finance.FinancialService;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import mls.sho.dms.service.edp.EdpPublisher;
+import mls.sho.dms.application.dto.finance.ManualJournalRequest;
+import mls.sho.dms.application.dto.finance.BalanceSheetResponse;
+import java.util.Map;
+import java.util.HashMap;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -24,6 +26,36 @@ import java.util.List;
 public class FinancialReportController {
 
     private final FinancialService financialService;
+    private final EdpPublisher edpPublisher;
+
+    @PostMapping("/entries")
+    @Operation(summary = "Post Manual Journal Entry", description = "Submit a manual transaction which will be processed via the EDP bus")
+    public void postManualEntry(@RequestBody ManualJournalRequest request) {
+        Map<String, Object> eventPayload = new HashMap<>();
+        eventPayload.put("description", request.description());
+        eventPayload.put("entryDate", request.entryDate());
+        eventPayload.put("lines", request.lines());
+        
+        edpPublisher.publish("finance.manual_entry", eventPayload);
+    }
+
+    @PostMapping("/actions/petty-cash")
+    @Operation(summary = "Replenish Petty Cash", description = "Record cash movement from main cash (1000) to petty cash (1005)")
+    public void replenishPettyCash(@RequestBody Map<String, Object> request) {
+        edpPublisher.publish("finance.petty_cash_fetched", request);
+    }
+
+    @PostMapping("/actions/expense")
+    @Operation(summary = "Record Cash Expense", description = "Record an operational expense paid from petty cash (1005)")
+    public void recordExpense(@RequestBody Map<String, Object> request) {
+        edpPublisher.publish("finance.cash_expense_paid", request);
+    }
+
+    @PostMapping("/actions/staff-advance")
+    @Operation(summary = "Pay Staff Advance", description = "Record a staff advance paid from main cash (1000)")
+    public void payStaffAdvance(@RequestBody Map<String, Object> request) {
+        edpPublisher.publish("finance.staff_advance_paid", request);
+    }
 
     @GetMapping("/accounts")
     @Operation(summary = "Get Chart of Accounts", description = "Fetch all accounting categories and their current balances")
@@ -53,5 +85,11 @@ public class FinancialReportController {
         if (from == null) from = to.minus(30, ChronoUnit.DAYS);
         
         return financialService.getPnL(from, to);
+    }
+
+    @GetMapping("/balance-sheet")
+    @Operation(summary = "Get Balance Sheet", description = "Fetch the current financial position (Assets, Liabilities, Equity)")
+    public BalanceSheetResponse getBalanceSheet() {
+        return financialService.getBalanceSheet();
     }
 }

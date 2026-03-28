@@ -37,6 +37,7 @@ const GoodsReceivingPage = lazy(() => import('./features/inventory/pages/GoodsRe
 const ThreeWayMatchPanel = lazy(() => import('./features/inventory/pages/ThreeWayMatchPanel').then(m => ({ default: m.ThreeWayMatchPanel })));
 const AIThreeWayMatchPage = lazy(() => import('./features/inventory/pages/AIThreeWayMatchPage').then(m => ({ default: m.AIThreeWayMatchPage })));
 const FinanceDashboard = lazy(() => import('./features/finance/pages/FinanceDashboard').then(m => ({ default: m.FinanceDashboard })));
+const ManualJournalEntryPage = lazy(() => import('./features/finance/pages/ManualJournalEntryPage').then(m => ({ default: m.ManualJournalEntryPage })));
 const VendorRFQPage = lazy(() => import('./features/inventory/pages/VendorRFQPage').then(m => ({ default: m.VendorRFQPage })));
 const DailyPerishablesPanel = lazy(() => import('./features/inventory/pages/DailyPerishablesPanel').then(m => ({ default: m.DailyPerishablesPanel })));
 const CrmLayout = lazy(() => import('./features/crm/layouts/CrmLayout').then(m => ({ default: m.CrmLayout })));
@@ -242,10 +243,13 @@ function AppContent() {
             path="/finance"
             element={
               <ProtectedRoute allowedRoles={ADMIN_ROLES}>
-                <FinanceDashboard />
+                <Outlet />
               </ProtectedRoute>
             }
-          />
+          >
+            <Route index element={<FinanceDashboard />} />
+            <Route path="manual" element={<ManualJournalEntryPage />} />
+          </Route>
 
           {/* Settings — admin only */}
           <Route

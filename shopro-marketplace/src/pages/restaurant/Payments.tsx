@@ -14,11 +14,6 @@ import {
   Zap,
   Globe,
   Award,
-  CircleDot,
-  ArrowRight,
-  ShieldCheck,
-  RefreshCw,
-  Clock,
   Wallet
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -92,7 +87,7 @@ export default function Payments() {
       </div>
 
       {/* Transaction Table */}
-      <div className="bg-white/10 dark:bg-slate-900/30 backdrop-blur-xl rounded-2xl border border-slate-200 dark:border-slate-800 shadow-lg overflow-hidden italic uppercase italic">
+      <div className="bg-white/10 dark:bg-slate-900/30 backdrop-blur-xl rounded-2xl border border-slate-200 dark:border-slate-800 shadow-lg overflow-hidden italic uppercase">
         <div className="overflow-x-auto custom-scrollbar">
             <table className="w-full text-left tracking-widest border-collapse">
                 <thead>

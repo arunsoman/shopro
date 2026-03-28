@@ -13,6 +13,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -41,7 +43,11 @@ public class FinancialEventConsumer {
         String type = event.getEventType();
         if (!"order.fire".equals(type) && 
             !"order.payment_completed".equals(type) && 
-            !"purchase.invoice_matched".equals(type)) {
+            !"purchase.invoice_matched".equals(type) &&
+            !"finance.manual_entry".equals(type) &&
+            !"finance.petty_cash_fetched".equals(type) &&
+            !"finance.cash_expense_paid".equals(type) &&
+            !"finance.staff_advance_paid".equals(type)) {
             return;
         }
 
@@ -58,6 +64,18 @@ public class FinancialEventConsumer {
                     break;
                 case "purchase.invoice_matched":
                     handlePurchaseInvoiceMatched(payload);
+                    break;
+                case "finance.manual_entry":
+                    processManualEntry(payload);
+                    break;
+                case "finance.petty_cash_fetched":
+                    handlePettyCashFetched(payload);
+                    break;
+                case "finance.cash_expense_paid":
+                    handleCashExpensePaid(payload);
+                    break;
+                case "finance.staff_advance_paid":
+                    handleStaffAdvancePaid(payload);
                     break;
             }
         } catch (Exception e) {
@@ -96,5 +114,60 @@ public class FinancialEventConsumer {
         
         log.info("Recording Procurement (Accrual) for Invoice matched on PO {} amount: {}", poId, totalAmount);
         financialService.recordPurchase(poId, totalAmount, taxAmount);
+    }
+
+    private void processManualEntry(Map<String, Object> payload) {
+        String description = (String) payload.get("description");
+        Instant entryDate = Instant.parse((String) payload.get("entryDate"));
+        List<Map<String, Object>> linesData = (List<Map<String, Object>>) payload.get("lines");
+        
+        List<FinancialService.LineRequest> lines = linesData.stream()
+                .map(l -> new FinancialService.LineRequest(
+                        (String) l.get("accountCode"),
+                        new BigDecimal(l.get("debit").toString()),
+                        new BigDecimal(l.get("credit").toString())
+                ))
+                .toList();
+
+        log.info("Processing manual journal entry: {} on {}", description, entryDate);
+        financialService.postEntry(entryDate, description, null, lines);
+    }
+
+    private void handlePettyCashFetched(Map<String, Object> payload) {
+        BigDecimal amount = new BigDecimal(payload.get("amount").toString());
+        String initiator = (String) payload.getOrDefault("initiatedBy", "System");
+        String desc = "Petty Cash Replenishment (Main Safe → Petty Cash) - Initiated by " + initiator;
+        
+        List<FinancialService.LineRequest> lines = List.of(
+            new FinancialService.LineRequest("1005", amount, BigDecimal.ZERO), // Debit Petty Cash
+            new FinancialService.LineRequest("1000", BigDecimal.ZERO, amount)  // Credit Main Cash
+        );
+        financialService.postEntry(Instant.now(), desc, null, lines);
+    }
+
+    private void handleCashExpensePaid(Map<String, Object> payload) {
+        BigDecimal amount = new BigDecimal(payload.get("amount").toString());
+        String category = (String) payload.getOrDefault("category", "General Expense");
+        String initiator = (String) payload.getOrDefault("initiatedBy", "System");
+        String desc = "Cash Expense: " + category + " - Initiated by " + initiator;
+        
+        List<FinancialService.LineRequest> lines = List.of(
+            new FinancialService.LineRequest("6000", amount, BigDecimal.ZERO), // Debit Expense
+            new FinancialService.LineRequest("1005", BigDecimal.ZERO, amount)  // Credit Petty Cash
+        );
+        financialService.postEntry(Instant.now(), desc, null, lines);
+    }
+
+    private void handleStaffAdvancePaid(Map<String, Object> payload) {
+        BigDecimal amount = new BigDecimal(payload.get("amount").toString());
+        String staffName = (String) payload.getOrDefault("staffName", "Unknown Staff");
+        String initiator = (String) payload.getOrDefault("initiatedBy", "System");
+        String desc = "Staff Advance: " + staffName + " - Initiated by " + initiator;
+        
+        List<FinancialService.LineRequest> lines = List.of(
+            new FinancialService.LineRequest("1210", amount, BigDecimal.ZERO), // Debit Staff Advance Asset
+            new FinancialService.LineRequest("1000", BigDecimal.ZERO, amount)  // Credit Main Cash
+        );
+        financialService.postEntry(Instant.now(), desc, null, lines);
     }
 }

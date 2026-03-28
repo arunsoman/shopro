@@ -34,6 +34,8 @@ public class FinancialServiceImpl implements FinancialService {
             createAccount("1000", "Cash on Hand", AccountType.ASSET);
             createAccount("1100", "Bank Account", AccountType.ASSET);
             createAccount("1200", "Inventory Asset", AccountType.ASSET);
+            createAccount("1005", "Petty Cash", AccountType.ASSET);
+            createAccount("1210", "Staff Advance Asset", AccountType.ASSET);
             createAccount("2000", "Accounts Payable", AccountType.LIABILITY);
             createAccount("2100", "Sales Tax Payable", AccountType.LIABILITY);
             createAccount("3000", "Retained Earnings", AccountType.EQUITY);
@@ -140,27 +142,53 @@ public class FinancialServiceImpl implements FinancialService {
 
     @Override
     public PnLResponse getPnL(Instant from, Instant to) {
-        Account revenueAcc = accountRepository.findByCode("4000").orElseThrow();
-        Account cogsAcc = accountRepository.findByCode("5000").orElseThrow();
-        Account expenseAcc = accountRepository.findByCode("6000").orElseThrow();
+        List<Account> accounts = accountRepository.findAll();
+        
+        List<PnLResponse.CategoryBalance> revenueLines = accounts.stream()
+            .filter(a -> a.getAccountType() == AccountType.REVENUE)
+            .map(a -> new PnLResponse.CategoryBalance(a.getCode(), a.getName(), getPeriodSum(a, from, to).negate()))
+            .filter(b -> b.balance().compareTo(BigDecimal.ZERO) != 0)
+            .toList();
 
-        // Calculate Period Totals (Debit - Credit)
-        BigDecimal revenueNet = getPeriodSum(revenueAcc, from, to);
-        BigDecimal cogsNet = getPeriodSum(cogsAcc, from, to);
-        BigDecimal expenseNet = getPeriodSum(expenseAcc, from, to);
+        List<PnLResponse.CategoryBalance> expenseLines = accounts.stream()
+            .filter(a -> a.getAccountType() == AccountType.EXPENSE)
+            .map(a -> new PnLResponse.CategoryBalance(a.getCode(), a.getName(), getPeriodSum(a, from, to)))
+            .filter(b -> b.balance().compareTo(BigDecimal.ZERO) != 0)
+            .toList();
 
-        // Revenue has Credit balance, so net (D-C) is negative.
-        BigDecimal totalRevenue = revenueNet.negate(); 
-        BigDecimal totalCOGS = cogsNet; // COGS is Debit-heavy
+        BigDecimal totalRevenue = revenueLines.stream().map(PnLResponse.CategoryBalance::balance).reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalCOGS = expenseLines.stream().filter(l -> l.accountCode().equals("5000")).map(PnLResponse.CategoryBalance::balance).reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal grossProfit = totalRevenue.subtract(totalCOGS);
-        BigDecimal totalOpExpenses = expenseNet; // OpEx is Debit-heavy
+        BigDecimal totalOpExpenses = expenseLines.stream().filter(l -> !l.accountCode().equals("5000")).map(PnLResponse.CategoryBalance::balance).reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal netIncome = grossProfit.subtract(totalOpExpenses);
 
-        return new PnLResponse(
-            totalRevenue, totalCOGS, grossProfit, totalOpExpenses, netIncome,
-            List.of(new PnLResponse.CategoryBalance(revenueAcc.getCode(), revenueAcc.getName(), totalRevenue)),
-            List.of(new PnLResponse.CategoryBalance(expenseAcc.getCode(), expenseAcc.getName(), totalOpExpenses))
-        );
+        return new PnLResponse(totalRevenue, totalCOGS, grossProfit, totalOpExpenses, netIncome, revenueLines, expenseLines);
+    }
+
+    @Override
+    public BalanceSheetResponse getBalanceSheet() {
+        List<Account> accounts = accountRepository.findAll();
+
+        List<BalanceSheetResponse.CategoryBalance> assetLines = accounts.stream()
+            .filter(a -> a.getAccountType() == AccountType.ASSET)
+            .map(a -> new BalanceSheetResponse.CategoryBalance(a.getCode(), a.getName(), a.getBalance()))
+            .toList();
+
+        List<BalanceSheetResponse.CategoryBalance> liabilityLines = accounts.stream()
+            .filter(a -> a.getAccountType() == AccountType.LIABILITY)
+            .map(a -> new BalanceSheetResponse.CategoryBalance(a.getCode(), a.getName(), a.getBalance().negate()))
+            .toList();
+
+        List<BalanceSheetResponse.CategoryBalance> equityLines = accounts.stream()
+            .filter(a -> a.getAccountType() == AccountType.EQUITY)
+            .map(a -> new BalanceSheetResponse.CategoryBalance(a.getCode(), a.getName(), a.getBalance().negate()))
+            .toList();
+
+        BigDecimal totalAssets = assetLines.stream().map(BalanceSheetResponse.CategoryBalance::balance).reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalLiabilities = liabilityLines.stream().map(BalanceSheetResponse.CategoryBalance::balance).reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalEquity = equityLines.stream().map(BalanceSheetResponse.CategoryBalance::balance).reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        return new BalanceSheetResponse(totalAssets, totalLiabilities, totalEquity, assetLines, liabilityLines, equityLines);
     }
 
     private BigDecimal getPeriodSum(Account account, Instant from, Instant to) {

@@ -14,6 +14,7 @@ import { financeApi } from '../api/financeApi';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { FinanceWidgets } from '../components/FinanceWidgets';
 import { 
   Table, 
   TableBody, 
@@ -28,6 +29,7 @@ export function FinanceDashboard() {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [pnl, setPnl] = useState<any>(null);
+  const [balanceSheet, setBalanceSheet] = useState<any>(null);
   const [ledger, setLedger] = useState<any[]>([]);
   const [accounts, setAccounts] = useState<any[]>([]);
 
@@ -38,12 +40,14 @@ export function FinanceDashboard() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [pnlData, ledgerData, accountsData] = await Promise.all([
+      const [pnlData, balanceSheetData, ledgerData, accountsData] = await Promise.all([
         financeApi.getPnL(),
+        financeApi.getBalanceSheet(),
         financeApi.getLedger(),
         financeApi.getAccounts()
       ]);
       setPnl(pnlData);
+      setBalanceSheet(balanceSheetData);
       setLedger(ledgerData);
       setAccounts(accountsData);
     } catch (error) {
@@ -135,10 +139,13 @@ export function FinanceDashboard() {
         </Card>
       </div>
 
+      <FinanceWidgets onSuccess={loadData} />
+
       <Tabs defaultValue="ledger" className="w-full">
-        <TabsList className="grid w-full max-w-md grid-cols-3">
+        <TabsList className="grid w-full max-w-lg grid-cols-4">
           <TabsTrigger value="ledger">{t('finance.ledger')}</TabsTrigger>
           <TabsTrigger value="pnl">{t('finance.pnl')}</TabsTrigger>
+          <TabsTrigger value="balance">{t('finance.balanceSheet') || "Balance Sheet"}</TabsTrigger>
           <TabsTrigger value="accounts">{t('finance.accounts')}</TabsTrigger>
         </TabsList>
 
@@ -242,6 +249,75 @@ export function FinanceDashboard() {
                   <div className={`flex justify-between p-2 font-bold text-xl ${pnl?.netIncome >= 0 ? "text-green-600" : "text-red-600"}`}>
                     <span>{t('finance.netIncome')}</span>
                     <span>${pnl?.netIncome?.toFixed(2)}</span>
+                 </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="balance" className="mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('finance.balanceSheet') || "Balance Sheet"}</CardTitle>
+              <CardDescription>Current snapshot of financial health: Assets = Liabilities + Equity.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid md:grid-cols-2 gap-8">
+                {/* Assets Column */}
+                <div className="space-y-4">
+                  <div className="flex justify-between border-b pb-2 font-bold text-green-600">
+                    <span>ASSETS</span>
+                    <span>${balanceSheet?.totalAssets?.toFixed(2)}</span>
+                  </div>
+                  {balanceSheet?.assetLines.map((line: any) => (
+                    <div key={line.accountCode} className="flex justify-between pl-4 text-sm text-muted-foreground italic">
+                      <span>{line.accountName} ({line.accountCode})</span>
+                      <span>${line.balance.toFixed(2)}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Liabilities & Equity Column */}
+                <div className="space-y-8">
+                  <div className="space-y-4">
+                    <div className="flex justify-between border-b pb-2 font-bold text-red-600">
+                      <span>LIABILITIES</span>
+                      <span>${balanceSheet?.totalLiabilities?.toFixed(2)}</span>
+                    </div>
+                    {balanceSheet?.liabilityLines.map((line: any) => (
+                      <div key={line.accountCode} className="flex justify-between pl-4 text-sm text-muted-foreground italic">
+                        <span>{line.accountName} ({line.accountCode})</span>
+                        <span>${line.balance.toFixed(2)}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="space-y-4 pt-4 border-t-4 border-double">
+                    <div className="flex justify-between border-b pb-2 font-bold text-indigo-600">
+                      <span>EQUITY</span>
+                      <span>${balanceSheet?.totalEquity?.toFixed(2)}</span>
+                    </div>
+                    {balanceSheet?.equityLines.map((line: any) => (
+                      <div key={line.accountCode} className="flex justify-between pl-4 text-sm text-muted-foreground italic">
+                        <span>{line.accountName} ({line.accountCode})</span>
+                        <span>${line.balance.toFixed(2)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-8 pt-6 border-t flex justify-between items-center bg-muted/30 p-4 rounded-xl">
+                 <div className="text-sm font-bold uppercase tracking-widest opacity-50 italic">Accounting Identity Check</div>
+                 <div className="flex gap-8">
+                    <div className="text-right">
+                       <p className="text-[10px] text-muted-foreground uppercase">Total Assets</p>
+                       <p className="text-xl font-bold font-mono text-green-600">${balanceSheet?.totalAssets?.toFixed(2)}</p>
+                    </div>
+                    <div className="text-right">
+                       <p className="text-[10px] text-muted-foreground uppercase">Liabilities + Equity</p>
+                       <p className="text-xl font-bold font-mono text-indigo-600">${(balanceSheet?.totalLiabilities + balanceSheet?.totalEquity).toFixed(2)}</p>
+                    </div>
                  </div>
               </div>
             </CardContent>

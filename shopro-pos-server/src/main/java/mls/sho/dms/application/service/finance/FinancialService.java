@@ -8,6 +8,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import mls.sho.dms.application.dto.finance.BalanceSheetResponse;
 
 public interface FinancialService {
     
@@ -23,6 +24,7 @@ public interface FinancialService {
     List<AccountResponse> getAllAccounts();
     List<JournalEntryResponse> getLedger(Instant from, Instant to);
     PnLResponse getPnL(Instant from, Instant to);
+    BalanceSheetResponse getBalanceSheet();
 
     record LineRequest(String accountCode, BigDecimal debit, BigDecimal credit) {}
 }
