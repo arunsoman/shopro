@@ -26,6 +26,7 @@ const MenuDashboard = lazy(() => import('./features/menu/pages/MenuDashboard').t
 const CategoriesPage = lazy(() => import('./features/menu/pages/CategoriesPage').then(m => ({ default: m.CategoriesPage })));
 const MenuItemsPage = lazy(() => import('./features/menu/pages/MenuItemsPage').then(m => ({ default: m.MenuItemsPage })));
 const ModifiersPage = lazy(() => import('./features/menu/pages/ModifiersPage').then(m => ({ default: m.ModifiersPage })));
+const MenuOverviewPage = lazy(() => import('./features/menu/pages/MenuOverviewPage').then(m => ({ default: m.MenuOverviewPage })));
 const InventoryLayout = lazy(() => import('./features/inventory/layouts/InventoryLayout').then(m => ({ default: m.InventoryLayout })));
 const InventoryDashboard = lazy(() => import('./features/inventory/pages/InventoryDashboard').then(m => ({ default: m.InventoryDashboard })));
 const RecipesPage = lazy(() => import('./features/inventory/pages/RecipesPage').then(m => ({ default: m.RecipesPage })));
@@ -187,7 +188,7 @@ function AppContent() {
               </ProtectedRoute>
             }
           >
-            <Route index element={<Navigate to="categories" replace />} />
+            <Route index element={<MenuOverviewPage />} />
             <Route path="categories" element={<CategoriesPage />} />
             <Route path="items" element={<MenuItemsPage />} />
             <Route path="modifiers" element={<ModifiersPage />} />

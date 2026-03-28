@@ -67,3 +67,13 @@ export const menuItemsApi = {
         return res.data;
     },
 };
+
+export const menuAnalyticsApi = {
+    getOverview: async (from?: string, to?: string): Promise<any> => {
+        const params = new URLSearchParams();
+        if (from) params.append("from", from);
+        if (to) params.append("to", to);
+        const res = await apiClient.get(`/menu-analytics/overview?${params.toString()}`);
+        return res.data;
+    },
+};

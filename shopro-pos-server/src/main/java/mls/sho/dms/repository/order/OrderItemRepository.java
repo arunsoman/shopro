@@ -20,4 +20,20 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, UUID> {
 
     /** Find all items with a specific status across all tickets. */
     List<OrderItem> findByStatus(OrderItemStatus status);
+
+    @org.springframework.data.jpa.repository.Query("SELECT oi.menuItem.id, SUM(oi.quantity), SUM(oi.quantity * (oi.unitPrice + oi.modifierUpchargeTotal)) " +
+           "FROM OrderItem oi WHERE oi.status NOT IN ('VOIDED', 'CANCELLED') " +
+           "AND oi.createdAt BETWEEN :from AND :to " +
+           "GROUP BY oi.menuItem.id")
+    List<Object[]> sumSalesByMenuItem(java.time.Instant from, java.time.Instant to);
+
+    @org.springframework.data.jpa.repository.Query("SELECT oi.menuItem.category.name, SUM(oi.quantity), SUM(oi.quantity * (oi.unitPrice + oi.modifierUpchargeTotal)) " +
+           "FROM OrderItem oi WHERE oi.status NOT IN ('VOIDED', 'CANCELLED') " +
+           "AND oi.createdAt BETWEEN :from AND :to " +
+           "GROUP BY oi.menuItem.category.name")
+    List<Object[]> sumSalesByCategory(java.time.Instant from, java.time.Instant to);
+
+    @org.springframework.data.jpa.repository.Query("SELECT COUNT(DISTINCT oi.ticket.id) FROM OrderItem oi " +
+           "WHERE oi.status NOT IN ('VOIDED', 'CANCELLED') AND oi.createdAt BETWEEN :from AND :to")
+    long countCompletedTickets(java.time.Instant from, java.time.Instant to);
 }
