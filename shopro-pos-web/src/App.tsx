@@ -36,6 +36,7 @@ const POManagementPage = lazy(() => import('./features/inventory/pages/POManagem
 const GoodsReceivingPage = lazy(() => import('./features/inventory/pages/GoodsReceivingPage').then(m => ({ default: m.GoodsReceivingPage })));
 const ThreeWayMatchPanel = lazy(() => import('./features/inventory/pages/ThreeWayMatchPanel').then(m => ({ default: m.ThreeWayMatchPanel })));
 const AIThreeWayMatchPage = lazy(() => import('./features/inventory/pages/AIThreeWayMatchPage').then(m => ({ default: m.AIThreeWayMatchPage })));
+const FinanceDashboard = lazy(() => import('./features/finance/pages/FinanceDashboard').then(m => ({ default: m.FinanceDashboard })));
 const VendorRFQPage = lazy(() => import('./features/inventory/pages/VendorRFQPage').then(m => ({ default: m.VendorRFQPage })));
 const DailyPerishablesPanel = lazy(() => import('./features/inventory/pages/DailyPerishablesPanel').then(m => ({ default: m.DailyPerishablesPanel })));
 const CrmLayout = lazy(() => import('./features/crm/layouts/CrmLayout').then(m => ({ default: m.CrmLayout })));
@@ -235,6 +236,16 @@ function AppContent() {
               element={<CrmSettingsPage />}
             />
           </Route>
+
+          {/* Finance — admin only */}
+          <Route
+            path="/finance"
+            element={
+              <ProtectedRoute allowedRoles={ADMIN_ROLES}>
+                <FinanceDashboard />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Settings — admin only */}
           <Route

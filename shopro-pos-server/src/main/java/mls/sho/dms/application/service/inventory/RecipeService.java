@@ -15,4 +15,7 @@ public interface RecipeService {
 
     /** Deplete raw ingredients for a single OrderItem based on its recipe. */
     void depleteForOrderItem(OrderItem item);
+
+    /** Calculate the total cost of goods sold (COGS) for a single OrderItem based on its recipe. */
+    java.math.BigDecimal calculateItemCost(OrderItem item);
 }

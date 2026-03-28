@@ -779,6 +779,13 @@
         "error": "Failed to send proposal"
       }
     },
+    "manualReorder": {
+      "sheet": {
+        "title": "Manual Reorder",
+        "desc": "Procurement strategy for {{name}}",
+        "stockLabel": "Stock: {{qty}} {{unit}}"
+      }
+    },
     "manualProcurement": {
       "sheet": {
         "title": "Manual Reorder",
@@ -873,6 +880,29 @@
       "submitReview": "Submit for Review",
       "runMatch": "Finalize Match"
     }
+  },
+  "finance": {
+    "title": "Financial Reports",
+    "desc": "General Ledger, P&L, and accounting insights.",
+    "ledger": "General Ledger",
+    "pnl": "Profit & Loss",
+    "accounts": "Chart of Accounts",
+    "procurement": "Procurement Analytics",
+    "revenue": "Total Revenue",
+    "cogs": "Total COGS",
+    "grossProfit": "Gross Profit",
+    "opExpenses": "Operating Expenses",
+    "netIncome": "Net Income",
+    "accountCode": "Code",
+    "accountName": "Account",
+    "balance": "Balance",
+    "debit": "Debit",
+    "credit": "Credit",
+    "description": "Description",
+    "date": "Date",
+    "reference": "Reference",
+    "noEntries": "No journal entries found for this period.",
+    "exportReport": "Export Report"
   },
   "crm": {
     "title": "CRM & Loyalty",
@@ -1058,6 +1088,8 @@
     "taxesDesc": "Manage tax rules and regional compliance.",
     "settingsTitle": "Settings",
     "settingsDesc": "Configure floor layout, tableside, and payments.",
+    "financeTitle": "Financial Reports",
+    "financeDesc": "General Ledger, P&L, and accounting insights.",
     "openModule": "Open Module"
   }
 }

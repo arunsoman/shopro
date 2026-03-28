@@ -31,7 +31,7 @@ public class ReceivingServiceImpl implements ReceivingService {
     private final NotificationEngine notificationEngine;
     private final POStateMachineService stateMachineService;
     private final SupplierPolicyRepository supplierPolicyRepository;
-
+    private final mls.sho.dms.application.service.finance.FinancialService financialService;
     public ReceivingServiceImpl(PurchaseOrderRepository poRepository,
                                 PurchaseOrderLineRepository poLineRepository,
                                 StaffRepository staffRepository,
@@ -43,7 +43,8 @@ public class ReceivingServiceImpl implements ReceivingService {
                                 VendorInvoiceLineRepository invoiceLineRepository,
                                 NotificationEngine notificationEngine,
                                 POStateMachineService stateMachineService,
-                                SupplierPolicyRepository supplierPolicyRepository) {
+                                SupplierPolicyRepository supplierPolicyRepository,
+                                mls.sho.dms.application.service.finance.FinancialService financialService) {
         this.poRepository = poRepository;
         this.poLineRepository = poLineRepository;
         this.staffRepository = staffRepository;
@@ -56,6 +57,7 @@ public class ReceivingServiceImpl implements ReceivingService {
         this.notificationEngine = notificationEngine;
         this.stateMachineService = stateMachineService;
         this.supplierPolicyRepository = supplierPolicyRepository;
+        this.financialService = financialService;
     }
 
     @Override
@@ -219,7 +221,11 @@ public class ReceivingServiceImpl implements ReceivingService {
                 }
             }
 
+
             stateMachineService.transition(poId, PurchaseOrderStatus.CLOSED, UUID.randomUUID(), "3-Way Match Passed");
+            
+            // Financial: Record Purchase
+            financialService.recordPurchase(poId, invoice.getTotalAmount(), invoice.getTaxAmount());
         }
 
         return poRepository.findById(poId).get();

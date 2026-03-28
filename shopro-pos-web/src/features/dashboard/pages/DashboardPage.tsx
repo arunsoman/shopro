@@ -10,6 +10,7 @@ import {
     Heart,
     ChevronRight,
     Truck,
+    BookOpen,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
@@ -105,8 +106,17 @@ const NAV_CARDS: NavCard[] = [
         roles: ADMIN_ROLES,
     },
     {
+        title: 'Financial Reports',
+        description: 'General Ledger, P&L, and procurement financial insights.',
+        href: '/finance',
+        icon: <BookOpen className="h-7 w-7" />,
+        gradient: 'from-blue-600 to-indigo-700',
+        roles: ADMIN_ROLES,
+        badge: 'New',
+    },
+    {
         title: 'Settings',
-        description: 'Configure floor layout, tableside ordering, payments, and notifications.',
+        description: 'Configure floor layout, tableside, and payments.',
         href: '/settings',
         icon: <Settings className="h-7 w-7" />,
         gradient: 'from-slate-500 to-gray-700',
@@ -161,6 +171,11 @@ export function DashboardPage() {
         },
         {
             ...NAV_CARDS[8],
+            title: t('dashboard.financeTitle'),
+            description: t('dashboard.financeDesc'),
+        },
+        {
+            ...NAV_CARDS[9],
             title: t('dashboard.settingsTitle'),
             description: t('dashboard.settingsDesc'),
         },

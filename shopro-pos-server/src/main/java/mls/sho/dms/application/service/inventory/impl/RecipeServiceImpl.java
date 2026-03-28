@@ -232,4 +232,26 @@ public class RecipeServiceImpl implements RecipeService {
             ingredientResponses
         );
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public BigDecimal calculateItemCost(OrderItem item) {
+        MenuItem menuItem = item.getMenuItem();
+        return recipeRepository.findLatestByMenuItem(menuItem)
+                .map(recipe -> {
+                    List<RecipeIngredient> lines = recipeIngredientRepository.findByRecipe(recipe);
+                    BigDecimal totalUnitCost = lines.stream()
+                            .map(line -> {
+                                if (line.getIngredient() != null) {
+                                    return line.getIngredient().getEffectiveCostPerUnit().multiply(line.getQuantity());
+                                } else if (line.getSubRecipe() != null) {
+                                    return line.getSubRecipe().getCostPerUnit().multiply(line.getQuantity());
+                                }
+                                return BigDecimal.ZERO;
+                            })
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+                    return totalUnitCost.multiply(new BigDecimal(item.getQuantity()));
+                })
+                .orElse(BigDecimal.ZERO);
+    }
 }

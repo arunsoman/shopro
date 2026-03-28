@@ -63,6 +63,7 @@ public class OrderServiceImpl implements OrderService {
     private final mls.sho.dms.application.service.core.NotificationEngine notificationEngine;
     private final EdpPublisher edpPublisher;
     private final SimpMessagingTemplate messagingTemplate;
+    private final mls.sho.dms.application.service.finance.FinancialService financialService;
 
     // Advanced Tax Integration (Legacy dependency removed as per user module request)
     private final mls.sho.dms.tax.repository.VenueCountryAssignmentRepository venueCountryAssignmentRepository;
@@ -377,6 +378,10 @@ public class OrderServiceImpl implements OrderService {
             // US-5.1: Real-time Inventory Depletion
             recipeService.depleteForOrderItem(item);
             
+            // Financial: Record COGS
+            java.math.BigDecimal itemCost = recipeService.calculateItemCost(item);
+            financialService.recordCOGS(orderId, itemCost);
+            
             // EDP: Publish independent unit-level events for granular tracking (US-5.1)
             int totalQuantity = item.getQuantity();
             for (int i = 1; i <= totalQuantity; i++) {
@@ -512,6 +517,9 @@ public class OrderServiceImpl implements OrderService {
         eventData.put("totalAmount", ticket.getSubtotal());
         eventData.put("paymentMethod", "CASH"); // Default if not specified in this method
         edpPublisher.publish("order.payment_completed", eventData);
+        
+        // Financial: Record Sale
+        financialService.recordSale(ticket.getId(), ticket.getTotalAmount(), ticket.getTaxAmount());
 
         OrderResponse response = mapToResponse(ticket);
         messagingTemplate.convertAndSend("/topic/orders/" + orderId, response);
