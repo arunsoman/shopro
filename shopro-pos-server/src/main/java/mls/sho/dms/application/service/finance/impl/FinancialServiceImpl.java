@@ -140,18 +140,20 @@ public class FinancialServiceImpl implements FinancialService {
 
     @Override
     public PnLResponse getPnL(Instant from, Instant to) {
-        // In a real P&L, we sum the NET flows (Debits - Credits) for Rev/Exp in the period
-        // For simplicity here, we'll use the current account balances (assuming cleared at start of year)
-        
         Account revenueAcc = accountRepository.findByCode("4000").orElseThrow();
         Account cogsAcc = accountRepository.findByCode("5000").orElseThrow();
         Account expenseAcc = accountRepository.findByCode("6000").orElseThrow();
 
-        // Revenue & Liability have Credit balances, so balance is negative in our (D-C) model
-        BigDecimal totalRevenue = revenueAcc.getBalance().negate(); 
-        BigDecimal totalCOGS = cogsAcc.getBalance();
+        // Calculate Period Totals (Debit - Credit)
+        BigDecimal revenueNet = getPeriodSum(revenueAcc, from, to);
+        BigDecimal cogsNet = getPeriodSum(cogsAcc, from, to);
+        BigDecimal expenseNet = getPeriodSum(expenseAcc, from, to);
+
+        // Revenue has Credit balance, so net (D-C) is negative.
+        BigDecimal totalRevenue = revenueNet.negate(); 
+        BigDecimal totalCOGS = cogsNet; // COGS is Debit-heavy
         BigDecimal grossProfit = totalRevenue.subtract(totalCOGS);
-        BigDecimal totalOpExpenses = expenseAcc.getBalance();
+        BigDecimal totalOpExpenses = expenseNet; // OpEx is Debit-heavy
         BigDecimal netIncome = grossProfit.subtract(totalOpExpenses);
 
         return new PnLResponse(
@@ -159,6 +161,11 @@ public class FinancialServiceImpl implements FinancialService {
             List.of(new PnLResponse.CategoryBalance(revenueAcc.getCode(), revenueAcc.getName(), totalRevenue)),
             List.of(new PnLResponse.CategoryBalance(expenseAcc.getCode(), expenseAcc.getName(), totalOpExpenses))
         );
+    }
+
+    private BigDecimal getPeriodSum(Account account, Instant from, Instant to) {
+        BigDecimal sum = journalLineRepository.sumAmountByAccountAndDate(account, from, to);
+        return sum != null ? sum : BigDecimal.ZERO;
     }
 
     private JournalEntryResponse mapEntry(JournalEntry entry) {

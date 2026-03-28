@@ -3,6 +3,7 @@ package mls.sho.dms.application.service.inventory.impl;
 import mls.sho.dms.application.service.inventory.ReceivingService;
 import mls.sho.dms.application.service.inventory.POStateMachineService;
 import mls.sho.dms.application.service.core.NotificationEngine;
+import mls.sho.dms.service.edp.EdpPublisher;
 import mls.sho.dms.entity.inventory.*;
 import mls.sho.dms.entity.staff.StaffMember;
 import mls.sho.dms.repository.inventory.*;
@@ -31,7 +32,7 @@ public class ReceivingServiceImpl implements ReceivingService {
     private final NotificationEngine notificationEngine;
     private final POStateMachineService stateMachineService;
     private final SupplierPolicyRepository supplierPolicyRepository;
-    private final mls.sho.dms.application.service.finance.FinancialService financialService;
+    private final EdpPublisher edpPublisher;
     public ReceivingServiceImpl(PurchaseOrderRepository poRepository,
                                 PurchaseOrderLineRepository poLineRepository,
                                 StaffRepository staffRepository,
@@ -44,7 +45,7 @@ public class ReceivingServiceImpl implements ReceivingService {
                                 NotificationEngine notificationEngine,
                                 POStateMachineService stateMachineService,
                                 SupplierPolicyRepository supplierPolicyRepository,
-                                mls.sho.dms.application.service.finance.FinancialService financialService) {
+                                EdpPublisher edpPublisher) {
         this.poRepository = poRepository;
         this.poLineRepository = poLineRepository;
         this.staffRepository = staffRepository;
@@ -57,7 +58,7 @@ public class ReceivingServiceImpl implements ReceivingService {
         this.notificationEngine = notificationEngine;
         this.stateMachineService = stateMachineService;
         this.supplierPolicyRepository = supplierPolicyRepository;
-        this.financialService = financialService;
+        this.edpPublisher = edpPublisher;
     }
 
     @Override
@@ -224,8 +225,13 @@ public class ReceivingServiceImpl implements ReceivingService {
 
             stateMachineService.transition(poId, PurchaseOrderStatus.CLOSED, UUID.randomUUID(), "3-Way Match Passed");
             
-            // Financial: Record Purchase
-            financialService.recordPurchase(poId, invoice.getTotalAmount(), invoice.getTaxAmount());
+            // Financial: Handled via EDP
+            edpPublisher.publish("purchase.invoice_matched", Map.of(
+                "poId", poId,
+                "invoiceId", invoice.getId(),
+                "totalAmount", invoice.getTotalAmount(),
+                "taxAmount", invoice.getTaxAmount()
+            ));
         }
 
         return poRepository.findById(poId).get();
