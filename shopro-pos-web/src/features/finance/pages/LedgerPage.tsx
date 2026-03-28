@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { 
   Filter,
@@ -40,6 +40,31 @@ export function LedgerPage() {
     }
   };
 
+  // Group entries by referenceId
+  const groupedLedger = useMemo(() => {
+    if (!ledger.length) return [];
+    
+    const groups = new Map<string, any[]>();
+    
+    ledger.forEach(entry => {
+      // Use referenceId as key, fall back to entry ID if ref is missing
+      const key = entry.referenceId || `entry-${entry.id}`;
+      if (!groups.has(key)) {
+        groups.set(key, []);
+      }
+      groups.get(key)!.push(entry);
+    });
+
+    // Convert map to array and sort by the latest entry date in each group
+    return Array.from(groups.entries())
+      .map(([ref, entries]) => ({
+        ref,
+        entries: entries.sort((a, b) => new Date(b.entryDate).getTime() - new Date(a.entryDate).getTime()),
+        maxDate: new Date(Math.max(...entries.map(e => new Date(e.entryDate).getTime())))
+      }))
+      .sort((a, b) => b.maxDate.getTime() - a.maxDate.getTime());
+  }, [ledger]);
+
   if (loading) {
     return (
       <div className="flex h-96 items-center justify-center">
@@ -53,7 +78,7 @@ export function LedgerPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{t('finance.ledger', 'Journal Ledger')}</h1>
-          <p className="text-muted-foreground">Comprehensive transaction history for the period.</p>
+          <p className="text-muted-foreground">Comprehensive transaction history grouped by order reference.</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm">
@@ -90,36 +115,50 @@ export function LedgerPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {ledger.map((entry) => (
-                <div key={entry.id} className="contents">
-                  <TableRow className="bg-muted/30 font-medium">
-                    <TableCell colSpan={3}>
-                       <div className="flex items-center gap-2">
-                         <span className="text-xs text-muted-foreground">{format(new Date(entry.entryDate), 'MMM dd, HH:mm')}</span>
-                         {entry.description}
-                       </div>
-                    </TableCell>
-                    <TableCell className="text-right text-xs text-muted-foreground font-mono">
-                        {entry.referenceId?.substring(0,8)}
-                    </TableCell>
-                    <TableCell></TableCell>
-                  </TableRow>
-                  {entry.lines.map((line: any) => (
-                    <TableRow key={line.id} className="border-none hover:bg-transparent">
-                      <TableCell></TableCell>
-                      <TableCell className="pl-8 text-sm italic py-1">
-                        {line.accountName} <span className="text-xs opacity-50">({line.accountCode})</span>
-                      </TableCell>
-                      <TableCell></TableCell>
-                      <TableCell className="text-right font-mono py-1">
-                        {line.debitAmount > 0 ? line.debitAmount.toFixed(2) : '-'}
-                      </TableCell>
-                      <TableCell className="text-right font-mono py-1">
-                        {line.creditAmount > 0 ? line.creditAmount.toFixed(2) : '-'}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                  <TableRow className="h-2 border-b-2 last:border-b-0" />
+              {groupedLedger.map((group) => (
+                <div key={group.ref} className="contents">
+                    {group.entries.map((entry, idx) => (
+                        <div key={entry.id} className="contents">
+                            <TableRow className={`bg-muted/30 font-medium ${idx > 0 ? "border-t-0 opacity-80" : ""}`}>
+                                <TableCell className="whitespace-nowrap">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-xs text-muted-foreground">
+                                            {format(new Date(entry.entryDate), 'MMM dd, HH:mm')}
+                                        </span>
+                                    </div>
+                                </TableCell>
+                                <TableCell>
+                                    <span className={idx > 0 ? "pl-4 italic text-sm text-muted-foreground" : ""}>
+                                        {entry.description}
+                                    </span>
+                                </TableCell>
+                                <TableCell>
+                                    <span className="text-xs text-primary font-mono bg-primary/5 px-2 py-0.5 rounded">
+                                        {entry.referenceId ? entry.referenceId.substring(0, 8) : '-'}
+                                    </span>
+                                </TableCell>
+                                <TableCell></TableCell>
+                                <TableCell></TableCell>
+                            </TableRow>
+                            {entry.lines.map((line: any) => (
+                                <TableRow key={line.id} className="border-none hover:bg-transparent">
+                                    <TableCell></TableCell>
+                                    <TableCell className="pl-8 text-sm italic py-1 text-muted-foreground/80">
+                                        {line.accountName} <span className="text-[10px] opacity-40">({line.accountCode})</span>
+                                    </TableCell>
+                                    <TableCell></TableCell>
+                                    <TableCell className="text-right font-mono py-1 text-sm">
+                                        {line.debitAmount > 0 ? line.debitAmount.toFixed(2) : '-'}
+                                    </TableCell>
+                                    <TableCell className="text-right font-mono py-1 text-sm">
+                                        {line.creditAmount > 0 ? line.creditAmount.toFixed(2) : '-'}
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </div>
+                    ))}
+                    {/* Add a thicker border between groups */}
+                    <TableRow className="h-4 border-b-2 border-primary/10 last:border-b-0" />
                 </div>
               ))}
               {ledger.length === 0 && (
