@@ -45,9 +45,11 @@ public class FinancialEventConsumer {
             !"order.payment_completed".equals(type) && 
             !"purchase.invoice_matched".equals(type) &&
             !"finance.manual_entry".equals(type) &&
-            !"finance.petty_cash_fetched".equals(type) &&
-            !"finance.cash_expense_paid".equals(type) &&
-            !"finance.staff_advance_paid".equals(type)) {
+            !"finance.staff_advance_paid".equals(type) &&
+            !"finance.bank_deposit_recorded".equals(type) &&
+            !"finance.utility_paid".equals(type) &&
+            !"finance.inventory_waste_recorded".equals(type) &&
+            !"finance.equity_action_recorded".equals(type)) {
             return;
         }
 
@@ -76,6 +78,18 @@ public class FinancialEventConsumer {
                     break;
                 case "finance.staff_advance_paid":
                     handleStaffAdvancePaid(payload);
+                    break;
+                case "finance.bank_deposit_recorded":
+                    handleBankDeposit(payload);
+                    break;
+                case "finance.utility_paid":
+                    handleUtilityPaid(payload);
+                    break;
+                case "finance.inventory_waste_recorded":
+                    handleInventoryWaste(payload);
+                    break;
+                case "finance.equity_action_recorded":
+                    handleEquityAction(payload);
                     break;
             }
         } catch (Exception e) {
@@ -168,6 +182,63 @@ public class FinancialEventConsumer {
             new FinancialService.LineRequest("1210", amount, BigDecimal.ZERO), // Debit Staff Advance Asset
             new FinancialService.LineRequest("1000", BigDecimal.ZERO, amount)  // Credit Main Cash
         );
+        financialService.postEntry(Instant.now(), desc, null, lines);
+    }
+
+    private void handleBankDeposit(Map<String, Object> payload) {
+        BigDecimal amount = new BigDecimal(payload.get("amount").toString());
+        String initiator = (String) payload.getOrDefault("initiatedBy", "System");
+        String desc = "Bank Deposit (Main Safe → Bank) - Initiated by " + initiator;
+        
+        List<FinancialService.LineRequest> lines = List.of(
+            new FinancialService.LineRequest("1100", amount, BigDecimal.ZERO), // Debit Bank
+            new FinancialService.LineRequest("1000", BigDecimal.ZERO, amount)  // Credit Cash
+        );
+        financialService.postEntry(Instant.now(), desc, null, lines);
+    }
+
+    private void handleUtilityPaid(Map<String, Object> payload) {
+        BigDecimal amount = new BigDecimal(payload.get("amount").toString());
+        String utilityName = (String) payload.getOrDefault("utilityName", "Utility/Rent");
+        String initiator = (String) payload.getOrDefault("initiatedBy", "System");
+        String desc = "Utility Payment: " + utilityName + " - Initiated by " + initiator;
+        
+        List<FinancialService.LineRequest> lines = List.of(
+            new FinancialService.LineRequest("6000", amount, BigDecimal.ZERO), // Debit Expense
+            new FinancialService.LineRequest("1100", BigDecimal.ZERO, amount)  // Credit Bank
+        );
+        financialService.postEntry(Instant.now(), desc, null, lines);
+    }
+
+    private void handleInventoryWaste(Map<String, Object> payload) {
+        BigDecimal amount = new BigDecimal(payload.get("amount").toString());
+        String reason = (String) payload.getOrDefault("reason", "Spoilage/Shrinkage");
+        String initiator = (String) payload.getOrDefault("initiatedBy", "System");
+        String desc = "Inventory Waste: " + reason + " - Initiated by " + initiator;
+        
+        List<FinancialService.LineRequest> lines = List.of(
+            new FinancialService.LineRequest("5000", amount, BigDecimal.ZERO), // Debit COGS/Loss
+            new FinancialService.LineRequest("1200", BigDecimal.ZERO, amount)  // Credit Inventory Asset
+        );
+        financialService.postEntry(Instant.now(), desc, null, lines);
+    }
+
+    private void handleEquityAction(Map<String, Object> payload) {
+        BigDecimal amount = new BigDecimal(payload.get("amount").toString());
+        String actionType = (String) payload.getOrDefault("actionType", "Drawing"); // Drawing or Injection
+        String initiator = (String) payload.getOrDefault("initiatedBy", "Owner");
+        String desc = "Equity Action (" + actionType + ") - Initiated by " + initiator;
+        
+        boolean isInjection = "Injection".equalsIgnoreCase(actionType);
+        
+        List<FinancialService.LineRequest> lines = isInjection ? List.of(
+            new FinancialService.LineRequest("1100", amount, BigDecimal.ZERO), // Debit Bank
+            new FinancialService.LineRequest("3000", BigDecimal.ZERO, amount)  // Credit Equity
+        ) : List.of(
+            new FinancialService.LineRequest("3000", amount, BigDecimal.ZERO), // Debit Equity (Drawing)
+            new FinancialService.LineRequest("1100", BigDecimal.ZERO, amount)  // Credit Bank
+        );
+        
         financialService.postEntry(Instant.now(), desc, null, lines);
     }
 }

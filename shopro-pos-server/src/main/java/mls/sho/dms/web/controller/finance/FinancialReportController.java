@@ -57,6 +57,30 @@ public class FinancialReportController {
         edpPublisher.publish("finance.staff_advance_paid", request);
     }
 
+    @PostMapping("/actions/bank-deposit")
+    @Operation(summary = "Record Bank Deposit", description = "Move cash from main safe (1000) to bank account (1100)")
+    public void recordBankDeposit(@RequestBody Map<String, Object> request) {
+        edpPublisher.publish("finance.bank_deposit_recorded", request);
+    }
+
+    @PostMapping("/actions/utility-payment")
+    @Operation(summary = "Pay Utility/Rent", description = "Record payment for utilities or rent from bank account (1100)")
+    public void payUtility(@RequestBody Map<String, Object> request) {
+        edpPublisher.publish("finance.utility_paid", request);
+    }
+
+    @PostMapping("/actions/inventory-waste")
+    @Operation(summary = "Log Inventory Waste", description = "Record inventory spoilage or loss (1200) to COGS (5000)")
+    public void logWaste(@RequestBody Map<String, Object> request) {
+        edpPublisher.publish("finance.inventory_waste_recorded", request);
+    }
+
+    @PostMapping("/actions/equity-action")
+    @Operation(summary = "Record Equity Action", description = "Record owner capital injection or drawings")
+    public void recordEquity(@RequestBody Map<String, Object> request) {
+        edpPublisher.publish("finance.equity_action_recorded", request);
+    }
+
     @GetMapping("/accounts")
     @Operation(summary = "Get Chart of Accounts", description = "Fetch all accounting categories and their current balances")
     public List<AccountResponse> getAccounts() {

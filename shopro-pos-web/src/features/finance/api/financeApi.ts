@@ -35,4 +35,16 @@ export const financeApi = {
     payStaffAdvance: async (amount: number, staffName: string, initiatedBy: string): Promise<void> => {
         await apiClient.post("/finance/actions/staff-advance", { amount, staffName, initiatedBy });
     },
+    recordBankDeposit: async (amount: number, initiatedBy: string): Promise<void> => {
+        await apiClient.post("/finance/actions/bank-deposit", { amount, initiatedBy });
+    },
+    payUtility: async (amount: number, utilityName: string, initiatedBy: string): Promise<void> => {
+        await apiClient.post("/finance/actions/utility-payment", { amount, utilityName, initiatedBy });
+    },
+    logInventoryWaste: async (amount: number, reason: string, initiatedBy: string): Promise<void> => {
+        await apiClient.post("/finance/actions/inventory-waste", { amount, reason, initiatedBy });
+    },
+    recordEquityAction: async (amount: number, actionType: string, initiatedBy: string): Promise<void> => {
+        await apiClient.post("/finance/actions/equity-action", { amount, actionType, initiatedBy });
+    },
 };

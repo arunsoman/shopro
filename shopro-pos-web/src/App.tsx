@@ -36,7 +36,6 @@ const POManagementPage = lazy(() => import('./features/inventory/pages/POManagem
 const GoodsReceivingPage = lazy(() => import('./features/inventory/pages/GoodsReceivingPage').then(m => ({ default: m.GoodsReceivingPage })));
 const ThreeWayMatchPanel = lazy(() => import('./features/inventory/pages/ThreeWayMatchPanel').then(m => ({ default: m.ThreeWayMatchPanel })));
 const AIThreeWayMatchPage = lazy(() => import('./features/inventory/pages/AIThreeWayMatchPage').then(m => ({ default: m.AIThreeWayMatchPage })));
-const FinanceDashboard = lazy(() => import('./features/finance/pages/FinanceDashboard').then(m => ({ default: m.FinanceDashboard })));
 const VendorRFQPage = lazy(() => import('./features/inventory/pages/VendorRFQPage').then(m => ({ default: m.VendorRFQPage })));
 const DailyPerishablesPanel = lazy(() => import('./features/inventory/pages/DailyPerishablesPanel').then(m => ({ default: m.DailyPerishablesPanel })));
 const CrmLayout = lazy(() => import('./features/crm/layouts/CrmLayout').then(m => ({ default: m.CrmLayout })));
@@ -75,6 +74,14 @@ const ShelfLifeRotationDashboard = lazy(() => import('./features/inventory/pages
 const YieldAnalysisPage = lazy(() => import('./features/inventory/pages/YieldAnalysisPage').then(m => ({ default: m.YieldAnalysisPage })));
 const SKUDetailPage = lazy(() => import('./features/inventory/pages/SKUDetailPage').then(m => ({ default: m.SKUDetailPage })));
 const RestockingAlertDashboard = lazy(() => import('./features/inventory/pages/RestockingAlertDashboard').then(m => ({ default: m.RestockingAlertDashboard })));
+
+// Finance Pages
+const FinanceLayout = lazy(() => import('./features/finance/layouts/FinanceLayout').then(m => ({ default: m.FinanceLayout })));
+const FinanceOverviewPage = lazy(() => import('./features/finance/pages/FinanceOverviewPage').then(m => ({ default: m.FinanceOverviewPage })));
+const LedgerPage = lazy(() => import('./features/finance/pages/LedgerPage').then(m => ({ default: m.LedgerPage })));
+const PnLPage = lazy(() => import('./features/finance/pages/PnLPage').then(m => ({ default: m.PnLPage })));
+const BalanceSheetPage = lazy(() => import('./features/finance/pages/BalanceSheetPage').then(m => ({ default: m.BalanceSheetPage })));
+const AccountsPage = lazy(() => import('./features/finance/pages/AccountsPage').then(m => ({ default: m.AccountsPage })));
 
 const PageLoader = () => (
     <div className="flex h-dvh w-full items-center justify-center">
@@ -242,11 +249,15 @@ function AppContent() {
             path="/finance"
             element={
               <ProtectedRoute allowedRoles={ADMIN_ROLES}>
-                <Outlet />
+                <FinanceLayout />
               </ProtectedRoute>
             }
           >
-            <Route index element={<FinanceDashboard />} />
+            <Route index element={<FinanceOverviewPage />} />
+            <Route path="ledger" element={<LedgerPage />} />
+            <Route path="pnl" element={<PnLPage />} />
+            <Route path="balance" element={<BalanceSheetPage />} />
+            <Route path="accounts" element={<AccountsPage />} />
           </Route>
 
           {/* Settings — admin only */}
