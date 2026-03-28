@@ -15,7 +15,8 @@ public record MenuItemResponse(
     String photoUrl,
     String createdAt,
     String updatedAt,
-    List<ModifierGroupResponse> modifierGroups
+    List<ModifierGroupResponse> modifierGroups,
+    Integer preparationTimeMinutes
 ) {
     public record ModifierGroupResponse(
         UUID id,

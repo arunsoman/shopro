@@ -374,6 +374,9 @@ public class OrderServiceImpl implements OrderService {
             item.setStatus(OrderItemStatus.SENT);
             orderItemRepository.save(item);
             
+            // US-5.1: Real-time Inventory Depletion
+            recipeService.depleteForOrderItem(item);
+            
             // EDP: Publish independent unit-level events for granular tracking (US-5.1)
             int totalQuantity = item.getQuantity();
             for (int i = 1; i <= totalQuantity; i++) {

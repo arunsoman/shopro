@@ -35,6 +35,7 @@ public class MenuItemServiceImpl implements MenuItemService {
     private final ModifierGroupRepository modifierGroupRepository;
     private final MenuItemMapper mapper;
     private final PhotoStorageService photoStorageService;
+    private final mls.sho.dms.application.service.inventory.RecipeService recipeService;
 
     @Override
     public MenuItemResponse create(CreateMenuItemRequest request, String performedBy) {
@@ -48,7 +49,13 @@ public class MenuItemServiceImpl implements MenuItemService {
         MenuItem item = mapper.toEntity(request);
         item.setCategory(category);
         item.setStatus(MenuItemStatus.DRAFT);
-        item.setPhotoUrl(request.photoUrl());
+        if (request.photoUrl() != null) {
+            item.setPhotoUrl(request.photoUrl());
+        }
+
+        if (request.preparationTimeMinutes() != null) {
+            item.setPreparationTimeMinutes(request.preparationTimeMinutes());
+        }
 
         if (request.modifierGroupIds() != null && !request.modifierGroupIds().isEmpty()) {
             int displayOrder = 0;
@@ -64,9 +71,14 @@ public class MenuItemServiceImpl implements MenuItemService {
         }
 
         MenuItem saved = menuItemRepository.save(item);
+
+        // Save Recipe if provided
+        if (request.recipeIngredients() != null && !request.recipeIngredients().isEmpty()) {
+            recipeService.updateRecipe(saved.getId(), new mls.sho.dms.application.dto.inventory.UpdateRecipeRequest(request.recipeIngredients()));
+        }
+
         return buildResponse(saved);
     }
-
     @Override
     public MenuItemResponse update(UUID id, UpdateMenuItemRequest request, String performedBy) {
         MenuItem item = getMenuItem(id);
@@ -77,13 +89,44 @@ public class MenuItemServiceImpl implements MenuItemService {
                 "An item with the name '" + request.name() + "' already exists in " + category.getName() + ".");
         }
 
+        // Requirement: Edit moves item to DRAFT if it was LIVE (PUBLISHED)
+        if (item.getStatus() == MenuItemStatus.PUBLISHED) {
+            item.setStatus(MenuItemStatus.DRAFT);
+        }
+
         mapper.updateEntityFromRequest(request, item);
         item.setCategory(category);
         if (request.photoUrl() != null) {
             item.setPhotoUrl(request.photoUrl());
         }
 
-        return buildResponse(menuItemRepository.save(item));
+        if (request.preparationTimeMinutes() != null) {
+            item.setPreparationTimeMinutes(request.preparationTimeMinutes());
+        }
+
+        // Update Modifier Groups
+        if (request.modifierGroupIds() != null) {
+            item.getModifierGroups().clear();
+            int displayOrder = 0;
+            for (UUID groupId : request.modifierGroupIds()) {
+                ModifierGroup group = modifierGroupRepository.findById(groupId)
+                    .orElseThrow(() -> new BusinessRuleException("Modifier Group not found with ID: " + groupId));
+
+                MenuItemModifierGroup link = new MenuItemModifierGroup();
+                link.setModifierGroup(group);
+                link.setDisplayOrder(displayOrder++);
+                item.addModifierGroup(link);
+            }
+        }
+
+        MenuItem saved = menuItemRepository.save(item);
+
+        // Update Recipe if provided
+        if (request.recipeIngredients() != null && !request.recipeIngredients().isEmpty()) {
+            recipeService.updateRecipe(saved.getId(), new mls.sho.dms.application.dto.inventory.UpdateRecipeRequest(request.recipeIngredients()));
+        }
+
+        return buildResponse(saved);
     }
 
     @Override
@@ -209,7 +252,8 @@ public class MenuItemServiceImpl implements MenuItemService {
             item.getPhotoUrl(),
             createdStr,
             updatedStr,
-            modifierGroupResponses
+            modifierGroupResponses,
+            item.getPreparationTimeMinutes()
         );
     }
 

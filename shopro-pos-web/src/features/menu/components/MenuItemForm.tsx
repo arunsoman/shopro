@@ -1,15 +1,18 @@
-import { useForm } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useCreateMenuItem, useUpdateMenuItem, useUploadMenuItemPhoto } from "../hooks/useMenuItems";
 import { useModifierGroups } from "../hooks/useModifiers";
+import { useIngredients, useSubRecipes, useRecipe } from "../../inventory/hooks/useInventory";
 import { CreateMenuItemRequestSchema } from "../schema/menuSchema";
 import type { CreateMenuItemRequest, MenuCategoryResponse, MenuItemResponse } from "../schema/menuSchema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Image as ImageIcon, X } from "lucide-react";
+import { Image as ImageIcon, X, Plus, Trash2, Clock, ChefHat, Layers, Settings2 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { cn } from "@/lib/utils";
 
 interface MenuItemFormProps {
     categories: MenuCategoryResponse[];
@@ -22,8 +25,16 @@ export function MenuItemForm({ categories, onComplete, item }: MenuItemFormProps
     const createItem = useCreateMenuItem();
     const updateItem = useUpdateMenuItem();
     const uploadPhoto = useUploadMenuItemPhoto();
+    
+    // Fetch dependencies
+    const { data: modifierGroups } = useModifierGroups();
+    const { data: allIngredients } = useIngredients(0, 100);
+    const { data: allSubRecipes } = useSubRecipes();
+    const { data: existingRecipe } = useRecipe(item?.id || "", false);
+
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(item?.photoUrl || null);
+    const [activeTab, setActiveTab] = useState("general");
 
     const form = useForm<CreateMenuItemRequest>({
         resolver: zodResolver(CreateMenuItemRequestSchema),
@@ -33,11 +44,28 @@ export function MenuItemForm({ categories, onComplete, item }: MenuItemFormProps
             basePrice: item?.basePrice || 0,
             categoryId: item?.categoryId || "",
             photoUrl: item?.photoUrl || "",
-            modifierGroupIds: [], // Current backend doesn't return these in MenuItemResponse yet, needs careful handling if needed
+            preparationTimeMinutes: (item as any)?.preparationTimeMinutes || 10,
+            modifierGroupIds: (item as any)?.modifierGroupResponses?.map((g: any) => g.id) || [],
+            recipeIngredients: [],
         },
     });
 
-    const { data: modifierGroups } = useModifierGroups();
+    const { fields, append, remove } = useFieldArray({
+        control: form.control,
+        name: "recipeIngredients",
+    });
+
+    // Load existing recipe into form
+    useEffect(() => {
+        if (existingRecipe?.ingredients) {
+            const formatted = existingRecipe.ingredients.map(ri => ({
+                ingredientId: ri.ingredientId || undefined,
+                subRecipeId: ri.subRecipeId || undefined,
+                quantity: ri.quantity
+            }));
+            form.setValue("recipeIngredients", formatted);
+        }
+    }, [existingRecipe, form]);
 
     const isEditing = !!item;
 
@@ -82,55 +110,227 @@ export function MenuItemForm({ categories, onComplete, item }: MenuItemFormProps
     };
 
     return (
-        <form onSubmit={form.handleSubmit(onSubmit)} className="max-w-xl space-y-6 rounded-lg border border-border bg-surface p-6 shadow-sm">
-            <div className="space-y-4">
-                <div className="space-y-2">
-                    <Label htmlFor="name">{t('menu.itemName')}</Label>
-                    <Input id="name" placeholder={t('menu.itemNamePlaceholder') || "e.g. Truffle Burger"} {...form.register("name")} />
-                    {form.formState.errors.name && <p className="text-xs text-red-500">{form.formState.errors.name.message}</p>}
-                </div>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <TabsList className="grid w-full grid-cols-4 bg-muted/20 p-1">
+                    <TabsTrigger value="general" className="flex items-center gap-2">
+                        <Settings2 className="h-4 w-4" />
+                        <span className="hidden sm:inline">{t('menu.generalTab')}</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="modifiers" className="flex items-center gap-2">
+                        <Layers className="h-4 w-4" />
+                        <span className="hidden sm:inline">{t('menu.modifiersTab')}</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="inventory" className="flex items-center gap-2">
+                        <ChefHat className="h-4 w-4" />
+                        <span className="hidden sm:inline">{t('menu.inventoryTab')}</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="media" className="flex items-center gap-2">
+                        <ImageIcon className="h-4 w-4" />
+                        <span className="hidden sm:inline">{t('menu.mediaTab')}</span>
+                    </TabsTrigger>
+                </TabsList>
 
-                <div className="space-y-2">
-                    <Label htmlFor="basePrice">{t('menu.basePrice')} ({t('common.currencySymbol')})</Label>
-                    <Input id="basePrice" type="number" step="0.01" {...form.register("basePrice", { valueAsNumber: true })} />
-                    {form.formState.errors.basePrice && <p className="text-xs text-red-500">{form.formState.errors.basePrice.message}</p>}
-                </div>
+                {/* GENERAL INFO */}
+                <TabsContent value="general" className="space-y-6 pt-6">
+                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="name">{t('menu.itemName')}</Label>
+                                <Input id="name" placeholder="e.g. Truffle Burger" {...form.register("name")} className="bg-background" />
+                                {form.formState.errors.name && <p className="text-xs text-red-500">{form.formState.errors.name.message}</p>}
+                            </div>
 
-                <div className="space-y-2">
-                    <Label htmlFor="categoryId">{t('menu.category')}</Label>
-                    <select
-                        id="categoryId"
-                        className="flex h-9 w-full rounded-md border border-border bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus:border-primary focus:outline-none"
-                        {...form.register("categoryId")}
-                    >
-                        <option value="">{t('menu.selectCategory')}</option>
-                        {categories.map(cat => (
-                            <option key={cat.id} value={cat.id}>{cat.name}</option>
-                        ))}
-                    </select>
-                    {form.formState.errors.categoryId && <p className="text-xs text-red-500">{form.formState.errors.categoryId.message}</p>}
-                </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="categoryId">{t('menu.category')}</Label>
+                                <select
+                                    id="categoryId"
+                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                                    {...form.register("categoryId")}
+                                >
+                                    <option value="">{t('menu.selectCategory')}</option>
+                                    {categories.map(cat => (
+                                        <option key={cat.id} value={cat.id}>{cat.name}</option>
+                                    ))}
+                                </select>
+                                {form.formState.errors.categoryId && <p className="text-xs text-red-500">{form.formState.errors.categoryId.message}</p>}
+                            </div>
+                        </div>
 
-                <div className="space-y-2">
-                    <Label htmlFor="photoFile">{t('menu.itemPhoto')}</Label>
-                    <div className="flex flex-col gap-4">
-                        <div className="relative flex h-32 w-48 items-center justify-center overflow-hidden rounded-md border-2 border-dashed border-muted bg-muted/5">
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="basePrice">{t('menu.basePrice')} ({t('common.currencySymbol')})</Label>
+                                <Input id="basePrice" type="number" step="0.01" {...form.register("basePrice", { valueAsNumber: true })} className="bg-background" />
+                                {form.formState.errors.basePrice && <p className="text-xs text-red-500">{form.formState.errors.basePrice.message}</p>}
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="preparationTime" className="flex items-center gap-2">
+                                    <Clock className="h-4 w-4" />
+                                    {t('menu.preparationTime')} ({t('common.minutesShort')})
+                                </Label>
+                                <Input id="preparationTime" type="number" {...form.register("preparationTimeMinutes", { valueAsNumber: true })} className="bg-background" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="description">{t('menu.description')}</Label>
+                        <textarea
+                            id="description"
+                            className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                            placeholder={t('menu.descriptionPlaceholder') || "Describe your item..."}
+                            {...form.register("description")}
+                        />
+                    </div>
+                </TabsContent>
+
+                {/* MODIFIERS */}
+                <TabsContent value="modifiers" className="space-y-4 pt-6">
+                    <div className="rounded-xl border bg-card p-6 shadow-sm">
+                        <Label className="mb-4 block text-lg font-medium">{t('menu.modifierGroups')}</Label>
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            {modifierGroups?.map(group => (
+                                <label
+                                    key={group.id}
+                                    className={cn(
+                                        "flex cursor-pointer items-center justify-between rounded-lg border p-4 transition-all hover:bg-muted/50",
+                                        form.watch("modifierGroupIds")?.includes(group.id) ? "border-primary bg-primary/5" : "border-border"
+                                    )}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <input
+                                            type="checkbox"
+                                            value={group.id}
+                                            className="h-4 w-4 rounded border-primary text-primary"
+                                            {...form.register("modifierGroupIds")}
+                                        />
+                                        <div>
+                                            <p className="font-medium">{group.name}</p>
+                                            <p className="text-xs text-muted-foreground">
+                                                {group.required ? t('common.required') : t('common.optional')} • {group.options.length} {t('menu.options')}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </label>
+                            ))}
+                        </div>
+                    </div>
+                </TabsContent>
+
+                {/* INVENTORY / RECIPE */}
+                <TabsContent value="inventory" className="space-y-6 pt-6">
+                    <div className="rounded-xl border bg-card shadow-sm">
+                        <div className="flex items-center justify-between border-b p-6">
+                            <div>
+                                <h3 className="text-lg font-medium">{t('menu.recipeBuilder')}</h3>
+                                <p className="text-sm text-muted-foreground">{t('menu.recipeDesc')}</p>
+                            </div>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => append({ ingredientId: "", quantity: 0 })}
+                                className="flex items-center gap-2"
+                            >
+                                <Plus className="h-4 w-4" />
+                                {t('menu.addIngredient')}
+                            </Button>
+                        </div>
+                        
+                        <div className="p-6">
+                            {fields.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                                    <ChefHat className="mb-2 h-12 w-12 opacity-20" />
+                                    <p>{t('menu.noIngredients')}</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    {fields.map((field, index) => (
+                                        <div key={field.id} className="flex items-end gap-4 rounded-lg border bg-muted/10 p-4">
+                                            <div className="flex-1 space-y-2">
+                                                <Label>{t('menu.ingredientOrSubRecipe')}</Label>
+                                                <select
+                                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                                                    {...form.register(`recipeIngredients.${index}.ingredientId` as const)}
+                                                    onChange={(e) => {
+                                                        const val = e.target.value;
+                                                        if (val.startsWith("sub:")) {
+                                                            form.setValue(`recipeIngredients.${index}.subRecipeId`, val.replace("sub:", ""));
+                                                            form.setValue(`recipeIngredients.${index}.ingredientId`, undefined);
+                                                        } else {
+                                                            form.setValue(`recipeIngredients.${index}.ingredientId`, val);
+                                                            form.setValue(`recipeIngredients.${index}.subRecipeId`, undefined);
+                                                        }
+                                                    }}
+                                                >
+                                                    <option value="">{t('menu.selectIngredient')}</option>
+                                                    <optgroup label={t('menu.rawIngredients')}>
+                                                        {allIngredients?.content.map(ing => (
+                                                            <option key={ing.id} value={ing.id}>{ing.name} ({ing.unitOfMeasure})</option>
+                                                        ))}
+                                                    </optgroup>
+                                                    <optgroup label={t('menu.subRecipes')}>
+                                                        {allSubRecipes?.map(sr => (
+                                                            <option key={sr.id} value={`sub:${sr.id}`}>{sr.name} ({sr.unitOfMeasure})</option>
+                                                        ))}
+                                                    </optgroup>
+                                                </select>
+                                            </div>
+
+                                            <div className="w-32 space-y-2">
+                                                <Label>{t('menu.quantity')}</Label>
+                                                <Input
+                                                    type="number"
+                                                    step="0.0001"
+                                                    {...form.register(`recipeIngredients.${index}.quantity` as const, { valueAsNumber: true })}
+                                                    className="bg-background"
+                                                />
+                                            </div>
+
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={() => remove(index)}
+                                                className="text-red-500 hover:bg-red-50 hover:text-red-600"
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </TabsContent>
+
+                {/* MEDIA */}
+                <TabsContent value="media" className="space-y-6 pt-6">
+                    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed p-12 text-center">
+                        <div className="relative mb-6 h-48 w-64 overflow-hidden rounded-2xl border bg-muted/30 shadow-inner">
                             {previewUrl ? (
                                 <>
                                     <img src={previewUrl} alt="Preview" className="h-full w-full object-cover" />
                                     <button
                                         type="button"
                                         onClick={clearFile}
-                                        className="absolute right-1 top-1 rounded-full bg-red-500 p-1 text-white hover:bg-red-600"
+                                        className="absolute right-3 top-3 rounded-full bg-red-500 p-2 text-white shadow-lg hover:bg-red-600 transition-transform active:scale-95"
                                     >
-                                        <X size={12} />
+                                        <X size={16} />
                                     </button>
                                 </>
                             ) : (
-                                <ImageIcon size={24} className="text-muted-foreground opacity-30" />
+                                <div className="flex h-full w-full flex-col items-center justify-center gap-3">
+                                    <ImageIcon size={48} className="text-muted-foreground opacity-20" />
+                                    <p className="text-sm text-muted-foreground">{t('menu.noImageSelected')}</p>
+                                </div>
                             )}
                         </div>
-                        <div className="flex items-center gap-4">
+                        
+                        <div className="max-w-xs space-y-4">
+                            <h3 className="text-lg font-medium">{t('menu.uploadNewImage')}</h3>
+                            <p className="text-xs text-muted-foreground">{t('menu.imageRequirements')}</p>
                             <Input
                                 id="photoFile"
                                 type="file"
@@ -140,52 +340,39 @@ export function MenuItemForm({ categories, onComplete, item }: MenuItemFormProps
                             />
                         </div>
                     </div>
-                </div>
-
-                <div className="space-y-2">
-                    <Label htmlFor="description">{t('menu.description')} ({t('common.optional')})</Label>
-                    <textarea
-                        id="description"
-                        className="flex w-full rounded-md border border-border bg-transparent px-3 py-2 text-sm shadow-sm transition-colors focus:border-primary focus:outline-none"
-                        rows={3}
-                        {...form.register("description")}
-                    />
-                    {form.formState.errors.description && <p className="text-xs text-red-500">{form.formState.errors.description.message}</p>}
-                </div>
-
-                {modifierGroups && modifierGroups.length > 0 && (
-                    <div className="space-y-3 pt-2">
-                        <Label>{t('menu.modifierGroups')} ({t('common.optional')})</Label>
-                        <div className="rounded-md border border-border bg-muted/5 p-4 space-y-2">
-                            {modifierGroups.map(group => (
-                                <div key={group.id} className="flex items-center space-x-2">
-                                    <input
-                                        type="checkbox"
-                                        id={`modifier-${group.id}`}
-                                        value={group.id}
-                                        className="h-4 w-4 rounded border-border bg-background text-primary focus:ring-primary"
-                                        {...form.register("modifierGroupIds")}
-                                    />
-                                    <Label htmlFor={`modifier-${group.id}`} className="font-normal cursor-pointer text-foreground">
-                                        {group.name} <span className="text-xs text-muted ml-1">({group.required ? t('common.required') : t('common.optional')})</span>
-                                    </Label>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
-            </div>
+                </TabsContent>
+            </Tabs>
 
             {form.formState.errors.root && (
-                <div className="rounded-md bg-red-50 p-3 text-sm text-red-500 dark:bg-red-900/10">
+                <div className="rounded-lg bg-red-50 p-4 text-sm text-red-600 dark:bg-red-900/10">
                     {form.formState.errors.root.message}
                 </div>
             )}
 
-            <div className="flex justify-end pt-4">
-                <Button type="submit" disabled={createItem.isPending || updateItem.isPending || uploadPhoto.isPending}>
-                    {createItem.isPending || updateItem.isPending || uploadPhoto.isPending ? t('common.processing') : (isEditing ? t('common.saveChanges') : t('menu.createItem'))}
-                </Button>
+            <div className="sticky bottom-0 flex items-center justify-between border-t bg-background/80 py-6 backdrop-blur-sm">
+                <div className="hidden sm:block">
+                    {isEditing && (
+                        <p className="text-xs text-muted-foreground italic">
+                            {t('menu.editWarning')}
+                        </p>
+                    )}
+                </div>
+                <div className="flex gap-4">
+                    <Button type="button" variant="outline" onClick={onComplete}>
+                        {t('common.cancel')}
+                    </Button>
+                    <Button 
+                        type="submit" 
+                        size="lg"
+                        disabled={createItem.isPending || updateItem.isPending || uploadPhoto.isPending}
+                        className="px-8"
+                    >
+                        {createItem.isPending || updateItem.isPending || uploadPhoto.isPending 
+                            ? t('common.processing') 
+                            : (isEditing ? t('common.saveChanges') : t('menu.createItem'))
+                        }
+                    </Button>
+                </div>
             </div>
         </form>
     );

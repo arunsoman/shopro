@@ -38,6 +38,15 @@ export const MenuItemResponseSchema = z.object({
 });
 
 export type MenuItemResponse = z.infer<typeof MenuItemResponseSchema>;
+export type MenuItemStatus = z.infer<typeof MenuItemResponseSchema.shape.status>;
+
+export const UpdateRecipeIngredientRequestSchema = z.object({
+    ingredientId: z.string().uuid().optional().nullable(),
+    subRecipeId: z.string().uuid().optional().nullable(),
+    quantity: z.number().min(0, "Quantity must be positive"),
+});
+
+export type UpdateRecipeIngredientRequest = z.infer<typeof UpdateRecipeIngredientRequestSchema>;
 
 export const CreateMenuItemRequestSchema = z.object({
     name: z.string().min(1, "Name is required").max(60, "Maximum 60 characters"),
@@ -46,6 +55,8 @@ export const CreateMenuItemRequestSchema = z.object({
     categoryId: z.string().uuid("Category is required"),
     photoUrl: z.string().optional().nullable(),
     modifierGroupIds: z.array(z.string().uuid()).optional(),
+    preparationTimeMinutes: z.number().int().min(0).optional().nullable(),
+    recipeIngredients: z.array(UpdateRecipeIngredientRequestSchema).optional(),
 });
 
 export type CreateMenuItemRequest = z.infer<typeof CreateMenuItemRequestSchema>;

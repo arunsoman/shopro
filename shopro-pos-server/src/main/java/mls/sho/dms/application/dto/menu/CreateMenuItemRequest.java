@@ -27,5 +27,9 @@ public record CreateMenuItemRequest(
 
     String photoUrl,
 
-    java.util.List<UUID> modifierGroupIds
+    java.util.List<UUID> modifierGroupIds,
+
+    Integer preparationTimeMinutes,
+
+    java.util.List<mls.sho.dms.application.dto.inventory.UpdateRecipeIngredientRequest> recipeIngredients
 ) {}

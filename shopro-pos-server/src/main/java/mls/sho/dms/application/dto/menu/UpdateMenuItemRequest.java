@@ -25,5 +25,11 @@ public record UpdateMenuItemRequest(
     @NotNull(message = "Category is required.")
     UUID categoryId,
 
-    String photoUrl
+    String photoUrl,
+
+    Integer preparationTimeMinutes,
+
+    java.util.List<UUID> modifierGroupIds,
+
+    java.util.List<mls.sho.dms.application.dto.inventory.UpdateRecipeIngredientRequest> recipeIngredients
 ) {}
