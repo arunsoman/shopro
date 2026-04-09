@@ -1,15 +1,14 @@
 package mls.sho.dms.application.service.inventory.impl;
 
 import mls.sho.dms.application.event.inventory.RFQStateChangedEvent;
-import mls.sho.dms.entity.inventory.RFQ;
-import mls.sho.dms.entity.inventory.RFQStatusHistory;
-import mls.sho.dms.entity.inventory.RfqStatus;
+import mls.sho.dms.entity.inventory.procurement.RFQ;
+import mls.sho.dms.entity.inventory.procurement.RFQStatusHistory;
+import mls.sho.dms.entity.inventory.procurement.RfqStatus;
 import mls.sho.dms.repository.inventory.RFQRepository;
 import mls.sho.dms.repository.inventory.RFQStatusHistoryRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;

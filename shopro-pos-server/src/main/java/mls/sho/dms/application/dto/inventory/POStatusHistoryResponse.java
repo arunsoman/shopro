@@ -2,7 +2,7 @@ package mls.sho.dms.application.dto.inventory;
 
 import lombok.Builder;
 import lombok.Data;
-import mls.sho.dms.entity.inventory.PurchaseOrderStatus;
+import mls.sho.dms.entity.inventory.procurement.PurchaseOrderStatus;
 import java.time.Instant;
 import java.util.UUID;
 

@@ -1,0 +1,163 @@
+====================================================
+SHOPRO-RES ALL CONTROLLERS TEST REPORT
+Generated at: Tuesday 31 March 2026 02:37:04 AM IST
+====================================================
+
+## 1. POS CONTROLLER
+
+### Get Tables
+URL: http://localhost:8080/api/pos/tables?restaurantId=1
+Method: GET
+{
+  "timestamp": "2026-03-30T21:07:04.405+00:00",
+  "status": 500,
+  "error": "Internal Server Error",
+  "path": "/api/pos/tables"
+}
+
+## 2. INVENTORY CONTROLLER
+
+### Get Ingredients
+URL: http://localhost:8080/api/inventory/ingredients?restaurantId=1
+Method: GET
+{
+  "timestamp": "2026-03-30T21:07:04.459+00:00",
+  "status": 500,
+  "error": "Internal Server Error",
+  "path": "/api/inventory/ingredients"
+}
+
+### Get Low Stock Count
+URL: http://localhost:8080/api/inventory/ingredients/low-stock?restaurantId=1
+Method: GET
+{
+  "timestamp": "2026-03-30T21:07:04.480+00:00",
+  "status": 404,
+  "error": "Not Found",
+  "path": "/api/inventory/ingredients/low-stock"
+}
+
+## 3. PURCHASING CONTROLLER
+
+### Get Suppliers
+URL: http://localhost:8080/api/purchasing/suppliers?restaurantId=1
+Method: GET
+{
+  "timestamp": "2026-03-30T21:07:04.517+00:00",
+  "status": 500,
+  "error": "Internal Server Error",
+  "path": "/api/purchasing/suppliers"
+}
+
+## 4. COSTING CONTROLLER
+
+### Get Menu Items
+URL: http://localhost:8080/api/costing/menu-items?restaurantId=1
+Method: GET
+{
+  "timestamp": "2026-03-30T21:07:04.547+00:00",
+  "status": 404,
+  "error": "Not Found",
+  "path": "/api/costing/menu-items"
+}
+
+## 5. ANALYTICS CONTROLLER
+
+### Get Sales Summary
+URL: http://localhost:8080/api/analytics/sales-summary?restaurantId=1
+Method: GET
+{
+  "timestamp": "2026-03-30T21:07:04.593+00:00",
+  "status": 404,
+  "error": "Not Found",
+  "path": "/api/analytics/sales-summary"
+}
+
+## 6. LABOR CONTROLLER
+
+### Create Employee
+URL: http://localhost:8080/api/labor/restaurants/1/employees
+Method: POST
+Input: {"name":"Test User","employeeType":"HOURLY","hourlyRate":20.00}
+{
+  "id": 3,
+  "restaurant": {
+    "id": 1,
+    "name": "Shopro Gourmet Test Kitchen",
+    "timezone": "Asia/Kolkata",
+    "createdAt": "2026-03-31T02:27:03.151982",
+    "updatedAt": "2026-03-31T02:27:03.152001"
+  },
+  "name": "Test User",
+  "employeeType": "HOURLY",
+  "hourlyRate": 20.00,
+  "annualSalary": null,
+  "active": true,
+  "createdAt": "2026-03-31T02:37:04.625555038"
+}
+
+### Get Employees
+URL: http://localhost:8080/api/labor/restaurants/1/employees
+Method: GET
+[
+  {
+    "id": 2,
+    "name": "Jane Smith",
+    "employeeType": "MANAGEMENT",
+    "hourlyRate": null,
+    "annualSalary": 52000.00,
+    "active": true
+  },
+  {
+    "id": 1,
+    "name": "John Doe",
+    "employeeType": "HOURLY",
+    "hourlyRate": 15.50,
+    "annualSalary": null,
+    "active": true
+  },
+  {
+    "id": 3,
+    "name": "Test User",
+    "employeeType": "HOURLY",
+    "hourlyRate": 20.00,
+    "annualSalary": null,
+    "active": true
+  }
+]
+
+## 7. PRIME COST CONTROLLER
+
+### Get Live Prime Cost
+URL: http://localhost:8080/api/prime-cost/live/1
+Method: GET
+{
+  "restaurantId": 1,
+  "grossSalesToDate": 4275.00,
+  "theoreticalCosToDate": 0,
+  "postedPurchasesThisWeek": 0,
+  "laborAccrualToDate": 1220.00,
+  "livePrimeCostPct": 0.2854
+}
+
+### Get Weekly Report
+URL: http://localhost:8080/api/prime-cost/weekly/1?weekStart=2026-03-29
+Method: GET
+{
+  "id": 1,
+  "restaurantId": 1,
+  "weekStartDate": "2026-03-29",
+  "netSales": 4275.00,
+  "actualFoodCos": 0.00,
+  "actualBevCos": null,
+  "theoreticalCos": 0.00,
+  "hourlyLabor": 0.00,
+  "mgmtLabor": 1000.00,
+  "primeCostGross": 1220.00,
+  "primeCostGrossPct": 0.2854,
+  "status": "FINALISED"
+}
+
+====================================================
+TEST COMPLETED
+====================================================

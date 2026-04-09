@@ -9,7 +9,7 @@ import mls.sho.dms.application.dto.menu.CreateMenuItemRequest;
 import mls.sho.dms.application.dto.menu.MenuItemResponse;
 import mls.sho.dms.application.dto.menu.UpdateMenuItemRequest;
 import mls.sho.dms.application.service.MenuItemService;
-import mls.sho.dms.entity.menu.MenuItemStatus;
+import mls.sho.dms.entity.inventory.menu.MenuItemStatus;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;

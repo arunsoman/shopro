@@ -1,7 +1,6 @@
 package mls.sho.dms.application.service.auth;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import mls.sho.dms.application.dto.auth.PinLoginRequest;
 import mls.sho.dms.application.dto.auth.StaffSessionResponse;
 import mls.sho.dms.application.dto.auth.SupplierLoginRequest;
@@ -10,7 +9,7 @@ import mls.sho.dms.entity.staff.StaffMember;
 import mls.sho.dms.repository.staff.StaffRepository;
 import mls.sho.dms.repository.staff.DeviceBindingRepository;
 import mls.sho.dms.repository.inventory.SupplierUserRepository;
-import mls.sho.dms.entity.inventory.SupplierUser;
+import mls.sho.dms.entity.inventory.vendor.SupplierUser;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,7 +18,6 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import mls.sho.dms.entity.staff.Permission;

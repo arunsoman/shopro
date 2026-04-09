@@ -1,0 +1,13 @@
+# Backend .gitignore
+
+# Build
+build/
+.gradle/
+bin/
+
+# IDEs
+.idea/
+*.iml
+
+# OS
+.DS_Store

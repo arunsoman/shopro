@@ -1,0 +1,7 @@
+/* 1. Imports FIRST */
+@import './lib/theme/tokens.css';
+
+/* 2. Tailwind directives after */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

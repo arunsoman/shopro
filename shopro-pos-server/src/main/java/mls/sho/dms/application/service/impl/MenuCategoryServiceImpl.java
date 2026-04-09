@@ -8,7 +8,8 @@ import mls.sho.dms.application.exception.BusinessRuleException;
 import mls.sho.dms.application.exception.ResourceNotFoundException;
 import mls.sho.dms.application.mapper.MenuCategoryMapper;
 import mls.sho.dms.application.service.MenuCategoryService;
-import mls.sho.dms.entity.menu.MenuCategory;
+import mls.sho.dms.entity.inventory.menu.MenuItemStatus;
+import mls.sho.dms.entity.inventory.menu.MenuCategory;
 import mls.sho.dms.repository.menu.MenuCategoryRepository;
 import mls.sho.dms.repository.menu.MenuItemRepository;
 import org.springframework.stereotype.Service;
@@ -76,7 +77,7 @@ public class MenuCategoryServiceImpl implements MenuCategoryService {
     public void delete(UUID id) {
         MenuCategory category = getMenuCategory(id);
         
-        long publishedItemsCount = menuItemRepository.countByCategoryAndStatus(category, mls.sho.dms.entity.menu.MenuItemStatus.PUBLISHED);
+        long publishedItemsCount = menuItemRepository.countByCategoryAndStatus(category, MenuItemStatus.PUBLISHED);
         if (publishedItemsCount > 0) {
             throw new BusinessRuleException("Category has " + publishedItemsCount + " published items. Reassign or archive them first.");
         }

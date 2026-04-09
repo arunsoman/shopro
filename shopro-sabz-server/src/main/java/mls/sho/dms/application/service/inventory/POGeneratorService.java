@@ -1,0 +1,36 @@
+package mls.sho.dms.application.service.inventory;
+
+import mls.sho.dms.entity.inventory.PurchaseOrder;
+import java.util.UUID;
+
+/**
+ * Service for generating Purchase Orders from various source entities.
+ */
+public interface POGeneratorService {
+
+    /**
+     * Creates a DRAFT PO from an RFQ. No supplier assigned yet.
+     */
+    PurchaseOrder createFromRfq(UUID rfqId, UUID staffId);
+
+    /**
+     * Awards an existing PO (linked to an RFQ) to a winning VendorBid.
+     */
+    PurchaseOrder awardPo(UUID rfqId, UUID bidId, UUID staffId);
+
+    /**
+     * Creates a DRAFT PO from an awarded VendorBid (Legacy/Direct path).
+     */
+    PurchaseOrder createFromBid(UUID bidId, UUID staffId);
+
+    /**
+     * Creates a DRAFT PO from an accepted VendorPriceProposal.
+     */
+    PurchaseOrder createFromProposal(UUID proposalId, UUID staffId);
+    
+    /**
+     * Creates a DRAFT or SENT PO directly based on Ingredient's primary supplier.
+     * Used for AUTO restocking mode.
+     */
+    PurchaseOrder generateAutoPO(mls.sho.dms.entity.inventory.RawIngredient ingredient);
+}

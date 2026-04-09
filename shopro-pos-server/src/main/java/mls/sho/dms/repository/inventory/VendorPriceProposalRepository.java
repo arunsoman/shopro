@@ -1,7 +1,7 @@
 package mls.sho.dms.repository.inventory;
 
-import mls.sho.dms.entity.inventory.VendorPriceProposal;
-import mls.sho.dms.entity.inventory.VendorPriceProposalStatus;
+import mls.sho.dms.entity.inventory.vendor.VendorPriceProposal;
+import mls.sho.dms.entity.inventory.vendor.VendorPriceProposalStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

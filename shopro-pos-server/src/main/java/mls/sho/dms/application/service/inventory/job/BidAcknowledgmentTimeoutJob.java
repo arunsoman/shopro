@@ -2,9 +2,8 @@ package mls.sho.dms.application.service.inventory.job;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import mls.sho.dms.application.service.inventory.BidStateMachineService;
-import mls.sho.dms.entity.inventory.VendorBid;
-import mls.sho.dms.entity.inventory.VendorBidStatus;
+import mls.sho.dms.entity.inventory.vendor.VendorBid;
+import mls.sho.dms.entity.inventory.vendor.VendorBidStatus;
 import mls.sho.dms.repository.inventory.VendorBidRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;

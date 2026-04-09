@@ -1,0 +1,14 @@
+package mls.sho.dms.entity.inventory.vendor;
+
+/**
+ * Status of a Vendor's bid against an RFQ.
+ */
+public enum VendorBidStatus {
+    SUBMITTED,
+    OVER_CEILING,
+    WON,
+    LOST,
+    REJECTED,
+    ACKNOWLEDGED,
+    UNACKED
+}

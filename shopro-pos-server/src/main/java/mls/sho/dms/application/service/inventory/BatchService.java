@@ -1,8 +1,6 @@
 package mls.sho.dms.application.service.inventory;
 
-import mls.sho.dms.entity.inventory.BatchRecord;
-import mls.sho.dms.entity.inventory.SubRecipe;
-import mls.sho.dms.entity.staff.StaffMember;
+import mls.sho.dms.entity.inventory.recipe.BatchRecord;
 
 import java.math.BigDecimal;
 import java.time.Instant;

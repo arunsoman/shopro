@@ -1,6 +1,6 @@
 package mls.sho.dms.application.dto.inventory;
 
-import mls.sho.dms.entity.inventory.VendorBidStatus;
+import mls.sho.dms.entity.inventory.vendor.VendorBidStatus;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;

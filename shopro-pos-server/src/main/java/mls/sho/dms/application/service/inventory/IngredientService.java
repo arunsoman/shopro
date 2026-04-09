@@ -3,8 +3,7 @@ package mls.sho.dms.application.service.inventory;
 import mls.sho.dms.application.dto.inventory.CreateIngredientRequest;
 import mls.sho.dms.application.dto.inventory.UpdateIngredientRequest;
 import mls.sho.dms.application.dto.inventory.IngredientResponse;
-import mls.sho.dms.application.dto.inventory.LogWasteRequest;
-import mls.sho.dms.entity.inventory.InventoryTransactionType;
+import mls.sho.dms.entity.inventory.stock.InventoryTransactionType;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

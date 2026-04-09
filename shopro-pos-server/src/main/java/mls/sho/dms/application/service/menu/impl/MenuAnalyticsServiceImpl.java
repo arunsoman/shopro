@@ -7,7 +7,7 @@ import mls.sho.dms.application.dto.analytics.MenuItemPerformanceDTO;
 import mls.sho.dms.application.dto.inventory.RecipeResponse;
 import mls.sho.dms.application.service.inventory.RecipeService;
 import mls.sho.dms.application.service.menu.MenuAnalyticsService;
-import mls.sho.dms.entity.menu.MenuItem;
+import mls.sho.dms.entity.inventory.menu.MenuItem;
 import mls.sho.dms.repository.menu.MenuItemRepository;
 import mls.sho.dms.repository.order.OrderItemRepository;
 import org.springframework.stereotype.Service;

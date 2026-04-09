@@ -1,6 +1,6 @@
 package mls.sho.dms.repository.menu;
 
-import mls.sho.dms.entity.menu.MenuItemRating;
+import mls.sho.dms.entity.inventory.menu.MenuItemRating;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

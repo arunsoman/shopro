@@ -1,8 +1,8 @@
 package mls.sho.dms.application.event.inventory;
 
 import lombok.Getter;
-import mls.sho.dms.entity.inventory.RFQ;
-import mls.sho.dms.entity.inventory.RfqStatus;
+import mls.sho.dms.entity.inventory.procurement.RFQ;
+import mls.sho.dms.entity.inventory.procurement.RfqStatus;
 import org.springframework.context.ApplicationEvent;
 
 import java.util.UUID;

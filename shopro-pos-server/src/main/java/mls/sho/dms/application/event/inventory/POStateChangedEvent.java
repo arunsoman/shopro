@@ -1,7 +1,7 @@
 package mls.sho.dms.application.event.inventory;
 
-import mls.sho.dms.entity.inventory.PurchaseOrder;
-import mls.sho.dms.entity.inventory.PurchaseOrderStatus;
+import mls.sho.dms.entity.inventory.procurement.PurchaseOrder;
+import mls.sho.dms.entity.inventory.procurement.PurchaseOrderStatus;
 import org.springframework.context.ApplicationEvent;
 
 import java.util.UUID;

@@ -8,8 +8,8 @@ import mls.sho.dms.application.dto.menu.ModifierGroupDTOs.ModifierOptionResponse
 import mls.sho.dms.application.exception.BusinessRuleException;
 import mls.sho.dms.application.exception.ResourceNotFoundException;
 import mls.sho.dms.application.service.menu.ModifierGroupService;
-import mls.sho.dms.entity.menu.ModifierGroup;
-import mls.sho.dms.entity.menu.ModifierOption;
+import mls.sho.dms.entity.inventory.menu.ModifierGroup;
+import mls.sho.dms.entity.inventory.menu.ModifierOption;
 import mls.sho.dms.entity.staff.AuditLog;
 import mls.sho.dms.repository.menu.ModifierGroupRepository;
 import mls.sho.dms.repository.staff.AuditLogRepository;

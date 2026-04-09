@@ -2,7 +2,7 @@ package mls.sho.dms.entity.order;
 
 import jakarta.persistence.*;
 import mls.sho.dms.entity.core.BaseEntity;
-import mls.sho.dms.entity.menu.ModifierOption;
+import mls.sho.dms.entity.inventory.menu.ModifierOption;
 
 import java.math.BigDecimal;
 

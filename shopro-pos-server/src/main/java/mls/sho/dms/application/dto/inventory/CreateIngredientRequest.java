@@ -1,8 +1,9 @@
 package mls.sho.dms.application.dto.inventory;
 
 import jakarta.validation.constraints.*;
-import mls.sho.dms.entity.inventory.RestockingMode;
-import mls.sho.dms.entity.inventory.StorageType;
+import mls.sho.dms.entity.inventory.stock.RestockingMode;
+import mls.sho.dms.entity.inventory.ingredient.StorageType;
+import mls.sho.dms.entity.inventory.ingredient.Allergen;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -62,7 +63,7 @@ public record CreateIngredientRequest(
 
     List<UUID> bidSupplierPool,
 
-    java.util.Set<mls.sho.dms.entity.inventory.Allergen> allergens,
+    java.util.Set<Allergen> allergens,
 
     UUID supplierId,
     int bidClosingDays,

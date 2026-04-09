@@ -8,7 +8,7 @@ import mls.sho.dms.application.dto.inventory.RFQResponse;
 import mls.sho.dms.application.dto.inventory.VendorBidRequest;
 import mls.sho.dms.application.dto.inventory.VendorBidResponse;
 import mls.sho.dms.application.service.inventory.RFQService;
-import mls.sho.dms.entity.inventory.RfqStatus;
+import mls.sho.dms.entity.inventory.procurement.RfqStatus;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 

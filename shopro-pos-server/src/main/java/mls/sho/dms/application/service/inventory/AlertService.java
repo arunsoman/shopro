@@ -1,6 +1,6 @@
 package mls.sho.dms.application.service.inventory;
 
-import mls.sho.dms.entity.inventory.RawIngredient;
+import mls.sho.dms.entity.inventory.ingredient.RawIngredient;
 
 public interface AlertService {
     void sendSafetyStockAlert(RawIngredient ingredient);

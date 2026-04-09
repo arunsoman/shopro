@@ -12,8 +12,8 @@ import { SupplierAuthProvider } from './features/auth/SupplierAuthContext';
 import type { StaffRole } from '@/lib/auth/AuthContext';
 
 // --- Lazy loaded Layouts ---
-const AuthenticatedLayout = lazy(() => import('./components/layout/AuthenticatedLayout'));
-const SupplierPortalAuthenticatedLayout = lazy(() => import('./features/inventory/layouts/SupplierPortalAuthenticatedLayout'));
+// const AuthenticatedLayout = lazy(() => import('./components/layout/AuthenticatedLayout'));
+// const SupplierPortalAuthenticatedLayout = lazy(() => import('./features/inventory/layouts/SupplierPortalAuthenticatedLayout'));
 
 // --- Lazy loaded features ---
 const LoginPage = lazy(() => import('./features/auth/pages/LoginPage').then(m => ({ default: m.LoginPage })));
@@ -318,7 +318,7 @@ function AppContent() {
           path="/admin/notifications"
           element={
             <ProtectedRoute allowedRoles={ADMIN_ROLES}>
-              <AuthenticatedLayout />
+              {/* <AuthenticatedLayout /> */}
             </ProtectedRoute>
           }
         >
@@ -347,7 +347,7 @@ function AppContent() {
           <Route
             element={
               <SupplierProtectedRoute>
-                <SupplierPortalAuthenticatedLayout />
+                {/* <SupplierPortalAuthenticatedLayout /> */}
               </SupplierProtectedRoute>
             }
           >

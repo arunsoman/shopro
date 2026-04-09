@@ -4,16 +4,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import mls.sho.dms.application.event.inventory.POStateChangedEvent;
 import mls.sho.dms.application.service.inventory.POStateMachineService;
-import mls.sho.dms.entity.inventory.POStatusHistory;
-import mls.sho.dms.entity.inventory.PurchaseOrder;
-import mls.sho.dms.entity.inventory.PurchaseOrderStatus;
+import mls.sho.dms.entity.inventory.procurement.POStatusHistory;
+import mls.sho.dms.entity.inventory.procurement.PurchaseOrder;
+import mls.sho.dms.entity.inventory.procurement.PurchaseOrderStatus;
 import mls.sho.dms.repository.inventory.POStatusHistoryRepository;
 import mls.sho.dms.repository.inventory.PurchaseOrderRepository;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
 import java.util.*;
 
 @Slf4j

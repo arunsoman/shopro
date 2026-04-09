@@ -2,7 +2,7 @@ package mls.sho.dms.application.service.inventory.job;
 
 import mls.sho.dms.application.service.inventory.AlertService;
 import mls.sho.dms.application.service.inventory.RFQService;
-import mls.sho.dms.entity.inventory.RawIngredient;
+import mls.sho.dms.entity.inventory.ingredient.RawIngredient;
 import mls.sho.dms.repository.inventory.RawIngredientRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

@@ -1,0 +1,774 @@
+====================================================
+SHOPRO-RES ALL CONTROLLERS TEST REPORT
+Generated at: Tuesday 31 March 2026 02:42:03 AM IST
+====================================================
+
+## 1. POS CONTROLLER
+
+### Get Tables
+URL: http://localhost:8080/api/pos/tables?restaurantId=1
+Method: GET
+[
+  {
+    "id": 1,
+    "tableNumber": "1",
+    "capacity": 4,
+    "status": "OCCUPIED",
+    "posX": null,
+    "posY": null
+  },
+  {
+    "id": 10,
+    "tableNumber": "10",
+    "capacity": 4,
+    "status": "AVAILABLE",
+    "posX": null,
+    "posY": null
+  },
+  {
+    "id": 11,
+    "tableNumber": "11",
+    "capacity": 4,
+    "status": "AVAILABLE",
+    "posX": null,
+    "posY": null
+  },
+  {
+    "id": 12,
+    "tableNumber": "12",
+    "capacity": 4,
+    "status": "AVAILABLE",
+    "posX": null,
+    "posY": null
+  },
+  {
+    "id": 13,
+    "tableNumber": "13",
+    "capacity": 4,
+    "status": "AVAILABLE",
+    "posX": null,
+    "posY": null
+  },
+  {
+    "id": 14,
+    "tableNumber": "14",
+    "capacity": 4,
+    "status": "AVAILABLE",
+    "posX": null,
+    "posY": null
+  },
+  {
+    "id": 15,
+    "tableNumber": "15",
+    "capacity": 4,
+    "status": "AVAILABLE",
+    "posX": null,
+    "posY": null
+  },
+  {
+    "id": 16,
+    "tableNumber": "16",
+    "capacity": 4,
+    "status": "AVAILABLE",
+    "posX": null,
+    "posY": null
+  },
+  {
+    "id": 17,
+    "tableNumber": "17",
+    "capacity": 4,
+    "status": "AVAILABLE",
+    "posX": null,
+    "posY": null
+  },
+  {
+    "id": 18,
+    "tableNumber": "18",
+    "capacity": 4,
+    "status": "AVAILABLE",
+    "posX": null,
+    "posY": null
+  },
+  {
+    "id": 19,
+    "tableNumber": "19",
+    "capacity": 4,
+    "status": "AVAILABLE",
+    "posX": null,
+    "posY": null
+  },
+  {
+    "id": 2,
+    "tableNumber": "2",
+    "capacity": 4,
+    "status": "OCCUPIED",
+    "posX": null,
+    "posY": null
+  },
+  {
+    "id": 20,
+    "tableNumber": "20",
+    "capacity": 4,
+    "status": "AVAILABLE",
+    "posX": null,
+    "posY": null
+  },
+  {
+    "id": 3,
+    "tableNumber": "3",
+    "capacity": 4,
+    "status": "OCCUPIED",
+    "posX": null,
+    "posY": null
+  },
+  {
+    "id": 4,
+    "tableNumber": "4",
+    "capacity": 4,
+    "status": "OCCUPIED",
+    "posX": null,
+    "posY": null
+  },
+  {
+    "id": 5,
+    "tableNumber": "5",
+    "capacity": 4,
+    "status": "OCCUPIED",
+    "posX": null,
+    "posY": null
+  },
+  {
+    "id": 6,
+    "tableNumber": "6",
+    "capacity": 4,
+    "status": "AVAILABLE",
+    "posX": null,
+    "posY": null
+  },
+  {
+    "id": 7,
+    "tableNumber": "7",
+    "capacity": 4,
+    "status": "AVAILABLE",
+    "posX": null,
+    "posY": null
+  },
+  {
+    "id": 8,
+    "tableNumber": "8",
+    "capacity": 4,
+    "status": "AVAILABLE",
+    "posX": null,
+    "posY": null
+  },
+  {
+    "id": 9,
+    "tableNumber": "9",
+    "capacity": 4,
+    "status": "AVAILABLE",
+    "posX": null,
+    "posY": null
+  }
+]
+
+## 2. INVENTORY CONTROLLER
+
+### Get Ingredients
+URL: http://localhost:8080/api/inventory/ingredients?restaurantId=1
+Method: GET
+[
+  {
+    "id": 1,
+    "itemCode": "ING0",
+    "description": "Test Ingredient 0",
+    "inventoryType": "FOOD",
+    "category": "PRODUCE",
+    "purchaseUnit": "LB",
+    "casePackSize": null,
+    "purchaseUnitPrice": 2.5000,
+    "recipeUnit": "OZ_WEIGHT",
+    "ruPerPu": 16.0000,
+    "yieldPct": 1.0000,
+    "inventoryUnit": "LB",
+    "iuPerPu": 1.0000,
+    "ozWeightPerCup": null,
+    "packedBy": null,
+    "parLevel": 50.000,
+    "onHand": 10.000,
+    "imageStorageKey": null,
+    "active": true,
+    "createdAt": "2026-03-31T02:41:07.898901",
+    "updatedAt": "2026-03-31T02:41:07.898914"
+  },
+  {
+    "id": 2,
+    "itemCode": "ING1",
+    "description": "Test Ingredient 1",
+    "inventoryType": "FOOD",
+    "category": "PRODUCE",
+    "purchaseUnit": "LB",
+    "casePackSize": null,
+    "purchaseUnitPrice": 2.5000,
+    "recipeUnit": "OZ_WEIGHT",
+    "ruPerPu": 16.0000,
+    "yieldPct": 1.0000,
+    "inventoryUnit": "LB",
+    "iuPerPu": 1.0000,
+    "ozWeightPerCup": null,
+    "packedBy": null,
+    "parLevel": 50.000,
+    "onHand": 10.000,
+    "imageStorageKey": null,
+    "active": true,
+    "createdAt": "2026-03-31T02:41:07.902454",
+    "updatedAt": "2026-03-31T02:41:07.90247"
+  },
+  {
+    "id": 11,
+    "itemCode": "ING10",
+    "description": "Test Ingredient 10",
+    "inventoryType": "FOOD",
+    "category": "PRODUCE",
+    "purchaseUnit": "LB",
+    "casePackSize": null,
+    "purchaseUnitPrice": 2.5000,
+    "recipeUnit": "OZ_WEIGHT",
+    "ruPerPu": 16.0000,
+    "yieldPct": 1.0000,
+    "inventoryUnit": "LB",
+    "iuPerPu": 1.0000,
+    "ozWeightPerCup": null,
+    "packedBy": null,
+    "parLevel": 50.000,
+    "onHand": 100.000,
+    "imageStorageKey": null,
+    "active": true,
+    "createdAt": "2026-03-31T02:41:07.919511",
+    "updatedAt": "2026-03-31T02:41:07.919537"
+  },
+  {
+    "id": 12,
+    "itemCode": "ING11",
+    "description": "Test Ingredient 11",
+    "inventoryType": "FOOD",
+    "category": "PRODUCE",
+    "purchaseUnit": "LB",
+    "casePackSize": null,
+    "purchaseUnitPrice": 2.5000,
+    "recipeUnit": "OZ_WEIGHT",
+    "ruPerPu": 16.0000,
+    "yieldPct": 1.0000,
+    "inventoryUnit": "LB",
+    "iuPerPu": 1.0000,
+    "ozWeightPerCup": null,
+    "packedBy": null,
+    "parLevel": 50.000,
+    "onHand": 100.000,
+    "imageStorageKey": null,
+    "active": true,
+    "createdAt": "2026-03-31T02:41:07.921194",
+    "updatedAt": "2026-03-31T02:41:07.921206"
+  },
+  {
+    "id": 13,
+    "itemCode": "ING12",
+    "description": "Test Ingredient 12",
+    "inventoryType": "FOOD",
+    "category": "PRODUCE",
+    "purchaseUnit": "LB",
+    "casePackSize": null,
+    "purchaseUnitPrice": 2.5000,
+    "recipeUnit": "OZ_WEIGHT",
+    "ruPerPu": 16.0000,
+    "yieldPct": 1.0000,
+    "inventoryUnit": "LB",
+    "iuPerPu": 1.0000,
+    "ozWeightPerCup": null,
+    "packedBy": null,
+    "parLevel": 50.000,
+    "onHand": 100.000,
+    "imageStorageKey": null,
+    "active": true,
+    "createdAt": "2026-03-31T02:41:07.923042",
+    "updatedAt": "2026-03-31T02:41:07.923054"
+  },
+  {
+    "id": 14,
+    "itemCode": "ING13",
+    "description": "Test Ingredient 13",
+    "inventoryType": "FOOD",
+    "category": "PRODUCE",
+    "purchaseUnit": "LB",
+    "casePackSize": null,
+    "purchaseUnitPrice": 2.5000,
+    "recipeUnit": "OZ_WEIGHT",
+    "ruPerPu": 16.0000,
+    "yieldPct": 1.0000,
+    "inventoryUnit": "LB",
+    "iuPerPu": 1.0000,
+    "ozWeightPerCup": null,
+    "packedBy": null,
+    "parLevel": 50.000,
+    "onHand": 100.000,
+    "imageStorageKey": null,
+    "active": true,
+    "createdAt": "2026-03-31T02:41:07.924863",
+    "updatedAt": "2026-03-31T02:41:07.924877"
+  },
+  {
+    "id": 15,
+    "itemCode": "ING14",
+    "description": "Test Ingredient 14",
+    "inventoryType": "FOOD",
+    "category": "PRODUCE",
+    "purchaseUnit": "LB",
+    "casePackSize": null,
+    "purchaseUnitPrice": 2.5000,
+    "recipeUnit": "OZ_WEIGHT",
+    "ruPerPu": 16.0000,
+    "yieldPct": 1.0000,
+    "inventoryUnit": "LB",
+    "iuPerPu": 1.0000,
+    "ozWeightPerCup": null,
+    "packedBy": null,
+    "parLevel": 50.000,
+    "onHand": 100.000,
+    "imageStorageKey": null,
+    "active": true,
+    "createdAt": "2026-03-31T02:41:07.926376",
+    "updatedAt": "2026-03-31T02:41:07.926387"
+  },
+  {
+    "id": 16,
+    "itemCode": "ING15",
+    "description": "Test Ingredient 15",
+    "inventoryType": "FOOD",
+    "category": "PRODUCE",
+    "purchaseUnit": "LB",
+    "casePackSize": null,
+    "purchaseUnitPrice": 2.5000,
+    "recipeUnit": "OZ_WEIGHT",
+    "ruPerPu": 16.0000,
+    "yieldPct": 1.0000,
+    "inventoryUnit": "LB",
+    "iuPerPu": 1.0000,
+    "ozWeightPerCup": null,
+    "packedBy": null,
+    "parLevel": 50.000,
+    "onHand": 100.000,
+    "imageStorageKey": null,
+    "active": true,
+    "createdAt": "2026-03-31T02:41:07.927712",
+    "updatedAt": "2026-03-31T02:41:07.927727"
+  },
+  {
+    "id": 17,
+    "itemCode": "ING16",
+    "description": "Test Ingredient 16",
+    "inventoryType": "FOOD",
+    "category": "PRODUCE",
+    "purchaseUnit": "LB",
+    "casePackSize": null,
+    "purchaseUnitPrice": 2.5000,
+    "recipeUnit": "OZ_WEIGHT",
+    "ruPerPu": 16.0000,
+    "yieldPct": 1.0000,
+    "inventoryUnit": "LB",
+    "iuPerPu": 1.0000,
+    "ozWeightPerCup": null,
+    "packedBy": null,
+    "parLevel": 50.000,
+    "onHand": 100.000,
+    "imageStorageKey": null,
+    "active": true,
+    "createdAt": "2026-03-31T02:41:07.929466",
+    "updatedAt": "2026-03-31T02:41:07.92948"
+  },
+  {
+    "id": 18,
+    "itemCode": "ING17",
+    "description": "Test Ingredient 17",
+    "inventoryType": "FOOD",
+    "category": "PRODUCE",
+    "purchaseUnit": "LB",
+    "casePackSize": null,
+    "purchaseUnitPrice": 2.5000,
+    "recipeUnit": "OZ_WEIGHT",
+    "ruPerPu": 16.0000,
+    "yieldPct": 1.0000,
+    "inventoryUnit": "LB",
+    "iuPerPu": 1.0000,
+    "ozWeightPerCup": null,
+    "packedBy": null,
+    "parLevel": 50.000,
+    "onHand": 100.000,
+    "imageStorageKey": null,
+    "active": true,
+    "createdAt": "2026-03-31T02:41:07.931237",
+    "updatedAt": "2026-03-31T02:41:07.931252"
+  },
+  {
+    "id": 19,
+    "itemCode": "ING18",
+    "description": "Test Ingredient 18",
+    "inventoryType": "FOOD",
+    "category": "PRODUCE",
+    "purchaseUnit": "LB",
+    "casePackSize": null,
+    "purchaseUnitPrice": 2.5000,
+    "recipeUnit": "OZ_WEIGHT",
+    "ruPerPu": 16.0000,
+    "yieldPct": 1.0000,
+    "inventoryUnit": "LB",
+    "iuPerPu": 1.0000,
+    "ozWeightPerCup": null,
+    "packedBy": null,
+    "parLevel": 50.000,
+    "onHand": 100.000,
+    "imageStorageKey": null,
+    "active": true,
+    "createdAt": "2026-03-31T02:41:07.9331",
+    "updatedAt": "2026-03-31T02:41:07.933115"
+  },
+  {
+    "id": 20,
+    "itemCode": "ING19",
+    "description": "Test Ingredient 19",
+    "inventoryType": "FOOD",
+    "category": "PRODUCE",
+    "purchaseUnit": "LB",
+    "casePackSize": null,
+    "purchaseUnitPrice": 2.5000,
+    "recipeUnit": "OZ_WEIGHT",
+    "ruPerPu": 16.0000,
+    "yieldPct": 1.0000,
+    "inventoryUnit": "LB",
+    "iuPerPu": 1.0000,
+    "ozWeightPerCup": null,
+    "packedBy": null,
+    "parLevel": 50.000,
+    "onHand": 100.000,
+    "imageStorageKey": null,
+    "active": true,
+    "createdAt": "2026-03-31T02:41:07.934956",
+    "updatedAt": "2026-03-31T02:41:07.93497"
+  },
+  {
+    "id": 3,
+    "itemCode": "ING2",
+    "description": "Test Ingredient 2",
+    "inventoryType": "FOOD",
+    "category": "PRODUCE",
+    "purchaseUnit": "LB",
+    "casePackSize": null,
+    "purchaseUnitPrice": 2.5000,
+    "recipeUnit": "OZ_WEIGHT",
+    "ruPerPu": 16.0000,
+    "yieldPct": 1.0000,
+    "inventoryUnit": "LB",
+    "iuPerPu": 1.0000,
+    "ozWeightPerCup": null,
+    "packedBy": null,
+    "parLevel": 50.000,
+    "onHand": 10.000,
+    "imageStorageKey": null,
+    "active": true,
+    "createdAt": "2026-03-31T02:41:07.904463",
+    "updatedAt": "2026-03-31T02:41:07.904477"
+  },
+  {
+    "id": 4,
+    "itemCode": "ING3",
+    "description": "Test Ingredient 3",
+    "inventoryType": "FOOD",
+    "category": "PRODUCE",
+    "purchaseUnit": "LB",
+    "casePackSize": null,
+    "purchaseUnitPrice": 2.5000,
+    "recipeUnit": "OZ_WEIGHT",
+    "ruPerPu": 16.0000,
+    "yieldPct": 1.0000,
+    "inventoryUnit": "LB",
+    "iuPerPu": 1.0000,
+    "ozWeightPerCup": null,
+    "packedBy": null,
+    "parLevel": 50.000,
+    "onHand": 10.000,
+    "imageStorageKey": null,
+    "active": true,
+    "createdAt": "2026-03-31T02:41:07.906347",
+    "updatedAt": "2026-03-31T02:41:07.906358"
+  },
+  {
+    "id": 5,
+    "itemCode": "ING4",
+    "description": "Test Ingredient 4",
+    "inventoryType": "FOOD",
+    "category": "PRODUCE",
+    "purchaseUnit": "LB",
+    "casePackSize": null,
+    "purchaseUnitPrice": 2.5000,
+    "recipeUnit": "OZ_WEIGHT",
+    "ruPerPu": 16.0000,
+    "yieldPct": 1.0000,
+    "inventoryUnit": "LB",
+    "iuPerPu": 1.0000,
+    "ozWeightPerCup": null,
+    "packedBy": null,
+    "parLevel": 50.000,
+    "onHand": 10.000,
+    "imageStorageKey": null,
+    "active": true,
+    "createdAt": "2026-03-31T02:41:07.908357",
+    "updatedAt": "2026-03-31T02:41:07.90837"
+  },
+  {
+    "id": 6,
+    "itemCode": "ING5",
+    "description": "Test Ingredient 5",
+    "inventoryType": "FOOD",
+    "category": "PRODUCE",
+    "purchaseUnit": "LB",
+    "casePackSize": null,
+    "purchaseUnitPrice": 2.5000,
+    "recipeUnit": "OZ_WEIGHT",
+    "ruPerPu": 16.0000,
+    "yieldPct": 1.0000,
+    "inventoryUnit": "LB",
+    "iuPerPu": 1.0000,
+    "ozWeightPerCup": null,
+    "packedBy": null,
+    "parLevel": 50.000,
+    "onHand": 10.000,
+    "imageStorageKey": null,
+    "active": true,
+    "createdAt": "2026-03-31T02:41:07.910571",
+    "updatedAt": "2026-03-31T02:41:07.910583"
+  },
+  {
+    "id": 7,
+    "itemCode": "ING6",
+    "description": "Test Ingredient 6",
+    "inventoryType": "FOOD",
+    "category": "PRODUCE",
+    "purchaseUnit": "LB",
+    "casePackSize": null,
+    "purchaseUnitPrice": 2.5000,
+    "recipeUnit": "OZ_WEIGHT",
+    "ruPerPu": 16.0000,
+    "yieldPct": 1.0000,
+    "inventoryUnit": "LB",
+    "iuPerPu": 1.0000,
+    "ozWeightPerCup": null,
+    "packedBy": null,
+    "parLevel": 50.000,
+    "onHand": 10.000,
+    "imageStorageKey": null,
+    "active": true,
+    "createdAt": "2026-03-31T02:41:07.912634",
+    "updatedAt": "2026-03-31T02:41:07.912645"
+  },
+  {
+    "id": 8,
+    "itemCode": "ING7",
+    "description": "Test Ingredient 7",
+    "inventoryType": "FOOD",
+    "category": "PRODUCE",
+    "purchaseUnit": "LB",
+    "casePackSize": null,
+    "purchaseUnitPrice": 2.5000,
+    "recipeUnit": "OZ_WEIGHT",
+    "ruPerPu": 16.0000,
+    "yieldPct": 1.0000,
+    "inventoryUnit": "LB",
+    "iuPerPu": 1.0000,
+    "ozWeightPerCup": null,
+    "packedBy": null,
+    "parLevel": 50.000,
+    "onHand": 10.000,
+    "imageStorageKey": null,
+    "active": true,
+    "createdAt": "2026-03-31T02:41:07.914665",
+    "updatedAt": "2026-03-31T02:41:07.914681"
+  },
+  {
+    "id": 9,
+    "itemCode": "ING8",
+    "description": "Test Ingredient 8",
+    "inventoryType": "FOOD",
+    "category": "PRODUCE",
+    "purchaseUnit": "LB",
+    "casePackSize": null,
+    "purchaseUnitPrice": 2.5000,
+    "recipeUnit": "OZ_WEIGHT",
+    "ruPerPu": 16.0000,
+    "yieldPct": 1.0000,
+    "inventoryUnit": "LB",
+    "iuPerPu": 1.0000,
+    "ozWeightPerCup": null,
+    "packedBy": null,
+    "parLevel": 50.000,
+    "onHand": 100.000,
+    "imageStorageKey": null,
+    "active": true,
+    "createdAt": "2026-03-31T02:41:07.916379",
+    "updatedAt": "2026-03-31T02:41:07.91639"
+  },
+  {
+    "id": 10,
+    "itemCode": "ING9",
+    "description": "Test Ingredient 9",
+    "inventoryType": "FOOD",
+    "category": "PRODUCE",
+    "purchaseUnit": "LB",
+    "casePackSize": null,
+    "purchaseUnitPrice": 2.5000,
+    "recipeUnit": "OZ_WEIGHT",
+    "ruPerPu": 16.0000,
+    "yieldPct": 1.0000,
+    "inventoryUnit": "LB",
+    "iuPerPu": 1.0000,
+    "ozWeightPerCup": null,
+    "packedBy": null,
+    "parLevel": 50.000,
+    "onHand": 100.000,
+    "imageStorageKey": null,
+    "active": true,
+    "createdAt": "2026-03-31T02:41:07.917933",
+    "updatedAt": "2026-03-31T02:41:07.917944"
+  }
+]
+
+### Get Inventory Stats
+URL: http://localhost:8080/api/inventory/stats?restaurantId=1
+Method: GET
+{
+  "foodInventoryValue": 625.0000000,
+  "barInventoryValue": 150.0000000,
+  "belowParCount": 8
+}
+
+## 3. PURCHASING CONTROLLER
+
+### Get Suppliers
+URL: http://localhost:8080/api/purchasing/suppliers?restaurantId=1
+Method: GET
+[
+  {
+    "id": 1,
+    "name": "Global Foods Inc",
+    "contactName": null,
+    "phone": null,
+    "email": null,
+    "accountNumber": null,
+    "active": true,
+    "createdAt": "2026-03-31T02:41:07.936885",
+    "updatedAt": "2026-03-31T02:41:07.936901"
+  }
+]
+
+## 4. COSTING CONTROLLER
+
+### Get Recipes
+URL: http://localhost:8080/api/costing/recipes?restaurantId=1
+Method: GET
+[]
+
+## 5. ANALYTICS CONTROLLER
+
+### Get Dashboard Metrics
+URL: http://localhost:8080/api/analytics/dashboard?restaurantId=1
+Method: GET
+{
+  "grossSalesToday": 1539.00,
+  "coversToday": 36,
+  "checkAvgToday": 42.75,
+  "foodCostPctToday": 0.28,
+  "openSessionsNow": 5,
+  "topSellerToday": "Grilled Ribeye Steak",
+  "lowStockCount": 8,
+  "draftInvoiceCount": 5,
+  "primeCostTrend": [
+    62.5,
+    61.2,
+    63.8,
+    60.5,
+    59.8,
+    61.5,
+    62.1,
+    60.2
+  ]
+}
+
+## 6. LABOR CONTROLLER
+
+### Create Employee
+URL: http://localhost:8080/api/labor/restaurants/1/employees
+Method: POST
+Input: {"name":"Test User","employeeType":"HOURLY","hourlyRate":20.00}
+{
+  "id": 1,
+  "restaurant": {
+    "id": 1,
+    "name": "Shopro Gourmet Test Kitchen",
+    "timezone": "Asia/Kolkata",
+    "createdAt": "2026-03-31T02:41:07.836795",
+    "updatedAt": "2026-03-31T02:41:07.836808"
+  },
+  "name": "Test User",
+  "employeeType": "HOURLY",
+  "hourlyRate": 20.00,
+  "annualSalary": null,
+  "active": true,
+  "createdAt": "2026-03-31T02:42:04.317606306"
+}
+
+### Get Employees
+URL: http://localhost:8080/api/labor/restaurants/1/employees
+Method: GET
+[
+  {
+    "id": 1,
+    "name": "Test User",
+    "employeeType": "HOURLY",
+    "hourlyRate": 20.00,
+    "annualSalary": null,
+    "active": true
+  }
+]
+
+## 7. PRIME COST CONTROLLER
+
+### Get Live Prime Cost
+URL: http://localhost:8080/api/prime-cost/live/1
+Method: GET
+{
+  "restaurantId": 1,
+  "grossSalesToDate": 4275.00,
+  "theoreticalCosToDate": 0,
+  "postedPurchasesThisWeek": 0,
+  "laborAccrualToDate": 0.00,
+  "livePrimeCostPct": 0.0000
+}
+
+### Get Weekly Report
+URL: http://localhost:8080/api/prime-cost/weekly/1?weekStart=2026-03-29
+Method: GET
+{
+  "id": null,
+  "restaurantId": 1,
+  "weekStartDate": "2026-03-29",
+  "netSales": 4275.00,
+  "actualFoodCos": 0,
+  "actualBevCos": null,
+  "theoreticalCos": 0,
+  "hourlyLabor": 0,
+  "mgmtLabor": 0,
+  "primeCostGross": 0.00,
+  "primeCostGrossPct": 0.0000,
+  "status": "DRAFT"
+}
+
+====================================================
+TEST COMPLETED
+====================================================

@@ -1,0 +1,97 @@
+====================================================
+PRIME COST MODULE VERIFICATION REPORT
+Generated at: Tuesday 31 March 2026 02:26:09 AM IST
+====================================================
+
+1. TESTING LABOR CONTROLLER
+----------------------------------------------------
+Action: Listing Employees for Restaurant 1...
+[]
+
+Action: Creating a Test Employee (Hourly)...
+{
+  "id": 1,
+  "restaurant": {
+    "id": 1,
+    "name": "Shopro Gourmet Test Kitchen",
+    "timezone": "Asia/Kolkata",
+    "createdAt": "2026-03-31T02:24:14.088613",
+    "updatedAt": "2026-03-31T02:24:14.08863"
+  },
+  "name": "John Doe",
+  "employeeType": "HOURLY",
+  "hourlyRate": 15.50,
+  "annualSalary": null,
+  "active": true,
+  "createdAt": "2026-03-31T02:26:10.137839172"
+}
+
+Action: Creating a Test Employee (Management)...
+{
+  "id": 2,
+  "restaurant": {
+    "id": 1,
+    "name": "Shopro Gourmet Test Kitchen",
+    "timezone": "Asia/Kolkata",
+    "createdAt": "2026-03-31T02:24:14.088613",
+    "updatedAt": "2026-03-31T02:24:14.08863"
+  },
+  "name": "Jane Smith",
+  "employeeType": "MANAGEMENT",
+  "hourlyRate": null,
+  "annualSalary": 52000,
+  "active": true,
+  "createdAt": "2026-03-31T02:26:10.182144317"
+}
+
+Action: Getting Weekly Labor Summary (Week Start: 2026-03-29)...
+{
+  "weekStartDate": "2026-03-29",
+  "employeeLabor": [],
+  "totalHourlyLaborCost": 0,
+  "totalManagementLaborCost": 1000.00,
+  "estimatedBenefitsCost": 220.00,
+  "totalLaborCost": 1220.00
+}
+
+2. TESTING PRIME COST CONTROLLER
+----------------------------------------------------
+Action: Getting Live Prime Cost...
+{
+  "restaurantId": 1,
+  "grossSalesToDate": 4275.00,
+  "theoreticalCosToDate": 0,
+  "postedPurchasesThisWeek": 0,
+  "laborAccrualToDate": 1220.00,
+  "livePrimeCostPct": 0.2854
+}
+
+Action: Getting Weekly Prime Cost Report (DRAFT)...
+{
+  "id": null,
+  "restaurantId": 1,
+  "weekStartDate": "2026-03-29",
+  "netSales": 4275.00,
+  "actualFoodCos": 0,
+  "actualBevCos": null,
+  "theoreticalCos": 0,
+  "hourlyLabor": 0,
+  "mgmtLabor": 1000.00,
+  "primeCostGross": 1220.00,
+  "primeCostGrossPct": 0.2854,
+  "status": "DRAFT"
+}
+
+Action: Computing Theoretical COS for today...
+0
+Action: Finalising Weekly Report...
+{
+  "timestamp": "2026-03-30T20:56:10.878+00:00",
+  "status": 500,
+  "error": "Internal Server Error",
+  "path": "/api/prime-cost/weekly/1/finalise"
+}
+
+====================================================
+VERIFICATION COMPLETE
+====================================================

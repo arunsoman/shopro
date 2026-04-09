@@ -1,6 +1,6 @@
 package mls.sho.dms.application.service.inventory;
 
-import mls.sho.dms.entity.inventory.VendorBidStatus;
+import mls.sho.dms.entity.inventory.vendor.VendorBidStatus;
 import java.util.UUID;
 
 /**

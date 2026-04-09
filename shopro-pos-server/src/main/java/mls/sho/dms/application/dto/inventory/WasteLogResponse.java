@@ -2,7 +2,7 @@ package mls.sho.dms.application.dto.inventory;
 
 import lombok.Builder;
 import lombok.Data;
-import mls.sho.dms.entity.inventory.InventoryTransactionType;
+import mls.sho.dms.entity.inventory.stock.InventoryTransactionType;
 
 import java.math.BigDecimal;
 import java.time.Instant;

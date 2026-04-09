@@ -1,7 +1,7 @@
 package mls.sho.dms.repository.menu;
 
-import mls.sho.dms.entity.menu.ModifierOption;
-import mls.sho.dms.entity.menu.ModifierGroup;
+import mls.sho.dms.entity.inventory.menu.ModifierOption;
+import mls.sho.dms.entity.inventory.menu.ModifierGroup;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

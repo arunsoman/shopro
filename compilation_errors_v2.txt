@@ -1,0 +1,98 @@
+
+> Task :shopro-res:compileJava FAILED
+/home/arun/IdeaProjects/shopro-pos/shopro-res/src/main/java/mls/sho/dms/entity/BatchRecipe.java:65: error: cannot find symbol
+    private List<RecipeIngredientLine> ingredientLines = new ArrayList<>();
+                 ^
+  symbol:   class RecipeIngredientLine
+  location: class BatchRecipe
+/home/arun/IdeaProjects/shopro-pos/shopro-res/src/main/java/mls/sho/dms/entity/BatchRecipe.java:65: error: cannot find symbol
+    private List<RecipeIngredientLine> ingredientLines = new ArrayList<>();
+                                       ^
+  symbol:   class RecipeIngredientLine
+  location: class BatchRecipe
+/home/arun/IdeaProjects/shopro-pos/shopro-res/src/main/java/mls/sho/dms/entity/BatchRecipe.java:19: error: cannot find symbol
+@Data
+^
+  symbol:   class RecipeIngredientLine
+  location: class BatchRecipe
+/home/arun/IdeaProjects/shopro-pos/shopro-res/src/main/java/mls/sho/dms/application/costing/service/BatchRecipeService.java:7: error: cannot find symbol
+import mls.sho.dms.entity.RecipeIngredientLine;
+                         ^
+  symbol:   class RecipeIngredientLine
+  location: package mls.sho.dms.entity
+/home/arun/IdeaProjects/shopro-pos/shopro-res/src/main/java/mls/sho/dms/config/WebConfig.java:4: error: package mls.sho.dms.application.security does not exist
+import mls.sho.dms.application.security.FloorPlanPermissionInterceptor;
+                                       ^
+/home/arun/IdeaProjects/shopro-pos/shopro-res/src/main/java/mls/sho/dms/config/WebConfig.java:5: error: package mls.sho.dms.application.security does not exist
+import mls.sho.dms.application.security.StaffAuthenticationInterceptor;
+                                       ^
+/home/arun/IdeaProjects/shopro-pos/shopro-res/src/main/java/mls/sho/dms/config/WebConfig.java:6: error: package mls.sho.dms.application.security does not exist
+import mls.sho.dms.application.security.MarketplaceAuthenticationInterceptor;
+                                       ^
+/home/arun/IdeaProjects/shopro-pos/shopro-res/src/main/java/mls/sho/dms/config/WebConfig.java:18: error: cannot find symbol
+    private final FloorPlanPermissionInterceptor floorPlanPermissionInterceptor;
+                  ^
+  symbol:   class FloorPlanPermissionInterceptor
+  location: class WebConfig
+/home/arun/IdeaProjects/shopro-pos/shopro-res/src/main/java/mls/sho/dms/config/WebConfig.java:19: error: cannot find symbol
+    private final StaffAuthenticationInterceptor staffAuthenticationInterceptor;
+                  ^
+  symbol:   class StaffAuthenticationInterceptor
+  location: class WebConfig
+/home/arun/IdeaProjects/shopro-pos/shopro-res/src/main/java/mls/sho/dms/config/WebConfig.java:20: error: cannot find symbol
+    private final MarketplaceAuthenticationInterceptor marketplaceAuthenticationInterceptor;
+                  ^
+  symbol:   class MarketplaceAuthenticationInterceptor
+  location: class WebConfig
+/home/arun/IdeaProjects/shopro-pos/shopro-res/src/main/java/mls/sho/dms/config/WebConfig.java:15: error: cannot find symbol
+@RequiredArgsConstructor
+^
+  symbol:   class FloorPlanPermissionInterceptor
+  location: class WebConfig
+/home/arun/IdeaProjects/shopro-pos/shopro-res/src/main/java/mls/sho/dms/config/security/FapiGuestTokenCustomizer.java:3: error: package mls.sho.dms.entity.guest does not exist
+import mls.sho.dms.entity.guest.GuestUser;
+                               ^
+/home/arun/IdeaProjects/shopro-pos/shopro-res/src/main/java/mls/sho/dms/config/security/FapiGuestTokenCustomizer.java:4: error: package mls.sho.dms.repository.guest does not exist
+import mls.sho.dms.repository.guest.GuestUserRepository;
+                                   ^
+/home/arun/IdeaProjects/shopro-pos/shopro-res/src/main/java/mls/sho/dms/config/security/FapiGuestTokenCustomizer.java:19: error: cannot find symbol
+    private final GuestUserRepository guestUserRepository;
+                  ^
+  symbol:   class GuestUserRepository
+  location: class FapiGuestTokenCustomizer
+/home/arun/IdeaProjects/shopro-pos/shopro-res/src/main/java/mls/sho/dms/config/security/FapiGuestTokenCustomizer.java:21: error: cannot find symbol
+    public FapiGuestTokenCustomizer(GuestUserRepository guestUserRepository) {
+                                    ^
+  symbol:   class GuestUserRepository
+  location: class FapiGuestTokenCustomizer
+/home/arun/IdeaProjects/shopro-pos/shopro-res/src/main/java/mls/瀕mls/sho/dms/application/costing/repository/RecipeIngredientLineRepository.java:3: error: package mls.sho.dms.application.costing.entity does not exist
+import mls.sho.dms.application.costing.entity.RecipeIngredientLine;
+                                             ^
+/home/arun/IdeaProjects/shopro-pos/shopro-res/src/main/java/mls/瀕mls/sho/dms/application/costing/repository/RecipeIngredientLineRepository.java:8: error: cannot find symbol
+public interface RecipeIngredientLineRepository extends JpaRepository<RecipeIngredientLine, Long> {
+                                                                      ^
+  symbol: class RecipeIngredientLine
+/home/arun/IdeaProjects/shopro-pos/shopro-res/src/main/java/mls/sho/dms/entity/BatchRecipe.java:64: error: cannot find symbol
+               orphanRemoval = true, orderBy = "lineNumber ASC")
+                                     ^
+  symbol:   method orderBy()
+  location: @interface OneToMany
+/home/arun/IdeaProjects/shopro-pos/shopro-res/src/main/java/mls/sho/dms/entity/BatchRecipe.java:68: error: cannot find symbol
+               orphanRemoval = true, orderBy = "stepNumber ASC")
+                                     ^
+  symbol:   method orderBy()
+  location: @interface OneToMany
+19 errors
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':shopro-res:compileJava'.
+> Compilation failed; see the compiler error output for details.
+
+* Try:
+> Run with --info option to get more log output.
+> Run with --scan to get full insights.
+
+BUILD FAILED in 3s
+1 actionable task: 1 executed

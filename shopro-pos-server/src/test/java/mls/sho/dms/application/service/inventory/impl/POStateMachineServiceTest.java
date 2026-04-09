@@ -1,8 +1,8 @@
 package mls.sho.dms.application.service.inventory.impl;
 
 import mls.sho.dms.application.event.inventory.POStateChangedEvent;
-import mls.sho.dms.entity.inventory.PurchaseOrder;
-import mls.sho.dms.entity.inventory.PurchaseOrderStatus;
+import mls.sho.dms.entity.inventory.procurement.PurchaseOrder;
+import mls.sho.dms.entity.inventory.procurement.PurchaseOrderStatus;
 import mls.sho.dms.repository.inventory.PurchaseOrderRepository;
 import mls.sho.dms.repository.inventory.POStatusHistoryRepository;
 import org.junit.jupiter.api.BeforeEach;

@@ -4,8 +4,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import mls.sho.dms.application.event.inventory.RFQStateChangedEvent;
 import mls.sho.dms.application.service.core.NotificationEngine;
-import mls.sho.dms.entity.inventory.RFQ;
-import mls.sho.dms.entity.inventory.RfqStatus;
+import mls.sho.dms.entity.inventory.procurement.RFQ;
+import mls.sho.dms.entity.inventory.procurement.RfqStatus;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 

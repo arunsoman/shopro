@@ -3,7 +3,7 @@ package mls.sho.dms.application.mapper;
 import mls.sho.dms.application.dto.menu.CreateMenuItemRequest;
 import mls.sho.dms.application.dto.menu.MenuItemResponse;
 import mls.sho.dms.application.dto.menu.UpdateMenuItemRequest;
-import mls.sho.dms.entity.menu.MenuItem;
+import mls.sho.dms.entity.inventory.menu.MenuItem;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;

@@ -4,7 +4,7 @@ import mls.sho.dms.application.dto.DuplicateCheckResponse;
 import mls.sho.dms.application.dto.menu.CreateMenuItemRequest;
 import mls.sho.dms.application.dto.menu.MenuItemResponse;
 import mls.sho.dms.application.dto.menu.UpdateMenuItemRequest;
-import mls.sho.dms.entity.menu.MenuItemStatus;
+import mls.sho.dms.entity.inventory.menu.MenuItemStatus;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;

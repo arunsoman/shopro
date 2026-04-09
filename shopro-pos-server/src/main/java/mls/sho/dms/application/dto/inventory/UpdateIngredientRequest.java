@@ -1,7 +1,7 @@
 package mls.sho.dms.application.dto.inventory;
 
-import mls.sho.dms.entity.inventory.RestockingMode;
-import mls.sho.dms.entity.inventory.StorageType;
+import mls.sho.dms.entity.inventory.stock.RestockingMode;
+import mls.sho.dms.entity.inventory.ingredient.StorageType;
 
 import java.math.BigDecimal;
 import java.util.List;

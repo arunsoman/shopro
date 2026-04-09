@@ -6,8 +6,8 @@ import mls.sho.dms.application.exception.ResourceNotFoundException;
 import mls.sho.dms.application.dto.floor.TableShapeResponse;
 import mls.sho.dms.entity.crm.CustomerProfile;
 import mls.sho.dms.entity.floor.TableShape;
-import mls.sho.dms.entity.menu.MenuItem;
-import mls.sho.dms.entity.menu.ModifierOption;
+import mls.sho.dms.entity.inventory.menu.MenuItem;
+import mls.sho.dms.entity.inventory.menu.ModifierOption;
 import mls.sho.dms.entity.order.*;
 import mls.sho.dms.entity.staff.StaffMember;
 import mls.sho.dms.repository.crm.CustomerProfileRepository;
@@ -28,11 +28,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.security.MessageDigest;
-import java.util.ArrayList;
+
 import mls.sho.dms.service.kds.KDSService;
 import mls.sho.dms.application.service.staff.StaffService;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

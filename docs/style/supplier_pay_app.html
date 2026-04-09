@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Supplier Pay — Restaurant Payment Hub</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f3; min-height: 100vh; display: flex; justify-content: center; padding: 20px; }
+
+  .app { max-width: 480px; width: 100%; margin: 0 auto; padding: 16px 0 40px; }
+
+  .screen { display: none; animation: fadeIn 0.25s ease; }
+  .screen.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  .top-nav { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 0.5px solid #e0ddd6; }
+  .nav-back { background: none; border: 0.5px solid #ccc; border-radius: 8px; padding: 6px 10px; cursor: pointer; font-size: 14px; color: #666; }
+  .nav-back:hover { background: #f0ede8; }
+  .nav-title { font-size: 16px; font-weight: 500; color: #1a1a1a; }
+
+  .tab-bar { display: flex; gap: 4px; background: #f0ede8; border-radius: 12px; padding: 4px; margin-bottom: 24px; }
+  .tab { flex: 1; padding: 8px; text-align: center; font-size: 13px; border-radius: 8px; cursor: pointer; border: none; background: none; color: #666; font-family: inherit; }
+  .tab.active { background: #fff; color: #1a1a1a; font-weight: 500; border: 0.5px solid #e0ddd6; }
+
+  .card { background: #fff; border: 0.5px solid #e0ddd6; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 12px; }
+  .card:hover { border-color: #bbb; }
+
+  .section-label { font-size: 11px; font-weight: 500; color: #999; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; margin-top: 20px; }
+
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 13px; color: #555; margin-bottom: 5px; }
+  .field input, .field select { width: 100%; height: 36px; border: 0.5px solid #ccc; border-radius: 8px; padding: 0 10px; font-size: 14px; background: #fff; color: #1a1a1a; font-family: inherit; outline: none; }
+  .field input:focus, .field select:focus { border-color: #888; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  .btn-primary { width: 100%; padding: 11px; background: #1a1a1a; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; font-family: inherit; margin-top: 8px; }
+  .btn-primary:hover { opacity: 0.85; }
+  .btn-outline { width: 100%; padding: 10px; background: none; border: 0.5px solid #ccc; border-radius: 8px; font-size: 14px; cursor: pointer; color: #1a1a1a; font-family: inherit; margin-top: 8px; }
+  .btn-outline:hover { background: #f0ede8; }
+
+  .provider-card { display: flex; align-items: center; gap: 12px; cursor: pointer; padding: 12px 14px; border: 0.5px solid #e0ddd6; border-radius: 12px; background: #fff; margin-bottom: 10px; transition: border-color 0.15s; }
+  .provider-card:hover, .provider-card.selected { border-color: #888; }
+  .provider-card.selected { border-width: 1.5px; }
+  .provider-icon { width: 40px; height: 40px; border-radius: 8px; background: #f0ede8; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .provider-info { flex: 1; }
+  .provider-name { font-size: 14px; font-weight: 500; color: #1a1a1a; }
+  .provider-sub { font-size: 12px; color: #666; margin-top: 2px; }
+  .provider-badge { font-size: 11px; padding: 3px 8px; border-radius: 99px; background: #eaf3de; color: #3b6d11; }
+  .provider-badge.pending { background: #faeeda; color: #854f0b; }
+
+  .radio-dot { width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid #ccc; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+  .radio-dot.checked { border-color: #1a1a1a; }
+  .radio-dot.checked::after { content: ''; width: 8px; height: 8px; border-radius: 50%; background: #1a1a1a; }
+
+  .step-indicator { display: flex; align-items: center; gap: 6px; margin-bottom: 24px; }
+  .step { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 500; }
+  .step.done { background: #eaf3de; color: #3b6d11; }
+  .step.active { background: #1a1a1a; color: #fff; }
+  .step.inactive { background: #f0ede8; color: #999; border: 0.5px solid #e0ddd6; }
+  .step-line { flex: 1; height: 0.5px; background: #e0ddd6; }
+
+  .amount-display { text-align: center; padding: 20px 0; }
+  .amount-big { font-size: 40px; font-weight: 500; color: #1a1a1a; letter-spacing: -1px; }
+  .amount-currency { font-size: 20px; color: #888; vertical-align: super; margin-right: 2px; }
+
+  .summary-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 0.5px solid #e0ddd6; font-size: 14px; }
+  .summary-row:last-child { border-bottom: none; font-weight: 500; }
+  .summary-label { color: #666; }
+  .summary-value { color: #1a1a1a; }
+
+  .success-icon { width: 64px; height: 64px; border-radius: 50%; background: #eaf3de; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; }
+
+  .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+  .metric { background: #f0ede8; border-radius: 8px; padding: 12px; }
+  .metric-label { font-size: 12px; color: #666; margin-bottom: 4px; }
+  .metric-value { font-size: 20px; font-weight: 500; color: #1a1a1a; }
+
+  .tx-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 0.5px solid #e0ddd6; }
+  .tx-row:last-child { border-bottom: none; }
+  .tx-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .tx-info { flex: 1; }
+  .tx-name { font-size: 14px; color: #1a1a1a; }
+  .tx-meta { font-size: 12px; color: #888; margin-top: 1px; }
+  .tx-amount { font-size: 14px; font-weight: 500; color: #a32d2d; }
+
+  input[type=number] { -moz-appearance: textfield; }
+  input[type=number]::-webkit-inner-spin-button,
+  input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+  <!-- HOME SCREEN -->
+  <div class="screen active" id="screen-home">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+      <div>
+        <div style="font-size:18px;font-weight:500;color:#1a1a1a;">Supplier Pay</div>
+        <div style="font-size:13px;color:#666;">Restaurant payment hub</div>
+      </div>
+      <button class="btn-outline" style="width:auto;margin:0;padding:7px 14px;font-size:13px;" onclick="goTo('screen-onboard-1')">+ Add provider</button>
+    </div>
+
+    <div class="metric-grid">
+      <div class="metric"><div class="metric-label">This month</div><div class="metric-value">$24,850</div></div>
+      <div class="metric"><div class="metric-label">Pending</div><div class="metric-value">$3,200</div></div>
+      <div class="metric"><div class="metric-label">Suppliers</div><div class="metric-value" id="supplier-count">4</div></div>
+      <div class="metric"><div class="metric-label">Providers</div><div class="metric-value" id="provider-count">2</div></div>
+    </div>
+
+    <button class="btn-primary" onclick="goTo('screen-pay-1')">Make a payment</button>
+
+    <div class="section-label" style="margin-top:24px;">Recent transactions</div>
+    <div class="card" style="padding:0 1.25rem;">
+      <div class="tx-row"><div class="tx-dot" style="background:#185fa5;"></div><div class="tx-info"><div class="tx-name">Fresh Farms Co.</div><div class="tx-meta">ACH · Apr 03</div></div><div class="tx-amount">-$4,200</div></div>
+      <div class="tx-row"><div class="tx-dot" style="background:#0f6e56;"></div><div class="tx-info"><div class="tx-name">Metro Meats Ltd.</div><div class="tx-meta">Virtual Card · Apr 01</div></div><div class="tx-amount">-$6,750</div></div>
+      <div class="tx-row"><div class="tx-dot" style="background:#854f0b;"></div><div class="tx-info"><div class="tx-name">Coastal Seafood</div><div class="tx-meta">Wire · Mar 29</div></div><div class="tx-amount">-$9,100</div></div>
+      <div class="tx-row"><div class="tx-dot" style="background:#993556;"></div><div class="tx-info"><div class="tx-name">SpiceRoute Import</div><div class="tx-meta">BNPL · Mar 27</div></div><div class="tx-amount">-$2,340</div></div>
+    </div>
+
+    <div class="section-label">Active providers</div>
+    <div id="provider-list-home"></div>
+    <button class="btn-outline" onclick="goTo('screen-onboard-1')">+ Onboard new payment provider</button>
+  </div>
+
+  <!-- ONBOARD STEP 1 -->
+  <div class="screen" id="screen-onboard-1">
+    <div class="top-nav">
+      <button class="nav-back" onclick="goTo('screen-home')">← Back</button>
+      <div class="nav-title">Add payment provider</div>
+    </div>
+    <div class="step-indicator">
+      <div class="step active">1</div><div class="step-line"></div>
+      <div class="step inactive">2</div><div class="step-line"></div>
+      <div class="step inactive">3</div>
+    </div>
+    <div style="font-size:15px;font-weight:500;margin-bottom:4px;">Choose provider type</div>
+    <div style="font-size:13px;color:#666;margin-bottom:20px;">Select how you want to pay your suppliers</div>
+    <div id="provider-type-list"></div>
+    <button class="btn-primary" onclick="nextOnboard1()">Continue</button>
+  </div>
+
+  <!-- ONBOARD STEP 2 -->
+  <div class="screen" id="screen-onboard-2">
+    <div class="top-nav">
+      <button class="nav-back" onclick="goTo('screen-onboard-1')">← Back</button>
+      <div class="nav-title">Provider details</div>
+    </div>
+    <div class="step-indicator">
+      <div class="step done">✓</div><div class="step-line"></div>
+      <div class="step active">2</div><div class="step-line"></div>
+      <div class="step inactive">3</div>
+    </div>
+    <div style="font-size:15px;font-weight:500;margin-bottom:4px;" id="onboard2-title">Connect provider</div>
+    <div style="font-size:13px;color:#666;margin-bottom:20px;">Enter your account credentials</div>
+    <div id="onboard2-form"></div>
+    <button class="btn-primary" onclick="nextOnboard2()">Connect provider</button>
+  </div>
+
+  <!-- ONBOARD STEP 3 -->
+  <div class="screen" id="screen-onboard-3">
+    <div class="top-nav">
+      <button class="nav-back" onclick="goTo('screen-home')">← Home</button>
+      <div class="nav-title">Provider connected</div>
+    </div>
+    <div style="padding:32px 0 24px;text-align:center;">
+      <div class="success-icon">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+          <path d="M7 14.5l5 5 9-10" stroke="#3b6d11" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div style="font-size:18px;font-weight:500;margin-bottom:8px;" id="onboard3-name">Provider connected!</div>
+      <div style="font-size:14px;color:#666;" id="onboard3-sub">You can now use this provider to pay suppliers.</div>
+    </div>
+    <div class="card" id="onboard3-summary"></div>
+    <button class="btn-primary" onclick="goTo('screen-pay-1')">Make a payment now</button>
+    <button class="btn-outline" onclick="goTo('screen-onboard-1')">Add another provider</button>
+    <button class="btn-outline" onclick="goTo('screen-home')">Back to home</button>
+  </div>
+
+  <!-- PAY STEP 1 -->
+  <div class="screen" id="screen-pay-1">
+    <div class="top-nav">
+      <button class="nav-back" onclick="goTo('screen-home')">← Back</button>
+      <div class="nav-title">New payment</div>
+    </div>
+    <div class="step-indicator">
+      <div class="step active">1</div><div class="step-line"></div>
+      <div class="step inactive">2</div><div class="step-line"></div>
+      <div class="step inactive">3</div>
+    </div>
+    <div class="section-label" style="margin-top:0;">Pay via</div>
+    <div id="pay-provider-list"></div>
+    <div class="section-label">Select supplier</div>
+    <div id="pay-seller-list"></div>
+    <button class="btn-outline" style="font-size:13px;" onclick="goTo('screen-add-seller')">+ Add new supplier</button>
+    <button class="btn-primary" style="margin-top:16px;" onclick="nextPay1()">Continue</button>
+  </div>
+
+  <!-- PAY STEP 2 -->
+  <div class="screen" id="screen-pay-2">
+    <div class="top-nav">
+      <button class="nav-back" onclick="goTo('screen-pay-1')">← Back</button>
+      <div class="nav-title">Payment details</div>
+    </div>
+    <div class="step-indicator">
+      <div class="step done">✓</div><div class="step-line"></div>
+      <div class="step active">2</div><div class="step-line"></div>
+      <div class="step inactive">3</div>
+    </div>
+    <div class="amount-display">
+      <div style="font-size:13px;color:#666;margin-bottom:10px;">Amount to pay</div>
+      <div class="amount-big"><span class="amount-currency">$</span><span id="amount-display">0</span></div>
+      <input type="number" id="amount-input" placeholder="0.00" style="text-align:center;font-size:22px;border:none;border-bottom:1.5px solid #888;border-radius:0;width:160px;background:transparent;color:#1a1a1a;margin-top:12px;padding:4px 0;font-family:inherit;" oninput="updateAmount(this.value)">
+    </div>
+    <div class="field"><label>Invoice / reference number</label><input type="text" id="pay-invoice" placeholder="INV-2024-001"></div>
+    <div class="field"><label>Payment note (optional)</label><input type="text" id="pay-note" placeholder="e.g. Weekly produce order"></div>
+    <div class="field"><label>Payment date</label><input type="date" id="pay-date"></div>
+    <button class="btn-primary" onclick="nextPay2()">Review payment</button>
+  </div>
+
+  <!-- PAY STEP 3 -->
+  <div class="screen" id="screen-pay-3">
+    <div class="top-nav">
+      <button class="nav-back" onclick="goTo('screen-pay-2')">← Back</button>
+      <div class="nav-title">Review & confirm</div>
+    </div>
+    <div class="step-indicator">
+      <div class="step done">✓</div><div class="step-line"></div>
+      <div class="step done">✓</div><div class="step-line"></div>
+      <div class="step active">3</div>
+    </div>
+    <div class="card" id="pay-review-card"></div>
+    <div style="font-size:13px;color:#666;margin:16px 0 8px;text-align:center;">By confirming, you authorize this payment from your connected account.</div>
+    <button class="btn-primary" onclick="confirmPayment()">Confirm & send payment</button>
+    <button class="btn-outline" onclick="goTo('screen-pay-1')">Cancel</button>
+  </div>
+
+  <!-- PAY SUCCESS -->
+  <div class="screen" id="screen-pay-success">
+    <div style="padding:40px 0 24px;text-align:center;">
+      <div class="success-icon" style="width:72px;height:72px;">
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+          <path d="M8 16.5l6 6 10-11" stroke="#3b6d11" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div style="font-size:20px;font-weight:500;margin-bottom:8px;">Payment sent!</div>
+      <div style="font-size:14px;color:#666;" id="success-sub">Your supplier will receive the funds shortly.</div>
+    </div>
+    <div class="card" id="success-card"></div>
+    <button class="btn-primary" onclick="goTo('screen-pay-1')">Make another payment</button>
+    <button class="btn-outline" onclick="goTo('screen-home')">Back to home</button>
+  </div>
+
+  <!-- ADD SELLER -->
+  <div class="screen" id="screen-add-seller">
+    <div class="top-nav">
+      <button class="nav-back" onclick="goTo('screen-pay-1')">← Back</button>
+      <div class="nav-title">Add supplier</div>
+    </div>
+    <div class="field"><label>Supplier / company name</label><input type="text" id="new-seller-name" placeholder="e.g. Green Valley Farms"></div>
+    <div class="field"><label>Contact name</label><input type="text" id="new-seller-contact" placeholder="e.g. James Okafor"></div>
+    <div class="field"><label>Email</label><input type="email" id="new-seller-email" placeholder="billing@supplier.com"></div>
+    <div class="field-row">
+      <div class="field"><label>Bank / routing no.</label><input type="text" id="new-seller-bank" placeholder="021000021"></div>
+      <div class="field"><label>Account no.</label><input type="text" id="new-seller-acct" placeholder="••••7823"></div>
+    </div>
+    <div class="field">
+      <label>Category</label>
+      <select id="new-seller-cat">
+        <option>Produce</option><option>Meat &amp; Poultry</option><option>Seafood</option>
+        <option>Dairy</option><option>Dry Goods</option><option>Beverages</option>
+        <option>Packaging</option><option>Cleaning Supplies</option><option>Other</option>
+      </select>
+    </div>
+    <button class="btn-primary" onclick="addSeller()">Save supplier</button>
+  </div>
+
+</div>
+
+<script>
+const providerTypes = [
+  { id:'ach', label:'ACH / Bank transfer', sub:'Direct bank-to-bank, 1–3 days', icon:'🏦', fields:[
+    {id:'bank',label:'Bank name',placeholder:'e.g. JPMorgan Chase'},
+    {id:'routing',label:'Routing number',placeholder:'021000021'},
+    {id:'account',label:'Account number',placeholder:'•••• •••• 4832'},
+    {id:'nickname',label:'Nickname (optional)',placeholder:'Main checking'}
+  ]},
+  { id:'vcard', label:'Virtual card', sub:'Instant, earn rebates, secure', icon:'💳', fields:[
+    {id:'provider',label:'Card provider',placeholder:'e.g. American Express, WEX, Corpay'},
+    {id:'card_num',label:'Card number (last 4)',placeholder:'•••• •••• •••• 7712'},
+    {id:'limit',label:'Monthly spend limit ($)',placeholder:'50000'}
+  ]},
+  { id:'wire', label:'Wire transfer', sub:'Same-day, large amounts', icon:'⚡', fields:[
+    {id:'bank',label:'Bank name',placeholder:'e.g. Bank of America'},
+    {id:'swift',label:'SWIFT / BIC code',placeholder:'BOFAUS3N'},
+    {id:'account',label:'Account number',placeholder:'•••• •••• 9201'},
+    {id:'currency',label:'Default currency',placeholder:'USD'}
+  ]},
+  { id:'bnpl', label:'Buy Now Pay Later', sub:'Spread payments over time', icon:'🛍️', fields:[
+    {id:'provider',label:'BNPL provider',placeholder:'e.g. Credit Key, Resolve Pay'},
+    {id:'limit',label:'Credit limit ($)',placeholder:'25000'},
+    {id:'terms',label:'Default terms',placeholder:'e.g. Net 30, Net 60'}
+  ]},
+  { id:'ap', label:'AP automation platform', sub:'MarginEdge, Restaurant365, Ramp', icon:'🤖', fields:[
+    {id:'platform',label:'Platform name',placeholder:'e.g. Restaurant365, MarginEdge'},
+    {id:'api_key',label:'API key / token',placeholder:'••••••••••••••••'},
+    {id:'entity',label:'Entity / location name',placeholder:'e.g. The Oak Kitchen - Main'}
+  ]},
+];
+
+const sellers = [
+  {id:'s1', name:'Fresh Farms Co.', contact:'Maria Chen', cat:'Produce'},
+  {id:'s2', name:'Metro Meats Ltd.', contact:'David Kim', cat:'Meat & Poultry'},
+  {id:'s3', name:'Coastal Seafood', contact:'Ana Torres', cat:'Seafood'},
+  {id:'s4', name:'SpiceRoute Import', contact:'Raj Patel', cat:'Dry Goods'},
+];
+
+let providers = [
+  {id:'p1', type:'ach', label:'ACH / Bank transfer', bank:'JPMorgan Chase', account:'4832', icon:'🏦'},
+  {id:'p2', type:'vcard', label:'Virtual card', bank:'American Express', account:'7712', icon:'💳'},
+];
+
+let state = { selectedProviderType:null, payProvider:null, paySeller:null, payAmount:0, payInvoice:'', payNote:'', payDate:'' };
+
+function goTo(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+  if (id==='screen-home') renderHome();
+  if (id==='screen-onboard-1') renderOnboard1();
+  if (id==='screen-pay-1') renderPay1();
+  if (id==='screen-pay-3') renderPayReview();
+}
+
+function renderHome() {
+  document.getElementById('provider-count').textContent = providers.length;
+  document.getElementById('supplier-count').textContent = sellers.length;
+  document.getElementById('provider-list-home').innerHTML = providers.map(p => `
+    <div class="provider-card">
+      <div class="provider-icon">${p.icon}</div>
+      <div class="provider-info"><div class="provider-name">${p.label}</div><div class="provider-sub">${p.bank} · ••••${p.account}</div></div>
+      <span class="provider-badge">Active</span>
+    </div>`).join('');
+}
+
+function renderOnboard1() {
+  state.selectedProviderType = null;
+  document.getElementById('provider-type-list').innerHTML = providerTypes.map(pt => `
+    <div class="provider-card" id="pt-${pt.id}" onclick="selectProviderType('${pt.id}')">
+      <div class="provider-icon">${pt.icon}</div>
+      <div class="provider-info"><div class="provider-name">${pt.label}</div><div class="provider-sub">${pt.sub}</div></div>
+      <div class="radio-dot" id="rd-${pt.id}"></div>
+    </div>`).join('');
+}
+
+function selectProviderType(id) {
+  state.selectedProviderType = id;
+  document.querySelectorAll('[id^=pt-]').forEach(c => c.classList.remove('selected'));
+  document.querySelectorAll('[id^=rd-]').forEach(d => d.classList.remove('checked'));
+  document.getElementById('pt-'+id).classList.add('selected');
+  document.getElementById('rd-'+id).classList.add('checked');
+}
+
+function nextOnboard1() {
+  if (!state.selectedProviderType) { alert('Please select a provider type.'); return; }
+  const pt = providerTypes.find(p => p.id===state.selectedProviderType);
+  document.getElementById('onboard2-title').textContent = 'Connect '+pt.label;
+  document.getElementById('onboard2-form').innerHTML = pt.fields.map(f => `
+    <div class="field"><label>${f.label}</label><input type="text" id="ob-${f.id}" placeholder="${f.placeholder}"></div>`).join('');
+  goTo('screen-onboard-2');
+}
+
+function nextOnboard2() {
+  const pt = providerTypes.find(p => p.id===state.selectedProviderType);
+  const firstField = document.getElementById('ob-'+pt.fields[0].id);
+  const bankName = firstField ? (firstField.value || pt.fields[0].placeholder) : pt.label;
+  const acctField = document.getElementById('ob-account') || document.getElementById('ob-card_num') || document.getElementById('ob-api_key');
+  const acct = acctField ? (acctField.value || '0000').slice(-4) : '0000';
+  providers.push({ id:'p'+Date.now(), type:pt.id, label:pt.label, bank:bankName, account:acct, icon:pt.icon });
+  document.getElementById('onboard3-name').textContent = pt.label+' connected!';
+  document.getElementById('onboard3-summary').innerHTML = `
+    <div class="summary-row"><span class="summary-label">Type</span><span class="summary-value">${pt.label}</span></div>
+    <div class="summary-row"><span class="summary-label">Account</span><span class="summary-value">${bankName}</span></div>
+    <div class="summary-row"><span class="summary-label">Status</span><span class="summary-value" style="color:#3b6d11;">Active</span></div>`;
+  goTo('screen-onboard-3');
+}
+
+function renderPay1() {
+  document.getElementById('pay-provider-list').innerHTML = providers.map(p => `
+    <div class="provider-card" id="pp-${p.id}" onclick="selectPayProvider('${p.id}')">
+      <div class="provider-icon">${p.icon}</div>
+      <div class="provider-info"><div class="provider-name">${p.label}</div><div class="provider-sub">${p.bank} · ••••${p.account}</div></div>
+      <div class="radio-dot" id="prd-${p.id}"></div>
+    </div>`).join('');
+  document.getElementById('pay-seller-list').innerHTML = sellers.map(s => `
+    <div class="provider-card" id="ps-${s.id}" onclick="selectPaySeller('${s.id}')">
+      <div class="provider-icon" style="font-weight:500;font-size:16px;color:#888;">${s.name.charAt(0)}</div>
+      <div class="provider-info"><div class="provider-name">${s.name}</div><div class="provider-sub">${s.contact} · ${s.cat}</div></div>
+      <div class="radio-dot" id="psd-${s.id}"></div>
+    </div>`).join('');
+  if (state.payProvider) selectPayProvider(state.payProvider);
+  if (state.paySeller) selectPaySeller(state.paySeller);
+}
+
+function selectPayProvider(id) {
+  state.payProvider = id;
+  document.querySelectorAll('[id^=pp-]').forEach(c => c.classList.remove('selected'));
+  document.querySelectorAll('[id^=prd-]').forEach(d => d.classList.remove('checked'));
+  const el = document.getElementById('pp-'+id);
+  if (el) { el.classList.add('selected'); document.getElementById('prd-'+id).classList.add('checked'); }
+}
+
+function selectPaySeller(id) {
+  state.paySeller = id;
+  document.querySelectorAll('[id^=ps-]').forEach(c => c.classList.remove('selected'));
+  document.querySelectorAll('[id^=psd-]').forEach(d => d.classList.remove('checked'));
+  const el = document.getElementById('ps-'+id);
+  if (el) { el.classList.add('selected'); document.getElementById('psd-'+id).classList.add('checked'); }
+}
+
+function nextPay1() {
+  if (!state.payProvider) { alert('Please select a payment provider.'); return; }
+  if (!state.paySeller) { alert('Please select a supplier.'); return; }
+  document.getElementById('pay-date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('amount-input').value = '';
+  document.getElementById('amount-display').textContent = '0';
+  goTo('screen-pay-2');
+}
+
+function updateAmount(val) {
+  const n = parseFloat(val) || 0;
+  document.getElementById('amount-display').textContent = n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+  state.payAmount = n;
+}
+
+function nextPay2() {
+  state.payAmount = parseFloat(document.getElementById('amount-input').value) || 0;
+  if (state.payAmount <= 0) { alert('Please enter a payment amount.'); return; }
+  state.payInvoice = document.getElementById('pay-invoice').value || 'N/A';
+  state.payNote = document.getElementById('pay-note').value || '';
+  state.payDate = document.getElementById('pay-date').value;
+  goTo('screen-pay-3');
+}
+
+function renderPayReview() {
+  const p = providers.find(x => x.id===state.payProvider) || {};
+  const s = sellers.find(x => x.id===state.paySeller) || {};
+  const fee = p.type==='wire' ? 25 : p.type==='vcard' ? (state.payAmount*0.029).toFixed(2) : 0;
+  const total = (parseFloat(state.payAmount)+parseFloat(fee)).toFixed(2);
+  document.getElementById('pay-review-card').innerHTML = `
+    <div class="summary-row"><span class="summary-label">Supplier</span><span class="summary-value">${s.name||'—'}</span></div>
+    <div class="summary-row"><span class="summary-label">Via</span><span class="summary-value">${p.label||'—'} (${p.bank||''})</span></div>
+    <div class="summary-row"><span class="summary-label">Invoice ref.</span><span class="summary-value">${state.payInvoice}</span></div>
+    ${state.payNote?`<div class="summary-row"><span class="summary-label">Note</span><span class="summary-value">${state.payNote}</span></div>`:''}
+    <div class="summary-row"><span class="summary-label">Payment date</span><span class="summary-value">${state.payDate}</span></div>
+    <div class="summary-row"><span class="summary-label">Amount</span><span class="summary-value">$${parseFloat(state.payAmount).toFixed(2)}</span></div>
+    <div class="summary-row"><span class="summary-label">Fee</span><span class="summary-value">${fee>0?'$'+fee:'None'}</span></div>
+    <div class="summary-row"><span class="summary-label">Total</span><span class="summary-value" style="font-size:16px;">$${total}</span></div>`;
+}
+
+function confirmPayment() {
+  const p = providers.find(x => x.id===state.payProvider) || {};
+  const s = sellers.find(x => x.id===state.paySeller) || {};
+  document.getElementById('success-sub').textContent = `$${parseFloat(state.payAmount).toFixed(2)} sent to ${s.name} via ${p.label}.`;
+  const fee = p.type==='wire'?25:p.type==='vcard'?(state.payAmount*0.029).toFixed(2):0;
+  document.getElementById('success-card').innerHTML = `
+    <div class="summary-row"><span class="summary-label">Reference</span><span class="summary-value">${state.payInvoice}</span></div>
+    <div class="summary-row"><span class="summary-label">Supplier</span><span class="summary-value">${s.name}</span></div>
+    <div class="summary-row"><span class="summary-label">Method</span><span class="summary-value">${p.label}</span></div>
+    <div class="summary-row"><span class="summary-label">Amount</span><span class="summary-value">$${parseFloat(state.payAmount).toFixed(2)}</span></div>
+    <div class="summary-row"><span class="summary-label">Status</span><span class="summary-value" style="color:#3b6d11;">Sent</span></div>`;
+  state.payProvider=null; state.paySeller=null; state.payAmount=0;
+  goTo('screen-pay-success');
+}
+
+function addSeller() {
+  const name = document.getElementById('new-seller-name').value.trim();
+  if (!name) { alert('Please enter a supplier name.'); return; }
+  sellers.push({ id:'s'+Date.now(), name, contact:document.getElementById('new-seller-contact').value.trim()||'N/A', cat:document.getElementById('new-seller-cat').value });
+  document.getElementById('supplier-count').textContent = sellers.length;
+  goTo('screen-pay-1');
+}
+
+renderHome();
+</script>
+</body>
+</html>

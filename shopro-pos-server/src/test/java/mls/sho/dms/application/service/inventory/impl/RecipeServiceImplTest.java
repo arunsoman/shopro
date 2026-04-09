@@ -1,15 +1,15 @@
 package mls.sho.dms.application.service.inventory.impl;
 
-import mls.sho.dms.application.dto.inventory.RecipeIngredientResponse;
 import mls.sho.dms.application.dto.inventory.RecipeResponse;
 import mls.sho.dms.application.dto.inventory.UpdateRecipeIngredientRequest;
 import mls.sho.dms.application.dto.inventory.UpdateRecipeRequest;
 import mls.sho.dms.application.service.inventory.IngredientService;
-import mls.sho.dms.entity.inventory.InventoryTransactionType;
-import mls.sho.dms.entity.inventory.RawIngredient;
-import mls.sho.dms.entity.inventory.Recipe;
-import mls.sho.dms.entity.inventory.RecipeIngredient;
-import mls.sho.dms.entity.menu.MenuItem;
+import mls.sho.dms.entity.inventory.stock.InventoryTransactionType;
+import mls.sho.dms.entity.inventory.ingredient.RawIngredient;
+import mls.sho.dms.entity.inventory.recipe.Recipe;
+import mls.sho.dms.entity.inventory.recipe.RecipeIngredient;
+import mls.sho.dms.entity.inventory.recipe.SubRecipe;
+import mls.sho.dms.entity.inventory.menu.MenuItem;
 import mls.sho.dms.entity.order.OrderItem;
 import mls.sho.dms.repository.inventory.RawIngredientRepository;
 import mls.sho.dms.repository.inventory.RecipeIngredientRepository;
@@ -198,7 +198,7 @@ class RecipeServiceImplTest {
         
         Recipe menuItemRecipe = new Recipe();
         
-        mls.sho.dms.entity.inventory.SubRecipe subRecipe = new mls.sho.dms.entity.inventory.SubRecipe();
+        SubRecipe subRecipe = new SubRecipe();
         subRecipe.setId(UUID.randomUUID());
         subRecipe.setName("Tomato Sauce");
         

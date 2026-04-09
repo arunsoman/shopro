@@ -1,6 +1,6 @@
 package mls.sho.dms.repository.inventory;
 
-import mls.sho.dms.entity.inventory.VendorInvoice;
+import mls.sho.dms.entity.inventory.vendor.VendorInvoice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

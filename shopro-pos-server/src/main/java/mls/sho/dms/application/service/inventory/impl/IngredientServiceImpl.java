@@ -7,21 +7,22 @@ import mls.sho.dms.application.dto.inventory.IngredientResponse;
 import mls.sho.dms.application.exception.ResourceNotFoundException;
 import mls.sho.dms.application.service.inventory.AlertService;
 import mls.sho.dms.application.service.inventory.IngredientService;
-import mls.sho.dms.entity.inventory.InventoryTransaction;
-import mls.sho.dms.entity.inventory.InventoryTransactionType;
-import mls.sho.dms.entity.inventory.RawIngredient;
-import mls.sho.dms.entity.inventory.Supplier;
+import mls.sho.dms.entity.inventory.stock.InventoryTransaction;
+import mls.sho.dms.entity.inventory.stock.InventoryTransactionType;
+import mls.sho.dms.entity.inventory.ingredient.Allergen;
+import mls.sho.dms.entity.inventory.ingredient.RawIngredient;
+import mls.sho.dms.entity.inventory.vendor.Supplier;
 import mls.sho.dms.repository.inventory.InventoryTransactionRepository;
 import mls.sho.dms.repository.inventory.PurchaseOrderRepository;
 import mls.sho.dms.repository.inventory.RFQRepository;
 import mls.sho.dms.repository.inventory.RawIngredientRepository;
 import mls.sho.dms.repository.inventory.SupplierRepository;
-import mls.sho.dms.entity.inventory.PurchaseOrderStatus;
-import mls.sho.dms.entity.inventory.RfqStatus;
-import mls.sho.dms.entity.inventory.PurchaseOrder;
-import mls.sho.dms.entity.inventory.RFQ;
+import mls.sho.dms.entity.inventory.procurement.PurchaseOrderStatus;
+import mls.sho.dms.entity.inventory.procurement.RfqStatus;
+import mls.sho.dms.entity.inventory.procurement.PurchaseOrder;
+import mls.sho.dms.entity.inventory.procurement.RFQ;
 import java.util.EnumSet;
-import java.util.Optional;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -112,7 +113,7 @@ public class IngredientServiceImpl implements IngredientService {
         
         if (request.allergens() != null) {
             ingredient.setAllergens(request.allergens().stream()
-                .map(mls.sho.dms.entity.inventory.Allergen::valueOf)
+                .map(Allergen::valueOf)
                 .collect(Collectors.toSet()));
         }
 

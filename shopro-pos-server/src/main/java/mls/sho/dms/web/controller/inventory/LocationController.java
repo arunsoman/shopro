@@ -1,7 +1,7 @@
 package mls.sho.dms.web.controller.inventory;
 
 import lombok.RequiredArgsConstructor;
-import mls.sho.dms.entity.inventory.InventoryLocation;
+import mls.sho.dms.entity.inventory.stock.InventoryLocation;
 import mls.sho.dms.repository.inventory.InventoryLocationRepository;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;

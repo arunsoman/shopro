@@ -1,7 +1,7 @@
 package mls.sho.dms.web.controller.inventory;
 
 import lombok.RequiredArgsConstructor;
-import mls.sho.dms.entity.inventory.DemandForecast;
+import mls.sho.dms.entity.inventory.ingredient.DemandForecast;
 import mls.sho.dms.repository.inventory.DemandForecastRepository;
 import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;

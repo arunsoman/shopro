@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import mls.sho.dms.application.dto.inventory.SubRecipeResponse;
 import mls.sho.dms.application.exception.ResourceNotFoundException;
 import mls.sho.dms.application.service.inventory.SubRecipeService;
-import mls.sho.dms.entity.inventory.SubRecipe;
+import mls.sho.dms.entity.inventory.recipe.SubRecipe;
 import mls.sho.dms.repository.inventory.SubRecipeRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

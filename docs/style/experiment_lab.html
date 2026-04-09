@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Experiment Lab — Restaurant Theory Tester</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f3;min-height:100vh;display:flex;justify-content:center;padding:20px}
+.wrap{max-width:720px;width:100%;margin:0 auto;padding:8px 0 48px}
+.screen{display:none;animation:fi .22s ease}
+.screen.active{display:block}
+@keyframes fi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.topbar{display:flex;align-items:center;gap:12px;margin-bottom:24px;padding-bottom:14px;border-bottom:0.5px solid #e0ddd6}
+.back-btn{background:none;border:0.5px solid #ccc;border-radius:8px;padding:5px 10px;cursor:pointer;font-size:13px;color:#666;font-family:inherit}
+.back-btn:hover{background:#f0ede8}
+.page-title{font-size:16px;font-weight:500;color:#1a1a1a}
+.steps{display:flex;align-items:center;gap:6px;margin-bottom:28px}
+.st{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;flex-shrink:0}
+.st.done{background:#eaf3de;color:#3b6d11}
+.st.active{background:#1a1a1a;color:#fff}
+.st.idle{background:#f0ede8;color:#999;border:0.5px solid #e0ddd6}
+.st-line{flex:1;height:0.5px;background:#e0ddd6}
+.sec-label{font-size:11px;font-weight:500;color:#999;text-transform:uppercase;letter-spacing:.06em;margin:20px 0 8px}
+.sec-label:first-child{margin-top:0}
+.card{background:#fff;border:0.5px solid #e0ddd6;border-radius:12px;padding:1rem 1.25rem;margin-bottom:10px}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:13px;color:#555;margin-bottom:5px}
+.field input,.field select,.field textarea{width:100%;border:0.5px solid #ccc;border-radius:8px;padding:0 10px;font-size:14px;background:#fff;color:#1a1a1a;font-family:inherit;outline:none}
+.field input,.field select{height:36px}
+.field textarea{padding:8px 10px;resize:vertical;min-height:72px;line-height:1.5}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:#888}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn-p{width:100%;padding:11px;background:#1a1a1a;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;margin-top:8px}
+.btn-p:hover{opacity:.85}
+.btn-o{width:100%;padding:10px;background:none;border:0.5px solid #ccc;border-radius:8px;font-size:14px;cursor:pointer;color:#1a1a1a;font-family:inherit;margin-top:8px}
+.btn-o:hover{background:#f0ede8}
+.selcard{display:flex;align-items:flex-start;gap:12px;cursor:pointer;padding:12px 14px;border:0.5px solid #e0ddd6;border-radius:12px;background:#fff;margin-bottom:8px;transition:border-color .15s}
+.selcard:hover,.selcard.sel{border-color:#888}
+.selcard.sel{border-width:1.5px}
+.selcard-icon{width:36px;height:36px;border-radius:8px;background:#f0ede8;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.selcard-body{flex:1}
+.selcard-name{font-size:14px;font-weight:500;color:#1a1a1a}
+.selcard-sub{font-size:12px;color:#666;margin-top:2px;line-height:1.4}
+.radio{width:16px;height:16px;border-radius:50%;border:1.5px solid #ccc;flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center}
+.radio.on{border-color:#1a1a1a}
+.radio.on::after{content:'';width:8px;height:8px;border-radius:50%;background:#1a1a1a}
+.check{width:16px;height:16px;border-radius:4px;border:1.5px solid #ccc;flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center}
+.check.on{border-color:#1a1a1a;background:#1a1a1a}
+.check.on::after{content:'';width:8px;height:2px;background:#fff;transform:rotate(-45deg) translate(1px,0)}
+.metric-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:16px}
+.metric{background:#f0ede8;border-radius:8px;padding:12px}
+.metric-l{font-size:12px;color:#666;margin-bottom:4px}
+.metric-v{font-size:20px;font-weight:500;color:#1a1a1a}
+.badge{display:inline-flex;align-items:center;font-size:11px;padding:3px 8px;border-radius:99px;font-weight:500}
+.badge-running{background:#faeeda;color:#854f0b}
+.badge-done{background:#eaf3de;color:#3b6d11}
+.badge-draft{background:#f0ede8;color:#666;border:0.5px solid #e0ddd6}
+.exp-row{display:flex;align-items:flex-start;gap:14px;padding:14px 0;border-bottom:0.5px solid #e0ddd6;cursor:pointer}
+.exp-row:last-child{border-bottom:none}
+.exp-row:hover{background:#fafaf8;margin:0 -1.25rem;padding-left:1.25rem;padding-right:1.25rem}
+.exp-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.exp-info{flex:1}
+.exp-name{font-size:14px;font-weight:500;color:#1a1a1a}
+.exp-meta{font-size:12px;color:#888;margin-top:3px}
+.sr-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:0.5px solid #e0ddd6;font-size:14px}
+.sr-row:last-child{border-bottom:none}
+.sr-l{color:#666}
+.sr-v{color:#1a1a1a;font-weight:500;text-align:right;max-width:60%}
+.kpi-tag{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:4px 10px;border-radius:99px;background:#e6f1fb;color:#185fa5;margin:3px}
+.prog-bar{height:6px;border-radius:3px;background:#f0ede8;overflow:hidden;margin-top:6px}
+.prog-fill{height:100%;border-radius:3px;background:#3b6d11}
+.result-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.result-card{background:#fff;border:0.5px solid #e0ddd6;border-radius:12px;padding:14px}
+.rc-label{font-size:12px;color:#666;margin-bottom:6px;text-transform:capitalize}
+.rc-val{font-size:22px;font-weight:500;color:#1a1a1a}
+.rc-delta{font-size:12px;margin-top:3px}
+.rc-up{color:#3b6d11}
+.rc-dn{color:#a32d2d}
+.hypothesis-box{background:#f5f5f3;border-radius:0;padding:12px 14px;font-size:13px;color:#555;line-height:1.6;margin-bottom:14px;border-left:2px solid #888}
+.tag-chip{display:inline-flex;font-size:11px;padding:3px 8px;border-radius:99px;border:0.5px solid #e0ddd6;color:#666;background:#f0ede8;margin:2px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- HOME -->
+<div class="screen active" id="s-home">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
+    <div>
+      <div style="font-size:18px;font-weight:500;color:#1a1a1a">Experiment lab</div>
+      <div style="font-size:13px;color:#666">Design, run &amp; measure restaurant experiments</div>
+    </div>
+    <button class="btn-p" style="width:auto;margin:0;padding:8px 16px;font-size:13px" onclick="go('s-new-1')">+ New experiment</button>
+  </div>
+  <div class="metric-grid">
+    <div class="metric"><div class="metric-l">Total experiments</div><div class="metric-v" id="m-total">3</div></div>
+    <div class="metric"><div class="metric-l">Running now</div><div class="metric-v" id="m-run">1</div></div>
+    <div class="metric"><div class="metric-l">Completed</div><div class="metric-v" id="m-done">2</div></div>
+    <div class="metric"><div class="metric-l">Avg lift</div><div class="metric-v">+12%</div></div>
+  </div>
+  <div class="sec-label">All experiments</div>
+  <div class="card" style="padding:0 1.25rem" id="exp-list"></div>
+  <button class="btn-o" onclick="go('s-new-1')">+ Design a new experiment</button>
+</div>
+
+<!-- STEP 1: Theory & target -->
+<div class="screen" id="s-new-1">
+  <div class="topbar">
+    <button class="back-btn" onclick="go('s-home')">← Back</button>
+    <div class="page-title">New experiment</div>
+  </div>
+  <div class="steps">
+    <div class="st active">1</div><div class="st-line"></div>
+    <div class="st idle">2</div><div class="st-line"></div>
+    <div class="st idle">3</div><div class="st-line"></div>
+    <div class="st idle">4</div>
+  </div>
+  <div style="font-size:15px;font-weight:500;margin-bottom:4px">Name your theory</div>
+  <div style="font-size:13px;color:#666;margin-bottom:20px">What do you believe will happen, and who are you testing it on?</div>
+  <div class="field"><label>Experiment name</label><input type="text" id="n-name" placeholder="e.g. Free drink loyalty reward, Happy hour test"></div>
+  <div class="field"><label>Your hypothesis (what do you believe will happen?)</label><textarea id="n-hypothesis" placeholder="e.g. Offering a free drink on every 5th visit will increase repeat visits by at least 20% over 60 days."></textarea></div>
+  <div class="sec-label">Target audience</div>
+  <div id="target-list">
+    <div class="selcard" id="t-all" onclick="selTarget('all')">
+      <div class="selcard-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5" r="3" stroke="#666" stroke-width="1.2"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="#666" stroke-width="1.2" stroke-linecap="round"/></svg></div>
+      <div class="selcard-body"><div class="selcard-name">All guests</div><div class="selcard-sub">Every customer who visits during the experiment period</div></div>
+      <div class="radio" id="r-all"></div>
+    </div>
+    <div class="selcard" id="t-new" onclick="selTarget('new')">
+      <div class="selcard-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5" r="3" stroke="#666" stroke-width="1.2"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="#666" stroke-width="1.2" stroke-linecap="round"/><line x1="12" y1="2" x2="12" y2="6" stroke="#666" stroke-width="1.2" stroke-linecap="round"/><line x1="10" y1="4" x2="14" y2="4" stroke="#666" stroke-width="1.2" stroke-linecap="round"/></svg></div>
+      <div class="selcard-body"><div class="selcard-name">New guests only</div><div class="selcard-sub">First-time visitors with no prior visit history</div></div>
+      <div class="radio" id="r-new"></div>
+    </div>
+    <div class="selcard" id="t-loyal" onclick="selTarget('loyal')">
+      <div class="selcard-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 13s-6-3.5-6-7.5a4 4 0 0 1 6-3.46A4 4 0 0 1 14 5.5c0 4-6 7.5-6 7.5z" stroke="#666" stroke-width="1.2"/></svg></div>
+      <div class="selcard-body"><div class="selcard-name">Loyal guests</div><div class="selcard-sub">Guests with 3+ visits in the last 90 days</div></div>
+      <div class="radio" id="r-loyal"></div>
+    </div>
+    <div class="selcard" id="t-lapsed" onclick="selTarget('lapsed')">
+      <div class="selcard-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="#666" stroke-width="1.2"/><path d="M8 5v4l2.5 1.5" stroke="#666" stroke-width="1.2" stroke-linecap="round"/></svg></div>
+      <div class="selcard-body"><div class="selcard-name">Lapsed guests</div><div class="selcard-sub">Guests who haven't visited in 60+ days</div></div>
+      <div class="radio" id="r-lapsed"></div>
+    </div>
+    <div class="selcard" id="t-segment" onclick="selTarget('segment')">
+      <div class="selcard-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="5" height="5" rx="1" stroke="#666" stroke-width="1.2"/><rect x="9" y="2" width="5" height="5" rx="1" stroke="#666" stroke-width="1.2"/><rect x="2" y="9" width="5" height="5" rx="1" stroke="#666" stroke-width="1.2"/><rect x="9" y="9" width="5" height="5" rx="1" stroke="#666" stroke-width="1.2"/></svg></div>
+      <div class="selcard-body"><div class="selcard-name">Custom segment</div><div class="selcard-sub">Define your own filter: spend tier, day part, cuisine preference</div></div>
+      <div class="radio" id="r-segment"></div>
+    </div>
+  </div>
+  <button class="btn-p" onclick="next1()">Continue</button>
+</div>
+
+<!-- STEP 2: Intervention -->
+<div class="screen" id="s-new-2">
+  <div class="topbar">
+    <button class="back-btn" onclick="go('s-new-1')">← Back</button>
+    <div class="page-title">Define the intervention</div>
+  </div>
+  <div class="steps">
+    <div class="st done">✓</div><div class="st-line"></div>
+    <div class="st active">2</div><div class="st-line"></div>
+    <div class="st idle">3</div><div class="st-line"></div>
+    <div class="st idle">4</div>
+  </div>
+  <div style="font-size:15px;font-weight:500;margin-bottom:4px">What are you changing?</div>
+  <div style="font-size:13px;color:#666;margin-bottom:20px">Choose the type of intervention and configure it</div>
+  <div class="sec-label">Intervention type</div>
+  <div id="interv-list">
+    <div class="selcard" id="iv-loyalty" onclick="selInterv('loyalty')">
+      <div class="selcard-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2l1.5 3 3.5.5-2.5 2.5.6 3.5L8 10l-3.1 1.5.6-3.5L3 5.5l3.5-.5z" stroke="#666" stroke-width="1.2" stroke-linejoin="round"/></svg></div>
+      <div class="selcard-body"><div class="selcard-name">Loyalty / reward trigger</div><div class="selcard-sub">Give a reward on the Nth visit, Nth order, or Nth spend threshold</div></div>
+      <div class="radio" id="ri-loyalty"></div>
+    </div>
+    <div class="selcard" id="iv-happy" onclick="selInterv('happy')">
+      <div class="selcard-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="5.5" stroke="#666" stroke-width="1.2"/><path d="M5.5 9.5s.8 1.5 2.5 1.5 2.5-1.5 2.5-1.5" stroke="#666" stroke-width="1.2" stroke-linecap="round"/><circle cx="6" cy="7" r=".8" fill="#666"/><circle cx="10" cy="7" r=".8" fill="#666"/></svg></div>
+      <div class="selcard-body"><div class="selcard-name">Happy hour / time promotion</div><div class="selcard-sub">Discounts or offers active during specific hours or days</div></div>
+      <div class="radio" id="ri-happy"></div>
+    </div>
+    <div class="selcard" id="iv-discount" onclick="selInterv('discount')">
+      <div class="selcard-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 3l10 10M6 4.5a1.5 1.5 0 100 3 1.5 1.5 0 000-3zM10 8.5a1.5 1.5 0 100 3 1.5 1.5 0 000-3z" stroke="#666" stroke-width="1.2" stroke-linecap="round"/></svg></div>
+      <div class="selcard-body"><div class="selcard-name">Discount / price change</div><div class="selcard-sub">Percentage or flat discount on a category, item, or total bill</div></div>
+      <div class="radio" id="ri-discount"></div>
+    </div>
+    <div class="selcard" id="iv-upsell" onclick="selInterv('upsell')">
+      <div class="selcard-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 13l4-4 3 2 5-7" stroke="#666" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="selcard-body"><div class="selcard-name">Upsell / bundle offer</div><div class="selcard-sub">Suggest a combo, add-on, or upgrade at order time</div></div>
+      <div class="radio" id="ri-upsell"></div>
+    </div>
+    <div class="selcard" id="iv-menu" onclick="selInterv('menu')">
+      <div class="selcard-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="3" y="2" width="10" height="12" rx="1.5" stroke="#666" stroke-width="1.2"/><line x1="6" y1="6" x2="10" y2="6" stroke="#666" stroke-width="1.2" stroke-linecap="round"/><line x1="6" y1="9" x2="10" y2="9" stroke="#666" stroke-width="1.2" stroke-linecap="round"/></svg></div>
+      <div class="selcard-body"><div class="selcard-name">Menu / item change</div><div class="selcard-sub">Introduce, remove, or rename a menu item and track impact</div></div>
+      <div class="radio" id="ri-menu"></div>
+    </div>
+    <div class="selcard" id="iv-custom" onclick="selInterv('custom')">
+      <div class="selcard-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="2" stroke="#666" stroke-width="1.2"/><path d="M8 2v2M8 12v2M2 8h2M12 8h2M3.5 3.5l1.5 1.5M11 11l1.5 1.5M3.5 12.5L5 11M11 5l1.5-1.5" stroke="#666" stroke-width="1.2" stroke-linecap="round"/></svg></div>
+      <div class="selcard-body"><div class="selcard-name">Custom intervention</div><div class="selcard-sub">Describe any other change you want to test</div></div>
+      <div class="radio" id="ri-custom"></div>
+    </div>
+  </div>
+  <div id="interv-config" style="margin-top:8px"></div>
+  <button class="btn-p" onclick="next2()" style="margin-top:16px">Continue</button>
+</div>
+
+<!-- STEP 3: Duration & control -->
+<div class="screen" id="s-new-3">
+  <div class="topbar">
+    <button class="back-btn" onclick="go('s-new-2')">← Back</button>
+    <div class="page-title">Duration &amp; control group</div>
+  </div>
+  <div class="steps">
+    <div class="st done">✓</div><div class="st-line"></div>
+    <div class="st done">✓</div><div class="st-line"></div>
+    <div class="st active">3</div><div class="st-line"></div>
+    <div class="st idle">4</div>
+  </div>
+  <div class="sec-label" style="margin-top:0">Experiment duration</div>
+  <div class="frow">
+    <div class="field"><label>Start date</label><input type="date" id="n-start"></div>
+    <div class="field"><label>End date</label><input type="date" id="n-end"></div>
+  </div>
+  <div class="field"><label>Run for (days)</label><input type="number" id="n-days" placeholder="e.g. 30, 60, 90" min="7" max="365"></div>
+  <div class="sec-label">Control group</div>
+  <div class="selcard" id="cg-ab" onclick="selControl('ab')">
+    <div class="selcard-body"><div class="selcard-name">A/B split — 50/50</div><div class="selcard-sub">Half the target sees the intervention; half sees normal experience</div></div>
+    <div class="radio" id="rc-ab"></div>
+  </div>
+  <div class="selcard" id="cg-pct" onclick="selControl('pct')">
+    <div class="selcard-body"><div class="selcard-name">Custom split</div><div class="selcard-sub">Set what % of target audience receives the intervention</div></div>
+    <div class="radio" id="rc-pct"></div>
+  </div>
+  <div id="split-pct-field" style="display:none">
+    <div class="field" style="margin-top:8px"><label>Treatment group size (%)</label><input type="number" id="n-split" min="10" max="90" value="50" placeholder="50"></div>
+  </div>
+  <div class="selcard" id="cg-all" onclick="selControl('all')">
+    <div class="selcard-body"><div class="selcard-name">No control — full rollout</div><div class="selcard-sub">Apply to everyone. Compare before vs after instead</div></div>
+    <div class="radio" id="rc-all"></div>
+  </div>
+  <div class="sec-label">Location scope</div>
+  <div class="frow">
+    <div class="field"><label>Location(s)</label><input type="text" id="n-location" placeholder="All locations, or name specific ones"></div>
+    <div class="field"><label>Day parts (optional)</label><input type="text" id="n-daypart" placeholder="e.g. Lunch, Dinner, All day"></div>
+  </div>
+  <button class="btn-p" onclick="next3()">Continue</button>
+</div>
+
+<!-- STEP 4: KPIs -->
+<div class="screen" id="s-new-4">
+  <div class="topbar">
+    <button class="back-btn" onclick="go('s-new-3')">← Back</button>
+    <div class="page-title">Success metrics</div>
+  </div>
+  <div class="steps">
+    <div class="st done">✓</div><div class="st-line"></div>
+    <div class="st done">✓</div><div class="st-line"></div>
+    <div class="st done">✓</div><div class="st-line"></div>
+    <div class="st active">4</div>
+  </div>
+  <div style="font-size:15px;font-weight:500;margin-bottom:4px">What does success look like?</div>
+  <div style="font-size:13px;color:#666;margin-bottom:20px">Choose KPIs to track and set your target lift</div>
+  <div class="sec-label" style="margin-top:0">Primary KPI (the one that determines success)</div>
+  <div id="kpi-primary-list"></div>
+  <div class="sec-label">Secondary KPIs (track but not pass/fail)</div>
+  <div id="kpi-secondary-list"></div>
+  <div class="sec-label">Success threshold</div>
+  <div class="frow">
+    <div class="field"><label>Minimum lift to call it a win (%)</label><input type="number" id="n-lift" placeholder="e.g. 10" min="1" max="200" oninput="renderHypPreview()"></div>
+    <div class="field"><label>Confidence level required (%)</label><input type="number" id="n-conf" placeholder="e.g. 95" value="95" min="80" max="99" oninput="renderHypPreview()"></div>
+  </div>
+  <div class="field"><label>Guardrail — halt if this metric drops below baseline by (%)</label><input type="number" id="n-guard" placeholder="e.g. 5" min="1" max="50"></div>
+  <div id="hyp-preview" style="margin-top:8px"></div>
+  <button class="btn-p" onclick="launchExp()">Launch experiment</button>
+  <button class="btn-o" onclick="saveAsDraft()">Save as draft</button>
+</div>
+
+<!-- DETAIL -->
+<div class="screen" id="s-detail">
+  <div class="topbar">
+    <button class="back-btn" onclick="go('s-home')">← Back</button>
+    <div class="page-title" id="d-title">Experiment detail</div>
+  </div>
+  <div id="d-badge-row" style="margin-bottom:16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap"></div>
+  <div class="hypothesis-box" id="d-hypothesis"></div>
+  <div class="sec-label" style="margin-top:0">Results</div>
+  <div class="result-grid" id="d-results"></div>
+  <div class="sec-label">Experiment config</div>
+  <div class="card" style="padding:0 1.25rem" id="d-config"></div>
+  <div class="sec-label">KPIs tracked</div>
+  <div id="d-kpis" style="margin-bottom:16px"></div>
+  <div class="sec-label">Progress</div>
+  <div class="card" id="d-progress"></div>
+</div>
+
+</div>
+
+<script>
+const kpiOptions=[
+  {id:'revisit',label:'Repeat visit rate',unit:'%',desc:'% of guests who return within the experiment window'},
+  {id:'avgspend',label:'Avg spend per visit',unit:'$',desc:'Average bill value per table or guest'},
+  {id:'covers',label:'Total covers / footfall',unit:'pax',desc:'Number of guests served over the period'},
+  {id:'nps',label:'Guest satisfaction (NPS)',unit:'pts',desc:'Net promoter score from post-visit surveys'},
+  {id:'dwell',label:'Avg dwell time',unit:'min',desc:'How long guests stay on average'},
+  {id:'upsell',label:'Upsell attach rate',unit:'%',desc:'% of orders that include an add-on or upgrade'},
+  {id:'revenue',label:'Total revenue',unit:'$',desc:'Gross revenue over the period'},
+  {id:'margin',label:'Gross margin %',unit:'%',desc:'Revenue minus direct costs as a percentage'},
+];
+
+const intervConfigs={
+  loyalty:`<div class="card" style="margin-top:4px"><div class="frow" style="margin-bottom:10px"><div class="field" style="margin:0"><label>Trigger type</label><select id="iv-trigger"><option>Every Nth visit</option><option>Every Nth order value</option><option>Birthday visit</option><option>Custom</option></select></div><div class="field" style="margin:0"><label>N (trigger frequency)</label><input type="number" id="iv-n" placeholder="e.g. 5" min="2"></div></div><div class="field" style="margin-bottom:10px"><label>Reward given</label><input type="text" id="iv-reward" placeholder="e.g. Free drink, 20% off next bill, Free dessert"></div><div class="field" style="margin:0"><label>Reward delivery method</label><select id="iv-delivery"><option>At POS automatically</option><option>SMS / app notification</option><option>Physical stamp card</option><option>Staff-handed coupon</option></select></div></div>`,
+  happy:`<div class="card" style="margin-top:4px"><div class="frow" style="margin-bottom:10px"><div class="field" style="margin:0"><label>Happy hour start</label><input type="time" id="iv-hstart" value="17:00"></div><div class="field" style="margin:0"><label>Happy hour end</label><input type="time" id="iv-hend" value="19:00"></div></div><div class="frow" style="margin-bottom:10px"><div class="field" style="margin:0"><label>Days active</label><select id="iv-days"><option>Mon–Fri</option><option>Weekends only</option><option>All days</option><option>Custom days</option></select></div><div class="field" style="margin:0"><label>Offer type</label><select id="iv-offer"><option>% off drinks</option><option>2-for-1 drinks</option><option>Fixed price menu</option><option>Free item with order</option></select></div></div><div class="field" style="margin:0"><label>Items / categories covered</label><input type="text" id="iv-items" placeholder="e.g. All cocktails, House wine, Appetizers"></div></div>`,
+  discount:`<div class="card" style="margin-top:4px"><div class="frow" style="margin-bottom:10px"><div class="field" style="margin:0"><label>Discount type</label><select id="iv-dtype"><option>Percentage off (%)</option><option>Flat amount off ($)</option><option>Fixed price item</option></select></div><div class="field" style="margin:0"><label>Discount value</label><input type="number" id="iv-dval" placeholder="e.g. 15 for 15%"></div></div><div class="field" style="margin:0"><label>Applied to</label><input type="text" id="iv-dcat" placeholder="e.g. Entire bill, Starters, Beverages, Specific item name"></div></div>`,
+  upsell:`<div class="card" style="margin-top:4px"><div class="field" style="margin-bottom:10px"><label>Upsell prompt</label><input type="text" id="iv-uprompt" placeholder="e.g. Add a dessert for $5, Upgrade to large for $2"></div><div class="field" style="margin-bottom:10px"><label>Trigger point</label><select id="iv-utrigger"><option>At ordering</option><option>Mid-meal check-in</option><option>With bill</option><option>Post-meal (return incentive)</option></select></div><div class="field" style="margin:0"><label>Delivery method</label><select id="iv-udeliver"><option>Staff verbal</option><option>Printed insert</option><option>App / kiosk prompt</option><option>Table tent card</option></select></div></div>`,
+  menu:`<div class="card" style="margin-top:4px"><div class="field" style="margin-bottom:10px"><label>Change description</label><input type="text" id="iv-mchange" placeholder="e.g. Introduce 3 new plant-based items, Rename Burger to Classic Smash"></div><div class="frow" style="margin-bottom:10px"><div class="field" style="margin:0"><label>Category affected</label><input type="text" id="iv-mcat" placeholder="e.g. Mains, Starters, Drinks"></div><div class="field" style="margin:0"><label>Price change ($)</label><input type="number" id="iv-mprice" placeholder="0 if no change"></div></div></div>`,
+  custom:`<div class="card" style="margin-top:4px"><div class="field" style="margin-bottom:10px"><label>Describe the intervention</label><textarea id="iv-cdesc" placeholder="Describe exactly what you are changing or introducing and how guests will experience it..."></textarea></div><div class="field" style="margin:0"><label>How is it delivered to the guest?</label><input type="text" id="iv-cdeliver" placeholder="e.g. Staff-led, app notification, table signage"></div></div>`
+};
+
+const experiments=[
+  {id:'e1',name:'Free drink — 5th visit reward',status:'running',target:'loyal',intervType:'loyalty',hypothesis:'Loyal guests given a free drink every 5th visit will increase visit frequency by 25% over 60 days.',startDate:'2026-02-01',endDate:'2026-04-01',days:60,control:'ab',location:'All locations',primaryKpi:'revisit',secondaryKpis:['avgspend','nps'],lift:25,results:{revisit:{base:18,curr:23,unit:'%'},avgspend:{base:42,curr:44,unit:'$'},nps:{base:34,curr:38,unit:'pts'}},progress:72},
+  {id:'e2',name:'Happy hour — Tue & Thu 5–7 pm',status:'done',target:'all',intervType:'happy',hypothesis:'A 2-for-1 drinks happy hour on quiet nights will increase covers by 30% on those nights.',startDate:'2025-11-01',endDate:'2025-12-31',days:60,control:'all',location:'Downtown branch',primaryKpi:'covers',secondaryKpis:['revenue','avgspend'],lift:30,results:{covers:{base:48,curr:66,unit:'pax'},revenue:{base:2100,curr:2650,unit:'$'},avgspend:{base:43,curr:40,unit:'$'}},progress:100},
+  {id:'e3',name:'Weekend upsell — dessert add-on',status:'draft',target:'all',intervType:'upsell',hypothesis:'Prompting guests to add a dessert at bill time will increase avg spend by $4 without reducing satisfaction.',startDate:'2026-05-01',endDate:'2026-06-30',days:60,control:'ab',location:'All locations',primaryKpi:'avgspend',secondaryKpis:['upsell','nps'],lift:10,results:null,progress:0},
+];
+
+let draft={name:'',hypothesis:'',target:null,intervType:null,control:null,primaryKpi:null,secondaryKpis:[],lift:'',conf:95,guard:'',days:'',start:'',end:'',location:'',daypart:''};
+
+function go(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+  if(id==='s-home') renderHome();
+  if(id==='s-new-1'){renderTargets();}
+  if(id==='s-new-2') renderIntervList();
+  if(id==='s-new-4'){renderKpiLists();renderHypPreview();}
+}
+
+function renderHome(){
+  document.getElementById('m-total').textContent=experiments.length;
+  document.getElementById('m-run').textContent=experiments.filter(e=>e.status==='running').length;
+  document.getElementById('m-done').textContent=experiments.filter(e=>e.status==='done').length;
+  const colors={running:'#BA7517',done:'#3B6D11',draft:'#888780'};
+  document.getElementById('exp-list').innerHTML=experiments.map(e=>`
+    <div class="exp-row" onclick="showDetail('${e.id}')">
+      <div class="exp-dot" style="background:${colors[e.status]}"></div>
+      <div class="exp-info">
+        <div class="exp-name">${e.name}</div>
+        <div class="exp-meta">${e.target} · ${e.intervType} · ${e.days} days · Primary: ${e.primaryKpi}</div>
+        <div class="prog-bar" style="max-width:180px"><div class="prog-fill" style="width:${e.progress}%"></div></div>
+      </div>
+      <span class="badge badge-${e.status}">${e.status}</span>
+    </div>`).join('');
+}
+
+function renderTargets(){
+  ['all','new','loyal','lapsed','segment'].forEach(t=>{
+    document.getElementById('t-'+t).classList.remove('sel');
+    document.getElementById('r-'+t).classList.remove('on');
+  });
+  if(draft.target){document.getElementById('t-'+draft.target).classList.add('sel');document.getElementById('r-'+draft.target).classList.add('on');}
+  if(draft.name) document.getElementById('n-name').value=draft.name;
+  if(draft.hypothesis) document.getElementById('n-hypothesis').value=draft.hypothesis;
+}
+
+function selTarget(t){
+  draft.target=t;
+  ['all','new','loyal','lapsed','segment'].forEach(x=>{document.getElementById('t-'+x).classList.remove('sel');document.getElementById('r-'+x).classList.remove('on');});
+  document.getElementById('t-'+t).classList.add('sel');document.getElementById('r-'+t).classList.add('on');
+}
+
+function renderIntervList(){
+  ['loyalty','happy','discount','upsell','menu','custom'].forEach(x=>{
+    document.getElementById('iv-'+x).classList.remove('sel');
+    document.getElementById('ri-'+x).classList.remove('on');
+  });
+  if(draft.intervType){
+    document.getElementById('iv-'+draft.intervType).classList.add('sel');
+    document.getElementById('ri-'+draft.intervType).classList.add('on');
+    document.getElementById('interv-config').innerHTML=intervConfigs[draft.intervType]||'';
+  } else {document.getElementById('interv-config').innerHTML='';}
+}
+
+function selInterv(t){
+  draft.intervType=t;
+  ['loyalty','happy','discount','upsell','menu','custom'].forEach(x=>{document.getElementById('iv-'+x).classList.remove('sel');document.getElementById('ri-'+x).classList.remove('on');});
+  document.getElementById('iv-'+t).classList.add('sel');document.getElementById('ri-'+t).classList.add('on');
+  document.getElementById('interv-config').innerHTML=intervConfigs[t]||'';
+}
+
+function selControl(c){
+  draft.control=c;
+  ['ab','pct','all'].forEach(x=>{document.getElementById('cg-'+x).classList.remove('sel');document.getElementById('rc-'+x).classList.remove('on');});
+  document.getElementById('cg-'+c).classList.add('sel');document.getElementById('rc-'+c).classList.add('on');
+  document.getElementById('split-pct-field').style.display=c==='pct'?'block':'none';
+}
+
+function renderKpiLists(){
+  const pl=document.getElementById('kpi-primary-list');
+  const sl=document.getElementById('kpi-secondary-list');
+  if(!pl||!sl) return;
+  pl.innerHTML=kpiOptions.map(k=>`<div class="selcard" id="kp-${k.id}" onclick="selPrimaryKpi('${k.id}')"><div class="selcard-body"><div class="selcard-name">${k.label} <span style="font-size:12px;color:#999">(${k.unit})</span></div><div class="selcard-sub">${k.desc}</div></div><div class="radio" id="krp-${k.id}"></div></div>`).join('');
+  sl.innerHTML=kpiOptions.map(k=>`<div class="selcard" id="ks-${k.id}" onclick="toggleSecondaryKpi('${k.id}')"><div class="selcard-body"><div class="selcard-name">${k.label}</div></div><div class="check" id="kcs-${k.id}"></div></div>`).join('');
+  if(draft.primaryKpi){document.getElementById('kp-'+draft.primaryKpi).classList.add('sel');document.getElementById('krp-'+draft.primaryKpi).classList.add('on');}
+  draft.secondaryKpis.forEach(k=>{const el=document.getElementById('ks-'+k);if(el){el.classList.add('sel');document.getElementById('kcs-'+k).classList.add('on');}});
+}
+
+function selPrimaryKpi(id){
+  draft.primaryKpi=id;
+  kpiOptions.forEach(k=>{const el=document.getElementById('kp-'+k.id);if(el){el.classList.remove('sel');document.getElementById('krp-'+k.id).classList.remove('on');}});
+  document.getElementById('kp-'+id).classList.add('sel');document.getElementById('krp-'+id).classList.add('on');
+  renderHypPreview();
+}
+
+function toggleSecondaryKpi(id){
+  const i=draft.secondaryKpis.indexOf(id);
+  if(i>-1) draft.secondaryKpis.splice(i,1); else draft.secondaryKpis.push(id);
+  const el=document.getElementById('ks-'+id);const ch=document.getElementById('kcs-'+id);
+  if(el&&ch){el.classList.toggle('sel');ch.classList.toggle('on');}
+}
+
+function renderHypPreview(){
+  const box=document.getElementById('hyp-preview');
+  if(!box) return;
+  const pKpi=kpiOptions.find(k=>k.id===draft.primaryKpi);
+  const lift=document.getElementById('n-lift')?document.getElementById('n-lift').value:'?';
+  const conf=document.getElementById('n-conf')?document.getElementById('n-conf').value:'95';
+  box.innerHTML=pKpi?`<div style="font-size:11px;font-weight:500;color:#999;text-transform:uppercase;letter-spacing:.06em;margin:20px 0 8px">Hypothesis preview</div><div class="hypothesis-box">"${draft.hypothesis||draft.name||'[experiment]'}" — targeting <strong>${draft.target||'?'}</strong> guests. Success = <strong>${lift||'?'}%</strong> improvement in <strong>${pKpi.label}</strong> (${pKpi.unit}) vs control, with ${conf}% confidence.</div>`:'';
+}
+
+function next1(){
+  draft.name=document.getElementById('n-name').value.trim();
+  draft.hypothesis=document.getElementById('n-hypothesis').value.trim();
+  if(!draft.name){alert('Please give your experiment a name.');return;}
+  if(!draft.target){alert('Please choose a target audience.');return;}
+  go('s-new-2');
+}
+
+function next2(){
+  if(!draft.intervType){alert('Please choose an intervention type.');return;}
+  go('s-new-3');
+  const today=new Date().toISOString().split('T')[0];
+  document.getElementById('n-start').value=today;
+  const end=new Date();end.setDate(end.getDate()+30);
+  document.getElementById('n-end').value=end.toISOString().split('T')[0];
+  document.getElementById('n-days').value=30;
+}
+
+function next3(){
+  draft.days=document.getElementById('n-days').value;
+  draft.start=document.getElementById('n-start').value;
+  draft.end=document.getElementById('n-end').value;
+  draft.location=document.getElementById('n-location').value||'All locations';
+  draft.daypart=document.getElementById('n-daypart').value||'All day';
+  if(!draft.days){alert('Please enter duration.');return;}
+  if(!draft.control){alert('Please select a control group approach.');return;}
+  go('s-new-4');
+}
+
+function launchExp(){
+  draft.lift=document.getElementById('n-lift').value;
+  draft.conf=document.getElementById('n-conf').value;
+  draft.guard=document.getElementById('n-guard').value;
+  if(!draft.primaryKpi){alert('Please select a primary KPI.');return;}
+  if(!draft.lift){alert('Please set a minimum lift target.');return;}
+  const newExp={id:'e'+Date.now(),name:draft.name,status:'running',target:draft.target,intervType:draft.intervType,hypothesis:draft.hypothesis,startDate:draft.start,endDate:draft.end,days:parseInt(draft.days),control:draft.control,location:draft.location,primaryKpi:draft.primaryKpi,secondaryKpis:[...draft.secondaryKpis],lift:parseInt(draft.lift),results:null,progress:0};
+  experiments.unshift(newExp);
+  draft={name:'',hypothesis:'',target:null,intervType:null,control:null,primaryKpi:null,secondaryKpis:[],lift:'',conf:95,guard:'',days:'',start:'',end:'',location:'',daypart:''};
+  go('s-home');
+}
+
+function saveAsDraft(){
+  const newExp={id:'e'+Date.now(),name:draft.name||'Untitled draft',status:'draft',target:draft.target,intervType:draft.intervType||'custom',hypothesis:draft.hypothesis,startDate:draft.start,endDate:draft.end,days:parseInt(draft.days)||30,control:draft.control||'ab',location:draft.location||'All',primaryKpi:draft.primaryKpi||'revenue',secondaryKpis:[...draft.secondaryKpis],lift:parseInt(draft.lift)||10,results:null,progress:0};
+  experiments.push(newExp);
+  go('s-home');
+}
+
+function showDetail(id){
+  const e=experiments.find(x=>x.id===id);
+  if(!e) return;
+  document.getElementById('d-title').textContent=e.name;
+  const sc={running:'badge-running',done:'badge-done',draft:'badge-draft'};
+  document.getElementById('d-badge-row').innerHTML=`<span class="badge ${sc[e.status]}">${e.status}</span><span class="tag-chip">${e.target} guests</span><span class="tag-chip">${e.intervType}</span><span class="tag-chip">${e.days} days</span><span class="tag-chip">${e.control} control</span>`;
+  document.getElementById('d-hypothesis').textContent=e.hypothesis||'No hypothesis recorded.';
+  if(e.results){
+    document.getElementById('d-results').innerHTML=Object.keys(e.results).map(k=>{const r=e.results[k];const delta=r.curr-r.base;const pct=((delta/r.base)*100).toFixed(1);const up=delta>=0;return `<div class="result-card"><div class="rc-label">${k}</div><div class="rc-val">${r.curr}${r.unit}</div><div class="rc-delta ${up?'rc-up':'rc-dn'}">${up?'+':''}${pct}% vs baseline (${r.base}${r.unit})</div></div>`;}).join('');
+  } else {document.getElementById('d-results').innerHTML='<div style="font-size:13px;color:#999;padding:12px 0">No results yet — experiment not started.</div>';}
+  document.getElementById('d-config').innerHTML=`<div class="sr-row"><span class="sr-l">Target audience</span><span class="sr-v">${e.target}</span></div><div class="sr-row"><span class="sr-l">Intervention</span><span class="sr-v">${e.intervType}</span></div><div class="sr-row"><span class="sr-l">Duration</span><span class="sr-v">${e.startDate} → ${e.endDate}</span></div><div class="sr-row"><span class="sr-l">Control group</span><span class="sr-v">${e.control}</span></div><div class="sr-row"><span class="sr-l">Location</span><span class="sr-v">${e.location||'All'}</span></div><div class="sr-row"><span class="sr-l">Target lift</span><span class="sr-v">+${e.lift}%</span></div>`;
+  const pKpi=kpiOptions.find(k=>k.id===e.primaryKpi);
+  const sKpis=e.secondaryKpis.map(k=>kpiOptions.find(x=>x.id===k)).filter(Boolean);
+  document.getElementById('d-kpis').innerHTML=`<div style="margin-bottom:8px"><span style="font-size:12px;color:#666">Primary:</span> ${pKpi?`<span class="kpi-tag">${pKpi.label} (${pKpi.unit})</span>`:''}</div>${sKpis.length?`<div><span style="font-size:12px;color:#666">Tracking:</span> ${sKpis.map(k=>`<span class="tag-chip">${k.label}</span>`).join(' ')}</div>`:''}`;
+  document.getElementById('d-progress').innerHTML=`<div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:13px;color:#666">Progress</span><span style="font-size:13px;font-weight:500">${e.progress}%</span></div><div class="prog-bar"><div class="prog-fill" style="width:${e.progress}%"></div></div><div style="font-size:12px;color:#999;margin-top:6px">Day ${Math.round(e.progress*e.days/100)} of ${e.days}</div>`;
+  go('s-detail');
+}
+
+renderHome();
+</script>
+</body>
+</html>

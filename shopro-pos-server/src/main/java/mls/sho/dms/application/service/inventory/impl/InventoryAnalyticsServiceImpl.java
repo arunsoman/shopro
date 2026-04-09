@@ -4,9 +4,9 @@ import lombok.RequiredArgsConstructor;
 import mls.sho.dms.application.dto.inventory.ShelfLifeAnalyticsResponse;
 import mls.sho.dms.application.dto.inventory.YieldAnalysisResponse;
 import mls.sho.dms.application.service.inventory.InventoryAnalyticsService;
-import mls.sho.dms.entity.inventory.BatchStatus;
-import mls.sho.dms.entity.inventory.InventoryBatch;
-import mls.sho.dms.entity.inventory.RawIngredient;
+import mls.sho.dms.entity.inventory.recipe.BatchStatus;
+import mls.sho.dms.entity.inventory.stock.InventoryBatch;
+import mls.sho.dms.entity.inventory.ingredient.RawIngredient;
 import mls.sho.dms.repository.inventory.InventoryBatchRepository;
 import mls.sho.dms.repository.inventory.RawIngredientRepository;
 import org.springframework.stereotype.Service;
@@ -18,7 +18,6 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)

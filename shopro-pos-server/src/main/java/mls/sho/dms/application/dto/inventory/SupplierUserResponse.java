@@ -1,6 +1,6 @@
 package mls.sho.dms.application.dto.inventory;
 
-import mls.sho.dms.entity.inventory.SupplierRole;
+import mls.sho.dms.entity.inventory.vendor.SupplierRole;
 
 import java.util.UUID;
 

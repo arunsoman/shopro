@@ -3,7 +3,7 @@ package mls.sho.dms.application.service.inventory;
 import mls.sho.dms.application.dto.inventory.CreatePurchaseOrderRequest;
 import mls.sho.dms.application.dto.inventory.PurchaseOrderResponse;
 import mls.sho.dms.application.dto.inventory.POStatusHistoryResponse;
-import mls.sho.dms.entity.inventory.PurchaseOrder;
+import mls.sho.dms.entity.inventory.procurement.PurchaseOrder;
 
 import java.util.List;
 import java.util.UUID;

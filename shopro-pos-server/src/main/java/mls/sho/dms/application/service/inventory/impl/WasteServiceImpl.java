@@ -6,7 +6,7 @@ import mls.sho.dms.application.exception.ResourceNotFoundException;
 import mls.sho.dms.application.service.inventory.IngredientService;
 import mls.sho.dms.application.service.inventory.RecipeService;
 import mls.sho.dms.application.service.inventory.WasteService;
-import mls.sho.dms.entity.inventory.InventoryTransactionType;
+import mls.sho.dms.entity.inventory.stock.InventoryTransactionType;
 import mls.sho.dms.entity.order.OrderItem;
 import mls.sho.dms.application.dto.inventory.WasteLogResponse;
 import mls.sho.dms.repository.inventory.InventoryTransactionRepository;

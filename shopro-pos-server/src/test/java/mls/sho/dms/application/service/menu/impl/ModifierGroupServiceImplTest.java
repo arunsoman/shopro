@@ -3,7 +3,7 @@ package mls.sho.dms.application.service.menu.impl;
 import mls.sho.dms.application.dto.menu.ModifierGroupDTOs.CreateModifierGroupRequest;
 import mls.sho.dms.application.dto.menu.ModifierGroupDTOs.CreateModifierOptionRequest;
 import mls.sho.dms.application.exception.BusinessRuleException;
-import mls.sho.dms.entity.menu.ModifierGroup;
+import mls.sho.dms.entity.inventory.menu.ModifierGroup;
 import mls.sho.dms.repository.menu.ModifierGroupRepository;
 import mls.sho.dms.repository.staff.AuditLogRepository;
 import org.junit.jupiter.api.Test;

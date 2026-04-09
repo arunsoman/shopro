@@ -3,8 +3,8 @@ package mls.sho.dms.application.event.inventory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import mls.sho.dms.application.service.inventory.AlertService;
-import mls.sho.dms.entity.inventory.PurchaseOrder;
-import mls.sho.dms.entity.inventory.PurchaseOrderStatus;
+import mls.sho.dms.entity.inventory.procurement.PurchaseOrder;
+import mls.sho.dms.entity.inventory.procurement.PurchaseOrderStatus;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 

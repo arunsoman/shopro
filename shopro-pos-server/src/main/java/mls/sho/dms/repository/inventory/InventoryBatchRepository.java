@@ -1,7 +1,7 @@
 package mls.sho.dms.repository.inventory;
 
-import mls.sho.dms.entity.inventory.InventoryBatch;
-import mls.sho.dms.entity.inventory.BatchStatus;
+import mls.sho.dms.entity.inventory.stock.InventoryBatch;
+import mls.sho.dms.entity.inventory.recipe.BatchStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import java.util.List;

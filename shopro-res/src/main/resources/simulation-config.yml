@@ -1,0 +1,45 @@
+# Shopro High-Fidelity Simulator Defaults
+# This configuration controls the behavioral engine of the restaurant simulation.
+
+simulation:
+  temporal:
+    days_to_simulate: 30
+    opening_time: "09:00"
+    closing_time: "23:00"
+    time_scale: 3600.0   # 1 real second = 1 simulated hour (for rapid bootstrapping)
+
+  labor:
+    staff_count: 6             # Total waiters on shift
+    chef_count: 4              # Total kitchen prep agents
+    hourly_pay_rate: 15.00     # Base hourly wage (USD/local)
+    overtime_multiplier: 1.5   # Applied to hours > 8 per day
+    shift_change_time: "15:00" # Mid-day shift rotation
+
+  demand:
+    base_arrival_rate: 12.0    # Average guests per hour (Poisson lambda)
+    patience_limit_min: 20     # Max minutes a guest will wait before leaving (Balking)
+    group_size_dist:
+      1: 0.15
+      2: 0.45
+      4: 0.30
+      6: 0.10
+    peak_periods:
+      - { start: "12:00", end: "14:00", multiplier: 3.5 } # Lunch Peak
+      - { start: "19:00", end: "21:30", multiplier: 5.0 } # Dinner Peak
+
+  operational:
+    prep_time_base_sec: 480    # 8 minutes base for a standard meal
+    waste_probability: 0.02    # 2% chance of a kitchen error / order void
+    table_turnover_buffer: 10  # Minutes taken to clean and reset a table
+
+  supply_chain:
+    item_miss_probability: 0.05      # 5% chance a line item is completely missing from a delivery
+    quantity_shortfall_max: 0.20     # Max 20% shortfall on any line item (e.g. received 80% of ordered)
+    delivery_delay_max_min: 120      # Max 2 hours delay in delivery arrival
+
+  floor_plan:
+    table_sharing: false             # Whether strangers can share one large table
+    tables:                          # List of table configurations (capacity & count)
+      - { capacity: 2, count: 5 }    # 5 tables for couples
+      - { capacity: 4, count: 12 }   # 12 standard dining tables
+      - { capacity: 8, count: 3 }    # 3 large group tables

@@ -4,9 +4,9 @@ import mls.sho.dms.application.dto.inventory.CreateBidRequest;
 import mls.sho.dms.application.dto.inventory.CreateRFQRequest;
 import mls.sho.dms.application.dto.inventory.RFQResponse;
 import mls.sho.dms.application.dto.inventory.VendorBidRequest;
-import mls.sho.dms.entity.inventory.RawIngredient;
-import mls.sho.dms.entity.inventory.RFQ;
-import mls.sho.dms.entity.inventory.RfqStatus;
+import mls.sho.dms.entity.inventory.ingredient.RawIngredient;
+import mls.sho.dms.entity.inventory.procurement.RFQ;
+import mls.sho.dms.entity.inventory.procurement.RfqStatus;
 import java.util.List;
 import java.util.UUID;
 

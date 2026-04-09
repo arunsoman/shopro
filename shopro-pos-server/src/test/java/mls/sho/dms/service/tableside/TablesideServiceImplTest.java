@@ -4,7 +4,7 @@ import mls.sho.dms.dto.tableside.AddCartItemRequest;
 import mls.sho.dms.dto.tableside.GuestCartItemDto;
 import mls.sho.dms.dto.tableside.TablesideSessionDto;
 import mls.sho.dms.entity.floor.TableShape;
-import mls.sho.dms.entity.menu.MenuItem;
+import mls.sho.dms.entity.inventory.menu.MenuItem;
 import mls.sho.dms.entity.tableside.GuestCartItem;
 import mls.sho.dms.entity.tableside.TablesideSession;
 import mls.sho.dms.entity.tableside.TablesideSessionStatus;

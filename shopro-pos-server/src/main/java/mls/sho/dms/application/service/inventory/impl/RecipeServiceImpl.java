@@ -1,6 +1,5 @@
 package mls.sho.dms.application.service.inventory.impl;
 
-import lombok.RequiredArgsConstructor;
 import mls.sho.dms.application.dto.inventory.RecipeResponse;
 import mls.sho.dms.application.dto.inventory.RecipeIngredientResponse;
 import mls.sho.dms.application.dto.inventory.UpdateRecipeRequest;
@@ -9,12 +8,12 @@ import mls.sho.dms.application.service.inventory.RecipeService;
 import mls.sho.dms.application.service.inventory.IngredientService;
 import mls.sho.dms.application.service.inventory.BatchService;
 import org.springframework.context.annotation.Lazy;
-import mls.sho.dms.entity.inventory.InventoryTransactionType;
-import mls.sho.dms.entity.inventory.RawIngredient;
-import mls.sho.dms.entity.inventory.Recipe;
-import mls.sho.dms.entity.inventory.RecipeIngredient;
-import mls.sho.dms.entity.inventory.SubRecipe;
-import mls.sho.dms.entity.menu.MenuItem;
+import mls.sho.dms.entity.inventory.stock.InventoryTransactionType;
+import mls.sho.dms.entity.inventory.ingredient.RawIngredient;
+import mls.sho.dms.entity.inventory.recipe.Recipe;
+import mls.sho.dms.entity.inventory.recipe.RecipeIngredient;
+import mls.sho.dms.entity.inventory.recipe.SubRecipe;
+import mls.sho.dms.entity.inventory.menu.MenuItem;
 import mls.sho.dms.entity.order.OrderItem;
 import mls.sho.dms.repository.inventory.RawIngredientRepository;
 import mls.sho.dms.repository.inventory.RecipeIngredientRepository;

@@ -1,19 +1,17 @@
 package mls.sho.dms.repository.inventory;
 
-import mls.sho.dms.entity.inventory.InventoryTransaction;
+import mls.sho.dms.entity.inventory.stock.InventoryTransaction;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.UUID;
 
-import mls.sho.dms.entity.inventory.InventoryTransactionType;
+import mls.sho.dms.entity.inventory.stock.InventoryTransactionType;
 import org.springframework.data.jpa.repository.Query;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.Optional;
 import java.util.List;
-import java.util.UUID;
 
 @Repository
 public interface InventoryTransactionRepository extends JpaRepository<InventoryTransaction, UUID> {

@@ -1,8 +1,7 @@
 package mls.sho.dms.service.kds;
 
-import mls.sho.dms.application.mapper.KDSMapper;
 import mls.sho.dms.application.service.order.OrderServiceImpl;
-import mls.sho.dms.entity.menu.MenuItem;
+import mls.sho.dms.entity.inventory.menu.MenuItem;
 import mls.sho.dms.entity.order.OrderItem;
 import mls.sho.dms.entity.order.OrderType;
 import mls.sho.dms.entity.order.OrderTicket;
@@ -14,7 +13,6 @@ import mls.sho.dms.repository.menu.MenuItemRepository;
 import mls.sho.dms.repository.menu.ModifierOptionRepository;
 import mls.sho.dms.repository.floor.TableShapeRepository;
 import mls.sho.dms.service.edp.EdpPublisher;
-import mls.sho.dms.service.kds.KDSService;
 import mls.sho.dms.application.service.inventory.RecipeService;
 import mls.sho.dms.application.service.staff.StaffService;
 import mls.sho.dms.tax.entity.VenueCountryAssignment;
@@ -29,7 +27,6 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 

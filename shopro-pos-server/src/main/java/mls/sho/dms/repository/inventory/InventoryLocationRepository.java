@@ -1,6 +1,6 @@
 package mls.sho.dms.repository.inventory;
 
-import mls.sho.dms.entity.inventory.InventoryLocation;
+import mls.sho.dms.entity.inventory.stock.InventoryLocation;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import java.util.UUID;

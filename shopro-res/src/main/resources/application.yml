@@ -1,0 +1,58 @@
+spring:
+  application:
+    name: shopro-pos-server
+  datasource:
+    url: jdbc:postgresql://localhost:5432/shopro_pos
+    username: postgres
+    password: password
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+app:
+  frontend:
+    url: ${FRONTEND_URL:http://localhost:3000}
+  jwt:
+    secret: ${JWT_SECRET:8f43678e-5b1a-4d2c-8a1a-3e4b5c6d7e8f-extremely-long-secret-key-for-hmac-sha-256-signing-must-be-at-least-256-bits-long}
+    expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+mfa:
+  encryption:
+    key: ${MFA_ENCRYPTION_KEY:32-char-encryption-key-for-mfa-s} # Must be 32 chars for AES-256
+  flyway:
+    enabled: false
+    baseline-on-migrate: true
+    validate-on-migrate: false
+oauth:
+  google:
+    client-id: ${GOOGLE_CLIENT_ID}
+    client-secret: ${GOOGLE_CLIENT_SECRET}
+  facebook:
+    client-id: ${FACEBOOK_APP_ID:dummy-fb-id}
+    client-secret: ${FACEBOOK_APP_SECRET:dummy-fb-secret}
+  x:
+    client-id: ${X_CLIENT_ID:dummy-x-id}
+    client-secret: ${X_CLIENT_SECRET:dummy-x-secret}
+
+server:
+  port: ${PORT:8080}
+  forward-headers-strategy: native
+
+fapi:
+  gateway:
+    internal-secret: ${FAPI_INTERNAL_SECRET:super-secret-fapi-gateway-key-32chars}
+    issuer: http://localhost:3001
+    audience: sabz-web-client-api
+    token-ttl-leeway-seconds: 5
+
+logging:
+  file:
+    name: logs/sabz-server.log
+  level:
+    mls.sho.dms: DEBUG
+    org.springframework.web: INFO
+    org.springframework.messaging: DEBUG
+    fapi-audit: INFO

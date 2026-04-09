@@ -1,8 +1,7 @@
 package mls.sho.dms.application.service.inventory;
 
-import mls.sho.dms.entity.inventory.GoodsReceiptNote;
-import mls.sho.dms.entity.inventory.PurchaseOrder;
-import mls.sho.dms.entity.inventory.VendorInvoice;
+import mls.sho.dms.entity.inventory.receiving.GoodsReceiptNote;
+import mls.sho.dms.entity.inventory.procurement.PurchaseOrder;
 
 import java.math.BigDecimal;
 import java.util.Map;

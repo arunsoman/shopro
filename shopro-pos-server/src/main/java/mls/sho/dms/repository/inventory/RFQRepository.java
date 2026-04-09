@@ -1,7 +1,7 @@
 package mls.sho.dms.repository.inventory;
 
-import mls.sho.dms.entity.inventory.RFQ;
-import mls.sho.dms.entity.inventory.RfqStatus;
+import mls.sho.dms.entity.inventory.procurement.RFQ;
+import mls.sho.dms.entity.inventory.procurement.RfqStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -10,7 +10,7 @@ import java.util.UUID;
 
 @Repository
 public interface RFQRepository extends JpaRepository<RFQ, UUID> {
-    java.util.List<RFQ> findByStatus(mls.sho.dms.entity.inventory.RfqStatus status);
+    java.util.List<RFQ> findByStatus(RfqStatus status);
 
     @org.springframework.data.jpa.repository.Query("SELECT COUNT(r) FROM RFQ r WHERE r.ingredient.id IN :ingredientIds AND r.status = :status")
     int countActiveRfqsByIngredientIds(List<UUID> ingredientIds, RfqStatus status);

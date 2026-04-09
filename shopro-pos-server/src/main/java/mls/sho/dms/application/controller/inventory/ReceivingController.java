@@ -3,8 +3,8 @@ package mls.sho.dms.application.controller.inventory;
 import mls.sho.dms.application.service.inventory.ReceivingService;
 import mls.sho.dms.application.service.inventory.dto.MatchInvoiceRequest;
 import mls.sho.dms.application.service.inventory.dto.ReceiveGoodsRequest;
-import mls.sho.dms.entity.inventory.GoodsReceiptNote;
-import mls.sho.dms.entity.inventory.PurchaseOrder;
+import mls.sho.dms.entity.inventory.receiving.GoodsReceiptNote;
+import mls.sho.dms.entity.inventory.procurement.PurchaseOrder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

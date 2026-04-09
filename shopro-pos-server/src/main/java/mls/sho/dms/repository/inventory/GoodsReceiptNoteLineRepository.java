@@ -1,6 +1,6 @@
 package mls.sho.dms.repository.inventory;
 
-import mls.sho.dms.entity.inventory.GoodsReceiptNoteLine;
+import mls.sho.dms.entity.inventory.receiving.GoodsReceiptNoteLine;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

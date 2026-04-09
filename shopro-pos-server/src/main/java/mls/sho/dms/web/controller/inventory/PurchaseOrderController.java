@@ -8,6 +8,7 @@ import mls.sho.dms.application.dto.inventory.CreatePurchaseOrderRequest;
 import mls.sho.dms.application.dto.inventory.PurchaseOrderResponse;
 import mls.sho.dms.application.dto.inventory.POStatusHistoryResponse;
 import mls.sho.dms.application.service.inventory.POService;
+import mls.sho.dms.entity.inventory.procurement.PurchaseOrder;
 import mls.sho.dms.repository.staff.StaffRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -81,7 +82,7 @@ public class PurchaseOrderController {
             .orElseThrow(() -> new IllegalStateException("No active staff members found in the system. Reorder requires a valid creator."));
     }
 
-    private PurchaseOrderResponse mapToResponse(mls.sho.dms.entity.inventory.PurchaseOrder po) {
+    private PurchaseOrderResponse mapToResponse(PurchaseOrder po) {
         return PurchaseOrderResponse.builder()
                 .id(po.getId())
                 .supplierName(po.getSupplier() != null ? po.getSupplier().getCompanyName() : "Pending Award")

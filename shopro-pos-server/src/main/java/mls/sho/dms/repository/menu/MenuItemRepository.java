@@ -1,8 +1,8 @@
 package mls.sho.dms.repository.menu;
 
-import mls.sho.dms.entity.menu.MenuCategory;
-import mls.sho.dms.entity.menu.MenuItem;
-import mls.sho.dms.entity.menu.MenuItemStatus;
+import mls.sho.dms.entity.inventory.menu.MenuCategory;
+import mls.sho.dms.entity.inventory.menu.MenuItem;
+import mls.sho.dms.entity.inventory.menu.MenuItemStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

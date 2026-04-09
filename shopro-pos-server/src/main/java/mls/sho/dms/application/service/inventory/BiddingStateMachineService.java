@@ -1,6 +1,6 @@
 package mls.sho.dms.application.service.inventory;
 
-import mls.sho.dms.entity.inventory.RfqStatus;
+import mls.sho.dms.entity.inventory.procurement.RfqStatus;
 import java.util.Set;
 import java.util.UUID;
 

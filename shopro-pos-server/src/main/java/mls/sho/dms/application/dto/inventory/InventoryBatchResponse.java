@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import mls.sho.dms.entity.inventory.BatchStatus;
+import mls.sho.dms.entity.inventory.recipe.BatchStatus;
 
 import java.math.BigDecimal;
 import java.time.Instant;

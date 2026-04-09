@@ -2,7 +2,7 @@ package mls.sho.dms.application.dto.inventory;
 
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
-import mls.sho.dms.entity.inventory.WasteReason;
+import mls.sho.dms.entity.inventory.ingredient.WasteReason;
 
 import java.math.BigDecimal;
 import java.util.UUID;

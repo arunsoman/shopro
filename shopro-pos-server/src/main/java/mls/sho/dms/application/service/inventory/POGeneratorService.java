@@ -1,6 +1,7 @@
 package mls.sho.dms.application.service.inventory;
 
-import mls.sho.dms.entity.inventory.PurchaseOrder;
+import mls.sho.dms.entity.inventory.ingredient.RawIngredient;
+import mls.sho.dms.entity.inventory.procurement.PurchaseOrder;
 import java.util.UUID;
 
 /**
@@ -32,5 +33,5 @@ public interface POGeneratorService {
      * Creates a DRAFT or SENT PO directly based on Ingredient's primary supplier.
      * Used for AUTO restocking mode.
      */
-    PurchaseOrder generateAutoPO(mls.sho.dms.entity.inventory.RawIngredient ingredient);
+    PurchaseOrder generateAutoPO(RawIngredient ingredient);
 }

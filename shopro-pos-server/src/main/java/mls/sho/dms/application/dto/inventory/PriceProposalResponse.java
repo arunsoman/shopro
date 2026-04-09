@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import mls.sho.dms.entity.inventory.VendorPriceProposalStatus;
+import mls.sho.dms.entity.inventory.vendor.VendorPriceProposalStatus;
 
 import java.time.Instant;
 import java.util.UUID;

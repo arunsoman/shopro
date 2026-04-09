@@ -1,8 +1,8 @@
 package mls.sho.dms.application.service.inventory.impl;
 
 import mls.sho.dms.application.service.inventory.dto.TvaReportRow;
-import mls.sho.dms.entity.inventory.InventoryTransactionType;
-import mls.sho.dms.entity.inventory.RawIngredient;
+import mls.sho.dms.entity.inventory.stock.InventoryTransactionType;
+import mls.sho.dms.entity.inventory.ingredient.RawIngredient;
 import mls.sho.dms.repository.inventory.InventoryTransactionRepository;
 import mls.sho.dms.repository.inventory.PhysicalCountLineRepository;
 import mls.sho.dms.repository.inventory.RawIngredientRepository;

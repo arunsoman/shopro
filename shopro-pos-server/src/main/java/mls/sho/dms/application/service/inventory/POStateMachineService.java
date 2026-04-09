@@ -1,6 +1,6 @@
 package mls.sho.dms.application.service.inventory;
 
-import mls.sho.dms.entity.inventory.PurchaseOrderStatus;
+import mls.sho.dms.entity.inventory.procurement.PurchaseOrderStatus;
 import java.util.Set;
 import java.util.UUID;
 

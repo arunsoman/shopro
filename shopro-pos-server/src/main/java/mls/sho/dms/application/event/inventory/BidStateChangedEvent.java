@@ -1,7 +1,7 @@
 package mls.sho.dms.application.event.inventory;
 
-import mls.sho.dms.entity.inventory.VendorBid;
-import mls.sho.dms.entity.inventory.VendorBidStatus;
+import mls.sho.dms.entity.inventory.vendor.VendorBid;
+import mls.sho.dms.entity.inventory.vendor.VendorBidStatus;
 import org.springframework.context.ApplicationEvent;
 
 import java.util.UUID;

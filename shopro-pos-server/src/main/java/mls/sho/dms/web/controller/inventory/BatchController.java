@@ -2,8 +2,8 @@ package mls.sho.dms.web.controller.inventory;
 
 import lombok.RequiredArgsConstructor;
 import mls.sho.dms.application.dto.inventory.InventoryBatchResponse;
-import mls.sho.dms.entity.inventory.InventoryBatch;
-import mls.sho.dms.entity.inventory.BatchStatus;
+import mls.sho.dms.entity.inventory.stock.InventoryBatch;
+import mls.sho.dms.entity.inventory.recipe.BatchStatus;
 import mls.sho.dms.repository.inventory.InventoryBatchRepository;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;

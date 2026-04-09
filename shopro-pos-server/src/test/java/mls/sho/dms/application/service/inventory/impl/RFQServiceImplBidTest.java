@@ -2,11 +2,10 @@ package mls.sho.dms.application.service.inventory.impl;
 
 import mls.sho.dms.application.dto.inventory.BidLineItemRequest;
 import mls.sho.dms.application.dto.inventory.CreateBidRequest;
-import mls.sho.dms.application.service.inventory.RFQService;
-import mls.sho.dms.entity.inventory.RawIngredient;
-import mls.sho.dms.entity.inventory.RFQ;
-import mls.sho.dms.entity.inventory.RfqStatus;
-import mls.sho.dms.entity.inventory.Supplier;
+import mls.sho.dms.entity.inventory.ingredient.RawIngredient;
+import mls.sho.dms.entity.inventory.procurement.RFQ;
+import mls.sho.dms.entity.inventory.procurement.RfqStatus;
+import mls.sho.dms.entity.inventory.vendor.Supplier;
 import mls.sho.dms.repository.inventory.RawIngredientRepository;
 import mls.sho.dms.repository.inventory.RFQRepository;
 import mls.sho.dms.repository.inventory.SupplierRepository;
@@ -15,7 +14,6 @@ import mls.sho.dms.application.service.inventory.BidStateMachineService;
 import mls.sho.dms.application.service.inventory.BiddingStateMachineService;
 import mls.sho.dms.application.service.inventory.POGeneratorService;
 import mls.sho.dms.repository.inventory.PurchaseOrderRepository;
-import mls.sho.dms.entity.inventory.PurchaseOrder;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -32,7 +30,6 @@ import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
 class RFQServiceImplBidTest {

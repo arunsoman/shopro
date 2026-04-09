@@ -1,7 +1,7 @@
 package mls.sho.dms.repository.inventory;
 
-import mls.sho.dms.entity.inventory.Recipe;
-import mls.sho.dms.entity.inventory.RecipeIngredient;
+import mls.sho.dms.entity.inventory.recipe.Recipe;
+import mls.sho.dms.entity.inventory.recipe.RecipeIngredient;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

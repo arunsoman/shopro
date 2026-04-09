@@ -1,0 +1,10 @@
+import type { StaffRole } from '@/lib/auth/AuthContext';
+
+export const ADMIN_ROLES: StaffRole[] = ['OWNER', 'MANAGER', 'GENERAL_MANAGER', 'ASSISTANT_MANAGER'];
+
+export const ALL_STAFF: StaffRole[] = [
+  'OWNER', 'MANAGER', 'GENERAL_MANAGER', 'ASSISTANT_MANAGER', 'FB_MANAGER',
+  'KITCHEN_MANAGER', 'EXECUTIVE_CHEF', 'SOUS_CHEF', 'CHEF_DE_PARTIE',
+  'LINE_COOK', 'PREP_COOK', 'DISHWASHER', 'MAITRE_D', 'HOST',
+  'BARTENDER', 'BUSSER', 'RUNNER', 'SENIOR_SERVER', 'JUNIOR_SERVER',
+];
