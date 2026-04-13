@@ -75,7 +75,18 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                             itemBuilder: (context, groupIndex) {
                               final taxLabel = groupedItems.keys.elementAt(groupIndex);
                               final items = groupedItems[taxLabel]!;
+                              
+                              // Calculate group subtotal (pre-tax)
                               final groupSubtotal = items.fold<double>(0, (sum, item) => sum + item.calculatedTotal);
+                              
+                              // Calculate group tax by summing tax breakdowns from all items in this group
+                              final groupTax = items.fold<double>(0, (sum, item) {
+                                final itemTax = item.taxBreakdowns.fold<double>(0, (taxSum, tb) => taxSum + tb.amount);
+                                return sum + itemTax;
+                              });
+                              
+                              // Group total = subtotal + tax
+                              final groupTotal = groupSubtotal + groupTax;
 
                               return Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -159,6 +170,40 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                                       ],
                                     ),
                                   ),
+                                  if (groupTax > 0)
+                                    Padding(
+                                      padding: const EdgeInsets.only(bottom: 8),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.end,
+                                        children: [
+                                          Text(
+                                            'GROUP TAX: ',
+                                            style: GoogleFonts.jetBrainsMono(fontSize: 12, color: AppColors.emeraldMuted),
+                                          ),
+                                          Text(
+                                            '\$${groupTax.toStringAsFixed(2)}',
+                                            style: GoogleFonts.jetBrainsMono(fontSize: 14, color: AppColors.emeraldOffWhite, fontWeight: FontWeight.bold),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  if (groupTax > 0)
+                                    Padding(
+                                      padding: const EdgeInsets.only(bottom: 16),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.end,
+                                        children: [
+                                          Text(
+                                            'GROUP TOTAL: ',
+                                            style: GoogleFonts.jetBrainsMono(fontSize: 14, color: AppColors.emeraldAccent, fontWeight: FontWeight.bold),
+                                          ),
+                                          Text(
+                                            '\$${groupTotal.toStringAsFixed(2)}',
+                                            style: GoogleFonts.jetBrainsMono(fontSize: 16, color: AppColors.emeraldAccent, fontWeight: FontWeight.bold),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
                                   if (groupIndex < groupedItems.length - 1)
                                     const Padding(
                                       padding: EdgeInsets.only(bottom: 24),
@@ -250,18 +295,39 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         const SizedBox(height: 8),
         ...order.taxSummary.entries.map((e) => _totalRow('TAX (${e.key})', e.value)),
         const SizedBox(height: 16),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'TOTAL',
-              style: GoogleFonts.syne(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.emeraldAccent),
-            ),
-            Text(
-              '\$${order.totalAmount.toStringAsFixed(2)}',
-              style: GoogleFonts.jetBrainsMono(fontSize: 28, fontWeight: FontWeight.bold, color: AppColors.emeraldOffWhite),
-            ),
-          ],
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.emeraldAccent.withOpacity(0.15),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.emeraldAccent, width: 2),
+          ),
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'AMOUNT DUE',
+                    style: GoogleFonts.syne(
+                      fontSize: 20, 
+                      fontWeight: FontWeight.bold, 
+                      color: AppColors.emeraldAccent,
+                      letterSpacing: 1.5,
+                    ),
+                  ),
+                  Text(
+                    '\$${order.totalAmount.toStringAsFixed(2)}',
+                    style: GoogleFonts.jetBrainsMono(
+                      fontSize: 32, 
+                      fontWeight: FontWeight.bold, 
+                      color: AppColors.emeraldAccent,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ],
     );
