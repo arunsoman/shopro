@@ -49,3 +49,4 @@ shopro-res/logs/sabz-server.log
 reports/*.json
 src/**/*-output.json
 **/reports/debug-session-*.json
+shopro-res/logs/sabz-server.log
