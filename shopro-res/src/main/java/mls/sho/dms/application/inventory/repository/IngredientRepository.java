@@ -1,6 +1,7 @@
 package mls.sho.dms.application.inventory.repository;
 
 import mls.sho.dms.entity.Ingredient;
+import mls.sho.dms.entity.PurchaseOrderLine;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -17,13 +18,16 @@ public interface IngredientRepository extends JpaRepository<Ingredient, Long> {
     @Query("UPDATE Ingredient i SET i.onHand = 0 WHERE i.restaurant.id = :restaurantId")
     void zeroOutStockByRestaurantId(@org.springframework.data.repository.query.Param("restaurantId") Long restaurantId);
 
-    @Query("SELECT i FROM Ingredient i WHERE i.restaurant.id = :restaurantId AND i.onHand < i.parLevel AND i.active = true")
+    @Query("SELECT i FROM Ingredient i WHERE i.restaurant.id = :restaurantId AND i.parLevel IS NOT NULL AND i.onHand < i.parLevel AND i.active = true "
+            + "AND NOT EXISTS (SELECT 1 FROM PurchaseOrderLine pol JOIN pol.purchaseOrder po WHERE pol.ingredient = i AND po.status IN ('DRAFT', 'SENT', 'PARTIAL'))")
     List<Ingredient> findAllLowStock(Long restaurantId);
 
-    @Query("SELECT COUNT(i) FROM Ingredient i WHERE i.restaurant.id = :restaurantId AND i.onHand < i.parLevel AND i.active = true")
+    @Query("SELECT COUNT(i) FROM Ingredient i WHERE i.restaurant.id = :restaurantId AND i.parLevel IS NOT NULL AND i.onHand < i.parLevel AND i.active = true "
+            + "AND NOT EXISTS (SELECT 1 FROM PurchaseOrderLine pol JOIN pol.purchaseOrder po WHERE pol.ingredient = i AND po.status IN ('DRAFT', 'SENT', 'PARTIAL'))")
     long countLowStock(Long restaurantId);
 
-    @Query("SELECT COUNT(i) FROM Ingredient i WHERE i.onHand < i.parLevel AND i.active = true")
+    @Query("SELECT COUNT(i) FROM Ingredient i WHERE i.parLevel IS NOT NULL AND i.onHand < i.parLevel AND i.active = true "
+            + "AND NOT EXISTS (SELECT 1 FROM PurchaseOrderLine pol JOIN pol.purchaseOrder po WHERE pol.ingredient = i AND po.status IN ('DRAFT', 'SENT', 'PARTIAL'))")
     long countBelowParGlobal();
 
     @Query("SELECT i FROM Ingredient i WHERE i.restaurant.id = :restaurantId " +
