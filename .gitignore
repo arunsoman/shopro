@@ -45,4 +45,5 @@ validation-report.md
 marketplace-be.log
 scratch/*
 shopro-res/logs/sabz-server.log
-state/debugger-output.json
+state/*.json
+reports/*.json
