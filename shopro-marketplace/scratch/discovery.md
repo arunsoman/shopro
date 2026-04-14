@@ -12,7 +12,7 @@
 - **Timing**: 3-day default deadline for "Time-to-Quote".
 - **Weighting**: Mock performance scoring (BidRate 90%, Quality 4.5/5).
 - **Automation**: Rolling intervals for repeat frequencies.
-- **Notification**: REST integration with `shopro-pos-server` (Target: `SUPPLIER_ADMIN`).
+- **Notification**: REST integration with `shopro-res` (Target: `SUPPLIER_ADMIN`).
 
 ## Entity Scoping (Phase 2 Preview)
 - `BidInvitation`: Add `operationMode`, `repeatFrequency`, `nextRunDate`.

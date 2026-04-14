@@ -7,9 +7,11 @@ import mls.sho.dms.entity.Restaurant;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import mls.sho.dms.application.inventory.dto.IngredientCostDto;
+import mls.sho.dms.application.inventory.dto.InventoryDtos.LowStockAlertDto;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -55,6 +57,29 @@ public class IngredientService {
     @Transactional(readOnly = true)
     public List<Ingredient> getLowStockIngredients(Long restaurantId) {
         return repository.findAllLowStock(restaurantId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<LowStockAlertDto> getLowStockAlerts(Long restaurantId) {
+        List<Ingredient> lowStockIngredients = repository.findAllLowStock(restaurantId);
+        
+        return lowStockIngredients.stream()
+            .map(ingredient -> {
+                BigDecimal parLevel = ingredient.getParLevel() != null ? ingredient.getParLevel() : BigDecimal.ZERO;
+                BigDecimal onHand = ingredient.getOnHand() != null ? ingredient.getOnHand() : BigDecimal.ZERO;
+                BigDecimal shortfallAmount = parLevel.subtract(onHand);
+                
+                return LowStockAlertDto.builder()
+                    .ingredientId(ingredient.getId())
+                    .itemCode(ingredient.getItemCode())
+                    .description(ingredient.getDescription())
+                    .inventoryUnit(ingredient.getInventoryUnit() != null ? ingredient.getInventoryUnit().name() : null)
+                    .parLevel(parLevel)
+                    .onHand(onHand)
+                    .shortfallAmount(shortfallAmount)
+                    .build();
+            })
+            .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)

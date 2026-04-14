@@ -1,0 +1,6 @@
+{
+  "taskId": "231ac948-32ed-4213-98cf-a5f49380f383",
+  "task": "Fix the low-stock API to return shortfallAmount field instead of raw Ingredient entities",
+  "completedAt": "2026-04-14T17:47:03.864Z",
+  "summary": "BE Developer fix executed - see output above for details"
+}

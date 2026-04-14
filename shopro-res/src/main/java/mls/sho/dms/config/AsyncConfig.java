@@ -32,4 +32,21 @@ public class AsyncConfig {
         exec.initialize();
         return exec;
     }
+
+    /**
+     * Dedicated thread pool for audit logging.
+     * Non-blocking async logging ensures API performance is not affected.
+     */
+    @Bean(name = "auditExecutor")
+    public Executor auditExecutor() {
+        ThreadPoolTaskExecutor exec = new ThreadPoolTaskExecutor();
+        exec.setCorePoolSize(2);
+        exec.setMaxPoolSize(10);
+        exec.setQueueCapacity(100);
+        exec.setThreadNamePrefix("audit-");
+        exec.setWaitForTasksToCompleteOnShutdown(true);
+        exec.setAwaitTerminationSeconds(30);
+        exec.initialize();
+        return exec;
+    }
 }

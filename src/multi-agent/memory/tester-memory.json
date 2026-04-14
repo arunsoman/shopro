@@ -1,0 +1,59 @@
+{
+  "coreLearnings": [
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "Backend testing: JUnit 5, Spring Boot Test with @SpringBootTest, @DataJpaTest, @WebMvcTest"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "Testcontainers: Using Testcontainers for PostgreSQL in integration tests"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "Frontend E2E: Playwright configured in shopro-res-web with test runner"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "Playwright config: playwright.config.ts with e2e/ tests and test-results/ output"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "Backend has 317 Java files - needs comprehensive test coverage"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "Frontend has 517 TSX/TS files - needs E2E and component tests"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "Key test scenarios: KDS real-time updates, inventory transactions, purchase order workflows, invoice matching"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "API testing: Controllers need @WebMvcTest or integration tests"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "Security testing: OAuth2, JWT endpoints need auth token handling"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "WebSocket testing: STOMP messages for KDS need special test setup"
+    }
+  ],
+  "recentFixes": [],
+  "patternsEstablished": [
+    "Use @SpringBootTest for full integration tests with @Testcontainers",
+    "Use @DataJpaTest for repository layer testing",
+    "Use @WebMvcTest for controller layer testing",
+    "Playwright: Use test.describe() for grouping, test.beforeEach() for setup",
+    "Frontend: Test critical user flows (login, ordering, inventory check)"
+  ],
+  "knownPitfalls": [
+    "Backend tests need better coverage - focus on services and repositories",
+    "E2E tests need proper wait conditions for WebSocket updates",
+    "Need to add test for AI invoice matching logic",
+    "Simulation module needs load/stress tests",
+    "Consider adding contract tests for API endpoints"
+  ]
+}

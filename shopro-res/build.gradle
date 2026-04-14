@@ -24,6 +24,9 @@ dependencies {
     // WebSockets for Real-Time KDS Sync
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
     
+    // AOP for audit logging
+    implementation 'org.springframework.boot:spring-boot-starter-aop'
+    
     // Flyway for migrations
     implementation 'org.flywaydb:flyway-core'
 

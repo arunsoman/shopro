@@ -1,7 +1,0 @@
-spring:
-  datasource:
-    url: jdbc:postgresql://web.afriqpay.com:5432/shopro_pos
-    username: postgres
-    password: password
-  flyway:
-    enabled: false

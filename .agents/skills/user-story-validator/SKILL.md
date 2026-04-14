@@ -46,11 +46,11 @@ EPIC: [Epic ID] [Epic Name]
 
 ```
 CODEBASE_ROOT: /home/arun/IdeaProjects/shopro-pos
-BACKEND_ROOT:  shopro-pos-server/src/main/java/mls/sho/dms
+BACKEND_ROOT:  shopro-res/src/main/java/mls/sho/dms
 FRONTEND_FLUTTER_ROOT: shopro-pos-flutter/lib
 FRONTEND_REACT_ROOT: shopro-pos-web/src
-MIGRATION_DIR: shopro-pos-server/src/main/resources/db/migration
-TEST_ROOT_JAVA: shopro-pos-server/src/test/java/mls/sho/dms
+MIGRATION_DIR: shopro-res/src/main/resources/db/migration
+TEST_ROOT_JAVA: shopro-res/src/test/java/mls/sho/dms
 TEST_ROOT_FLUTTER: shopro-pos-flutter/test
 TEST_ROOT_REACT: shopro-pos-web/src/__tests__
 ```
@@ -63,11 +63,11 @@ TEST_ROOT_REACT: shopro-pos-web/src/__tests__
 
 | Evidence Type | What it requires | Where to look |
 |---|---|---|
-| `DB_CONSTRAINT` | Table column, check constraint, or unique index | `shopro-pos-server/src/main/resources/db/migration/*.sql` |
-| `ENTITY_FIELD` | JPA entity field with annotation | `shopro-pos-server/src/main/java/mls/sho/dms/entity/*.java` |
+| `DB_CONSTRAINT` | Table column, check constraint, or unique index | `shopro-res/src/main/resources/db/migration/*.sql` |
+| `ENTITY_FIELD` | JPA entity field with annotation | `shopro-res/src/main/java/mls/sho/dms/entity/*.java` |
 | `VALIDATION_RULE` | Jakarta/Zod validation on a field | Records `*.java`, Zod schemas `*.ts`, Flutter FormField |
 | `DEFAULT_VALUE` | Field set to a specific default | Entity constructor, service `create()` |
-| `BUSINESS_RULE` | Logic in service layer (if/throw) | `shopro-pos-server/src/main/java/mls/sho/dms/service/impl/*.java` |
+| `BUSINESS_RULE` | Logic in service layer (if/throw) | `shopro-res/src/main/java/mls/sho/dms/service/impl/*.java` |
 | `HTTP_CONTRACT` | HTTP status code, endpoint existence | Controller `*.java` |
 | `ERROR_MESSAGE` | Exact error message text (exact match) | Exception classes, frontend toast/dialog copy |
 | `UI_ELEMENT` | Form field, button, badge, dialog presence | React/Flutter screen files |
@@ -81,27 +81,27 @@ TEST_ROOT_REACT: shopro-pos-web/src/__tests__
 
 ## 2.1 Layer 1 — Database (Flyway Migrations)
 
-**Target:** `shopro-pos-server/src/main/resources/db/migration/`
+**Target:** `shopro-res/src/main/resources/db/migration/`
 
 - Check for: `CREATE TABLE`, `NOT NULL`, `VARCHAR(N)`, `CHECK`, `DEFAULT`, `UNIQUE`, `FOREIGN KEY`.
 - Flag mismatches between AC requirements and SQL definition.
 
 ## 2.2 Layer 2 — JPA Entities
 
-**Target:** `shopro-pos-server/src/main/java/mls/sho/dms/entity/`
+**Target:** `shopro-res/src/main/java/mls/sho/dms/entity/`
 
 - Check: `@Entity`, `@Table`, `@Column(nullable=false/length=N)`, `@Enumerated`, `@Version`, `@CreationTimestamp`.
 - Cross-check with DB migrations for consistency.
 
 ## 2.3 Layer 3 — Service (Business Rules)
 
-**Target:** `shopro-pos-server/src/main/java/mls/sho/dms/service/`
+**Target:** `shopro-res/src/main/java/mls/sho/dms/service/`
 
 - Check: Guard clauses (if/throw), custom exceptions, `AuditLog` writes, `@Transactional`.
 
 ## 2.4 Layer 4 — Controller (HTTP Contract)
 
-**Target:** `shopro-pos-server/src/main/java/mls/sho/dms/controller/`
+**Target:** `shopro-res/src/main/java/mls/sho/dms/controller/`
 
 - Check: `@RestController`, `@RequestMapping`, HTTP verbs, `@Valid` on `@RequestBody`, `GlobalExceptionHandler`.
 

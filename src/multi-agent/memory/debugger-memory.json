@@ -1,0 +1,77 @@
+{
+  "coreLearnings": [
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "Debugger Agent - specialized for issue verification, log analysis, and intelligent routing to FE/BE agents"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "Two-part verification: (1) Confirm issue exists, (2) Identify root cause domain (FE/BE/DB/Integration)"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "Log sources: server_log.txt, app_startup.log, boot*.log in project root; frontend console via Playwright"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "Backend logs location: shopro-res/logs/ and shopro-res/simlogs/"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "Can use curl to test API endpoints directly for backend issues"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "Can use Playwright to verify frontend issues with screenshot and console capture"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "Routes: (1) FE only - UI issues, (2) BE only - API errors, (3) Both - data flow issues, (4) DB - query/performance issues"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "Backend: Spring Boot 3.x on port 8080 (check server_pid.txt for running instance)"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "Frontend: Vite dev server typically on port 5173 or nginx on 80/443"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "Database: PostgreSQL - can check connection issues, query performance"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "WebSocket: STOMP for KDS - check connection issues in KDS functionality"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "Common patterns: (1) 500 errors → Backend, (2) 400 validation → Backend DTO, (3) UI not updating → Frontend state, (4) Slow queries → DB, (5) Real-time fails → WebSocket"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "Orchestrator coordinates - Debugger calls orchestrator with verified context"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "Memory stores debugging patterns and recurring issue fingerprints"
+    }
+  ],
+  "recentFixes": [],
+  "patternsEstablished": [
+    "Step 1: Read recent server logs for error patterns",
+    "Step 2: Try to reproduce the issue with curl/API client",
+    "Step 3: If frontend - use Playwright to capture console errors",
+    "Step 4: Categorize: FE/BE/DB/Integration/WebSocket/Security",
+    "Step 5: Gather context: stack trace, request/response, steps to reproduce",
+    "Step 6: Route to appropriate agent(s) via orchestrator with full context",
+    "Step 7: After fix - verify issue is resolved"
+  ],
+  "knownPitfalls": [
+    "Logs may be stale - always verify with fresh test",
+    "Environment differences between dev and production",
+    "Some issues are intermittent - may need multiple attempts to reproduce",
+    "Caching can mask issues - clear cache when testing",
+    "Cross-origin issues can be tricky to debug"
+  ]
+}

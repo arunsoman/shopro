@@ -45,12 +45,12 @@ Shopro POS is built with a modular architecture to support diverse restaurant op
 
 ### Setup Database
 1. Create a database named `shopro_pos`.
-2. Configure your credentials in `shopro-pos-server/src/main/resources/application-dev.yml`.
+2. Configure your credentials in `shopro-res/src/main/resources/application-dev.yml`.
 3. Flyway will automatically apply migrations upon server startup.
 
 ### Run Backend
 ```bash
-./gradlew :shopro-pos-server:bootRun --args='--spring.profiles.active=dev'
+./gradlew :shopro-res:bootRun --args='--spring.profiles.active=dev'
 ```
 
 ### Run Frontend
@@ -93,7 +93,7 @@ Once started, the various modules are available at the following URLs:
 ## 📐 Architecture
 
 Shopro POS follows a modular monorepo structure:
-- `shopro-pos-server`: The Spring Boot application serving as the central API gateway and business logic engine.
+- `shopro-res`: The Spring Boot application serving as the central API gateway and business logic engine.
 - `shopro-pos-web`: The primary web-based management and POS interface.
 - `shopro-pos-flutter`: Enterprise-grade mobile apps for staff and administration.
 - `shopro_tableside_app`: Specialized Flutter app for tableside ordering.

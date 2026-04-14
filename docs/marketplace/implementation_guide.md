@@ -6,7 +6,7 @@ This guide provides a detailed, point-by-point technical breakdown of how to ach
 
 ## 1. Executive Summary & Strategy
 *How we achieve the Facilitator/Marketplace evolution:*
-- **Project Structure**: Introduce a separate `shopro-marketplace` React application (completed) that communicates with a new set of `/api/v1/marketplace/**` endpoints in the `shopro-pos-server`.
+- **Project Structure**: Introduce a separate `shopro-marketplace` React application (completed) that communicates with a new set of `/api/v1/marketplace/**` endpoints in the `shopro-res`.
 - **Backend Service**: Create a `MarketplaceService` in Spring Boot to encapsulate all "middleman" logic, keeping the core POS logic (ordering, inventory) decoupled.
 
 ## 2. Identity Masking (Section 2, 3.3, 4)

@@ -1,0 +1,173 @@
+{
+  "version": "2.0",
+  "description": "Hardcoded knowledge for Backend Developer Agent - no codebase search needed",
+  "projectInfo": {
+    "name": "shopro-res",
+    "type": "Spring Boot REST API",
+    "location": "/home/arun/IdeaProjects/shopro-pos/shopro-res",
+    "port": 8080,
+    "healthEndpoint": "http://localhost:8080/actuator/health"
+  },
+  "techStack": {
+    "framework": "Spring Boot 3.x",
+    "language": "Java 17+",
+    "database": "PostgreSQL",
+    "orm": "JPA / Hibernate",
+    "security": "Spring Security + OAuth2 + JWT/DPoP",
+    "caching": "Redis",
+    "messaging": "WebSockets with STOMP",
+    "buildTool": "Gradle",
+    "testing": "JUnit 5, Testcontainers"
+  },
+  "coreLearnings": [
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "Backend uses Spring Boot 3.x with Java, JPA, PostgreSQL, Redis, WebSockets"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "317 Java source files organized in package mls.sho.dms.application.*"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "Modules: analytics, core, costing, engineering, inventory, kds, pos, primecost, purchasing, seeder, simulator, users"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "Controllers: AnalyticsController, ReportController, MenuController, RecipeController, EngineeringController, IngredientController, InventoryController, InventoryIntelligenceController, InventoryStatsController, CentralKdsController, ExpoKdsController, StationKdsController, MenuItemConfigController, PosController, GoodsReceiptController, PurchasingController, SupplierController, GuestAuthController, OnboardingController"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "Key Entities: Restaurant, DiningTable, TableSession, Order, OrderLine, Ingredient, MenuItem, Recipe, RecipeIngredientLine, RecipeProcedureStep, PurchaseOrder, PurchaseOrderLine, PurchaseInvoice, PurchaseInvoiceLine, GoodsReceipt, GoodsReceiptLine, Supplier, InventoryActiveLot, InventoryIngredientLedger, InventoryWasteRegistry, MenuCostGroup"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "Security: Spring Security with OAuth2, JWT/DPoP, Google Authenticator for 2FA"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "Database: PostgreSQL with Flyway migrations (migration folder exists but empty - using Hibernate)"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "Caching: Redis for session management and caching"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "Real-time: WebSockets with STOMP for KDS (Kitchen Display System) synchronization"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "AI Features: PDF invoice parsing (PDFBox), OCR (Tesseract), 3-way matching with Apache PDFBox, OpenCV, JGraphT"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "Business Simulation: Built-in simulator for inventory, sales, waste scenarios in simulator module"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "Seeders: AfghanIngredientSeeder, DashboardDataSeeder, ExperimentDataSeeder, KdsDataSeeder, MenuCostingSeeder, ShoProUserSeeder"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "Inventory features: FIFO tracking, lot management, waste registry, physical inventory periods, ingredient costing"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "Purchasing: Supplier management, purchase orders, goods receipts, 3-way invoice matching with AI"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "KDS: CentralKds, ExpoKds, StationKds with real-time order status updates via WebSocket"
+    }
+  ],
+  "completeControllerList": [
+    "AnalyticsController - /api/v1/analytics/*",
+    "ReportController - /api/v1/reports/*",
+    "MenuController - /api/v1/menu/*",
+    "RecipeController - /api/v1/recipes/*",
+    "EngineeringController - /api/v1/engineering/*",
+    "IngredientController - /api/v1/ingredients/*",
+    "InventoryController - /api/v1/inventory/*",
+    "InventoryIntelligenceController - /api/v1/inventory/intelligence/*",
+    "InventoryStatsController - /api/v1/inventory/stats/*",
+    "CentralKdsController - /api/v1/kds/central/*",
+    "ExpoKdsController - /api/v1/kds/expo/*",
+    "StationKdsController - /api/v1/kds/station/*",
+    "MenuItemConfigController - /api/v1/menu-item-config/*",
+    "PosController - /api/v1/pos/*",
+    "GoodsReceiptController - /api/v1/goods-receipts/*",
+    "PurchasingController - /api/v1/purchasing/*",
+    "SupplierController - /api/v1/suppliers/*",
+    "GuestAuthController - /api/v1/guest/*",
+    "OnboardingController - /api/v1/onboarding/*"
+  ],
+  "completeEntityList": [
+    "Restaurant", "DiningTable", "TableSession", "Order", "OrderLine",
+    "Ingredient", "MenuItem", "Recipe", "RecipeIngredientLine", "RecipeProcedureStep",
+    "PurchaseOrder", "PurchaseOrderLine", "PurchaseInvoice", "PurchaseInvoiceLine",
+    "GoodsReceipt", "GoodsReceiptLine", "Supplier",
+    "InventoryActiveLot", "InventoryIngredientLedger", "InventoryWasteRegistry", "PhysicalInventoryPeriod", "PhysicalInventoryLine",
+    "MenuCostGroup", "BanquetEventOrder", "GuestFeedback", "HaccpLog", "WaitlistEntry",
+    "OperationsManualEntry", "BuildChartLine",
+    "User", "Role", "Permission",
+    "ExperimentConfig", "ExperimentResult", "ExperimentMetric"
+  ],
+  "apiEndpoints": {
+    "ingredients": "/api/v1/ingredients",
+    "menuItems": "/api/v1/menu",
+    "recipes": "/api/v1/recipes",
+    "inventory": "/api/v1/inventory",
+    "purchasing": "/api/v1/purchasing",
+    "suppliers": "/api/v1/suppliers",
+    "goodsReceipts": "/api/v1/goods-receipts",
+    "orders": "/api/v1/pos/orders",
+    "kds": "/api/v1/kds",
+    "analytics": "/api/v1/analytics",
+    "auth": "/api/v1/auth",
+    "onboarding": "/api/v1/onboarding"
+  },
+  "keyServices": [
+    "OAuth2Service - authentication with Google OAuth2",
+    "InventoryService - FIFO inventory management",
+    "RecipeService - recipe and costing calculations",
+    "PurchasingService - purchase order workflow",
+    "GoodsReceiptService - goods receipt and 3-way matching",
+    "KdsService - kitchen display synchronization",
+    "SimulationService - business scenario simulation"
+  ],
+  "quickReference": {
+    "runBackend": "cd /home/arun/IdeaProjects/shopro-pos/shopro-res && ./gradlew bootRun",
+    "runTests": "cd /home/arun/IdeaProjects/shopro-pos/shopro-res && ./gradlew test",
+    "build": "cd /home/arun/IdeaProjects/shopro-pos/shopro-res && ./gradlew build",
+    "checkHealth": "curl http://localhost:8080/actuator/health",
+    "viewLogs": "tail -f /home/arun/IdeaProjects/shopro-pos/shopro-res/logs/application.log"
+  },
+  "patternsEstablished": [
+    "REST Controllers return DTOs, not entities - use @RestController annotation",
+    "Services contain business logic, Controllers handle HTTP request/response",
+    "Repositories extend JpaRepository for standard CRUD",
+    "Use MapStruct for entity-DTO mapping",
+    "Lombok for reducing boilerplate (@Data, @Builder, @AllArgsConstructor)",
+    "Validation via Jakarta Bean Validation (@Valid, @NotNull, @NotBlank)",
+    "Use @Transactional for service methods modifying data",
+    "WebSocket endpoints use @MessageMapping for STOMP destinations",
+    "All DTOs in mls.sho.dms.dto package",
+    "All entities in mls.sho.dms.entity package",
+    "All services in mls.sho.dms.application.*.service package"
+  ],
+  "knownPitfalls": [
+    "Flyway migration folder is empty - ensure proper migration strategy",
+    "Large number of entities may need optimization with indexes",
+    "Consider adding OpenAPI documentation to all endpoints",
+    "AI features (OCR, 3-way matching) need proper error handling for edge cases",
+    "OAuth2Service requires GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET env vars - defaults in application.yml",
+    "WebSocket STOMP endpoints need /topic/ and /queue/ prefixes"
+  ],
+  "commonErrors": {
+    "UnsatisfiedDependencyException": "Check application.yml for missing ${VAR:default} values",
+    "NullPointerException in KDS": "Check WebSocket session management",
+    "Transaction rollback": "Check @Transactional boundaries and database constraints",
+    "401/403 errors": "Verify JWT token validation and role permissions"
+  }
+}

@@ -49,4 +49,16 @@ public class InventoryDtos {
         private LocalDateTime finalisedAt;
         private List<PhysicalInventoryLineDto> lines;
     }
+
+    @Data
+    @Builder
+    public static class LowStockAlertDto {
+        private Long ingredientId;
+        private String itemCode;
+        private String description;
+        private String inventoryUnit;
+        private BigDecimal parLevel;
+        private BigDecimal onHand;
+        private BigDecimal shortfallAmount;
+    }
 }

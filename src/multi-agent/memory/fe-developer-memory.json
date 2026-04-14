@@ -1,0 +1,200 @@
+{
+  "version": "2.0",
+  "description": "Hardcoded knowledge for Frontend Developer Agent - no codebase search needed",
+  "projectInfo": {
+    "name": "shopro-res-web",
+    "type": "React SPA",
+    "location": "/home/arun/IdeaProjects/shopro-pos/shopro-res-web",
+    "devPort": 5173,
+    "prodPort": 80
+  },
+  "techStack": {
+    "framework": "React 19",
+    "buildTool": "Vite",
+    "language": "TypeScript",
+    "styling": "Tailwind CSS",
+    "uiLibrary": "MUI v7 + Radix UI",
+    "stateManagement": "Zustand (global), TanStack Query (server)",
+    "forms": "React Hook Form + Zod",
+    "routing": "React Router DOM v7",
+    "charts": "Recharts",
+    "canvas": "Konva + react-konva",
+    "i18n": "i18next",
+    "testing": "Playwright",
+    "icons": "lucide-react"
+  },
+  "coreLearnings": [
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "Frontend uses React 19 + Vite + TypeScript + Tailwind CSS with MUI v7 and Radix UI components"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "State management: Zustand for global state, TanStack Query for server state, React Query for caching"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "517 TypeScript/TSX files in frontend codebase organized by features in src/features/"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "API client located at src/api/client.ts using Axios with interceptors for auth tokens"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "All API files: auth, buildCharts, cfo, costGroups, diningTables, goodsReceipts, guestCount, ingredients, inventory, invoices, kpi, labor, manuals, menuEngineering, menuItems, orders, primeCost, purchaseOrders, recipes, restaurant, sessions, suppliers, unitConversion, weeklyBudget"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "Features: auth, dashboard, build-charts, experiments, inventory, kds, menu-costing, menu-engineering, operations-manual, payments, pos, prime-cost, purchase, purchasing, recipes, recipes-menu, reports, settings, unit-converter"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "Components: charts (recharts), kpi, layout (Header, Sidebar, MainLayout), notifications, search, shared, ui (Button, Card, Dialog, Input, Select, Table, Tabs)"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "Real-time: WebSocket via STOMP/sockjs-client for KDS (Kitchen Display System) updates"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "Routing: React Router DOM v7 in src/router/"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "Forms: React Hook Form + Zod for validation in most features"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "Design system: Custom fonts (DMSans, DMMono, PlayfairDisplay) in src/assets/fonts/"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "Canvas drawing: Konva + react-konva for floor plan / table layout editor"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "i18n: i18next with locales in src/locales/"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "Testing: Playwright for E2E tests in e2e/ folder with test-results/"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "Build output: dist/ folder deployed via Docker with nginx"
+    }
+  ],
+  "completeFeatureList": [
+    "auth - Authentication, login, OAuth",
+    "dashboard - Main dashboard with KPIs",
+    "build-charts - Recipe build chart visualization",
+    "experiments - A/B testing and experiments",
+    "inventory - Inventory management",
+    "kds - Kitchen Display System",
+    "menu-costing - Menu item costing",
+    "menu-engineering - Menu engineering matrix",
+    "operations-manual - Operations documentation",
+    "payments - Payment processing",
+    "pos - Point of Sale",
+    "prime-cost - Prime cost analysis",
+    "purchase - Purchase management",
+    "purchasing - Purchasing workflow",
+    "recipes - Recipe management",
+    "recipes-menu - Recipe-menu linking",
+    "reports - Reporting and analytics",
+    "settings - App settings",
+    "unit-converter - Unit conversion utility"
+  ],
+  "completeApiList": [
+    "src/api/auth.ts",
+    "src/api/buildCharts.ts",
+    "src/api/cfo.ts",
+    "src/api/costGroups.ts",
+    "src/api/diningTables.ts",
+    "src/api/goodsReceipts.ts",
+    "src/api/guestCount.ts",
+    "src/api/ingredients.ts",
+    "src/api/inventory.ts",
+    "src/api/invoices.ts",
+    "src/api/kpi.ts",
+    "src/api/labor.ts",
+    "src/api/manuals.ts",
+    "src/api/menuEngineering.ts",
+    "src/api/menuItems.ts",
+    "src/api/orders.ts",
+    "src/api/primeCost.ts",
+    "src/api/purchaseOrders.ts",
+    "src/api/recipes.ts",
+    "src/api/restaurant.ts",
+    "src/api/sessions.ts",
+    "src/api/suppliers.ts",
+    "src/api/unitConversion.ts",
+    "src/api/weeklyBudget.ts"
+  ],
+  "keyComponents": {
+    "ui": [
+      "src/components/ui/Button.tsx",
+      "src/components/ui/Card.tsx",
+      "src/components/ui/Dialog.tsx",
+      "src/components/ui/Input.tsx",
+      "src/components/ui/Select.tsx",
+      "src/components/ui/Table.tsx",
+      "src/components/ui/Tabs.tsx",
+      "src/components/ui/Badge.tsx",
+      "src/components/ui/Modal.tsx"
+    ],
+    "layout": [
+      "src/components/layout/Header.tsx",
+      "src/components/layout/Sidebar.tsx",
+      "src/components/layout/MainLayout.tsx"
+    ],
+    "charts": [
+      "src/components/charts/LineChart.tsx",
+      "src/components/charts/BarChart.tsx",
+      "src/components/charts/PieChart.tsx"
+    ],
+    "shared": [
+      "src/components/shared/LoadingSpinner.tsx",
+      "src/components/shared/ErrorBoundary.tsx",
+      "src/components/shared/ConfirmDialog.tsx"
+    ]
+  },
+  "stores": {
+    "auth": "src/stores/authStore.ts - Zustand store for authentication state",
+    "app": "src/stores/appStore.ts - Zustand store for app-wide state"
+  },
+  "quickReference": {
+    "runDev": "cd /home/arun/IdeaProjects/shopro-pos/shopro-res-web && npm run dev",
+    "build": "cd /home/arun/IdeaProjects/shopro-pos/shopro-res-web && npm run build",
+    "preview": "cd /home/arun/IdeaProjects/shopro-pos/shopro-res-web && npm run preview",
+    "lint": "cd /home/arun/IdeaProjects/shopro-pos/shopro-res-web && npm run lint",
+    "testE2E": "cd /home/arun/IdeaProjects/shopro-pos/shopro-res-web && npx playwright test"
+  },
+  "patternsEstablished": [
+    "API calls use TanStack Query hooks: useQuery for GET, useMutation for POST/PUT/DELETE",
+    "Forms use React Hook Form with Zod schema validation",
+    "Components use Tailwind CSS classes with clsx and tailwind-merge for conditional classes",
+    "Modals use Radix UI Dialog component",
+    "Tables use custom Table component with sorting and pagination",
+    "Real-time updates via WebSocket STOMP messages for KDS",
+    "Protected routes check authentication state from Zustand auth store",
+    "Use @tanstack/react-query for server state",
+    "Use zustand for client state",
+    "API base URL configured in src/api/client.ts"
+  ],
+  "commonErrors": {
+    "CORS errors": "Backend not allowing frontend origin - check backend CORS config",
+    "401 Unauthorized": "Token expired or not sent - check auth interceptor",
+    "React key warning": "Missing key prop in list items",
+    "Hydration mismatch": "SSR/SSG data not matching client - use useEffect for client-only",
+    "WebSocket connection failed": "Check STOMP broker configuration"
+  },
+  "knownPitfalls": [
+    "Large bundle size - consider code splitting for features",
+    "Some components missing proper error boundaries",
+    "Need to add loading skeletons for async data",
+    "Ensure dark mode compatibility for all components",
+    "WebSocket reconnect logic needs improvement"
+  ]
+}

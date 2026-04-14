@@ -2,6 +2,7 @@ package mls.sho.dms.application.inventory.web;
 
 import lombok.RequiredArgsConstructor;
 import mls.sho.dms.application.inventory.service.IngredientService;
+import mls.sho.dms.application.inventory.dto.InventoryDtos.LowStockAlertDto;
 import mls.sho.dms.entity.Ingredient;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
@@ -34,8 +35,8 @@ public class IngredientController {
     }
 
     @GetMapping("/low-stock")
-    public List<Ingredient> getLowStock(@PathVariable Long restaurantId) {
-        return ingredientService.getLowStockIngredients(restaurantId);
+    public List<LowStockAlertDto> getLowStock(@PathVariable Long restaurantId) {
+        return ingredientService.getLowStockAlerts(restaurantId);
     }
 
     @GetMapping("/{id}")

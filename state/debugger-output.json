@@ -1,0 +1,6 @@
+{
+  "taskId": "328f559b-9d9d-41e0-b4eb-9a299b2ab0a4",
+  "issue": "goods_receipt]] with root cause\n\norg.postgresql.util.PSQLException: ERROR: null value in column supplier_id of relation goods_receipt violates not-null constraint\nDetail: Failing row contains (5000.00, 2026-04-14 23:53:06.074263, 3, null, 2026-04-14 12:00:00, 1, null, 2026-04-14 23:53:06.076449, null, DRAFT).\nat org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse(QueryExecutorImpl.java:2713)\nat org.postgresql.core.v3.QueryExecutorImpl.processResults(QueryExecutorImpl.java:2401",
+  "completedAt": "2026-04-14T18:26:35.129Z",
+  "report": ""
+}

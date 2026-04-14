@@ -51,7 +51,7 @@ stateDiagram-v2
 
 ## Layer 1: Shared Backend Services
 
-> These are the **core domain services** used by **both** the Supplier Portal API and the Staff Portal API. They live in `shopro-pos-server` and contain all business logic, state transitions, and side-effects.
+> These are the **core domain services** used by **both** the Supplier Portal API and the Staff Portal API. They live in `shopro-res` and contain all business logic, state transitions, and side-effects.
 
 ---
 
@@ -101,7 +101,7 @@ Unified PO creation regardless of source.
 
 ---
 
-### 1.3 `POService` — [MODIFY] [POService.java](file:///home/arun/IdeaProjects/shopro-pos/shopro-pos-server/src/main/java/mls/sho/dms/application/service/inventory/POService.java)
+### 1.3 `POService` — [MODIFY] [POService.java](file:///home/arun/IdeaProjects/shopro-pos/shopro-res/src/main/java/mls/sho/dms/application/service/inventory/POService.java)
 
 | Method | Status | Description |
 |:---|:---:|:---|
@@ -119,7 +119,7 @@ Unified PO creation regardless of source.
 
 ---
 
-### 1.4 `RFQService` — [MODIFY] [RFQService.java](file:///home/arun/IdeaProjects/shopro-pos/shopro-pos-server/src/main/java/mls/sho/dms/application/service/inventory/RFQService.java)
+### 1.4 `RFQService` — [MODIFY] [RFQService.java](file:///home/arun/IdeaProjects/shopro-pos/shopro-res/src/main/java/mls/sho/dms/application/service/inventory/RFQService.java)
 
 | Method | Status | Description |
 |:---|:---:|:---|
@@ -127,7 +127,7 @@ Unified PO creation regardless of source.
 
 ---
 
-### 1.5 `ProcurementService` — [MODIFY] [ProcurementService.java](file:///home/arun/IdeaProjects/shopro-pos/shopro-pos-server/src/main/java/mls/sho/dms/application/service/inventory/ProcurementService.java)
+### 1.5 `ProcurementService` — [MODIFY] [ProcurementService.java](file:///home/arun/IdeaProjects/shopro-pos/shopro-res/src/main/java/mls/sho/dms/application/service/inventory/ProcurementService.java)
 
 | Method | Status | Description |
 |:---|:---:|:---|
@@ -135,7 +135,7 @@ Unified PO creation regardless of source.
 
 ---
 
-### 1.6 `ReceivingService` — [MODIFY] [ReceivingService.java](file:///home/arun/IdeaProjects/shopro-pos/shopro-pos-server/src/main/java/mls/sho/dms/application/service/inventory/ReceivingService.java)
+### 1.6 `ReceivingService` — [MODIFY] [ReceivingService.java](file:///home/arun/IdeaProjects/shopro-pos/shopro-res/src/main/java/mls/sho/dms/application/service/inventory/ReceivingService.java)
 
 | Method | Status | Description |
 |:---|:---:|:---|
@@ -184,7 +184,7 @@ Per-supplier configuration.
 
 ---
 
-### 2.1 Backend: `SupplierPortalController` — [MODIFY] [SupplierPortalController.java](file:///home/arun/IdeaProjects/shopro-pos/shopro-pos-server/src/main/java/mls/sho/dms/application/controller/inventory/SupplierPortalController.java)
+### 2.1 Backend: `SupplierPortalController` — [MODIFY] [SupplierPortalController.java](file:///home/arun/IdeaProjects/shopro-pos/shopro-res/src/main/java/mls/sho/dms/application/controller/inventory/SupplierPortalController.java)
 
 **Existing endpoints** (consume `SupplierPortalService`):
 
@@ -249,7 +249,7 @@ Per-supplier configuration.
 
 ### 3.1 Backend: Staff-Facing Controllers — [MODIFY]
 
-**`PurchaseOrderController`** — [PurchaseOrderController.java](file:///home/arun/IdeaProjects/shopro-pos/shopro-pos-server/src/main/java/mls/sho/dms/web/controller/inventory/PurchaseOrderController.java)
+**`PurchaseOrderController`** — [PurchaseOrderController.java](file:///home/arun/IdeaProjects/shopro-pos/shopro-res/src/main/java/mls/sho/dms/web/controller/inventory/PurchaseOrderController.java)
 
 | Endpoint | Method | Status | What it does |
 |:---|:---:|:---:|:---|
@@ -265,11 +265,11 @@ Per-supplier configuration.
 | `/api/v1/inventory/po/{id}/status-history` | GET | 🆕 | View the PO audit trail |
 | `/api/v1/inventory/po/{id}/allowed-actions` | GET | 🆕 | What the manager can do next |
 
-**`RFQController`** — [RFQController.java](file:///home/arun/IdeaProjects/shopro-pos/shopro-pos-server/src/main/java/mls/sho/dms/application/controller/inventory/RFQController.java) — ✅ No changes needed
+**`RFQController`** — [RFQController.java](file:///home/arun/IdeaProjects/shopro-pos/shopro-res/src/main/java/mls/sho/dms/application/controller/inventory/RFQController.java) — ✅ No changes needed
 
-**`ProcurementController`** — [ProcurementController.java](file:///home/arun/IdeaProjects/shopro-pos/shopro-pos-server/src/main/java/mls/sho/dms/application/controller/inventory/ProcurementController.java) — ✅ No changes needed
+**`ProcurementController`** — [ProcurementController.java](file:///home/arun/IdeaProjects/shopro-pos/shopro-res/src/main/java/mls/sho/dms/application/controller/inventory/ProcurementController.java) — ✅ No changes needed
 
-**`ReceivingController`** — [ReceivingController.java](file:///home/arun/IdeaProjects/shopro-pos/shopro-pos-server/src/main/java/mls/sho/dms/application/controller/inventory/ReceivingController.java) — ✅ No changes needed (already has `receiveGoods` and `processInvoiceAndMatch`)
+**`ReceivingController`** — [ReceivingController.java](file:///home/arun/IdeaProjects/shopro-pos/shopro-res/src/main/java/mls/sho/dms/application/controller/inventory/ReceivingController.java) — ✅ No changes needed (already has `receiveGoods` and `processInvoiceAndMatch`)
 
 ---
 

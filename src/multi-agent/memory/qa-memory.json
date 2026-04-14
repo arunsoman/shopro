@@ -1,0 +1,59 @@
+{
+  "coreLearnings": [
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "QA covers both shopro-res (Spring Boot backend) and shopro-res-web (React frontend)"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "Backend: Spring Boot 3.x, 317 Java files, PostgreSQL, Redis, WebSockets"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "Frontend: React 19, Vite, TypeScript, Tailwind, 517 TSX/TS files"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "Critical flows: KDS real-time updates, inventory FIFO tracking, purchase order 3-way matching, table session management"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "Security: OAuth2, JWT/DPoP, 2FA via Google Authenticator"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "AI features: Invoice OCR, 3-way matching - need special QA attention"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "Business simulation: Inventory scenarios need validation"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "Key integrations: Frontend-Backend API contracts, WebSocket STOMP messages"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "Seeders provide test data: Afghan ingredients, dashboard, menu costing, experiments"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "Deployment: Backend Docker, Frontend Docker + nginx"
+    }
+  ],
+  "recentFixes": [],
+  "patternsEstablished": [
+    "QA should verify: API responses match DTO contracts, WebSocket messages arrive correctly",
+    "Test data: Use seeder classes to create consistent test data",
+    "Performance: Check Redis caching, database query optimization",
+    "Security: Verify auth flows, token expiration, role-based access",
+    "Mobile/POS: Test on different screen sizes (NEXGO EF60 terminal mentioned)"
+  ],
+  "knownPitfalls": [
+    "Need comprehensive test coverage reports",
+    "WebSocket tests need special tooling for STOMP",
+    "AI feature testing needs ground truth datasets",
+    "Consider performance testing for simulation module",
+    "Missing automated regression tests for critical flows"
+  ]
+}

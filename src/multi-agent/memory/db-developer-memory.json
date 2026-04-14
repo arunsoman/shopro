@@ -1,0 +1,135 @@
+{
+  "version": "2.0",
+  "description": "Hardcoded knowledge for Database Developer Agent - no codebase search needed",
+  "projectInfo": {
+    "backendProject": "shopro-res",
+    "backendLocation": "/home/arun/IdeaProjects/shopro-pos/shopro-res",
+    "database": "PostgreSQL",
+    "orm": "JPA / Hibernate"
+  },
+  "techStack": {
+    "database": "PostgreSQL",
+    "orm": "JPA / Hibernate",
+    "migration": "Flyway (configured but not used - using Hibernate auto-ddl)",
+    "caching": "Redis for sessions and data"
+  },
+  "coreLearnings": [
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "Database: PostgreSQL for shopro-res backend"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "Main tables: restaurants, dining_tables, table_sessions, orders, order_lines, ingredients, menu_items, recipes, recipe_ingredient_lines, recipe_procedure_steps, purchase_orders, purchase_order_lines, purchase_invoices, purchase_invoice_lines, goods_receipts, goods_receipt_lines, suppliers, inventory_active_lots, inventory_ingredient_ledgers, inventory_waste_registries, menu_cost_groups, banquet_event_orders, guest_feedbacks, haccp_logs, waitlist_entries, operations_manual_entries, build_chart_lines"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "Entity relationships: Restaurant -> DiningTables, TableSessions; DiningTable -> Orders; Order -> OrderLines; MenuItem -> Recipes; Recipe -> RecipeIngredientLines (to Ingredients), RecipeProcedureSteps; PurchaseOrder -> PurchaseOrderLines; PurchaseInvoice -> PurchaseInvoiceLines; GoodsReceipt -> GoodsReceiptLines"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "Inventory tracking: InventoryActiveLot (FIFO lots), InventoryIngredientLedger (transaction log), InventoryWasteRegistry (waste tracking)"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "Physical inventory: PhysicalInventoryPeriod, PhysicalInventoryLine for periodic counts"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "User tables: User, Role, Permission in mls.sho.dms.entity.users"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "ID strategy: Most entities use Long/Sequence or UUID for primary keys"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "Hypersistence Utils: Using @HibernateType for JSON columns where needed"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "Caching: Redis configured for session and data caching"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "Migration strategy: Flyway configured but migrations folder empty - using Hibernate auto-ddl"
+    },
+    {
+      "timestamp": "2025-01-15T10:00:00Z",
+      "content": "Experiment entities: ExperimentConfig, ExperimentResult, ExperimentMetric in entity/experiment/"
+    }
+  ],
+  "completeEntityList": [
+    "Restaurant - Restaurant entity",
+    "DiningTable - Table layout and capacity",
+    "TableSession - Active table sessions",
+    "Order - Customer orders",
+    "OrderLine - Individual order items",
+    "Ingredient - Inventory ingredients",
+    "MenuItem - Menu items for sale",
+    "Recipe - Recipe definitions",
+    "RecipeIngredientLine - Recipe-Ingredient mappings",
+    "RecipeProcedureStep - Recipe cooking steps",
+    "PurchaseOrder - Purchase orders to suppliers",
+    "PurchaseOrderLine - PO line items",
+    "PurchaseInvoice - Supplier invoices",
+    "PurchaseInvoiceLine - Invoice line items",
+    "GoodsReceipt - Received goods",
+    "GoodsReceiptLine - Receipt line items",
+    "Supplier - Supplier information",
+    "InventoryActiveLot - FIFO inventory lots",
+    "InventoryIngredientLedger - Inventory transaction log",
+    "InventoryWasteRegistry - Waste tracking",
+    "PhysicalInventoryPeriod - Physical inventory periods",
+    "PhysicalInventoryLine - Physical inventory counts",
+    "MenuCostGroup - Menu cost groupings",
+    "User - User accounts",
+    "Role - User roles",
+    "Permission - Role permissions",
+    "ExperimentConfig - A/B test configurations",
+    "ExperimentResult - Experiment results",
+    "ExperimentMetric - Experiment metrics"
+  ],
+  "entityPackages": {
+    "core": "mls.sho.dms.entity.core",
+    "users": "mls.sho.dms.entity.users",
+    "inventory": "mls.sho.dms.entity.inventory",
+    "purchasing": "mls.sho.dms.entity.purchasing",
+    "kds": "mls.sho.dms.entity.kds",
+    "pos": "mls.sho.dms.entity.pos",
+    "recipe": "mls.sho.dms.entity.recipe",
+    "experiment": "mls.sho.dms.entity.experiment"
+  },
+  "commonQueries": {
+    "activeTableSessions": "SELECT * FROM table_sessions WHERE status = 'ACTIVE'",
+    "pendingOrders": "SELECT * FROM orders WHERE status IN ('PENDING', 'IN_PROGRESS')",
+    "lowStockIngredients": "SELECT * FROM ingredients WHERE quantity_on_hand < reorder_level",
+    "fifoLots": "SELECT * FROM inventory_active_lots WHERE ingredient_id = ? ORDER BY expiry_date ASC",
+    "recentTransactions": "SELECT * FROM inventory_ingredient_ledger ORDER BY transaction_date DESC LIMIT 100"
+  },
+  "quickReference": {
+    "connectPsql": "psql -h localhost -U postgres -d shopro",
+    "listTables": "\\dt",
+    "checkIndexes": "\\di",
+    "migrationLocation": "/home/arun/IdeaProjects/shopro-pos/shopro-res/src/main/resources/db/migration"
+  },
+  "patternsEstablished": [
+    "Entities use JPA annotations (@Entity, @Table, @Column, @Id, @GeneratedValue)",
+    "Relationships use @OneToOne, @OneToMany, @ManyToOne, @ManyToMany with cascade and fetch settings",
+    "Use @Builder pattern via Lombok for complex entity construction",
+    "Soft deletes can use @Where annotation for automatic filtering",
+    "Auditing: Can add @CreatedDate, @LastModifiedDate with @EntityListeners"
+  ],
+  "knownPitfalls": [
+    "No Flyway migrations - should create proper migration scripts",
+    "Missing indexes on frequently queried columns (foreign keys, status fields)",
+    "Consider partitioning large tables (inventory_ledger) by date",
+    "Need to add partial indexes for common queries (active sessions, pending orders)"
+  ],
+  "indexRecommendations": [
+    "CREATE INDEX idx_table_sessions_status ON table_sessions(status) WHERE status = 'ACTIVE'",
+    "CREATE INDEX idx_orders_status ON orders(status) WHERE status IN ('PENDING', 'IN_PROGRESS')",
+    "CREATE INDEX idx_inventory_ledger_date ON inventory_ingredient_ledger(transaction_date)",
+    "CREATE INDEX idx_inventory_lots_ingredient ON inventory_active_lots(ingredient_id, expiry_date)"
+  ]
+}
