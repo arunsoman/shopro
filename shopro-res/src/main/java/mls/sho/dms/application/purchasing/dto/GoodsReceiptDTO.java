@@ -17,7 +17,7 @@ public class GoodsReceiptDTO {
     private BigDecimal totalAmount;
     private GoodsReceiptStatus status;
     private String notes;
-    private List<GoodsReceiptLineDTO> lines;
+    private List<PurchaseOrderLineDTO> lines;
 
     @Data
     public static class GoodsReceiptLineDTO {

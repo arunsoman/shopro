@@ -15,11 +15,12 @@ public class PurchaseInvoiceDTO {
     private Long id;
     private Long supplierId;
     private String supplierName;
+    private Long goodsReceiptId;
     private LocalDate invoiceDate;
     private String invoiceNumber;
     private BigDecimal invoiceAmount;
     private InvoiceStatus status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private List<PurchaseInvoiceLineDTO> lines;
+    private List<PurchaseOrderLineDTO> lines;
 }

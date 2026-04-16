@@ -1,11 +1,10 @@
 package mls.sho.dms.application.purchasing.service;
 
 import lombok.RequiredArgsConstructor;
-import mls.sho.dms.application.purchasing.repository.GoodsReceiptLineRepository;
 import mls.sho.dms.application.purchasing.repository.GoodsReceiptRepository;
 import mls.sho.dms.common.enums.GoodsReceiptStatus;
 import mls.sho.dms.entity.GoodsReceipt;
-import mls.sho.dms.entity.GoodsReceiptLine;
+import mls.sho.dms.entity.PurchaseOrderLine;
 import mls.sho.dms.entity.Ingredient;
 import mls.sho.dms.application.inventory.repository.IngredientRepository;
 import mls.sho.dms.application.inventory.service.InventoryIntelligenceService;
@@ -13,6 +12,7 @@ import mls.sho.dms.application.purchasing.repository.PurchaseOrderRepository;
 import mls.sho.dms.application.purchasing.service.PurchaseInvoiceService;
 import mls.sho.dms.common.enums.PurchaseOrderStatus;
 import mls.sho.dms.application.purchasing.dto.GoodsReceiptDTO;
+import mls.sho.dms.application.purchasing.dto.PurchaseOrderLineDTO;
 import mls.sho.dms.entity.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,7 +27,6 @@ import java.util.stream.Collectors;
 public class GoodsReceiptService {
 
     private final GoodsReceiptRepository goodsReceiptRepository;
-    private final GoodsReceiptLineRepository goodsReceiptLineRepository;
     private final IngredientRepository ingredientRepository;
     private final PurchaseOrderRepository purchaseOrderRepository;
     private final PurchaseInvoiceService purchaseInvoiceService;
@@ -46,9 +45,6 @@ public class GoodsReceiptService {
 
     @Transactional
     public GoodsReceipt save(GoodsReceipt grn) {
-        if (grn.getLines() != null) {
-            grn.getLines().forEach(line -> line.setGoodsReceipt(grn));
-        }
         grn.calculateTotal();
         grn.setUpdatedAt(LocalDateTime.now());
         return goodsReceiptRepository.save(grn);
@@ -56,6 +52,7 @@ public class GoodsReceiptService {
 
     /**
      * Finalizes a GRN and updates inventory stock levels.
+     * Uses lines from the linked PurchaseOrder.
      */
     @Transactional
     public PurchaseInvoice finalise(Long grnId) {
@@ -65,15 +62,15 @@ public class GoodsReceiptService {
             throw new IllegalStateException("Goods Receipt is already finalized.");
         }
 
-        // 1. Process Stock Increments
-        if (grn.getLines() != null) {
-            for (GoodsReceiptLine line : grn.getLines()) {
-                Ingredient ing = line.getIngredient();
-                if (ing != null) {
+        // 1. Process Stock Increments using PO lines
+        List<PurchaseOrderLine> poLines = grn.getLines();
+        if (poLines != null) {
+            for (PurchaseOrderLine poLine : poLines) {
+                Ingredient ing = poLine.getIngredient();
+                if (ing != null && poLine.getReceivedQty() != null && poLine.getReceivedQty().compareTo(BigDecimal.ZERO) > 0) {
                     // Convert Received Purchase Units to Inventory Units
-                    // e.g. 2 Bags * 50 (KG/Bag) = 100 KG added to onHand
                     BigDecimal conversionFactor = ing.getIuPerPu() != null ? ing.getIuPerPu() : BigDecimal.ONE;
-                    BigDecimal increment = line.getReceivedQty().multiply(conversionFactor);
+                    BigDecimal increment = poLine.getReceivedQty().multiply(conversionFactor);
                     
                     BigDecimal currentStock = ing.getOnHand() != null ? ing.getOnHand() : BigDecimal.ZERO;
                     ing.setOnHand(currentStock.add(increment));
@@ -91,15 +88,9 @@ public class GoodsReceiptService {
         if (po != null) {
             boolean allLinesSatisfied = true;
             for (PurchaseOrderLine poLine : po.getLines()) {
-                // Find matching GRN lines for this ingredient
-                BigDecimal sumReceived = grn.getLines().stream()
-                        .filter(gl -> gl.getIngredient().getId().equals(poLine.getIngredient().getId()))
-                        .map(GoodsReceiptLine::getReceivedQty)
-                        .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-                poLine.setReceivedQty(poLine.getReceivedQty().add(sumReceived));
+                BigDecimal sumReceived = poLine.getReceivedQty() != null ? poLine.getReceivedQty() : BigDecimal.ZERO;
                 
-                if (poLine.getReceivedQty().compareTo(poLine.getOrderedQty()) < 0) {
+                if (sumReceived.compareTo(poLine.getOrderedQty()) < 0) {
                     allLinesSatisfied = false;
                 }
             }
@@ -127,21 +118,24 @@ public class GoodsReceiptService {
     }
 
     /**
-     * Marks a specific GRN line as a conflict with a reason, and sets the GRN status to CONFLICT.
+     * Marks a specific PO line as a conflict with a reason, and sets the GRN status to CONFLICT.
      */
     @Transactional
-    public GoodsReceiptDTO raiseLineConflict(Long grnId, Long lineId, String reason) {
+    public GoodsReceiptDTO raiseLineConflict(Long grnId, Long poLineId, String reason) {
         GoodsReceipt grn = getById(grnId);
-        GoodsReceiptLine line = goodsReceiptLineRepository.findById(lineId)
-                .orElseThrow(() -> new RuntimeException("GRN line not found: " + lineId));
-        if (!line.getGoodsReceipt().getId().equals(grnId)) {
-            throw new RuntimeException("Line does not belong to this GRN");
-        }
-        line.setHasConflict(true);
-        line.setConflictReason(reason);
-        goodsReceiptLineRepository.save(line);
+        
+        // Find the PO line
+        PurchaseOrderLine poLine = grn.getLines().stream()
+                .filter(l -> l.getId().equals(poLineId))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("PO line not found: " + poLineId));
+        
+        poLine.setHasConflict(true);
+        poLine.setConflictReason(reason);
+        
         grn.setStatus(GoodsReceiptStatus.CONFLICT);
         goodsReceiptRepository.save(grn);
+        
         return toDTO(getById(grnId));
     }
 
@@ -149,18 +143,19 @@ public class GoodsReceiptService {
      * Resolves a conflict line (clears flag) and moves GRN back to RECEIVED if no remaining conflicts.
      */
     @Transactional
-    public GoodsReceiptDTO resolveLineConflict(Long grnId, Long lineId) {
+    public GoodsReceiptDTO resolveLineConflict(Long grnId, Long poLineId) {
         GoodsReceipt grn = getById(grnId);
-        GoodsReceiptLine line = goodsReceiptLineRepository.findById(lineId)
-                .orElseThrow(() -> new RuntimeException("GRN line not found: " + lineId));
-        if (!line.getGoodsReceipt().getId().equals(grnId)) {
-            throw new RuntimeException("Line does not belong to this GRN");
-        }
-        line.setHasConflict(false);
-        line.setConflictReason(null);
-        goodsReceiptLineRepository.save(line);
+        
+        // Find and clear the PO line
+        PurchaseOrderLine poLine = grn.getLines().stream()
+                .filter(l -> l.getId().equals(poLineId))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("PO line not found: " + poLineId));
+        
+        poLine.setHasConflict(false);
+        poLine.setConflictReason(null);
 
-        boolean anyRemaining = grn.getLines().stream().anyMatch(GoodsReceiptLine::isHasConflict);
+        boolean anyRemaining = grn.getLines().stream().anyMatch(PurchaseOrderLine::isHasConflict);
         if (!anyRemaining) {
             grn.setStatus(GoodsReceiptStatus.RECEIVED);
             goodsReceiptRepository.save(grn);
@@ -180,19 +175,16 @@ public class GoodsReceiptService {
         dto.setStatus(grn.getStatus());
         dto.setNotes(grn.getNotes());
         
-        if (grn.getLines() != null) {
-            dto.setLines(grn.getLines().stream().map(line -> {
-                GoodsReceiptDTO.GoodsReceiptLineDTO ldto = new GoodsReceiptDTO.GoodsReceiptLineDTO();
-                ldto.setId(line.getId());
-                ldto.setIngredientId(line.getIngredient().getId());
-                ldto.setIngredientDescription(line.getIngredient().getDescription());
-                ldto.setReceivedQty(line.getReceivedQty());
-                ldto.setUnitPrice(line.getUnitPrice());
-                ldto.setHasConflict(line.isHasConflict());
-                ldto.setConflictReason(line.getConflictReason());
-                return ldto;
-            }).collect(Collectors.toList()));
-        }
+        dto.setLines(grn.getLines().stream().map(line -> {
+            PurchaseOrderLineDTO ldto = new PurchaseOrderLineDTO();
+            ldto.setId(line.getId());
+            ldto.setIngredientId(line.getIngredient().getId());
+            ldto.setIngredientDescription(line.getIngredient().getDescription());
+            ldto.setReceivedQty(line.getReceivedQty());
+            ldto.setUnitPrice(line.getUnitPrice());
+            return ldto;
+        }).collect(Collectors.toList()));
+        
         return dto;
     }
 }

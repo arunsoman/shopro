@@ -31,14 +31,19 @@ public class InventoryIntelligenceService {
     /**
      * Records physical shipment intake. 
      * Creates new active FIFO lots and corresponding ledger inflows.
+     * Uses PO lines from the linked PurchaseOrder.
      */
     @Transactional
     public void receiveShipment(GoodsReceipt grn) {
         var restaurant = grn.getRestaurant();
         var supplier = grn.getSupplier();
         var grnId = grn.getId();
+        var purchaseOrder = grn.getPurchaseOrder();
         
-        for (GoodsReceiptLine lin : grn.getLines()) {
+        for (PurchaseOrderLine lin : grn.getLines()) {
+            if (lin.getReceivedQty() == null || lin.getReceivedQty().compareTo(BigDecimal.ZERO) <= 0) {
+                continue; // Skip lines with no received quantity
+            }
             Ingredient ingredient = lin.getIngredient();
             BigDecimal receivedQty = lin.getReceivedQty();
             BigDecimal unitPrice = lin.getUnitPrice();
@@ -58,7 +63,7 @@ public class InventoryIntelligenceService {
             // 2. Create the Ledger Inflow Entry
             createLedgerEntry(restaurant, ingredient, StockMovementType.RECEIVING, 
                     receivedQty, unitPrice, BigDecimal.ZERO, lot, 
-                    grnId, (grn.getPurchaseOrder() != null ? grn.getPurchaseOrder().getId() : null), 
+                    grnId, (purchaseOrder != null ? purchaseOrder.getId() : null), 
                     (supplier != null ? supplier.getId() : null), 
                     null, lin.getId(), null, grn.getReceivedDate(), "SYSTEM", "GRN_INTAKE");
         }

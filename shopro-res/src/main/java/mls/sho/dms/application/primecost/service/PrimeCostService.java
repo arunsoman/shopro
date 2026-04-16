@@ -13,7 +13,7 @@ import mls.sho.dms.application.inventory.repository.InventoryLedgerRepository;
 import mls.sho.dms.entity.Order;
 import mls.sho.dms.entity.OrderLine;
 import mls.sho.dms.entity.PurchaseInvoice;
-import mls.sho.dms.entity.PurchaseInvoiceLine;
+import mls.sho.dms.entity.PurchaseOrderLine;
 import mls.sho.dms.common.enums.StockMovementType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -351,7 +351,11 @@ public class PrimeCostService {
         return invoices.stream()
                 .filter(i -> i.getStatus() == PurchaseInvoice.InvoiceStatus.POSTED)
                 .flatMap(i -> i.getLines().stream())
-                .map(PurchaseInvoiceLine::getAmount)
+                .map(line -> {
+                    BigDecimal qty = line.getReceivedQty() != null ? line.getReceivedQty() : BigDecimal.ZERO;
+                    BigDecimal price = line.getUnitPrice() != null ? line.getUnitPrice() : BigDecimal.ZERO;
+                    return qty.multiply(price);
+                })
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 

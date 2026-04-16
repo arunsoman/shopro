@@ -2,22 +2,20 @@ package mls.sho.dms.application.purchasing.service;
 
 import lombok.RequiredArgsConstructor;
 import mls.sho.dms.application.purchasing.repository.GoodsReceiptRepository;
-import mls.sho.dms.application.purchasing.repository.PurchaseInvoiceLineRepository;
 import mls.sho.dms.application.purchasing.repository.PurchaseInvoiceRepository;
 import mls.sho.dms.common.util.ConversionFunctions;
 import mls.sho.dms.application.inventory.service.IngredientService;
 import mls.sho.dms.common.enums.InventoryCategory;
 import mls.sho.dms.common.enums.PurchaseCategory;
 import mls.sho.dms.application.purchasing.dto.PurchaseInvoiceDTO;
-import mls.sho.dms.application.purchasing.dto.PurchaseInvoiceLineDTO;
+import mls.sho.dms.application.purchasing.dto.PurchaseOrderLineDTO;
 import mls.sho.dms.application.purchasing.dto.WeeklySummaryDTO;
 import mls.sho.dms.entity.Ingredient;
 import mls.sho.dms.entity.PurchaseInvoice;
-import mls.sho.dms.entity.PurchaseInvoiceLine;
+import mls.sho.dms.entity.PurchaseOrderLine;
 import mls.sho.dms.entity.Restaurant;
 import mls.sho.dms.entity.Supplier;
 import mls.sho.dms.entity.GoodsReceipt;
-import mls.sho.dms.entity.GoodsReceiptLine;
 import java.math.RoundingMode;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,6 +38,9 @@ public class PurchaseInvoiceService {
             dto.setSupplierId(entity.getSupplier().getId());
             dto.setSupplierName(entity.getSupplier().getName());
         }
+        if (entity.getGoodsReceipt() != null) {
+            dto.setGoodsReceiptId(entity.getGoodsReceipt().getId());
+        }
         dto.setInvoiceDate(entity.getInvoiceDate());
         dto.setInvoiceNumber(entity.getInvoiceNumber());
         dto.setInvoiceAmount(entity.getInvoiceAmount());
@@ -47,26 +48,27 @@ public class PurchaseInvoiceService {
         dto.setCreatedAt(entity.getCreatedAt());
         dto.setUpdatedAt(entity.getUpdatedAt());
         
-        if (entity.getLines() != null) {
-            dto.setLines(entity.getLines().stream()
-                    .map(this::toLineDTO)
-                    .collect(Collectors.toList()));
-        }
+        // Map lines from PO/GRN
+        dto.setLines(entity.getLines().stream()
+                .map(this::toLineDTO)
+                .collect(Collectors.toList()));
         
         return dto;
     }
 
-    private PurchaseInvoiceLineDTO toLineDTO(PurchaseInvoiceLine entity) {
-        PurchaseInvoiceLineDTO dto = new PurchaseInvoiceLineDTO();
+    private PurchaseOrderLineDTO toLineDTO(PurchaseOrderLine entity) {
+        PurchaseOrderLineDTO dto = new PurchaseOrderLineDTO();
         dto.setId(entity.getId());
-        dto.setPurchaseCategory(entity.getPurchaseCategory());
-        dto.setAmount(entity.getAmount());
+        dto.setIngredientId(entity.getIngredient().getId());
+        dto.setIngredientDescription(entity.getIngredient().getDescription());
+        dto.setOrderedQty(entity.getOrderedQty());
+        dto.setReceivedQty(entity.getReceivedQty());
+        dto.setUnitPrice(entity.getUnitPrice());
         return dto;
     }
 
 
     private final PurchaseInvoiceRepository invoiceRepository;
-    private final PurchaseInvoiceLineRepository lineRepository;
     private final GoodsReceiptRepository grnRepository;
 
     @Transactional(readOnly = true)
@@ -104,14 +106,6 @@ public class PurchaseInvoiceService {
     }
 
     @Transactional
-    public void addLine(Long invoiceId, PurchaseInvoiceLine line) {
-        PurchaseInvoice invoice = invoiceRepository.findById(invoiceId)
-                .orElseThrow(() -> new RuntimeException("Invoice not found"));
-        line.setInvoice(invoice);
-        lineRepository.save(line);
-    }
-
-    @Transactional
     public void postInvoice(Long invoiceId) {
         PurchaseInvoice invoice = invoiceRepository.findById(invoiceId)
                 .orElseThrow(() -> new RuntimeException("Invoice not found"));
@@ -138,30 +132,7 @@ public class PurchaseInvoiceService {
         invoice.setInvoiceAmount(grn.getTotalAmount());
         invoice.setStatus(PurchaseInvoice.InvoiceStatus.DRAFT);
 
-        final PurchaseInvoice saved = invoiceRepository.save(invoice);
-
-        // Group GRN lines by PurchaseCategory
-        Map<PurchaseCategory, BigDecimal> categoryTotals = grn.getLines().stream()
-                .collect(Collectors.groupingBy(
-                        line -> mapCategory(line.getIngredient().getCategory()),
-                        Collectors.mapping(
-                                line -> line.getReceivedQty().multiply(line.getUnitPrice()),
-                                Collectors.reducing(BigDecimal.ZERO, BigDecimal::add)
-                        )
-                ));
-
-        List<PurchaseInvoiceLine> lines = categoryTotals.entrySet().stream()
-                .map(e -> {
-                    PurchaseInvoiceLine line = new PurchaseInvoiceLine();
-                    line.setInvoice(saved);
-                    line.setPurchaseCategory(e.getKey());
-                    line.setAmount(e.getValue());
-                    return line;
-                }).collect(Collectors.toList());
-
-        lineRepository.saveAll(lines);
-        saved.setLines(lines);
-        return saved;
+        return invoiceRepository.save(invoice);
     }
 
     @Transactional
@@ -215,21 +186,7 @@ public class PurchaseInvoiceService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         invoice.setInvoiceAmount(totalAmount);
         
-        final PurchaseInvoice saved = invoiceRepository.save(invoice);
-
-        // Create Lines
-        List<PurchaseInvoiceLine> lines = categoryShortfalls.entrySet().stream()
-                .filter(e -> e.getValue().compareTo(BigDecimal.ZERO) > 0)
-                .map(e -> {
-                    PurchaseInvoiceLine line = new PurchaseInvoiceLine();
-                    line.setInvoice(saved);
-                    line.setPurchaseCategory(e.getKey());
-                    line.setAmount(e.getValue());
-                    return line;
-                }).collect(Collectors.toList());
-
-        lineRepository.saveAll(lines);
-        return saved;
+        return invoiceRepository.save(invoice);
     }
 
     private PurchaseCategory mapCategory(InventoryCategory invCat) {
@@ -260,11 +217,20 @@ public class PurchaseInvoiceService {
                 .map(PurchaseInvoice::getInvoiceAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
+        // Group totals by category from PO lines (via GRN)
         Map<PurchaseCategory, BigDecimal> totalsByCategory = invoices.stream()
                 .flatMap(i -> i.getLines().stream())
                 .collect(Collectors.groupingBy(
-                        PurchaseInvoiceLine::getPurchaseCategory,
-                        Collectors.reducing(BigDecimal.ZERO, PurchaseInvoiceLine::getAmount, BigDecimal::add)
+                        line -> mapCategory(line.getIngredient().getCategory()),
+                        Collectors.reducing(
+                                BigDecimal.ZERO,
+                                line -> {
+                                    BigDecimal qty = line.getReceivedQty() != null ? line.getReceivedQty() : BigDecimal.ZERO;
+                                    BigDecimal price = line.getUnitPrice() != null ? line.getUnitPrice() : BigDecimal.ZERO;
+                                    return qty.multiply(price);
+                                },
+                                BigDecimal::add
+                        )
                 ));
 
         List<WeeklySummaryDTO.CategoryBreakdownDTO> breakdown = totalsByCategory.entrySet().stream()
@@ -341,36 +307,14 @@ public class PurchaseInvoiceService {
         return invoiceRepository.save(invoice);
     }
 
-    @Transactional
-    public PurchaseInvoice upsertLine(Long invoiceId, PurchaseInvoiceLine newLine) {
-        PurchaseInvoice invoice = getInvoice(invoiceId);
-        newLine.setInvoice(invoice);
-        if (invoice.getLines() == null) invoice.setLines(new ArrayList<>());
-        if (newLine.getId() != null) {
-            invoice.getLines().removeIf(l -> l.getId().equals(newLine.getId()));
-        }
-        lineRepository.save(newLine);
-        invoice.setInvoiceAmount(invoice.getLines().stream()
-            .map(PurchaseInvoiceLine::getAmount)
-            .reduce(BigDecimal.ZERO, BigDecimal::add).add(newLine.getAmount()));
-        return invoiceRepository.save(invoice);
-    }
-
-    @Transactional
-    public void deleteLine(Long invoiceId, Long lineId) {
-        PurchaseInvoice invoice = getInvoice(invoiceId);
-        lineRepository.deleteById(lineId);
-        invoice.setLines(lineRepository.findAllByInvoiceId(invoiceId));
-        BigDecimal newTotal = invoice.getLines().stream()
-            .map(PurchaseInvoiceLine::getAmount)
-            .reduce(BigDecimal.ZERO, BigDecimal::add);
-        invoice.setInvoiceAmount(newTotal);
-        invoiceRepository.save(invoice);
-    }
-
     private void validateInvoiceBalanced(PurchaseInvoice invoice) {
+        // Invoice is balanced if total matches sum of line values from PO/GRN
         BigDecimal sum = invoice.getLines().stream()
-                .map(PurchaseInvoiceLine::getAmount)
+                .map(line -> {
+                    BigDecimal qty = line.getReceivedQty() != null ? line.getReceivedQty() : BigDecimal.ZERO;
+                    BigDecimal price = line.getUnitPrice() != null ? line.getUnitPrice() : BigDecimal.ZERO;
+                    return qty.multiply(price);
+                })
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         BigDecimal diff = invoice.getInvoiceAmount().subtract(sum);

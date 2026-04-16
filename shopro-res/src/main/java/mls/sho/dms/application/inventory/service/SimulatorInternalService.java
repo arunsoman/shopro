@@ -39,7 +39,6 @@ public class SimulatorInternalService {
     private final PurchaseOrderRepository poRepository;
     private final PurchaseOrderLineRepository poLineRepository;
     private final GoodsReceiptRepository grnRepository;
-    private final GoodsReceiptLineRepository grnLineRepository;
     
     private final OutletRepository kdsOutletRepository;
     private final KdsStationRepository kdsStationRepository;
@@ -56,7 +55,6 @@ public class SimulatorInternalService {
         orderLineRepository.deleteByOrderSessionTableRestaurantId(restaurantId);
         orderRepository.deleteByRestaurantId(restaurantId);
         sessionRepository.deleteByRestaurantId(restaurantId);
-        grnLineRepository.deleteByGoodsReceiptRestaurantId(restaurantId);
         grnRepository.deleteByRestaurantId(restaurantId);
         poLineRepository.deleteByPurchaseOrderRestaurantId(restaurantId);
         poRepository.deleteByRestaurantId(restaurantId);

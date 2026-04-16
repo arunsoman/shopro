@@ -8,7 +8,6 @@ import mls.sho.dms.application.purchasing.dto.PurchaseInvoiceDTO;
 import mls.sho.dms.application.purchasing.dto.SupplierDTO;
 import mls.sho.dms.application.purchasing.dto.WeeklySummaryDTO;
 import mls.sho.dms.entity.PurchaseInvoice;
-import mls.sho.dms.entity.PurchaseInvoiceLine;
 import mls.sho.dms.entity.Supplier;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
@@ -59,11 +58,6 @@ public class PurchasingController {
     @DeleteMapping("/invoices/{id}")
     public void deleteInvoice(@PathVariable Long restaurantId, @PathVariable Long id) {
         invoiceService.deleteInvoice(id);
-    }
-
-    @PostMapping("/invoices/{id}/lines")
-    public void addLine(@PathVariable Long restaurantId, @PathVariable Long id, @RequestBody PurchaseInvoiceLine line) {
-        invoiceService.addLine(id, line);
     }
 
     @PostMapping("/invoices/{id}/post")
@@ -127,22 +121,4 @@ public class PurchasingController {
         return invoiceService.toDTO(invoiceService.voidInvoice(id));
     }
 
-    @PutMapping("/invoices/{invoiceId}/lines")
-    public PurchaseInvoiceDTO updateInvoiceLines(
-            @PathVariable Long restaurantId,
-            @PathVariable Long invoiceId,
-            @RequestBody PurchaseInvoiceLine body) {
-        return invoiceService.toDTO(invoiceService.upsertLine(invoiceId, body));
-    }
-
-    @DeleteMapping("/invoices/{invoiceId}/lines/{lineId}")
-    public ResponseEntity<Void> deleteInvoiceLine(
-            @PathVariable Long restaurantId,
-            @PathVariable Long invoiceId,
-            @PathVariable Long lineId) {
-        invoiceService.deleteLine(invoiceId, lineId);
-        return ResponseEntity.noContent().build();
-    }
-
 }
-

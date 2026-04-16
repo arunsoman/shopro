@@ -9,9 +9,11 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * One supplier invoice header.
+ * Lines are derived from the linked GoodsReceipt/PurchaseOrder.
  */
 @Entity
 @Table(name = "purchase_invoice")
@@ -54,8 +56,16 @@ public class PurchaseInvoice {
     @JoinColumn(name = "goods_receipt_id")
     private GoodsReceipt goodsReceipt;
 
-    @OneToMany(mappedBy = "invoice", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<PurchaseInvoiceLine> lines = new ArrayList<>();
+    /**
+     * Get lines from the linked GoodsReceipt (which gets them from PurchaseOrder).
+     * Returns empty list if no GRN is linked.
+     */
+    public List<PurchaseOrderLine> getLines() {
+        if (goodsReceipt == null) {
+            return new ArrayList<>();
+        }
+        return goodsReceipt.getLines();
+    }
 
     public enum InvoiceStatus { DRAFT, POSTED, VOID }
 }

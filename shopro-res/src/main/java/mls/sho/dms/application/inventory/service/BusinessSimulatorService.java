@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import mls.sho.dms.application.pos.web.PosController;
 import mls.sho.dms.application.purchasing.controller.PurchaseOrderController;
 import mls.sho.dms.application.purchasing.repository.PurchaseOrderRepository;
+import mls.sho.dms.application.purchasing.repository.PurchaseOrderLineRepository;
 import mls.sho.dms.application.purchasing.web.GoodsReceiptController;
 import mls.sho.dms.application.purchasing.dto.GoodsReceiptDTO;
 import mls.sho.dms.application.purchasing.dto.PurchaseOrderCreateDTO;
@@ -57,6 +58,7 @@ public class BusinessSimulatorService {
     private final PosController posController;
     private final PurchaseOrderController poController;
     private final PurchaseOrderRepository poRepository;
+    private final PurchaseOrderLineRepository poLineRepository;
     private final GoodsReceiptController grnController;
     private final LaborController laborController;
     private final IngredientRepository ingredientRepository;
@@ -336,6 +338,15 @@ public class BusinessSimulatorService {
             PurchaseOrder managedPo = poRepository.findById(po.getId())
                     .orElseThrow(() -> new RuntimeException("PO not persisted: " + po.getId()));
 
+            // Update PO line with received quantity (simulating goods receipt)
+            if (managedPo.getLines() != null && !managedPo.getLines().isEmpty()) {
+                PurchaseOrderLine poLine = managedPo.getLines().get(0);
+                poLine.setReceivedQty(qty);
+                poLine.setUnitPrice(unitPrice);
+                poLineRepository.save(poLine);
+            }
+
+            // Create GRN - now it just references the PO (no separate lines needed)
             GoodsReceipt grn = new GoodsReceipt();
             grn.setReceivedDate(date);
             grn.setNotes("SIM-" + System.nanoTime());
@@ -344,13 +355,6 @@ public class BusinessSimulatorService {
             grn.setPurchaseOrder(managedPo);
             Supplier sup = new Supplier(); sup.setId(1L);
             grn.setSupplier(sup);
-
-            GoodsReceiptLine grnLine = new GoodsReceiptLine();
-            grnLine.setIngredient(ing);
-            grnLine.setReceivedQty(qty);
-            grnLine.setUnitPrice(unitPrice);
-            grnLine.setGoodsReceipt(grn);
-            grn.setLines(List.of(grnLine));
             grn.calculateTotal();
 
             // Convert entity to DTO for controller
@@ -359,11 +363,7 @@ public class BusinessSimulatorService {
             dto.setPurchaseOrderId(managedPo.getId());
             dto.setReceivedDate(date);
             dto.setNotes(grn.getNotes());
-            GoodsReceiptDTO.GoodsReceiptLineDTO lineDto = new GoodsReceiptDTO.GoodsReceiptLineDTO();
-            lineDto.setIngredientId(ing.getId());
-            lineDto.setReceivedQty(qty);
-            lineDto.setUnitPrice(unitPrice);
-            dto.setLines(List.of(lineDto));
+            // Lines will be derived from PO
 
             var savedGrn = grnController.create(restaurantId, dto);
             grnController.finalise(restaurantId, savedGrn.getId());

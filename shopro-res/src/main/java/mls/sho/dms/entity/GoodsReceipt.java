@@ -9,10 +9,12 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Goods Receipt Note (GRN) Header record.
  * Represents a delivery received at the restaurant.
+ * Lines are derived from the linked PurchaseOrder.
  */
 @Entity
 @Table(name = "goods_receipt")
@@ -55,13 +57,36 @@ public class GoodsReceipt {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt = LocalDateTime.now();
 
-    @OneToMany(mappedBy = "goodsReceipt", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<GoodsReceiptLine> lines = new ArrayList<>();
+    /**
+     * Get lines from the linked PurchaseOrder.
+     * Returns empty list if no PO is linked.
+     */
+    public List<PurchaseOrderLine> getLines() {
+        if (purchaseOrder == null || purchaseOrder.getLines() == null) {
+            return new ArrayList<>();
+        }
+        return purchaseOrder.getLines();
+    }
 
+    /**
+     * Calculate total from PO lines (receivedQty * unitPrice).
+     */
     public void calculateTotal() {
-        this.totalAmount = lines.stream()
-                .map(line -> line.getReceivedQty().multiply(line.getUnitPrice()))
+        this.totalAmount = getLines().stream()
+                .map(line -> {
+                    BigDecimal received = line.getReceivedQty() != null ? line.getReceivedQty() : BigDecimal.ZERO;
+                    BigDecimal price = line.getUnitPrice() != null ? line.getUnitPrice() : BigDecimal.ZERO;
+                    return received.multiply(price);
+                })
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
+    /**
+     * Get lines with non-zero received quantity (for display in GRN).
+     */
+    public List<PurchaseOrderLine> getReceivedLines() {
+        return getLines().stream()
+                .filter(line -> line.getReceivedQty() != null && line.getReceivedQty().compareTo(BigDecimal.ZERO) > 0)
+                .collect(Collectors.toList());
+    }
 }
