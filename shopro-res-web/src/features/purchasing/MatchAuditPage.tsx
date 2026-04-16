@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useAppStore } from '@/App';
 import { 
   CheckCircle2, 
   AlertCircle, 
@@ -13,7 +14,8 @@ import {
   History,
   TrendingDown,
   TrendingUp,
-  PackageCheck
+  PackageCheck,
+  ArrowLeft
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -33,6 +35,7 @@ import { currency as formatCurrency, formatDate } from "@/lib/utils";
 const MatchAuditPage: React.FC = () => {
   const restaurantId = 1; // From Auth context normally
   const [selectedPoId, setSelectedPoId] = useState<number | null>(null);
+  const back = useAppStore(s => s.back);
   
   const { data: orders, isLoading: loadingOrders } = usePurchaseOrders(restaurantId, { restaurantId });
   const { data: bundle, isLoading: loadingBundle } = useMatchBundle(restaurantId, selectedPoId!);
@@ -52,9 +55,14 @@ const MatchAuditPage: React.FC = () => {
   return (
     <div className="p-6 space-y-6 max-w-[1600px] mx-auto animate-in fade-in duration-500">
       <div className="flex justify-between items-end">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">3-Way Match Audit</h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-1">Reconcile orders, receipts, and invoices to protect your margins.</p>
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" onClick={() => back()} className="h-10 w-10 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/5 text-muted-foreground/40 hover:text-indigo-600 hover:bg-indigo-50/50 transition-all">
+             <ArrowLeft size={18} strokeWidth={3} />
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">3-Way Match Audit</h1>
+            <p className="text-slate-500 dark:text-slate-400 mt-1">Reconcile orders, receipts, and invoices to protect your margins.</p>
+          </div>
         </div>
         <div className="flex gap-2">
            <Button variant="outline" size="sm" className="gap-2">

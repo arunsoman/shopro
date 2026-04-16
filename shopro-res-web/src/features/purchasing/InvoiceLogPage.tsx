@@ -6,7 +6,7 @@
 
 import React, { useState } from 'react';
 import { useAppStore } from "@/App";
-import { Search, Filter, Plus, FileText, ShoppingCart, CheckCircle2, ChevronRight, Info } from 'lucide-react';
+import { Search, Filter, Plus, FileText, ShoppingCart, CheckCircle2, ChevronRight, Info, ArrowLeft } from 'lucide-react';
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { InvoiceTable } from "./components/InvoiceTable";
@@ -17,6 +17,7 @@ import { cn } from '@/lib/utils';
 
 export default function InvoiceLogPage() {
   const navigate = useAppStore(s => s.navigate);
+  const back = useAppStore(s => s.back);
   const restaurantId = useRestaurantId();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [params] = useState({
@@ -34,6 +35,9 @@ export default function InvoiceLogPage() {
       <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-8 px-2">
         <div className="space-y-4">
           <div className="flex items-center gap-3">
+             <Button variant="ghost" size="icon" onClick={() => back()} className="h-10 w-10 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/5 text-muted-foreground/40 hover:text-indigo-600 hover:bg-indigo-50/50 transition-all">
+                <ArrowLeft size={18} strokeWidth={3} />
+             </Button>
              <div className="h-8 w-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-600 shadow-sm">
                 <FileText size={16} />
              </div>

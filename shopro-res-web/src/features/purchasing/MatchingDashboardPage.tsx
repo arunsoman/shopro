@@ -6,7 +6,8 @@ import {
   Clock, 
   ShoppingCart, 
   PieChart, 
-  ArrowUpRight 
+  ArrowUpRight,
+  ArrowLeft
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { cn, formatDate } from '@/lib/utils';
@@ -15,6 +16,7 @@ import { useRestaurantId } from '@/providers/RestaurantProvider';
 
 export default function MatchingDashboardPage() {
   const navigate = useAppStore(s => s.navigate);
+  const back = useAppStore(s => s.back);
   const restaurantId = useRestaurantId();
   const { data: staleGRNs, isLoading } = useStaleGRNs(restaurantId);
 
@@ -28,6 +30,9 @@ export default function MatchingDashboardPage() {
       <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-8 px-2">
         <div className="space-y-4">
           <div className="flex items-center gap-3">
+             <Button variant="ghost" size="icon" onClick={() => back()} className="h-10 w-10 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/5 text-muted-foreground/40 hover:text-indigo-600 hover:bg-indigo-50/50 transition-all">
+                <ArrowLeft size={18} strokeWidth={3} />
+             </Button>
              <div className="h-8 w-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-600 shadow-sm">
                 <CheckCircle2 size={16} />
              </div>
