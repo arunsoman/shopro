@@ -14,7 +14,6 @@ import {
   createAgentSession,
   DefaultResourceLoader,
   ModelRegistry,
-  SessionManager,
   createCodingTools,
 } from "@mariozechner/pi-coding-agent";
 
@@ -55,9 +54,10 @@ This will:
     const modelRegistry = ModelRegistry.create(authStorage);
     modelRegistry.refresh();
     
-    const model = modelRegistry.find("ollama", "minimax-m2:cloud");
+    const model = modelRegistry.find("openrouter", "google/gemma-4-31b-it:free")
+               ?? modelRegistry.getAvailable()[0];
     if (!model) {
-      throw new Error("Model ollama/minimax-m2:cloud not found. Run pi login first.");
+      throw new Error("No model available. Check ~/.pi/agent/models.json.");
     }
 
     // Load BE Developer agents file

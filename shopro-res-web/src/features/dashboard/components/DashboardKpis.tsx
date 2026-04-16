@@ -1,6 +1,6 @@
 import React from 'react';
 import { DollarSign, Users, Receipt, PieChart, Timer, ShoppingBag } from 'lucide-react';
-import { KpiCard } from '@/components/shared/KpiCard';
+import { KpiCard } from '@/components/shared/cards/KpiCard';
 import type { DashboardMetrics } from '../hooks/useDashboard';
 
 interface DashboardKpisProps {
@@ -8,7 +8,7 @@ interface DashboardKpisProps {
 }
 
 export const DashboardKpis: React.FC<DashboardKpisProps> = ({ metrics }) => {
-  const formatCurrency = (val: number | null | undefined) => 
+  const formatCurrency = (val: number | null | undefined) =>
     new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val ?? 0);
 
   const getDeltaProps = (val: number | null | undefined) => {

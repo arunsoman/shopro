@@ -1,6 +1,25 @@
 {
-  "taskId": "328f559b-9d9d-41e0-b4eb-9a299b2ab0a4",
-  "issue": "goods_receipt]] with root cause\n\norg.postgresql.util.PSQLException: ERROR: null value in column supplier_id of relation goods_receipt violates not-null constraint\nDetail: Failing row contains (5000.00, 2026-04-14 23:53:06.074263, 3, null, 2026-04-14 12:00:00, 1, null, 2026-04-14 23:53:06.076449, null, DRAFT).\nat org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse(QueryExecutorImpl.java:2713)\nat org.postgresql.core.v3.QueryExecutorImpl.processResults(QueryExecutorImpl.java:2401",
-  "completedAt": "2026-04-14T18:26:35.129Z",
-  "report": ""
+  "sessionId": "18754671-fa15-4431-aba4-19abb28e1fd4",
+  "issue": "In the page element with name 'Pending Reconciliation', calling 'http://localhost:5173/api/v1/restaurants/1/purchasing/grns/stale' when hitting the url is not giveing the complete data ",
+  "report": {
+    "rootCause": "The /stale endpoint query filters by receivedDate < threshold, returning only GRNs older than X days instead of ALL unmatched GRNs that need reconciliation",
+    "category": "BE",
+    "affectedFiles": [
+      "shopro-res/src/main/java/mls/sho/dms/application/purchasing/repository/GoodsReceiptRepository.java"
+    ],
+    "affectedMethods": [
+      "findStaleGRNs"
+    ],
+    "currentBehavior": "Query: AND g.receivedDate < :threshold — only returns GRNs received more than X days ago that have no invoice",
+    "expectedBehavior": "Should return ALL GRNs with status RECEIVED that have no matching PurchaseInvoice, regardless of age",
+    "evidence": [
+      "GoodsReceiptRepository.java:16-20: @Query includes 'AND g.receivedDate < :threshold' which filters by age",
+      "GoodsReceiptRepository.java:28-31: countUnmatchedGRNs() does NOT filter by receivedDate - shows the expected behavior",
+      "MatchingDashboardPage.tsx:82: Shows staleGRNs?.length for 'Open GRNs' count - expects ALL unmatched, not just stale"
+    ],
+    "recommendedFix": "Remove 'AND g.receivedDate < :threshold' from the findStaleGRNs query in GoodsReceiptRepository.java line 18, or create a separate endpoint for ALL unmatched GRNs",
+    "confidence": "high"
+  },
+  "rawOutput": "Let me examine the stale GRN implementation more closely to understand the full flow and identify the root cause.\nNow let me check the GoodsReceipt entity and its toDTO method to see what fields are being serialized:\nLet me also check the GoodsReceiptDTO to understand what fields are expected:\nNow let me check the MatchingDashboardPage to understand what data is being used and what's expected:\nLet me check what happens when GRN is finalized and look at the status values:\nLet me check the PurchaseInvoice entity to see the relationship:\nLet me verify the controller endpoint again:\n\nLet me verify my understanding by looking at how the data is actually displayed on the frontend and if there's another endpoint for ALL pending GRNs:\nLet me check the PurchasingDashboardService and what unmatchedGrnCount represents:\nBased on my analysis, I've identified the root cause. Let me verify by checking the counts between the dashboard and the stale endpoint:\nNow I have a clear picture. Let me also double-check by looking at how the page displays \"stale\" in the UI:\nBased on my investigation, I've identified the root cause. Here's my analysis:\n\n## Root Cause Analysis\n\nThe issue is in the **repository query** for stale GRNs. The query filters by `receivedDate < :threshold` which only returns GRNs older than X days. However, the \"Pending Reconciliation\" page (MatchingDashboardPage) expects to show **ALL** unmatched GRNs (regardless of age), not just the stale/old ones.\n\n**Evidence:**\n1. `countUnmatchedGRNs()` in the repository (used by dashboard) does NOT filter by date - it counts ALL GRNs with status=RECEIVED and no invoice\n2. `findStaleGRNs()` (used by the `/stale` endpoint) HAS the filter `g.receivedDate < :threshold` which limits results to only GRNs older than X days\n3. The frontend page \"Pending Reconciliation\" displays `staleGRNs?.length` as the count for \"Open GRNs\", expecting it to match the dashboard's `unmatchedGrnCount`, but they don't match because of the date filter\n\nThe query is too restrictive - it excludes recent but still unmatched GRNs that should appear in the \"Pending Reconciliation\" view.\n\n```json\n{\n  \"rootCause\": \"The /stale endpoint query filters by receivedDate < threshold, returning only GRNs older than X days instead of ALL unmatched GRNs that need reconciliation\",\n  \"category\": \"BE\",\n  \"affectedFiles\": [\"shopro-res/src/main/java/mls/sho/dms/application/purchasing/repository/GoodsReceiptRepository.java\"],\n  \"affectedMethods\": [\"findStaleGRNs\"],\n  \"currentBehavior\": \"Query: AND g.receivedDate < :threshold — only returns GRNs received more than X days ago that have no invoice\",\n  \"expectedBehavior\": \"Should return ALL GRNs with status RECEIVED that have no matching PurchaseInvoice, regardless of age\",\n  \"evidence\": [\n    \"GoodsReceiptRepository.java:16-20: @Query includes 'AND g.receivedDate < :threshold' which filters by age\",\n    \"GoodsReceiptRepository.java:28-31: countUnmatchedGRNs() does NOT filter by receivedDate - shows the expected behavior\",\n    \"MatchingDashboardPage.tsx:82: Shows staleGRNs?.length for 'Open GRNs' count - expects ALL unmatched, not just stale\"\n  ],\n  \"recommendedFix\": \"Remove 'AND g.receivedDate < :threshold' from the findStaleGRNs query in GoodsReceiptRepository.java line 18, or create a separate endpoint for ALL unmatched GRNs\",\n  \"confidence\": \"high\"\n}\n```",
+  "completedAt": "2026-04-16T00:02:48.910Z"
 }

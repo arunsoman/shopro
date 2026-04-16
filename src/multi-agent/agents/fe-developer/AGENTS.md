@@ -2,6 +2,11 @@
 
 You are a senior React/TypeScript engineer specializing in building modern web interfaces.
 
+> **⚠️ IMPORTANT: Project Root**
+> - Project root: `/home/arun/IdeaProjects/shopro-pos/`
+> - All file paths must use absolute paths or be relative to this root
+> - Example: `shopro-res-web/src/...` is at `/home/arun/IdeaProjects/shopro-pos/shopro-res-web/src/...`
+
 ## Constraints
 
 - **Technology Stack:**

@@ -8,6 +8,7 @@ import mls.sho.dms.application.pos.web.PosController;
 import mls.sho.dms.application.purchasing.controller.PurchaseOrderController;
 import mls.sho.dms.application.purchasing.repository.PurchaseOrderRepository;
 import mls.sho.dms.application.purchasing.web.GoodsReceiptController;
+import mls.sho.dms.application.purchasing.dto.GoodsReceiptDTO;
 import mls.sho.dms.application.purchasing.dto.PurchaseOrderCreateDTO;
 import mls.sho.dms.application.primecost.controller.LaborController;
 import mls.sho.dms.application.primecost.entity.Employee;
@@ -352,7 +353,19 @@ public class BusinessSimulatorService {
             grn.setLines(List.of(grnLine));
             grn.calculateTotal();
 
-            var savedGrn = grnController.create(restaurantId, grn);
+            // Convert entity to DTO for controller
+            GoodsReceiptDTO dto = new GoodsReceiptDTO();
+            dto.setSupplierId(1L);
+            dto.setPurchaseOrderId(managedPo.getId());
+            dto.setReceivedDate(date);
+            dto.setNotes(grn.getNotes());
+            GoodsReceiptDTO.GoodsReceiptLineDTO lineDto = new GoodsReceiptDTO.GoodsReceiptLineDTO();
+            lineDto.setIngredientId(ing.getId());
+            lineDto.setReceivedQty(qty);
+            lineDto.setUnitPrice(unitPrice);
+            dto.setLines(List.of(lineDto));
+
+            var savedGrn = grnController.create(restaurantId, dto);
             grnController.finalise(restaurantId, savedGrn.getId());
 
             audit.addInflow(qty.multiply(unitPrice));

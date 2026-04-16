@@ -1,18 +1,21 @@
 package mls.sho.dms.application.purchasing.web;
 
 import lombok.RequiredArgsConstructor;
+import mls.sho.dms.application.purchasing.dto.GoodsReceiptDTO;
+import mls.sho.dms.application.purchasing.dto.PurchaseInvoiceDTO;
+import mls.sho.dms.application.purchasing.repository.SupplierRepository;
 import mls.sho.dms.application.purchasing.service.GoodsReceiptService;
+import mls.sho.dms.application.purchasing.service.PurchaseInvoiceService;
 import mls.sho.dms.entity.GoodsReceipt;
-import mls.sho.dms.entity.Restaurant;
 import mls.sho.dms.entity.PurchaseInvoice;
+import mls.sho.dms.entity.PurchaseOrder;
+import mls.sho.dms.entity.Restaurant;
+import mls.sho.dms.entity.Supplier;
+import mls.sho.dms.application.purchasing.repository.PurchaseOrderRepository;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
-
-import mls.sho.dms.application.purchasing.dto.GoodsReceiptDTO;
-import mls.sho.dms.application.purchasing.dto.PurchaseInvoiceDTO;
-import mls.sho.dms.application.purchasing.service.PurchaseInvoiceService;
 
 @RestController
 @RequestMapping("/api/v1/restaurants/{restaurantId}/purchasing/grns")
@@ -21,6 +24,8 @@ public class GoodsReceiptController {
 
     private final GoodsReceiptService goodsReceiptService;
     private final PurchaseInvoiceService purchaseInvoiceService;
+    private final SupplierRepository supplierRepository;
+    private final PurchaseOrderRepository purchaseOrderRepository;
 
     @GetMapping
     public List<GoodsReceiptDTO> getAll(@PathVariable Long restaurantId) {
@@ -35,10 +40,34 @@ public class GoodsReceiptController {
     }
 
     @PostMapping
-    public GoodsReceiptDTO create(@PathVariable Long restaurantId, @RequestBody GoodsReceipt grn) {
+    public GoodsReceiptDTO create(@PathVariable Long restaurantId, @RequestBody GoodsReceiptDTO dto) {
+        // Convert DTO to Entity - manually map IDs to entities
+        GoodsReceipt grn = new GoodsReceipt();
+        
+        // Map supplier
+        if (dto.getSupplierId() != null) {
+            Supplier supplier = supplierRepository.findById(dto.getSupplierId())
+                    .orElseThrow(() -> new RuntimeException("Supplier not found: " + dto.getSupplierId()));
+            grn.setSupplier(supplier);
+        } else {
+            throw new RuntimeException("supplierId is required");
+        }
+        
+        // Map purchase order if provided
+        if (dto.getPurchaseOrderId() != null) {
+            PurchaseOrder po = purchaseOrderRepository.findById(dto.getPurchaseOrderId()).orElse(null);
+            grn.setPurchaseOrder(po);
+        }
+        
+        // Set restaurant
         Restaurant restaurant = new Restaurant();
         restaurant.setId(restaurantId);
         grn.setRestaurant(restaurant);
+        
+        // Map other fields
+        grn.setReceivedDate(dto.getReceivedDate());
+        grn.setNotes(dto.getNotes());
+        
         return goodsReceiptService.toDTO(goodsReceiptService.save(grn));
     }
 
@@ -49,9 +78,8 @@ public class GoodsReceiptController {
     }
 
     @GetMapping("/stale")
-    public List<GoodsReceiptDTO> getStale(@PathVariable Long restaurantId,
-                                          @RequestParam(defaultValue = "3") int days) {
-        return goodsReceiptService.getStaleGRNs(restaurantId, days).stream()
+    public List<GoodsReceiptDTO> getStale(@PathVariable Long restaurantId) {
+        return goodsReceiptService.getStaleGRNs(restaurantId).stream()
                 .map(goodsReceiptService::toDTO)
                 .toList();
     }

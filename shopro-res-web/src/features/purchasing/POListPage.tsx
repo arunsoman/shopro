@@ -4,7 +4,7 @@
  * Master Purchase Order Ledger — Command Center for procurement.
  */
 
-import { FileText, Plus, Search, Filter, ChevronRight, ShoppingCart, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
+import { FileText, Plus, Search, Filter, ChevronRight, ShoppingCart, Clock, CheckCircle2, AlertCircle, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
@@ -17,6 +17,7 @@ import { useAppStore } from '@/App';
 export default function POListPage() {
    const restaurantId = useRestaurantId();
    const navigate = useAppStore(s => s.navigate);
+   const back = useAppStore(s => s.back);
    const { data: pos, isLoading } = usePurchaseOrders(restaurantId);
    return (
       <div className="absolute inset-0 flex flex-col min-h-0 bg-slate-50 dark:bg-slate-950 font-sans p-4 sm:p-10 space-y-10 mi-animate overflow-y-auto">
@@ -25,6 +26,9 @@ export default function POListPage() {
          <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-8 px-2">
             <div className="space-y-4">
                <div className="flex items-center gap-3">
+                  <Button variant="ghost" size="icon" onClick={() => back()} className="h-10 w-10 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/5 text-muted-foreground/40 hover:text-indigo-600 hover:bg-indigo-50/50 transition-all">
+                     <ArrowLeft size={18} strokeWidth={3} />
+                  </Button>
                   <div className="h-8 w-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-600 shadow-sm">
                      <ShoppingCart size={16} />
                   </div>

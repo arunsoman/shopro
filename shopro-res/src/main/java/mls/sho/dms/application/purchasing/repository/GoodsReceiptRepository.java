@@ -15,10 +15,8 @@ public interface GoodsReceiptRepository extends JpaRepository<GoodsReceipt, Long
 
     @Query("SELECT g FROM GoodsReceipt g WHERE g.restaurant.id = :restaurantId " +
            "AND g.status = 'RECEIVED' " +
-           "AND g.receivedDate < :threshold " +
            "AND NOT EXISTS (SELECT 1 FROM PurchaseInvoice pi WHERE pi.goodsReceipt = g)")
-    List<GoodsReceipt> findStaleGRNs(@Param("restaurantId") Long restaurantId, 
-                                   @Param("threshold") java.time.LocalDateTime threshold);
+    List<GoodsReceipt> findStaleGRNs(@Param("restaurantId") Long restaurantId);
 
     List<GoodsReceipt> findAllByPurchaseOrderId(Long poId);
 

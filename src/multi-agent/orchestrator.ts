@@ -101,8 +101,8 @@ const AGENTS_DIR = path.join(PROJECT_ROOT, "src/multi-agent/agents");
 const MEMORY_DIR = path.join(PROJECT_ROOT, "src/multi-agent/memory");
 const SESSIONS_DIR = path.join(PROJECT_ROOT, ".pi/sessions");
 const DEFAULT_MAX_RETRIES = 3;
-const DEFAULT_PROVIDER = "ollama";
-const DEFAULT_MODEL = "minimax-m2:cloud";
+const DEFAULT_PROVIDER = "openrouter";
+const DEFAULT_MODEL = "google/gemma-4-31b-it:free";
 
 // Agent configurations
 const AGENT_CONFIGS = {

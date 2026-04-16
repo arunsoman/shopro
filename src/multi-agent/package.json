@@ -5,18 +5,20 @@
   "type": "module",
   "main": "orchestrator.js",
   "scripts": {
-    "start": "npx ts-node --esm cli.ts",
-    "start:task": "npx ts-node --esm cli.ts",
-    "status": "npx ts-node --esm cli.ts --status",
+    "start": "tsx cli.ts",
+    "start:task": "tsx cli.ts",
+    "status": "tsx cli.ts --status",
+    "debug": "tsx debugger-cli.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@mariozechner/pi-coding-agent": "^0.65.2",
+    "@mariozechner/pi-coding-agent": "^0.67.3",
     "@sinclair/typebox": "^0.32.0"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",
     "ts-node": "^10.9.2",
+    "tsx": "^4.21.0",
     "typescript": "^5.4.0"
   },
   "keywords": [

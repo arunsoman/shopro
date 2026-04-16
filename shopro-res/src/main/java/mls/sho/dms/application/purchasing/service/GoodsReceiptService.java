@@ -117,9 +117,8 @@ public class GoodsReceiptService {
     }
 
     @Transactional(readOnly = true)
-    public List<GoodsReceipt> getStaleGRNs(Long restaurantId, int daysThreshold) {
-        LocalDateTime threshold = LocalDateTime.now().minusDays(daysThreshold);
-        return goodsReceiptRepository.findStaleGRNs(restaurantId, threshold);
+    public List<GoodsReceipt> getStaleGRNs(Long restaurantId) {
+        return goodsReceiptRepository.findStaleGRNs(restaurantId);
     }
 
     @Transactional(readOnly = true)

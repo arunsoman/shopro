@@ -1,0 +1,60 @@
+{
+  "version": 1,
+  "patterns": [
+    {
+      "id": "pattern-4ab6a76a",
+      "name": "short name for this class of bug",
+      "issueSignature": [
+        "keyword1",
+        "keyword2",
+        "keyword3"
+      ],
+      "issueExamples": [
+        " The 'Reorder Staging' page is currently showing the message:\n'All Stock Verified. No ingredients currently fall below their reorder threshold. All levels are optimal.'\nHowever, in the Ingredient Master, Water is listed as 0/20 (reorder point). This indicates that there are currently 0 bottles in stock, while at least 20 bottles are required.\nDespite this, Water is not appearing in the reorder table on the 'Reorder Staging' page. It should be listed there since it has fallen below the reorder threshold. "
+      ],
+      "category": "FE | BE | DB | Integration | WebSocket | Security",
+      "codeSearchStrategy": [
+        "grep -r 'keyword' shopro-res/src/main/java/"
+      ],
+      "rootCauseTemplate": "abstract root cause with {placeholders}",
+      "fixTemplate": "abstract fix with {placeholders}",
+      "verificationSteps": [
+        "how to verify the fix"
+      ],
+      "confidence": 0.6,
+      "timesApplied": 1,
+      "timesSucceeded": 1,
+      "createdAt": "2026-04-14T22:31:17.671Z",
+      "lastUsed": "2026-04-14T22:31:17.671Z",
+      "sourceSessionId": "bc7fcfb6-61e9-443d-9103-531c2a6c6df5"
+    },
+    {
+      "id": "pattern-d388d413",
+      "name": "short name for this class of bug",
+      "issueSignature": [
+        "keyword1",
+        "keyword2",
+        "keyword3"
+      ],
+      "issueExamples": [
+        "/home/arun/IdeaProjects/shopro-pos/shopro-res/src/main/java/mls/sho/dms/application/inventory/service/BusinessSimulatorService.java:355:error: incompatible types: GoodsReceipt cannot be converted to GoodsReceiptDTO\nvar savedGrn = grnController.create(restaurantId, grn)"
+      ],
+      "category": "FE | BE | DB | Integration | WebSocket | Security",
+      "codeSearchStrategy": [
+        "grep -r 'keyword' shopro-res/src/main/java/"
+      ],
+      "rootCauseTemplate": "abstract root cause with {placeholders}",
+      "fixTemplate": "abstract fix with {placeholders}",
+      "verificationSteps": [
+        "how to verify the fix"
+      ],
+      "confidence": 0.6,
+      "timesApplied": 1,
+      "timesSucceeded": 1,
+      "createdAt": "2026-04-15T07:38:00.418Z",
+      "lastUsed": "2026-04-15T07:38:00.418Z",
+      "sourceSessionId": "7eff92ac-911d-499d-a943-c015473e2848"
+    }
+  ],
+  "lastUpdated": "2026-04-15T07:38:00.428Z"
+}

@@ -1,0 +1,77 @@
+{
+  "version": 1,
+  "patterns": [
+    {
+      "id": "pattern-218714ec",
+      "name": "Seeder Early Return Prevents Test Data on Restart",
+      "issueSignature": [
+        "seeder",
+        "no data",
+        "empty response",
+        "test data",
+        "seed"
+      ],
+      "issueExamples": [
+        "the page element with name 'Pending Reconciliation' is calling 'http://localhost:5173/api/v1/restaurants/1/purchasing/grns/stale' when hitting the url is not giveing the actaul data"
+      ],
+      "category": "BE",
+      "codeSearchStrategy": [
+        "grep -r 'if.*count.*> 0.*return' shopro-res/src/main/java/"
+      ],
+      "rootCauseTemplate": "The {SeederName} uses an early return condition `{condition}` which prevents {dataType} seeding on subsequent application restarts when tables already exist",
+      "fixTemplate": "Move the {dataType} seeding logic outside the early return check, or make the early return condition more specific to only prevent duplicate seeding of {staticDataTypes}, not {transactionalDataTypes}",
+      "verificationSteps": [
+        "Restart the application to trigger the seeder",
+        "Call the API endpoint that should return the data",
+        "Verify the response contains the expected records",
+        "If empty, check the seeder logic for early return conditions that prevent data creation"
+      ],
+      "confidence": 0.6,
+      "timesApplied": 1,
+      "timesSucceeded": 1,
+      "createdAt": "2026-04-15T18:50:13.928Z",
+      "lastUsed": "2026-04-15T18:50:13.928Z",
+      "sourceSessionId": "39c5088a-4172-449c-a6c5-1505129e3bc3"
+    },
+    {
+      "id": "pattern-9c3435d9",
+      "name": "Date Filter Mismatch Between Count and List Endpoints",
+      "issueSignature": [
+        "stale",
+        "pending",
+        "unmatched",
+        "count mismatch",
+        "dashboard"
+      ],
+      "issueExamples": [
+        "In the page element with name 'Pending Reconciliation', calling 'http://localhost:5173/api/v1/restaurants/1/purchasing/grns/stale' when hitting the url is not giveing the complete data "
+      ],
+      "category": "BE",
+      "codeSearchStrategy": [
+        "grep -r 'receivedDate.*<' shopro-res/src/main/java/ --include='*.java'",
+        "grep -r 'count.*GRN\\|countUnmatched' shopro-res/src/main/java/ --include='*.java'"
+      ],
+      "rootCauseTemplate": "The {listEndpoint} query filters by date ({field} < :threshold), returning only items older than X days instead of ALL {itemType} that need {action}",
+      "fixTemplate": "Remove the date filter from the list query to match the count query, OR create separate endpoints: one for ALL items (no date filter) and one for STALE items (with date filter)",
+      "verificationSteps": [
+        "1. Call the count endpoint (e.g., countUnmatchedGRNs) - note the count",
+        "2. Call the list endpoint (e.g., /stale) - note the count",
+        "3. Verify both return the same count after fix",
+        "4. Ensure recent unmatched GRNs now appear in the list"
+      ],
+      "confidence": 0.6,
+      "timesApplied": 1,
+      "timesSucceeded": 1,
+      "createdAt": "2026-04-16T00:15:20.399Z",
+      "lastUsed": "2026-04-16T00:15:20.399Z",
+      "sourceSessionId": "18754671-fa15-4431-aba4-19abb28e1fd4",
+      "pastFixExample": {
+        "oldFile": "shopro-res/src/main/java/mls/sho/dms/application/purchasing/repository/GoodsReceiptRepository.java",
+        "oldMethod": "findStaleGRNs",
+        "oldDiff": "Now I need to update the service method that calls the repository - it needs to be updated since the method signature changed:\nNow let me verify all the changes are correct by reading the modified files:\n---\n## Files Changed\n- **Change:** Removed `AND g.receivedDate < :threshold` from the `findStaleGRNs` query\n- The query now returns ALL unmatched GRNs (status=RECEIVED without a matching PurchaseInvoice) instead of only GRNs older than X days\n- **Change:** Updated `getStaleGRNs` method to remove the `daysThreshold` parameter\n- Now accepts only `restaurantId` and calls the repository without the threshold filter\n- **Change:** Updated the `/stale` endpoint to remove the `days` request parameter\n- The endpoint no longer accepts the optional `days` parameter",
+        "estimatedContextUsed": ""
+      }
+    }
+  ],
+  "lastUpdated": "2026-04-16T00:15:20.413Z"
+}

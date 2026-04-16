@@ -50,3 +50,6 @@ reports/*.json
 src/**/*-output.json
 **/reports/debug-session-*.json
 shopro-res/logs/sabz-server.log
+shopro-res/logs/sabz-server.log
+shopro-res/logs/sabz-server.log.2026-04-15.0.gz
+shopro-res/logs/sabz-server.log
