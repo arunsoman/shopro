@@ -6,11 +6,12 @@
 
 import React from 'react';
 import { useAppStore } from "@/App";
-import { FileText, Users, BarChart3, ShoppingCart, CheckCircle2, ClipboardCheck, Plus, LayoutGrid, TrendingUp } from 'lucide-react';
-import { Card } from "@/components/ui/Card";
+import { Users, BarChart3, ShoppingCart, CheckCircle2, ClipboardCheck, Plus, LayoutGrid, TrendingUp } from 'lucide-react';
 import { Button } from "@/components/ui/Button";
 import { KpiCard } from "@/components/shared/cards/KpiCard";
+import { KpiChartCard } from "@/components/shared/cards/KpiChartCard";
 import { usePurchasingDashboard } from "@/hooks/useInvoices";
+import { usePurchasingHubCounts } from "./hooks/usePurchasingHubCounts";
 import { format, startOfWeek } from "date-fns";
 import { useRestaurantId } from "@/providers/RestaurantProvider";
 
@@ -19,24 +20,9 @@ import { SlideOver, SlideOverContent, SlideOverHeader, SlideOverTitle, SlideOver
 import NavCard from "@/components/shared/cards/NavCard";
 import type { NavCardContent } from "@/components/shared/cards/NavCard";
 import { HubHeader } from "@/components/shared/headers/HubHeader";
-import { DataList, DataListItem } from "@/components/shared/lists/DataList";
-import { Suspendable } from "@/components/shared/Suspendable";
 import { useCreateSupplier } from "@/hooks/useSuppliers";
-import { useLowStockAlerts } from "@/features/inventory/hooks/useIngredients";
 import { useToast } from "@/providers/ToastProvider";
-import { cn, currency } from "@/lib/utils";
-
-// ── Trend chart skeleton ─────────────────────────────────────────
-
-function TrendChartSkeleton() {
-  return (
-    <div className="h-[280px] flex items-end gap-4 pb-4 animate-pulse">
-      {Array.from({ length: 8 }).map((_, i) => (
-        <div key={i} className="flex-1 bg-muted/10 rounded-2xl" style={{ height: `${30 + Math.random() * 60}%` }} />
-      ))}
-    </div>
-  );
-}
+import { currency } from "@/lib/utils";
 
 export default function PurchasingHubPage() {
   const navigate = useAppStore(s => s.navigate);
@@ -46,14 +32,17 @@ export default function PurchasingHubPage() {
   const [showAddSupplier, setShowAddSupplier] = React.useState(false);
   const weekStart = format(startOfWeek(new Date()), 'yyyy-MM-dd');
   const { data: dashboard, isLoading } = usePurchasingDashboard(restaurantId, weekStart);
+  const { data: hubCounts, isLoading: hubLoading } = usePurchasingHubCounts();
   const { mutate: createSupplier } = useCreateSupplier(restaurantId);
-  const { data: lowStockAlerts } = useLowStockAlerts();
+
+  // Use hub counts from dedicated endpoint for nav cards
+  const isCardLoading = isLoading || hubLoading;
 
   const navCards: NavCardContent[] = [
-    { label: 'Reorder Staging', desc: 'Mark items for reorder & raise POs', count: lowStockAlerts?.length, Icon: LayoutGrid, route: 'purchase-po-staging', iconColor: 'text-rose-500', iconBg: 'bg-rose-500/10' },
-    { label: 'Purchase Orders', desc: 'Procurement drafts & sent orders', count: dashboard?.openPoCount, Icon: ShoppingCart, route: 'purchase-po-list', iconColor: 'text-indigo-600', iconBg: 'bg-indigo-500/10' },
-    { label: 'Goods Receipts', desc: 'Verify and confirm deliveries', count: dashboard?.unmatchedGrnCount, Icon: CheckCircle2, route: 'purchase-grn-list', iconColor: 'text-emerald-600', iconBg: 'bg-emerald-500/10' },
-    { label: '3-Way Match', desc: 'Reconcile PO vs GRN vs INV', count: dashboard?.matchingHealth, Icon: ClipboardCheck, route: 'purchase-matching', iconColor: 'text-amber-600', iconBg: 'bg-amber-500/10' },
+    { label: 'Reorder Staging', desc: 'Mark items for reorder & raise POs', count: hubCounts?.reorderStagingCount, Icon: LayoutGrid, route: 'purchase-po-staging', iconColor: 'text-rose-500', iconBg: 'bg-rose-500/10' },
+    { label: 'Purchase Orders', desc: 'Procurement drafts & sent orders', count: hubCounts?.purchaseOrdersToSendCount, Icon: ShoppingCart, route: 'purchase-po-list', iconColor: 'text-indigo-600', iconBg: 'bg-indigo-500/10' },
+    { label: 'Goods Receipts', desc: 'Verify and confirm deliveries', count: hubCounts?.goodsReceiptsPendingCount, Icon: CheckCircle2, route: 'purchase-grn-list', iconColor: 'text-emerald-600', iconBg: 'bg-emerald-500/10' },
+    { label: '3-Way Match', desc: 'Reconcile PO vs GRN vs INV', count: hubCounts?.threeWayMatchPendingCount, Icon: ClipboardCheck, route: 'purchase-matching', iconColor: 'text-amber-600', iconBg: 'bg-amber-500/10' },
   ];
 
   return (
@@ -73,7 +62,7 @@ export default function PurchasingHubPage() {
         </Button>
       </HubHeader>
 
-      {/* KPI Matrix */}
+      {/* KPI Matrix with Chart */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 px-2">
         <KpiCard
           title="Weekly Spend"
@@ -84,28 +73,41 @@ export default function PurchasingHubPage() {
           loading={isLoading}
         />
         <KpiCard
-          title="Open Orders"
-          value={String(dashboard?.openPoCount ?? 0)}
-          delta="Requires follow-up"
-          deltaDir="flat"
-          icon={ShoppingCart}
-          loading={isLoading}
-        />
-        <KpiCard
-          title="Unmatched GRNs"
-          value={String(dashboard?.unmatchedGrnCount ?? 0)}
-          delta="Critical reconciliation"
-          deltaDir={(dashboard?.unmatchedGrnCount ?? 0) > 0 ? 'down' : 'flat'}
-          icon={CheckCircle2}
-          loading={isLoading}
-        />
-        <KpiCard
           title="Matching Health"
           value={`${dashboard?.matchingHealth ?? 0}%`}
           delta="On target"
           deltaDir={(dashboard?.matchingHealth ?? 0) >= 90 ? 'up' : 'down'}
           icon={ClipboardCheck}
           loading={isLoading}
+        />
+        <KpiChartCard
+          title="Spend Trend (8 Weeks)"
+          data={(dashboard?.spendTrend || []).map(t => ({
+            label: t.weekLabel || '',
+            value: t.trendPercentage || 0
+          }))}
+          chartType="line"
+          color="primary"
+          icon={TrendingUp}
+          height={140}
+          loading={isLoading}
+          className="xl:col-span-2"
+          action={
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => navigate("purchase-trend")} 
+              className="text-[10px] font-black uppercase tracking-widest text-indigo-600 hover:bg-indigo-500/5 rounded-xl px-4 h-7"
+            >
+              Analyze Trends
+            </Button>
+          }
+          footer={
+            <div className="flex justify-between text-[9px] font-black tracking-[0.2em] text-muted-foreground/30 opacity-60 uppercase">
+              <span>{dashboard?.spendTrend?.[0]?.weekLabel || 'Start'}</span>
+              <span>{dashboard?.spendTrend?.length ? dashboard.spendTrend[dashboard.spendTrend.length - 1].weekLabel + ' (Current)' : 'Current'}</span>
+            </div>
+          }
         />
       </div>
 
@@ -115,70 +117,14 @@ export default function PurchasingHubPage() {
           <NavCard
             key={card.label}
             card={card}
-            loading={isLoading}
+            loading={isCardLoading}
             onClick={() => navigate(card.route as any)}
           />
         ))}
       </div>
 
-      {/* Charts + Latest Vouchers */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 px-2 pb-10">
-        <Card className="lg:col-span-2 p-10 bg-white dark:bg-slate-900 border-slate-200 dark:border-white/5 rounded-[2.5rem] space-y-10 shadow-sm relative overflow-hidden">
-          <div className="flex justify-between items-center relative z-10">
-            <h3 className="text-[10px] font-bold uppercase tracking-widest text-foreground opacity-60 flex items-center gap-2">
-              <TrendingUp size={14} className="text-indigo-600" />
-              Spend Frequency (8 Weeks)
-            </h3>
-            <Button variant="ghost" size="sm" onClick={() => navigate("purchase-trend")} className="text-[10px] font-black uppercase tracking-widest text-indigo-600 hover:bg-indigo-500/5 rounded-xl px-4">
-              Analyze Trends
-            </Button>
-          </div>
-
-          <Suspendable
-            isLoading={isLoading}
-            skeleton={<TrendChartSkeleton />}
-          >
-            <div className="h-[280px] flex items-end gap-4 pb-4 relative z-10">
-              {(dashboard?.spendTrend || []).map((trend, i) => (
-                <div key={i} className="flex-1 bg-slate-50 dark:bg-black/20 rounded-2xl relative group h-full">
-                  <div
-                    className="absolute bottom-0 left-0 right-0 bg-indigo-600 rounded-2xl transition-all duration-700 ease-out group-hover:shadow-[0_0_15px_rgba(79,70,229,0.5)]"
-                    style={{ height: `${trend.trendPercentage}%` }}
-                  />
-                </div>
-              ))}
-            </div>
-          </Suspendable>
-
-          <div className="flex justify-between text-[9px] font-black tracking-[0.2em] text-muted-foreground/30 opacity-60 uppercase relative z-10 mt-2">
-            <span>{dashboard?.spendTrend?.[0]?.weekLabel || 'Start'}</span>
-            <span>{dashboard?.spendTrend?.length ? dashboard.spendTrend[dashboard.spendTrend.length - 1].weekLabel + ' (Current)' : 'Current'}</span>
-          </div>
-        </Card>
-
-        <Card className="p-10 bg-white dark:bg-slate-900 border-slate-200 dark:border-white/5 rounded-[2.5rem] space-y-6 shadow-sm">
-          <h3 className="text-[10px] font-bold uppercase tracking-widest text-foreground opacity-60 flex items-center gap-2">
-            <FileText size={14} className="text-sky-500" />
-            Latest Vouchers
-          </h3>
-
-          <DataList loading={isLoading} skeletonCount={4}>
-            {(dashboard?.latestVouchers || []).map(invoice => (
-              <DataListItem
-                key={invoice.id}
-                title={(invoice.invoiceNumber && invoice.invoiceNumber.length > 0) ? invoice.invoiceNumber : `INV-${invoice.id}`}
-                subtitle={invoice.supplierName || 'Unknown Supplier'}
-                value={currency(invoice.invoiceAmount)}
-                onClick={() => navigate('purchase-invoice-log')}
-              />
-            ))}
-          </DataList>
-
-          <Button variant="outline" className="w-full h-14 rounded-2xl border-slate-200 dark:border-white/5 font-black uppercase tracking-widest text-[11px] hover:bg-slate-50 dark:hover:bg-white/5" onClick={() => navigate("purchase-invoice-log")}>
-            See Integrated Log
-          </Button>
-        </Card>
-      </div>
+      {/* Charts + Latest Vouchers - Now uses KpiChartCard above */}
+      {/* Remaining content can be added here if needed */}
 
       <SlideOver open={showAddSupplier} onOpenChange={setShowAddSupplier}>
         <SlideOverContent className="sm:max-w-xl">

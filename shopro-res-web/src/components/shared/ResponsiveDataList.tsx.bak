@@ -1,0 +1,658 @@
+import React, { useState, useMemo, useCallback } from 'react'
+import { 
+    Table, 
+    TableBody, 
+    TableCell, 
+    TableHead, 
+    TableHeader, 
+    TableRow 
+} from '@/components/ui/Table'
+import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/Button'
+import { Search, SlidersHorizontal, ChevronLeft, ChevronRight, X, ChevronUp, ChevronDown } from 'lucide-react'
+import { useDebounce } from '@/components/shared/useDebounce'
+import { BottomSheet } from '@/components/shared/BottomSheet'
+
+// ============================================
+// Types
+// ============================================
+
+export interface Column<T> {
+    header: string
+    accessorKey: keyof T | string
+    cell?: (item: T) => React.ReactNode
+    className?: string
+    sortable?: boolean
+}
+
+export interface FilterOption<T = unknown> {
+    key: keyof T | string
+    label: string
+    options: { value: string | number; label: string }[]
+}
+
+export interface PaginationState {
+    page: number
+    pageSize: number
+    total: number
+}
+
+export interface SortState {
+    key: string
+    direction: 'asc' | 'desc'
+}
+
+interface ResponsiveDataTableProps<T extends { id: string | number }> {
+    data: T[]
+    columns: Column<T>[]
+    mobileRender?: (item: T) => React.ReactNode
+    
+    // Search
+    searchable?: boolean
+    searchPlaceholder?: string
+    searchKeys?: (keyof T | string)[]
+    
+    // Filtering
+    filterable?: boolean
+    filterOptions?: FilterOption<T>[]
+    
+    // Sorting
+    sortable?: boolean
+    
+    // Pagination
+    pagination?: boolean
+    initialPageSize?: number
+    
+    // Scroll options
+    maxHeight?: string
+    
+    // Callbacks
+    onRowClick?: (item: T) => void
+    
+    // UI Options
+    emptyMessage?: string
+    emptyDescription?: string
+    isLoading?: boolean
+}
+
+// ============================================
+// Helper Components
+// ============================================
+
+function SearchInput({ 
+    value, 
+    onChange, 
+    placeholder = 'Search...',
+    className,
+    disabled
+}: { 
+    value: string
+    onChange: (value: string) => void
+    placeholder?: string
+    className?: string
+    disabled?: boolean
+}) {
+    return (
+        <div className={cn("relative group", className)}>
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40 group-focus-within:text-primary transition-colors" />
+            <input
+                type="search"
+                placeholder={placeholder}
+                value={value}
+                disabled={disabled}
+                onChange={e => onChange(e.target.value)}
+                className="w-full h-10 pl-10 pr-4 rounded-xl border border-slate-200 dark:border-white/5 bg-slate-50/50 dark:bg-slate-950/50 text-sm font-medium focus:outline-none focus:border-primary/40 focus:ring-4 focus:ring-primary/5 transition-all placeholder:text-muted-foreground/30 shadow-sm disabled:opacity-50"
+            />
+            {value && (
+                <button
+                    onClick={() => onChange('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 rounded-full bg-muted-foreground/20 flex items-center justify-center hover:bg-muted-foreground/40 transition-colors"
+                >
+                    <X className="h-2.5 w-2.5 text-white" />
+                </button>
+            )}
+        </div>
+    )
+}
+
+function FilterButton({ 
+    active, 
+    onClick,
+    disabled
+}: { 
+    active: boolean
+    onClick: () => void
+    disabled?: boolean
+}) {
+    return (
+        <Button
+            variant="outline"
+            size="icon"
+            onClick={onClick}
+            disabled={disabled}
+            className="h-10 w-10 rounded-xl relative border-slate-200 dark:border-white/10 shadow-sm"
+        >
+            <SlidersHorizontal className="h-4 w-4 text-muted-foreground/60" />
+            {active && (
+                <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-primary border-2 border-white dark:border-slate-900 shadow-sm" />
+            )}
+        </Button>
+    )
+}
+
+function PaginationControls({ 
+    pagination,
+    onPageChange,
+    onPageSizeChange,
+    pageSizeOptions = [10, 25, 50, 100],
+    className 
+}: { 
+    pagination: PaginationState
+    onPageChange: (page: number) => void
+    onPageSizeChange: (size: number) => void
+    pageSizeOptions?: number[]
+    className?: string
+}) {
+    const totalPages = Math.max(1, Math.ceil(pagination.total / pagination.pageSize))
+    const startItem = (pagination.page - 1) * pagination.pageSize + 1
+    const endItem = Math.min(pagination.page * pagination.pageSize, pagination.total)
+
+    const getPageNumbers = () => {
+        const pages: number[] = []
+        const maxVisible = 5
+        
+        if (totalPages <= maxVisible) {
+            for (let i = 1; i <= totalPages; i++) pages.push(i)
+        } else if (pagination.page <= 3) {
+            for (let i = 1; i <= 4; i++) pages.push(i)
+            pages.push(-1)
+            pages.push(totalPages)
+        } else if (pagination.page >= totalPages - 2) {
+            pages.push(1)
+            pages.push(-1)
+            for (let i = totalPages - 3; i <= totalPages; i++) pages.push(i)
+        } else {
+            pages.push(1)
+            pages.push(-1)
+            for (let i = pagination.page - 1; i <= pagination.page + 1; i++) pages.push(i)
+            pages.push(-1)
+            pages.push(totalPages)
+        }
+        
+        return pages
+    }
+
+    return (
+        <div className={cn("flex items-center justify-between px-6 py-3 border-t border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-black/20", className)}>
+            <div className="flex items-center gap-4">
+                <span className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-[0.2em]">
+                    {startItem}-{endItem} of {pagination.total}
+                </span>
+                <select
+                    value={pagination.pageSize}
+                    onChange={e => onPageSizeChange(Number(e.target.value))}
+                    className="h-7 px-2 rounded-lg border border-slate-200 dark:border-white/5 bg-white dark:bg-slate-800 text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider focus:outline-none focus:border-primary/40 cursor-pointer"
+                >
+                    {pageSizeOptions.map(size => (
+                        <option key={size} value={size}>{size}</option>
+                    ))}
+                </select>
+            </div>
+            
+            <div className="flex items-center gap-1">
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onPageChange(1)}
+                    disabled={pagination.page <= 1}
+                    className="h-7 w-7 rounded-lg"
+                >
+                    <ChevronLeft className="h-3.5 w-3.5" />
+                    <ChevronLeft className="h-3.5 w-3.5 -ml-2" />
+                </Button>
+                
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onPageChange(pagination.page - 1)}
+                    disabled={pagination.page <= 1}
+                    className="h-7 w-7 rounded-lg"
+                >
+                    <ChevronLeft className="h-3.5 w-3.5" />
+                </Button>
+                
+                <div className="flex items-center gap-0.5 px-1">
+                    {getPageNumbers().map((pageNum, idx) => {
+                        if (pageNum === -1) {
+                            return <span key={`ellipsis-${idx}`} className="px-1 text-muted-foreground/40">...</span>
+                        }
+                        
+                        return (
+                            <button
+                                key={pageNum}
+                                onClick={() => onPageChange(pageNum)}
+                                className={cn(
+                                    "h-7 min-w-[28px] px-2 rounded-lg text-[10px] font-bold transition-colors",
+                                    pagination.page === pageNum 
+                                        ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900" 
+                                        : "text-muted-foreground/60 hover:bg-slate-100 dark:hover:bg-white/5"
+                                )}
+                            >
+                                {pageNum}
+                            </button>
+                        )
+                    })}
+                </div>
+                
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onPageChange(pagination.page + 1)}
+                    disabled={pagination.page >= totalPages}
+                    className="h-7 w-7 rounded-lg"
+                >
+                    <ChevronRight className="h-3.5 w-3.5" />
+                </Button>
+
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onPageChange(totalPages)}
+                    disabled={pagination.page >= totalPages}
+                    className="h-7 w-7 rounded-lg"
+                >
+                    <ChevronRight className="h-3.5 w-3.5" />
+                    <ChevronRight className="h-3.5 w-3.5 -ml-2" />
+                </Button>
+            </div>
+        </div>
+    )
+}
+
+function FilterSheet<T extends { id: string | number }>({
+    open,
+    onClose,
+    filterOptions,
+    filters,
+    onFilterChange,
+    onClear,
+}: {
+    open: boolean
+    onClose: () => void
+    filterOptions: FilterOption<T>[]
+    filters: Record<string, string | number | boolean | undefined>
+    onFilterChange: (key: string, value: string | number | boolean | undefined) => void
+    onClear: () => void
+}) {
+    const hasActiveFilters = Object.values(filters).some(v => v !== undefined && v !== '' && v !== 'all')
+    
+    return (
+        <BottomSheet open={open} onClose={onClose} title="Filters">
+            <div className="p-6 space-y-8">
+                {filterOptions.map(filter => (
+                    <div key={String(filter.key)} className="space-y-3">
+                        <p className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest">
+                            {filter.label}
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                            <button
+                                onClick={() => onFilterChange(String(filter.key), undefined)}
+                                className={cn(
+                                    "px-3.5 py-1.5 rounded-lg border text-[10px] font-bold uppercase tracking-wide transition-all",
+                                    !filters[String(filter.key)]
+                                        ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 border-slate-900 dark:border-white"
+                                        : "border-slate-200 dark:border-white/10 text-muted-foreground/60 hover:bg-slate-50 dark:hover:bg-white/5"
+                                )}
+                            >
+                                All
+                            </button>
+                            {filter.options.map(opt => (
+                                <button
+                                    key={String(opt.value)}
+                                    onClick={() => onFilterChange(String(filter.key), opt.value)}
+                                    className={cn(
+                                        "px-3.5 py-1.5 rounded-lg border text-[10px] font-bold uppercase tracking-wide transition-all",
+                                        filters[String(filter.key)] === opt.value
+                                            ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 border-slate-900 dark:border-white"
+                                            : "border-slate-200 dark:border-white/10 text-muted-foreground/60 hover:bg-slate-50 dark:hover:bg-white/5"
+                                    )}
+                                >
+                                    {opt.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                ))}
+                
+                {hasActiveFilters && (
+                    <Button
+                        variant="ghost"
+                        onClick={onClear}
+                        className="w-full justify-center text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-500/10 font-bold text-[11px] uppercase tracking-widest"
+                    >
+                        Clear All Filters
+                    </Button>
+                )}
+            </div>
+        </BottomSheet>
+    )
+}
+
+// ============================================
+// Main Component
+// ============================================
+
+export function ResponsiveDataTable<T extends { id: string | number }>({
+    data,
+    columns,
+    mobileRender,
+    searchable = false,
+    searchPlaceholder = 'Search...',
+    searchKeys = [],
+    filterable = false,
+    filterOptions = [],
+    sortable = false,
+    pagination: enablePagination = false,
+    initialPageSize = 10,
+    maxHeight = '400px',
+    onRowClick,
+    emptyMessage = 'No items found',
+    emptyDescription = 'Try adjusting your search or filters.',
+    isLoading = false,
+}: ResponsiveDataTableProps<T>) {
+    // Simple state management
+    const [searchQuery, setSearchQuery] = useState('')
+    const [filters, setFilters] = useState<Record<string, string | number | boolean | undefined>>({})
+    const [page, setPage] = useState(1)
+    const [pageSize, setPageSize] = useState(initialPageSize)
+    const [sortConfig, setSortConfig] = useState<SortState | null>(null)
+    const [filterSheetOpen, setFilterSheetOpen] = useState(false)
+    
+    const debouncedSearch = useDebounce(searchQuery, 300)
+
+    // Filter & sort data
+    const processedData = useMemo(() => {
+        let result = [...data]
+        
+        // Apply search
+        if (debouncedSearch && searchKeys.length > 0) {
+            const lowerQuery = debouncedSearch.toLowerCase()
+            result = result.filter(item => 
+                searchKeys.some(key => {
+                    const value = item[key as keyof T]
+                    if (value === null || value === undefined) return false
+                    return String(value).toLowerCase().includes(lowerQuery)
+                })
+            )
+        }
+        
+        // Apply filters
+        Object.entries(filters).forEach(([key, value]) => {
+            if (value !== undefined && value !== '' && value !== 'all') {
+                result = result.filter(item => {
+                    const itemValue = item[key as keyof T]
+                    return String(itemValue) === String(value)
+                })
+            }
+        })
+        
+        // Apply sorting
+        if (sortConfig) {
+            result.sort((a, b) => {
+                const aVal = a[sortConfig.key as keyof T]
+                const bVal = b[sortConfig.key as keyof T]
+                
+                if (aVal === bVal) return 0
+                if (aVal === null || aVal === undefined) return 1
+                if (bVal === null || bVal === undefined) return -1
+                
+                let comparison = 0
+                if (typeof aVal === 'string' && typeof bVal === 'string') {
+                    comparison = aVal.localeCompare(bVal)
+                } else if (typeof aVal === 'number' && typeof bVal === 'number') {
+                    comparison = aVal - bVal
+                } else {
+                    comparison = String(aVal).localeCompare(String(bVal))
+                }
+                
+                return sortConfig.direction === 'asc' ? comparison : -comparison
+            })
+        }
+        
+        return result
+    }, [data, debouncedSearch, filters, sortConfig, searchKeys])
+
+    // Pagination
+    const totalItems = processedData.length
+    const totalPages = Math.max(1, Math.ceil(totalItems / pageSize))
+    
+    // Reset page when data/filters change
+    React.useEffect(() => {
+        if (page > totalPages) {
+            setPage(1)
+        }
+    }, [totalPages, page])
+
+    const paginatedData = useMemo(() => {
+        if (!enablePagination) return processedData
+        const start = (page - 1) * pageSize
+        return processedData.slice(start, start + pageSize)
+    }, [processedData, page, pageSize, enablePagination])
+
+    // Event handlers
+    const handleSearch = useCallback((query: string) => {
+        setSearchQuery(query)
+        setPage(1)
+    }, [])
+
+    const handleFilterChange = useCallback((key: string, value: string | number | boolean | undefined) => {
+        setFilters(prev => ({ ...prev, [key]: value }))
+        setPage(1)
+    }, [])
+
+    const clearFilters = useCallback(() => {
+        setFilters({})
+        setSearchQuery('')
+        setPage(1)
+    }, [])
+
+    const handleSort = useCallback((key: string) => {
+        if (!sortable) return
+        setSortConfig(prev => ({
+            key,
+            direction: prev?.key === key && prev.direction === 'asc' ? 'desc' : 'asc'
+        }))
+    }, [sortable])
+
+    const handlePageChange = useCallback((newPage: number) => {
+        setPage(newPage)
+    }, [])
+
+    const handlePageSizeChange = useCallback((newSize: number) => {
+        setPageSize(newSize)
+        setPage(1)
+    }, [])
+
+    const activeFilterCount = Object.values(filters).filter(v => v !== undefined && v !== '' && v !== 'all').length
+
+    // Render toolbar
+    const renderToolbar = () => {
+        if (!searchable && !filterable) return null
+        
+        return (
+            <div className="flex items-center gap-3 mb-4 shrink-0">
+                {searchable && (
+                    <SearchInput
+                        value={searchQuery}
+                        onChange={handleSearch}
+                        placeholder={searchPlaceholder}
+                        className="flex-1"
+                        disabled={isLoading}
+                    />
+                )}
+                {filterable && (
+                    <FilterButton
+                        active={activeFilterCount > 0}
+                        onClick={() => setFilterSheetOpen(true)}
+                        disabled={isLoading}
+                    />
+                )}
+            </div>
+        )
+    }
+
+    // Render mobile cards
+    const renderMobileCards = () => (
+        <div className="flex flex-col gap-3 md:hidden">
+            {paginatedData.map((item) => (
+                <div 
+                    key={item.id} 
+                    onClick={() => onRowClick?.(item)}
+                    className="cursor-pointer active:scale-[0.98] transition-transform"
+                >
+                    {mobileRender ? mobileRender(item) : (
+                        <div className="p-4 bg-surface border border-border rounded-xl">
+                            <div className="font-medium">Item {item.id}</div>
+                        </div>
+                    )}
+                </div>
+            ))}
+        </div>
+    )
+
+    // Render desktop table with sticky header and scrollable body
+    const renderDesktopTable = () => {
+        // If maxHeight is '100%', we use flex layout to fill available space
+        const isFullHeight = maxHeight === '100%'
+        
+        return (
+        <div className={cn(
+            "hidden md:block bg-surface border border-border rounded-2xl overflow-hidden shadow-sm",
+            isFullHeight && "flex flex-col min-h-0"
+        )}>
+            <div 
+                className={cn(
+                    "overflow-auto",
+                    isFullHeight ? "flex-1 min-h-0" : ""
+                )} 
+                style={!isFullHeight ? { maxHeight } : undefined}
+            >
+                <Table>
+                    <TableHeader className="sticky top-0 z-10 bg-surface-2/95 backdrop-blur-sm shadow-sm">
+                        <TableRow>
+                            {columns.map((column, idx) => (
+                                <TableHead 
+                                    key={idx} 
+                                    className={cn(
+                                        "text-[10px] font-black uppercase tracking-widest text-muted-foreground py-4 px-6",
+                                        column.sortable && sortable && "cursor-pointer hover:text-foreground transition-colors",
+                                        column.className
+                                    )}
+                                    onClick={() => column.sortable && sortable && handleSort(String(column.accessorKey))}
+                                >
+                                    <div className="flex items-center gap-2">
+                                        {column.header}
+                                        {sortable && sortConfig?.key === column.accessorKey && (
+                                            <span className="text-primary">
+                                                {sortConfig.direction === 'asc' 
+                                                    ? <ChevronUp className="h-3 w-3" />
+                                                    : <ChevronDown className="h-3 w-3" />
+                                                }
+                                            </span>
+                                        )}
+                                    </div>
+                                </TableHead>
+                            ))}
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {isLoading ? (
+                            Array.from({ length: pageSize }).map((_, idx) => (
+                                <TableRow key={idx}>
+                                    {columns.map((col, cIdx) => (
+                                        <TableCell key={cIdx} className="py-4 px-6">
+                                            <div className="h-4 bg-muted/30 rounded animate-pulse" />
+                                        </TableCell>
+                                    ))}
+                                </TableRow>
+                            ))
+                        ) : (
+                            paginatedData.map((item) => (
+                                <TableRow 
+                                    key={item.id} 
+                                    onClick={() => onRowClick?.(item)}
+                                    className="hover:bg-primary/5 cursor-pointer transition-colors group"
+                                >
+                                    {columns.map((column, idx) => (
+                                        <TableCell 
+                                            key={idx} 
+                                            className={cn("py-4 px-6 font-medium", column.className)}
+                                        >
+                                            {column.cell 
+                                                ? column.cell(item) 
+                                                : (item[column.accessorKey as keyof T] as React.ReactNode)
+                                            }
+                                        </TableCell>
+                                    ))}
+                                </TableRow>
+                            ))
+                        )}
+                    </TableBody>
+                </Table>
+            </div>
+        </div>
+    )
+
+    // Render empty state
+    const renderEmpty = () => (
+        <div className="flex flex-col items-center justify-center py-16 px-4">
+            <div className="text-center space-y-2">
+                <p className="font-bold text-lg text-foreground">{emptyMessage}</p>
+                <p className="text-sm text-muted-foreground">{emptyDescription}</p>
+            </div>
+        </div>
+    )
+
+    return (
+        <div className="w-full flex flex-col">
+            {/* Toolbar - stays fixed */}
+            {renderToolbar()}
+            
+            {/* Content */}
+            <div className="flex-1 min-h-[200px]">
+                {!isLoading && paginatedData.length === 0 ? (
+                    renderEmpty()
+                ) : (
+                    <>
+                        {renderMobileCards()}
+                        {renderDesktopTable()}
+                    </>
+                )}
+            </div>
+            
+            {/* Footer with pagination - stays fixed */}
+            {enablePagination && paginatedData.length > 0 && (
+                <PaginationControls 
+                    pagination={{ page, pageSize, total: totalItems }}
+                    onPageChange={handlePageChange}
+                    onPageSizeChange={handlePageSizeChange}
+                />
+            )}
+            
+            {/* Filter Sheet */}
+            {filterable && (
+                <FilterSheet
+                    open={filterSheetOpen}
+                    onClose={() => setFilterSheetOpen(false)}
+                    filterOptions={filterOptions}
+                    filters={filters}
+                    onFilterChange={handleFilterChange}
+                    onClear={clearFilters}
+                />
+            )}
+        </div>
+    )
+}
+
+// Backward compatibility alias
+export { ResponsiveDataTable as ResponsiveDataList }

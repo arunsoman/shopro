@@ -82,41 +82,57 @@ This will:
       resourceLoader: loader,
     });
 
+    // Load debugger diagnosis from state file if available
+    let debuggerContext = "";
+    try {
+      const debuggerOutput = JSON.parse(
+        await fs.readFile(path.join(STATE_DIR, "debugger-output.json"), "utf-8")
+      );
+      const r = debuggerOutput.report;
+      debuggerContext = `
+## Debugger Diagnosis (session ${debuggerOutput.sessionId})
+
+**Issue**: ${debuggerOutput.issue}
+
+**Root Cause**: ${r.rootCause}
+**Category**: ${r.category}
+**Confidence**: ${r.confidence}
+
+**Affected Files**: ${r.affectedFiles?.join(", ")}
+**Affected Methods**: ${r.affectedMethods?.join(", ")}
+
+**Current Behavior**: ${r.currentBehavior}
+**Expected Behavior**: ${r.expectedBehavior}
+
+**Evidence**:
+${r.evidence?.map((e: string) => `- ${e}`).join("\n")}
+
+**Recommended Fix**: ${r.recommendedFix}`;
+    } catch {
+      // No debugger output available
+    }
+
     // Build the prompt with full context from debugger
-    const prompt = 
+    const prompt =
 `# Task
 
 ${taskDescription}
-
----
-
-## Issue Context (from Debugger Agent)
-
-**Issue**: "Reorder Staging -> Shortfall the value is coming as -NaN BOTTLE"
-
-**Root Cause**: Backend API contract mismatch
-- The backend endpoint /restaurants/{id}/ingredients/low-stock returns List<Ingredient> 
-- The frontend expects LowStockAlertDto with shortfallAmount field
-- When frontend accesses alert.shortfallAmount, it gets undefined
-- Math.abs(undefined) -> NaN
-
-**Fix Required**: Modify the backend getLowStock endpoint to return data with shortfallAmount calculated (as parLevel - currentCount).
+${debuggerContext}
 
 ---
 
 ## Your Task
 
-1. **Analyze**: Find the IngredientController.java and IngredientService.java files
-2. **Fix**: Modify the getLowStock endpoint to return proper data with shortfallAmount
-3. **Options**:
-   - Option A: Return a new DTO (e.g., LowStockAlertDto) with shortfallAmount field
-   - Option B: Add a computed field to Ingredient and use a projection
-4. **Verify**: Ensure the API will return the shortfallAmount field
+1. Read and understand the diagnosis above
+2. Locate the exact files and methods mentioned
+3. Implement the recommended fix
+4. Ensure proper error handling following BE Developer guidelines (AGENTS.md)
+5. Write summary to state/be-developer-output.json when done
 
 **Important Constraints**:
 - Use Jakarta Persistence (jakarta.persistence.*), NOT javax.persistence
+- Use @ControllerAdvice for exception handling — never throw raw exceptions from controllers
 - Use DTOs for response, don't expose entities directly
-- Write summary to state/be-developer-output.json when done
 
 Follow the BE Developer guidelines in AGENTS.md.`;
 

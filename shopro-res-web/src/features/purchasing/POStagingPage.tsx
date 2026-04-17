@@ -4,15 +4,19 @@
  * Reorder Staging — Identify low-stock items and raise Purchase Orders.
  */
 
-import React, { useState } from 'react';
+import React, { useState, lazy, Suspense } from 'react';
 import { useAppStore } from "@/App";
 import { Package, Plus, Search, Filter, ShoppingCart, Truck, ArrowLeft, Loader2, AlertCircle } from 'lucide-react';
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { StagingTable } from "./components/StagingTable";
-import { RaisePOModal } from "./components/RaisePOModal";
 import { usePOStaging } from "./hooks/usePOStaging";
 import { cn } from '@/lib/utils';
+
+// Lazy load RaisePOModal to prevent API calls until modal is opened
+const RaisePOModal = lazy(() => 
+  import('./components/RaisePOModal').then(module => ({ default: module.RaisePOModal }))
+);
 
 export default function POStagingPage() {
   const navigate = useAppStore(s => s.navigate);
@@ -96,12 +100,14 @@ export default function POStagingPage() {
         />
       )}
 
-      <RaisePOModal
-        open={showRaiseModal}
-        onOpenChange={setShowRaiseModal}
-        selectedItems={selectedItems}
-        onSuccess={() => setSelectedIds([])}
-      />
+      <Suspense fallback={null}>
+        <RaisePOModal
+          open={showRaiseModal}
+          onOpenChange={setShowRaiseModal}
+          selectedItems={selectedItems}
+          onSuccess={() => setSelectedIds([])}
+        />
+      </Suspense>
     </div>
   );
 }

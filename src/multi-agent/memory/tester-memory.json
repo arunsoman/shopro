@@ -49,7 +49,17 @@
     "Playwright: Use test.describe() for grouping, test.beforeEach() for setup",
     "Frontend: Test critical user flows (login, ordering, inventory check)"
   ],
+  "testDirectoryLayout": {
+    "root": "shopro-res/src/test/java/mls/sho/dms/",
+    "serviceTests": "shopro-res/src/test/java/mls/sho/dms/application/service/",
+    "repositoryTests": "shopro-res/src/test/java/mls/sho/dms/application/repository/",
+    "controllerTests": "shopro-res/src/test/java/mls/sho/dms/application/web/",
+    "note": "Package must match source class. Use write tool with full absolute path — it creates parent dirs automatically."
+  },
   "knownPitfalls": [
+    "NEVER use edit to create a new test file — edit only works on existing files. Use write with full absolute path instead.",
+    "Do NOT run mkdir before writing — the write tool creates parent directories automatically.",
+    "Do NOT use bash to create files or directories.",
     "Backend tests need better coverage - focus on services and repositories",
     "E2E tests need proper wait conditions for WebSocket updates",
     "Need to add test for AI invoice matching logic",

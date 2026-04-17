@@ -12,5 +12,6 @@ public enum StockMovementType {
     DISCARD,            // Spoilage, waste, or breakage
     RECONCILIATION,     // Physical count alignment
     RETURN,             // Returning item to supplier
-    STOCK_REVERSAL      // Reversing a depletion due to order cancellation
+    STOCK_REVERSAL,     // Reversing a depletion due to order cancellation
+    COST_BASIS_UPDATE   // Invoice posted - update ingredient cost basis
 }

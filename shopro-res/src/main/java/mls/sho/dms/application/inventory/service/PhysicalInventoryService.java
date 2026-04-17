@@ -22,6 +22,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -44,11 +45,10 @@ public class PhysicalInventoryService {
     }
 
     @Transactional(readOnly = true)
-    public PhysicalInventoryPeriodDto getCurrentPeriod(Long restaurantId, InventoryType type) {
-        PhysicalInventoryPeriod period = periodRepository.findFirstByRestaurantIdAndInventoryTypeAndStatus(
+    public Optional<PhysicalInventoryPeriodDto> getCurrentPeriod(Long restaurantId, InventoryType type) {
+        return periodRepository.findFirstByRestaurantIdAndInventoryTypeAndStatus(
                 restaurantId, type, PeriodStatus.OPEN)
-                .orElseThrow(() -> new RuntimeException("No open period found"));
-        return toPeriodDto(period);
+                .map(this::toPeriodDto);
     }
 
     @Transactional(readOnly = true)

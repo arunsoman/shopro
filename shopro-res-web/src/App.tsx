@@ -24,6 +24,7 @@ import { RestaurantProvider } from "@/providers";
 import { ToastProvider } from "@/providers/ToastProvider";
 import SupplierDirectory from "@/features/purchasing/SupplierDirectoryPage";
 import InvoiceEntry from "@/features/purchasing/InvoiceEntryPage";
+import InvoiceEditorPage from "@/features/purchasing/InvoiceEditorPage";
 import InvoiceLog from "@/features/purchasing/InvoiceLogPage";
 import WeeklySummaryPage from "@/features/purchasing/WeeklySummaryPage";
 import TrendChartPage from "@/features/purchasing/TrendChartPage";
@@ -96,7 +97,7 @@ function createStore<T extends object>(
 export type Screen = 
   | "login" | "dashboard" | "card-detail" | "inventory" | "kds" | "prime-cost" | "engineering" | "purchasing" | "recipes" 
   | "inventory-ingredients" | "inventory-count" | "inventory-history" | "inventory-alerts" | "inventory-new-ingredient" | "inventory-ingredient-detail" | "inventory-period-detail"
-  | "purchase-suppliers" | "purchase-invoice-entry" | "purchase-invoice-log"
+  | "purchase-suppliers" | "purchase-invoice-entry" | "purchase-invoice-log" | "purchase-invoice-editor"
   | "purchase-weekly" | "purchase-trend" | "purchase-alerts"
   | "purchase-po-list" | "purchase-po-editor" | "purchase-po-detail"
   | "purchase-grn-list" | "purchase-grn-editor" | "purchase-grn-detail" | "purchase-grn-conflicts"
@@ -454,6 +455,7 @@ function Canvas() {
           {displayScreen === "purchasing" && <PurchasingHub />}
           {displayScreen === "purchase-suppliers" && <SupplierDirectory />}
           {displayScreen === "purchase-invoice-entry" && <InvoiceEntry />}
+          {displayScreen === "purchase-invoice-editor" && <InvoiceEditorPage />}
           {displayScreen === "purchase-invoice-log" && <InvoiceLog />}
           {displayScreen === "purchase-weekly" && <WeeklySummaryPage />}
           {displayScreen === "purchase-trend" && <TrendChartPage />}
@@ -514,7 +516,7 @@ function RouteSync() {
     if (matchPath("/purchasing", pathname)) {
       store.navigate("purchasing");
     } else if (matchPath("/purchasing/invoices/new", pathname)) {
-      useAppStore.setState({ screen: "purchase-invoice-entry", selectedInvoiceId: 'new' });
+      useAppStore.setState({ screen: "purchase-invoice-editor" });
     } else if (matchPath("/purchasing/invoices/:id", pathname)) {
       const match = matchPath("/purchasing/invoices/:id", pathname);
       const id = match?.params.id;

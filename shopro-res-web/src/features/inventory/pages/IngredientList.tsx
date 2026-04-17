@@ -1,11 +1,9 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { useAppStore } from '@/App'
-import { Plus, Search, SlidersHorizontal, ChevronRight, ArrowLeft } from 'lucide-react'
-import { SkeletonCard } from '@/components/shared/SkeletonCard'
-import { EmptyState } from '@/components/shared/EmptyState'
+import { Plus, Search, ChevronRight, ArrowLeft } from 'lucide-react'
 import { StatusBadge } from '@/components/shared/StatusBadge'
-import { BottomSheet } from '@/components/shared/BottomSheet'
-import { useIngredients, type InventoryType, type InventoryCategory } from '../hooks/useIngredients'
+import { ResponsiveDataList, type Column, type FilterOption } from '@/components/shared/ResponsiveDataList'
+import { useIngredients, type InventoryType, type InventoryCategory, type Ingredient } from '../hooks/useIngredients'
 import { useDebounce } from '@/components/shared/useDebounce'
 import { currency } from '@/lib/utils'
 import { Button } from '@/components/ui/Button'
@@ -20,24 +18,113 @@ export default function IngredientList() {
   const openIngredientDetail = useAppStore((s) => s.openIngredientDetail)
   const [search, setSearch] = useState('')
   const [type, setType] = useState<InventoryType | undefined>()
-  const [category, setCategory] = useState<InventoryCategory | undefined>()
-  const [showActiveOnly, setShowActiveOnly] = useState(true)
-  const [filterOpen, setFilterOpen] = useState(false)
 
   const debouncedSearch = useDebounce(search, 300)
   const { data: ingredients, isLoading } = useIngredients(type)
 
-  const filtered = useMemo(() => {
-    if (!ingredients) return []
-    return ingredients.filter(i => {
-      const matchSearch = !debouncedSearch ||
-        i.description.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-        i.itemCode.toLowerCase().includes(debouncedSearch.toLowerCase())
-      const matchCat = !category || i.category === category
-      const matchActive = !showActiveOnly || i.active
-      return matchSearch && matchCat && matchActive
-    })
-  }, [ingredients, debouncedSearch, category, showActiveOnly])
+  // Create filter options
+  const categoryFilterOptions: FilterOption<Ingredient>[] = [
+    {
+      key: 'category',
+      label: 'Supply Domain',
+      options: CATEGORIES.map(cat => ({ value: cat, label: cat.replace('_', ' ') }))
+    }
+  ]
+
+  const statusFilterOptions: FilterOption<Ingredient>[] = [
+    {
+      key: 'active',
+      label: 'Entry Lifecycle',
+      options: [
+        { value: 'active', label: 'Active Only' },
+        { value: 'all', label: 'Show All' }
+      ]
+    }
+  ]
+
+  const filterOptions = [...categoryFilterOptions, ...statusFilterOptions]
+
+  const columns: Column<Ingredient>[] = useMemo(() => [
+    {
+      header: 'Item Spec',
+      accessorKey: 'description',
+      cell: (item) => (
+        <div className="space-y-0.5">
+          <div className="font-bold text-foreground text-[13px] tracking-tight group-hover:text-primary transition-colors">{item.description}</div>
+          <div className="font-mono text-[9px] font-bold tracking-wider text-muted-foreground/40 uppercase">{item.itemCode}</div>
+        </div>
+      )
+    },
+    {
+      header: 'Category',
+      accessorKey: 'category',
+      cell: (item) => (
+        <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest bg-slate-100 dark:bg-white/5 px-2 py-0.5 rounded-md">
+          {item.category.replace('_', ' ')}
+        </span>
+      )
+    },
+    {
+      header: 'Base Unit',
+      accessorKey: 'purchaseUnit',
+      cell: (item) => <span className="text-xs font-semibold text-muted-foreground/80 lowercase italic">{item.purchaseUnit}</span>
+    },
+    {
+      header: 'Unit Price',
+      accessorKey: 'purchaseUnitPrice',
+      cell: (item) => <div className="font-bold text-foreground tabular-nums text-[13px]">{currency(item.purchaseUnitPrice)}</div>
+    },
+    {
+      header: 'Conv.',
+      accessorKey: 'ruPerPu',
+      cell: (item) => (
+        <div className="space-y-0.5">
+          <div className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-tight">1 {item.purchaseUnit} =</div>
+          <div className="text-xs font-mono font-bold text-foreground">{item.ruPerPu} <span className="opacity-40 text-[9px] font-sans">{item.recipeUnit.replace('_', ' ')}</span></div>
+        </div>
+      )
+    },
+    {
+      header: 'Yield',
+      accessorKey: 'yieldPct',
+      cell: (item) => <span className="font-mono text-xs font-bold text-foreground/60">{(item.yieldPct * 100).toFixed(0)}%</span>
+    },
+    {
+      header: 'Status',
+      accessorKey: 'active',
+      cell: (item) => <StatusBadge status={item.active ? 'ACTIVE' : 'INACTIVE'} className="scale-75 origin-left" />
+    }
+  ], [])
+
+  const mobileRender = useCallback((item: Ingredient) => (
+    <div className="p-5 bg-white dark:bg-slate-800/40 rounded-xl border border-slate-200 dark:border-white/5 transition-all hover:bg-slate-50/50 dark:hover:bg-white/5 group active:scale-[0.99]">
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex-1 min-w-0 space-y-1.5">
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-[9px] font-bold text-muted-foreground/40 tracking-wider">
+              {item.itemCode}
+            </span>
+            <StatusBadge status={item.active ? 'ACTIVE' : 'INACTIVE'} className="scale-75 origin-left" />
+          </div>
+          <h3 className="font-bold text-[15px] text-foreground leading-tight tracking-tight">
+            {item.description}
+          </h3>
+          <div className="flex items-center gap-2.5 pt-1 text-[11px] font-medium text-muted-foreground/60">
+            <span className="uppercase tracking-widest text-[9px] font-bold opacity-60">
+              {item.category.replace('_', ' ')}
+            </span>
+            <span className="h-1 w-1 rounded-full bg-slate-200 dark:bg-white/10" />
+            <span className="text-foreground/80 font-bold">
+              {currency(item.purchaseUnitPrice)} <span className="font-medium opacity-40 text-[9px]">/ {item.purchaseUnit}</span>
+            </span>
+          </div>
+        </div>
+        <div className="shrink-0 w-8 h-8 rounded-full border border-slate-100 dark:border-white/5 flex items-center justify-center text-muted-foreground/20 group-hover:text-primary transition-colors">
+          <ChevronRight className="h-4 w-4" />
+        </div>
+      </div>
+    </div>
+  ), [])
 
   return (
     <div className="w-full bg-slate-50 dark:bg-slate-950  overflow-hidden flex items-center justify-center p-4 font-sans">
@@ -114,169 +201,38 @@ export default function IngredientList() {
 
         {/* List Content */}
         <main className="flex-1 overflow-y-auto no-scrollbar bg-slate-50/20 dark:bg-transparent">
-          {isLoading ? (
-            <div className="p-6 space-y-4">
-              {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} lines={3} />)}
-            </div>
-          ) : filtered.length === 0 ? (
-            <EmptyState
-              title="No results found"
-              description={search ? `No ingredients match "${search}"` : 'Your ingredient library is empty.'}
-              action={{ label: 'Add Ingredient', onClick: () => navigate('inventory-new-ingredient') }}
+          <div className="p-3">
+            <ResponsiveDataList<Ingredient>
+              data={ingredients || []}
+              columns={columns}
+              mobileRender={mobileRender}
+              onRowClick={(item) => openIngredientDetail(item.id)}
+              searchable
+              searchPlaceholder="Filter by name or SKU..."
+              searchKeys={['description', 'itemCode']}
+              filterable
+              filterOptions={filterOptions}
+              pagination
+              initialPageSize={25}
+              maxHeight="100%"
+              isLoading={isLoading}
+              emptyMessage="No results found"
+              emptyDescription={search ? `No ingredients match "${search}"` : 'Your ingredient library is empty.'}
             />
-          ) : (
-            <div className="w-full">
-              {/* Mobile cards */}
-              <div className="md:hidden p-4 space-y-3">
-                {filtered.map(ing => (
-                  <button
-                    key={ing.id}
-                    onClick={() => openIngredientDetail(ing.id)}
-                    className="w-full text-left bg-white dark:bg-slate-800/40 rounded-xl border border-slate-200 dark:border-white/5 p-5 transition-all hover:bg-slate-50/50 dark:hover:bg-white/5 group active:scale-[0.99]"
-                  >
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1 min-w-0 space-y-1.5">
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono text-[9px] font-bold text-muted-foreground/40 tracking-wider">
-                            {ing.itemCode}
-                          </span>
-                          <StatusBadge status={ing.active ? 'ACTIVE' : 'INACTIVE'} className="scale-75 origin-left" />
-                        </div>
-                        <h3 className="font-bold text-[15px] text-foreground leading-tight tracking-tight">
-                          {ing.description}
-                        </h3>
-                        <div className="flex items-center gap-2.5 pt-1 text-[11px] font-medium text-muted-foreground/60">
-                          <span className="uppercase tracking-widest text-[9px] font-bold opacity-60">
-                            {ing.category.replace('_', ' ')}
-                          </span>
-                          <span className="h-1 w-1 rounded-full bg-slate-200 dark:bg-white/10" />
-                          <span className="text-foreground/80 font-bold">
-                            {currency(ing.purchaseUnitPrice)} <span className="font-medium opacity-40 text-[9px]">/ {ing.purchaseUnit}</span>
-                          </span>
-                        </div>
-                      </div>
-                      <div className="shrink-0 w-8 h-8 rounded-full border border-slate-100 dark:border-white/5 flex items-center justify-center text-muted-foreground/20 group-hover:text-primary transition-colors">
-                        <ChevronRight className="h-4 w-4" />
-                      </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-
-              {/* Desktop table */}
-              <div className="hidden md:block overflow-x-auto">
-                <table className="w-full text-sm border-collapse">
-                  <thead>
-                    <tr className="border-b border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-black/20">
-                      {['Item Spec', 'Category', 'Base Unit', 'Unit Price', 'Conv.', 'Yield', 'Status'].map(h => (
-                        <th key={h} className="px-6 py-3.5 text-left text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest whitespace-nowrap">
-                          {h}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-white/5">
-                    {filtered.map(ing => (
-                      <tr
-                        key={ing.id}
-                        onClick={() => openIngredientDetail(ing.id)}
-                        className="group cursor-pointer hover:bg-slate-50/50 dark:hover:bg-white/5 transition-colors"
-                      >
-                        <td className="px-6 py-4">
-                          <div className="space-y-0.5">
-                            <div className="font-bold text-foreground text-[13px] tracking-tight group-hover:text-primary transition-colors">{ing.description}</div>
-                            <div className="font-mono text-[9px] font-bold tracking-wider text-muted-foreground/40 uppercase">{ing.itemCode}</div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest bg-slate-100 dark:bg-white/5 px-2 py-0.5 rounded-md">
-                            {ing.category.replace('_', ' ')}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-xs font-semibold text-muted-foreground/80 lowercase italic">{ing.purchaseUnit}</td>
-                        <td className="px-6 py-4">
-                          <div className="font-bold text-foreground tabular-nums text-[13px]">{currency(ing.purchaseUnitPrice)}</div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-tight">1 {ing.purchaseUnit} =</div>
-                          <div className="text-xs font-mono font-bold text-foreground">{ing.ruPerPu} <span className="opacity-40 text-[9px] font-sans">{ing.recipeUnit.replace('_', ' ')}</span></div>
-                        </td>
-                        <td className="px-6 py-4 font-mono text-xs font-bold text-foreground/60">{(ing.yieldPct * 100).toFixed(0)}%</td>
-                        <td className="px-6 py-4">
-                          <StatusBadge status={ing.active ? 'ACTIVE' : 'INACTIVE'} className="scale-75 origin-left" />
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
+          </div>
         </main>
 
-        {/* Metadata Footer */}
-        {!isLoading && filtered.length > 0 && (
+        {/* Metadata Footer - only show if not using table's built-in footer */}
+        {!isLoading && ingredients && ingredients.length > 0 && (
           <footer className="shrink-0 px-6 py-3 border-t border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-black/20 flex items-center justify-between">
-            <span className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest">{filtered.length} total entries</span>
+            <span className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest">{ingredients.length} total entries</span>
             <span className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest">Global Master Database</span>
           </footer>
         )}
       </div>
 
-      {/* Filter bottom sheet */}
-      <BottomSheet open={filterOpen} onClose={() => setFilterOpen(false)} title="Data Slicer">
-        <div className="p-6 space-y-8">
-          {/* Status */}
-          <div className="space-y-3">
-            <p className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest">Filter by Lifecycle</p>
-            <div className="flex gap-2">
-              {[{ label: 'Active', val: true }, { label: 'All Entries', val: false }].map(opt => (
-                <button
-                  key={String(opt.val)}
-                  onClick={() => setShowActiveOnly(opt.val)}
-                  className={`flex-1 px-4 py-2.5 rounded-xl border text-[11px] font-bold uppercase tracking-tight transition-all ${showActiveOnly === opt.val
-                      ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 border-slate-900 dark:border-white shadow-lg'
-                      : 'border-slate-200 dark:border-white/10 text-muted-foreground hover:bg-slate-50 dark:hover:bg-white/5'
-                    }`}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Category */}
-          <div className="space-y-4">
-            <p className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest">Department Category</p>
-            <div className="flex flex-wrap gap-2">
-              {CATEGORIES.map(cat => (
-                <button
-                  key={cat}
-                  onClick={() => setCategory(c => c === cat ? undefined : cat)}
-                  className={`px-3.5 py-1.5 rounded-lg border text-[10px] font-bold uppercase tracking-wide transition-all ${category === cat
-                      ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 border-slate-900 dark:border-white shadow-md'
-                      : 'border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 text-muted-foreground/60'
-                    }`}
-                >
-                  {cat.replace('_', ' ')}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <Button
-            variant="ghost"
-            onClick={() => {
-              setCategory(undefined)
-              setShowActiveOnly(true)
-              setFilterOpen(false)
-            }}
-            className="w-full justify-center text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-500/10 font-bold text-xs uppercase tracking-widest"
-          >
-            Reset Filters
-          </Button>
-        </div>
-      </BottomSheet>
+      {/* Filter bottom sheet - removed since we now use built-in filters */}
+      {/* Keeping the filter button for future advanced filters */}
     </div>
   )
 }

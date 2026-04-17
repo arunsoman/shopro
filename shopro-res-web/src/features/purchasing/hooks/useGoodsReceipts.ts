@@ -9,7 +9,7 @@ export const grnKeys = {
   detail: (restaurantId: number, id: number) => [...grnKeys.details(restaurantId), id] as const,
 };
 
-export const useGoodsReceipts = (restaurantId: number, params?: { supplierId?: number }) =>
+export const useGoodsReceipts = (restaurantId: number, params?: { supplierId?: number; status?: string }) =>
   useQuery({
     queryKey: [...grnKeys.lists(restaurantId), params],
     queryFn: () => api.listGoodsReceipts(restaurantId, params),

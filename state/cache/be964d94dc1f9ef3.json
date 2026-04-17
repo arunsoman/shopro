@@ -1,0 +1,26 @@
+{
+  "hash": "be964d94dc1f9ef3",
+  "report": {
+    "rootCause": "The getCurrentPeriod() method throws RuntimeException when no open inventory period exists for the restaurant, and there's no exception handler to convert this to a proper 404 HTTP response",
+    "category": "BE",
+    "affectedFiles": [
+      "shopro-res/src/main/java/mls/sho/dms/application/inventory/service/PhysicalInventoryService.java"
+    ],
+    "affectedMethods": [
+      "getCurrentPeriod"
+    ],
+    "currentBehavior": "When no open period exists, periodRepository.findFirstByRestaurantIdAndInventoryTypeAndStatus() returns empty Optional, which triggers orElseThrow() to throw RuntimeException('No open period found'), resulting in 500 Internal Server Error",
+    "expectedBehavior": "Return a proper 404 Not Found response with a meaningful message, or auto-create a new period if business logic requires one to always exist",
+    "evidence": [
+      "PhysicalInventoryService.java:47-51: orElseThrow(() -> new RuntimeException(\"No open period found\")) - throws unhandled exception when Optional is empty",
+      "InventoryController.java:109-114: getCurrentPeriod() calls the service method without try-catch",
+      "No @ControllerAdvice or @ExceptionHandler exists in the codebase to handle RuntimeException"
+    ],
+    "recommendedFix": "Change PhysicalInventoryService.getCurrentPeriod() to return Optional<PhysicalInventoryPeriodDto> and handle empty case in controller with ResponseEntity.notFound().build(), OR add a global exception handler that maps RuntimeException to 404 status",
+    "confidence": "high"
+  },
+  "affectedFiles": [
+    "shopro-res/src/main/java/mls/sho/dms/application/inventory/service/PhysicalInventoryService.java"
+  ],
+  "cachedAt": "2026-04-16T06:32:33.482Z"
+}

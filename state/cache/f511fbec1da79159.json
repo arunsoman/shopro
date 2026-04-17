@@ -1,0 +1,25 @@
+{
+  "hash": "f511fbec1da79159",
+  "report": {
+    "rootCause": "JPQL query tries to JOIN FETCH a non-existent persistent attribute 'lines' on PurchaseInvoice entity - lines is a derived Java method, not a JPA @OneToMany relationship",
+    "category": "BE",
+    "affectedFiles": [
+      "shopro-res/src/main/java/mls/sho/dms/application/purchasing/repository/PurchaseInvoiceRepository.java"
+    ],
+    "affectedMethods": [
+      "findAllByRestaurantIdAndInvoiceDateBetween"
+    ],
+    "currentBehavior": "Query 'SELECT DISTINCT i FROM PurchaseInvoice i JOIN FETCH i.lines WHERE i.restaurant.id = :restaurantId AND i.invoiceDate BETWEEN :from AND :to' fails because 'lines' is not a mapped JPA relationship",
+    "expectedBehavior": "Query should either use a proper @OneToMany relationship or remove JOIN FETCH and rely on the getLines() method in Java code",
+    "evidence": [
+      "PurchaseInvoice.java lines 55-63: getLines() is a derived method accessing goodsReceipt.getLines(), not a persistent @OneToMany mappedBy field",
+      "PurchaseInvoiceRepository.java line 21: Query uses 'JOIN FETCH i.lines' which requires a JPA @OneToMany relationship that doesn't exist"
+    ],
+    "recommendedFix": "Remove 'JOIN FETCH i.lines' from the JPQL query on line 21. Change to: 'SELECT DISTINCT i FROM PurchaseInvoice i WHERE i.restaurant.id = :restaurantId AND i.invoiceDate BETWEEN :from AND :to'. The service layer already calls getLines() method to access invoice lines via the GoodsReceipt.",
+    "confidence": "high"
+  },
+  "affectedFiles": [
+    "shopro-res/src/main/java/mls/sho/dms/application/purchasing/repository/PurchaseInvoiceRepository.java"
+  ],
+  "cachedAt": "2026-04-16T06:53:35.373Z"
+}

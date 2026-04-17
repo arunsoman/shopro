@@ -5,6 +5,7 @@ import mls.sho.dms.application.purchasing.repository.GoodsReceiptRepository;
 import mls.sho.dms.application.purchasing.repository.PurchaseInvoiceRepository;
 import mls.sho.dms.common.util.ConversionFunctions;
 import mls.sho.dms.application.inventory.service.IngredientService;
+import mls.sho.dms.application.inventory.service.InventoryIntelligenceService;
 import mls.sho.dms.common.enums.InventoryCategory;
 import mls.sho.dms.common.enums.PurchaseCategory;
 import mls.sho.dms.application.purchasing.dto.PurchaseInvoiceDTO;
@@ -16,6 +17,7 @@ import mls.sho.dms.entity.PurchaseOrderLine;
 import mls.sho.dms.entity.Restaurant;
 import mls.sho.dms.entity.Supplier;
 import mls.sho.dms.entity.GoodsReceipt;
+import mls.sho.dms.application.inventory.repository.IngredientRepository;
 import java.math.RoundingMode;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -70,6 +72,8 @@ public class PurchaseInvoiceService {
 
     private final PurchaseInvoiceRepository invoiceRepository;
     private final GoodsReceiptRepository grnRepository;
+    private final IngredientRepository ingredientRepository;
+    private final InventoryIntelligenceService intelligenceService;
 
     @Transactional(readOnly = true)
     public List<PurchaseInvoice> getInvoices(Long restaurantId, PurchaseInvoice.InvoiceStatus status) {
@@ -115,7 +119,38 @@ public class PurchaseInvoiceService {
         invoice.setStatus(PurchaseInvoice.InvoiceStatus.POSTED);
         invoiceRepository.save(invoice);
 
-        // TODO: Publish InvoicePostedEvent
+        // Update ingredient cost basis from invoice lines
+        updateIngredientCostBasis(invoice);
+    }
+
+    /**
+     * Updates ingredient cost basis after invoice is posted.
+     * This ensures real-time inventory valuation uses current purchase prices.
+     */
+    private void updateIngredientCostBasis(PurchaseInvoice invoice) {
+        if (invoice.getGoodsReceipt() == null) return;
+        
+        List<PurchaseOrderLine> lines = invoice.getGoodsReceipt().getLines();
+        if (lines == null) return;
+        
+        for (PurchaseOrderLine line : lines) {
+            Ingredient ingredient = line.getIngredient();
+            if (ingredient != null && line.getUnitPrice() != null) {
+                // Update the last purchase price for cost basis tracking
+                ingredient.setPurchaseUnitPrice(line.getUnitPrice());
+                ingredientRepository.save(ingredient);
+                
+                // Create ledger entry for cost basis update
+                // This allows tracking price history and variance analysis
+                intelligenceService.recordCostBasisUpdate(
+                    invoice.getRestaurant(),
+                    ingredient,
+                    line.getUnitPrice(),
+                    line.getReceivedQty(),
+                    invoice.getId()
+                );
+            }
+        }
     }
 
     @Transactional

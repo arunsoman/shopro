@@ -1,34 +1,38 @@
 import React from 'react'
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/Table"
+import { ResponsiveDataList, type Column } from "@/components/shared/ResponsiveDataList"
 import { PurchaseCategory } from "@/types"
 
 export interface CategoryBreakdownTableProps {
   data: { category: PurchaseCategory; amount: number; pct: number }[];
 }
 
+const categoryColumns: Column<{ category: PurchaseCategory; amount: number; pct: number }>[] = [
+  { 
+    header: 'Category', 
+    accessorKey: 'category', 
+    cell: (item) => <span className="font-medium text-foreground">{item.category}</span> 
+  },
+  { 
+    header: 'Total Amount', 
+    accessorKey: 'amount', 
+    className: 'text-right',
+    cell: (item) => <span className="font-mono font-bold">${(item.amount || 0).toFixed(2)}</span> 
+  },
+  { 
+    header: '% of Store', 
+    accessorKey: 'pct', 
+    className: 'text-right',
+    cell: (item) => <span className="font-mono text-xs text-muted-foreground">{(item.pct || 0).toFixed(1)}%</span> 
+  }
+];
+
 export function CategoryBreakdownTable({ data }: CategoryBreakdownTableProps) {
   return (
-    <div className="border rounded-xl bg-surface overflow-hidden">
-      <Table>
-        <TableHeader className="bg-muted/50">
-          <TableRow>
-            <TableHead>Category</TableHead>
-            <TableHead className="text-right">Total Amount</TableHead>
-            <TableHead className="text-right">% of Store</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {data.map((item) => (
-            <TableRow key={item.category}>
-              <TableCell className="font-medium text-foreground">{item.category}</TableCell>
-              <TableCell className="text-right font-mono font-bold">${(item.amount || 0).toFixed(2)}</TableCell>
-              <TableCell className="text-right text-muted-foreground font-mono text-xs">
-                {(item.pct || 0).toFixed(1)}%
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+    <ResponsiveDataList
+      data={data}
+      columns={categoryColumns}
+      emptyMessage="No category data"
+      emptyDescription="No spending data available for this period."
+    />
   )
 }

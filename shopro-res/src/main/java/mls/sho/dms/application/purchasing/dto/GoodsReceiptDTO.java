@@ -26,6 +26,7 @@ public class GoodsReceiptDTO {
         private String ingredientDescription;
         private BigDecimal receivedQty;
         private BigDecimal unitPrice;
+        private BigDecimal lineTotal;  // receivedQty * unitPrice
         private boolean hasConflict;
         private String conflictReason;
     }

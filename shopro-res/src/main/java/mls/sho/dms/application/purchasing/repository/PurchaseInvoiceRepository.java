@@ -16,7 +16,7 @@ public interface PurchaseInvoiceRepository extends JpaRepository<PurchaseInvoice
     @Query("SELECT COUNT(i) FROM PurchaseInvoice i WHERE i.restaurant.id = :restaurantId AND i.status = 'DRAFT'")
     long countDraftInvoices(@Param("restaurantId") Long restaurantId);
 
-    @Query("SELECT DISTINCT i FROM PurchaseInvoice i JOIN FETCH i.lines WHERE i.restaurant.id = :restaurantId AND i.invoiceDate BETWEEN :from AND :to")
+    @Query("SELECT DISTINCT i FROM PurchaseInvoice i WHERE i.restaurant.id = :restaurantId AND i.invoiceDate BETWEEN :from AND :to")
     List<PurchaseInvoice> findAllByRestaurantIdAndInvoiceDateBetween(
             @Param("restaurantId") Long restaurantId, 
             @Param("from") LocalDate from, 

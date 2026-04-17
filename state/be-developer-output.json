@@ -1,42 +1,31 @@
 {
   "agentId": "be-developer",
-  "issue": "In the page element with name 'Pending Reconciliation', calling 'http://localhost:5173/api/v1/restaurants/1/purchasing/grns/stale' when hitting the url is not giveing the complete data ",
+  "issue": "d\nCaused by: org.springframework.data.repository.query.QueryCreationException: Could not create query for public abstract java.util.List mls.sho.dms.application.purchasing.repository.PurchaseInvoiceRepository.findAllByRestaurantIdAndInvoiceDateBetween(java.lang.Long,java.time.LocalDate,java.time.LocalDate); Reason: Validation failed for query for method public abstract java.util.List mls.sho.dms.application.purchasing.repository.PurchaseInvoiceRepository.findAllByRestaurantIdAndInvoiceDateBetween(java.lang.Long,java.time.LocalDate,java.time.LocalDate)   d\nCaused by: java.lang.IllegalArgumentException: org.hibernate.query.sqm.UnknownPathException: Could not resolve attribute 'lines' of 'mls.sho.dms.entity.PurchaseInvoice' [SELECT DISTINCT i FROM PurchaseInvoice i JOIN FETCH i.lines WHERE i.restaurant.id = :restaurantId AND i.invoiceDate BETWEEN :from AND :to]",
   "report": {
-    "rootCause": "The /stale endpoint query filters by receivedDate < threshold, returning only GRNs older than X days instead of ALL unmatched GRNs that need reconciliation",
+    "rootCause": "JPQL query tries to JOIN FETCH a non-existent persistent attribute 'lines' on PurchaseInvoice entity - lines is a derived Java method, not a JPA @OneToMany relationship",
     "category": "BE",
     "affectedFiles": [
-      "shopro-res/src/main/java/mls/sho/dms/application/purchasing/repository/GoodsReceiptRepository.java"
+      "shopro-res/src/main/java/mls/sho/dms/application/purchasing/repository/PurchaseInvoiceRepository.java"
     ],
     "affectedMethods": [
-      "findStaleGRNs"
+      "findAllByRestaurantIdAndInvoiceDateBetween"
     ],
-    "currentBehavior": "Query: AND g.receivedDate < :threshold — only returns GRNs received more than X days ago that have no invoice",
-    "expectedBehavior": "Should return ALL GRNs with status RECEIVED that have no matching PurchaseInvoice, regardless of age",
+    "currentBehavior": "Query 'SELECT DISTINCT i FROM PurchaseInvoice i JOIN FETCH i.lines WHERE i.restaurant.id = :restaurantId AND i.invoiceDate BETWEEN :from AND :to' fails because 'lines' is not a mapped JPA relationship",
+    "expectedBehavior": "Query should either use a proper @OneToMany relationship or remove JOIN FETCH and rely on the getLines() method in Java code",
     "evidence": [
-      "GoodsReceiptRepository.java:16-20: @Query includes 'AND g.receivedDate < :threshold' which filters by age",
-      "GoodsReceiptRepository.java:28-31: countUnmatchedGRNs() does NOT filter by receivedDate - shows the expected behavior",
-      "MatchingDashboardPage.tsx:82: Shows staleGRNs?.length for 'Open GRNs' count - expects ALL unmatched, not just stale"
+      "PurchaseInvoice.java lines 55-63: getLines() is a derived method accessing goodsReceipt.getLines(), not a persistent @OneToMany mappedBy field",
+      "PurchaseInvoiceRepository.java line 21: Query uses 'JOIN FETCH i.lines' which requires a JPA @OneToMany relationship that doesn't exist"
     ],
-    "recommendedFix": "Remove 'AND g.receivedDate < :threshold' from the findStaleGRNs query in GoodsReceiptRepository.java line 18, or create a separate endpoint for ALL unmatched GRNs",
+    "recommendedFix": "Remove 'JOIN FETCH i.lines' from the JPQL query on line 21. Change to: 'SELECT DISTINCT i FROM PurchaseInvoice i WHERE i.restaurant.id = :restaurantId AND i.invoiceDate BETWEEN :from AND :to'. The service layer already calls getLines() method to access invoice lines via the GoodsReceipt.",
     "confidence": "high"
   },
-  "output": "I'll read the GoodsReceiptRepository.java file to see the exact code and apply the fix.\nNow I'll apply the fix - removing the `AND g.receivedDate < :threshold` filter and the unused threshold parameter from the `findStaleGRNs` method to match the behavior of `countUnmatchedGRNs`:\nNow I need to find where this method is called to update the caller. Let me search for usages:\nLet me search for where this method is called:\nNow I need to update the service method that calls the repository - it needs to be updated since the method signature changed:\nNow I need to update the REST controller that calls this service method:\nLet me check where the REST controllers are:\nLet me search for the endpoint definition in another way - check the web layer:\nLet me search for a file that might reference getStaleGRNs:\nLet me try the controller folder that was mentioned in other parts of the codebase:\nLet me search for any file that might have a path with \"purchasing\" and \"rest\" or \"api\":\nLet me try to check if there's a file in a package called \"purchasing\" in the root of the application:\nLet me check for other Java files in the project:\n\nLet me check for other paths:\nLet me try a different approach - I'll check the project structure by looking at what's in the main folder:\nLet me try running Maven to check if there are compilation errors:\nLet me check the project structure from the root:\nLet me check if there's a controller in another part of the project:\nLet me verify the changes I made are correct:\nGood. Now let me verify the service change:\nLet me check another likely path:\nI found the PurchasingController! Let me search for another controller that handles the /purchasing/grns path:\nFound it! Now I need to update this controller to match the new service method signature (removing the `days` parameter):\nNow let me verify all the changes are correct by reading the modified files:\nAll changes have been applied. Here's the summary:\n\n---\n\n## Files Changed\n\n### 1. `/home/arun/IdeaProjects/shopro-pos/shopro-res/src/main/java/mls/sho/dms/application/purchasing/repository/GoodsReceiptRepository.java`\n- **Change:** Removed `AND g.receivedDate < :threshold` from the `findStaleGRNs` query\n- The query now returns ALL unmatched GRNs (status=RECEIVED without a matching PurchaseInvoice) instead of only GRNs older than X days\n\n### 2. `/home/arun/IdeaProjects/shopro-pos/shopro-res/src/main/java/mls/sho/dms/application/purchasing/service/GoodsReceiptService.java`\n- **Change:** Updated `getStaleGRNs` method to remove the `daysThreshold` parameter\n- Now accepts only `restaurantId` and calls the repository without the threshold filter\n\n### 3. `/home/arun/IdeaProjects/shopro-pos/shopro-res/src/main/java/mls/sho/dms/application/purchasing/web/GoodsReceiptController.java`\n- **Change:** Updated the `/stale` endpoint to remove the `days` request parameter\n- The endpoint no longer accepts the optional `days` parameter\n\n---\n\n## How to Verify\n\n1. **Restart the backend server** to pick up the changes\n\n2. **Test the endpoint:**\n   ```bash\n   curl http://localhost:8080/api/v1/restaurants/1/purchasing/grns/stale\n   ```\n\n3. **Verify the response** now includes ALL unmatched GRNs (GRNs with status=RECEIVED that don't have a matching PurchaseInvoice), not just stale ones\n\n4. **Compare with frontend count:** The \"Open GRNs\" count on the Matching Dashboard should now match the count returned by `countUnmatchedGRNs()` method",
+  "output": "I'll read the file to confirm the exact code before applying the fix.\nNow I'll apply the fix by removing the `JOIN FETCH i.lines` from the JPQL query:\n## Fix Applied ✓\n\n**File Changed:**\n- `/home/arun/IdeaProjects/shopro-pos/shopro-res/src/main/java/mls/sho/dms/application/purchasing/repository/PurchaseInvoiceRepository.java`\n\n**What Was Changed:**\n- Removed `JOIN FETCH i.lines` from the JPQL query on line 18\n- Changed from:\n  ```java\n  @Query(\"SELECT DISTINCT i FROM PurchaseInvoice i JOIN FETCH i.lines WHERE i.restaurant.id = :restaurantId AND i.invoiceDate BETWEEN :from AND :to\")\n  ```\n- Changed to:\n  ```java\n  @Query(\"SELECT DISTINCT i FROM PurchaseInvoice i WHERE i.restaurant.id = :restaurantId AND i.invoiceDate BETWEEN :from AND :to\")\n  ```\n\n**How to Verify:**\n1. Restart the application or trigger the affected code path (e.g., search purchase invoices by date range in the UI)\n2. The previous error `UnknownPathException: Could not resolve attribute 'lines'` should no longer occur\n3. The service layer already calls `getLines()` to access invoice lines via GoodsReceipt, so functionality remains intact",
   "filesChanged": [
     {
-      "file": "/home/arun/IdeaProjects/shopro-pos/shopro-res/src/main/java/mls/sho/dms/application/purchasing/repository/GoodsReceiptRepository.java",
+      "file": "/home/arun/IdeaProjects/shopro-pos/shopro-res/src/main/java/mls/sho/dms/application/purchasing/repository/PurchaseInvoiceRepository.java",
       "action": "MODIFIED",
-      "timestamp": "2026-04-16T00:08:01.502Z"
-    },
-    {
-      "file": "/home/arun/IdeaProjects/shopro-pos/shopro-res/src/main/java/mls/sho/dms/application/purchasing/service/GoodsReceiptService.java",
-      "action": "MODIFIED",
-      "timestamp": "2026-04-16T00:08:01.502Z"
-    },
-    {
-      "file": "/home/arun/IdeaProjects/shopro-pos/shopro-res/src/main/java/mls/sho/dms/application/purchasing/web/GoodsReceiptController.java",
-      "action": "MODIFIED",
-      "timestamp": "2026-04-16T00:08:01.502Z"
+      "timestamp": "2026-04-16T06:54:07.210Z"
     }
   ],
-  "completedAt": "2026-04-16T00:08:01.502Z"
+  "completedAt": "2026-04-16T06:54:07.210Z"
 }

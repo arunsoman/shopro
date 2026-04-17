@@ -46,7 +46,7 @@ export interface LowStockAlertDto {
   description: string
   category: InventoryCategory
   inventoryType: InventoryType
-  currentCount: number
+  onHand: number
   parLevel: number
   inventoryUnit: InventoryUnit
   shortfallAmount: number
@@ -97,7 +97,7 @@ export function useIngredientCosts(id: number | null) {
 
 export function useLowStockAlerts() {
   const { restaurantId } = useRestaurantStore()
-  return useQuery<Ingredient[]>({
+  return useQuery<LowStockAlertDto[]>({
     queryKey: ['low-stock', restaurantId],
     queryFn: () =>
       api.get(`/restaurants/${restaurantId}/ingredients/low-stock`).then(r => r.data),

@@ -2,7 +2,7 @@ import React from 'react'
 import { Card } from "@/components/ui/Card"
 import { Input } from "@/components/ui/Input"
 import { Label } from "@/components/ui/Label"
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/Table"
+import { ResponsiveDataList, type Column } from "@/components/shared/ResponsiveDataList"
 import { PurchaseCategory } from "@/types"
 import { cn } from "@/lib/utils"
 
@@ -23,8 +23,63 @@ const CATEGORIES: { key: PurchaseCategory; label: string }[] = [
   { key: 'SUPPLIES', label: 'Paper & Chemical Supplies' },
 ]
 
+interface CategoryRow {
+  id: PurchaseCategory;
+  key: PurchaseCategory;
+  label: string;
+  amount: number;
+}
+
 export function CategoryLinesTable({ lines, onChange, readOnly = false }: CategoryLinesTableProps) {
   const sum = Object.values(lines).reduce((acc, curr) => acc + (curr || 0), 0)
+
+  const tableData: CategoryRow[] = CATEGORIES.map(cat => ({
+    id: cat.key,
+    key: cat.key,
+    label: cat.label,
+    amount: lines[cat.key] || 0
+  }))
+
+  const columns: Column<CategoryRow>[] = [
+    { 
+      header: 'Category', 
+      accessorKey: 'label',
+      cell: (row) => <span className="font-medium text-foreground">{row.label}</span>
+    },
+    {
+      header: 'Amount ($)',
+      accessorKey: 'amount',
+      className: 'text-right',
+      cell: (row) => (
+        <Input
+          type="number"
+          step="0.01"
+          className="border-none rounded-none text-right font-mono bg-transparent h-12 focus-visible:ring-0 focus-visible:bg-muted/20 max-w-[120px]"
+          value={row.amount || ''}
+          placeholder="0.00"
+          onChange={(e) => onChange(row.key, parseFloat(e.target.value) || 0)}
+          disabled={readOnly}
+        />
+      )
+    },
+    {
+      header: '% of Total',
+      accessorKey: 'amount',
+      className: 'text-right w-[120px]',
+      cell: (row) => {
+        const pct = sum > 0 ? (row.amount / sum) * 100 : 0
+        return <span className="font-mono text-xs text-muted-foreground">{(pct || 0).toFixed(1)}%</span>
+      }
+    }
+  ]
+
+  // Add total row
+  const totalRow: CategoryRow = {
+    id: 'TOTAL' as PurchaseCategory,
+    key: 'TOTAL' as PurchaseCategory,
+    label: 'Grand Total',
+    amount: sum
+  }
 
   return (
     <div className="space-y-4">
@@ -35,47 +90,13 @@ export function CategoryLinesTable({ lines, onChange, readOnly = false }: Catego
         </div>
       </div>
 
-      <div className="border rounded-xl bg-surface overflow-hidden">
-        <Table>
-          <TableHeader className="bg-muted/30">
-            <TableRow>
-              <TableHead className="w-[300px]">Category</TableHead>
-              <TableHead className="text-right">Amount ($)</TableHead>
-              <TableHead className="text-right w-[120px]">% of Total</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {CATEGORIES.map((cat) => {
-              const amount = lines[cat.key] || 0
-              const pct = sum > 0 ? (amount / sum) * 100 : 0
-              return (
-                <TableRow key={cat.key} className="hover:bg-muted/10">
-                  <TableCell className="font-medium text-foreground">{cat.label}</TableCell>
-                  <TableCell className="text-right p-0">
-                    <Input
-                      type="number"
-                      step="0.01"
-                      className="border-none rounded-none text-right font-mono bg-transparent h-12 focus-visible:ring-0 focus-visible:bg-muted/20"
-                      value={amount || ''}
-                      placeholder="0.00"
-                      onChange={(e) => onChange(cat.key, parseFloat(e.target.value) || 0)}
-                      disabled={readOnly}
-                    />
-                  </TableCell>
-                  <TableCell className="text-right text-muted-foreground font-mono text-xs">
-                    {(pct || 0).toFixed(1)}%
-                  </TableCell>
-                </TableRow>
-              )
-            })}
-            <TableRow className="bg-muted/20 border-t-2 font-bold">
-              <TableCell>Grand Total</TableCell>
-              <TableCell className="text-right font-mono text-lg">${(sum || 0).toFixed(2)}</TableCell>
-              <TableCell className="text-right">100%</TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
-      </div>
+      <ResponsiveDataList<CategoryRow>
+        data={tableData}
+        columns={columns}
+        maxHeight="400px"
+        emptyMessage="No categories"
+        emptyDescription="Add category amounts."
+      />
     </div>
   )
 }

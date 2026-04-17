@@ -7,6 +7,7 @@ import mls.sho.dms.application.costing.repository.RecipeRepository;
 import mls.sho.dms.entity.*;
 import mls.sho.dms.common.enums.*;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +22,7 @@ import java.util.stream.Collectors;
  */
 @Component
 @RequiredArgsConstructor
+@Order(100) // Run after most other seeders to ensure recipes are linked
 public class AfghanIngredientSeeder implements CommandLineRunner {
 
     private final IngredientRepository ingredientRepository;
@@ -36,20 +38,30 @@ public class AfghanIngredientSeeder implements CommandLineRunner {
         Restaurant res = restaurantRepository.findById(1L).orElse(null);
         if (res == null) return;
 
-        // 1. SEED INGREDIENTS (50 ITEMS)
+        // 1. SEED INGREDIENTS (50 ITEMS) - Only if our specific ingredients are missing
         if (ingredientRepository.findByRestaurantIdAndItemCode(1L, "PR-01").isEmpty()) {
             seedIngredients(res);
         }
 
-        // 2. SEED BATCH RECIPES (PREP ITEMS)
-        if (recipeRepository.count() < 1) {
+        // 2. SEED BATCH RECIPES - Skip if they already exist (check by unique name)
+        List<Recipe> existingBatchRecipes = recipeRepository.findAll().stream()
+                .filter(r -> r.getRecipeType() == RecipeType.BATCH && r.getMenuItem() == null)
+                .collect(Collectors.toList());
+        
+        if (existingBatchRecipes.isEmpty()) {
             seedRecipes(res);
+        } else {
+            // Recipes exist, ensure they have ingredient lines
+            for (Recipe r : existingBatchRecipes) {
+                if (r.getIngredientLines() == null || r.getIngredientLines().isEmpty()) {
+                    // This shouldn't happen but log it
+                    System.out.println("WARNING: Recipe " + r.getName() + " exists but has no ingredient lines!");
+                }
+            }
         }
 
-        // 3. SEED MENU ITEMS
-        if (menuItemRepository.count() < 1) {
-            seedMenuItems(res);
-        }
+        // 3. SEED MENU ITEMS WITH PLATE RECIPES - Always try, handles duplicates gracefully
+        seedMenuItems(res);
     }
 
     private void seedIngredients(Restaurant res) {
@@ -148,15 +160,33 @@ public class AfghanIngredientSeeder implements CommandLineRunner {
     }
 
     private void createPlateItem(Restaurant res, MenuCostGroup group, String posId, String name, String price, int prepTime, String sourceRecipeName) {
-        MenuItem item = new MenuItem();
-        item.setRestaurant(res);
-        item.setGroup(group);
-        item.setPosId(posId);
-        item.setName(name);
-        item.setSellPriceBuffer(new BigDecimal(price));
-        item.setPrepTimeMinutes(prepTime);
-        item.setTargetFoodCostPct(new BigDecimal("0.28"));
-        item = menuItemRepository.save(item);
+        // Check if menu item already exists - if so, use it
+        MenuItem item = menuItemRepository.findAll().stream()
+                .filter(m -> m.getPosId() != null && m.getPosId().equals(posId))
+                .findFirst()
+                .orElse(null);
+        
+        if (item == null) {
+            // Create new menu item
+            item = new MenuItem();
+            item.setRestaurant(res);
+            item.setGroup(group);
+            item.setPosId(posId);
+            item.setName(name);
+            item.setSellPriceBuffer(new BigDecimal(price));
+            item.setPrepTimeMinutes(prepTime);
+            item.setTargetFoodCostPct(new BigDecimal("0.28"));
+            item = menuItemRepository.save(item);
+        }
+
+        // Check if this menu item already has an active PLATE recipe
+        boolean hasPlateRecipe = item.getRecipes() != null && item.getRecipes().stream()
+                .anyMatch(r -> r.getRecipeType() == RecipeType.PLATE && r.isActive());
+        
+        if (hasPlateRecipe) {
+            System.out.println("Menu item " + posId + " already has a plate recipe, skipping...");
+            return;
+        }
 
         Recipe batchSource = recipeRepository.findAll().stream()
                 .filter(r -> r.getName().equals(sourceRecipeName))

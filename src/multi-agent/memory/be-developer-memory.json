@@ -156,6 +156,20 @@
     "All entities in mls.sho.dms.entity package",
     "All services in mls.sho.dms.application.*.service package"
   ],
+  "recentFixes": [
+    {
+      "timestamp": "2026-04-16T06:47:00Z",
+      "issue": "GET /inventory/periods/current returned 500 when no open period existed",
+      "fix": "Changed service method to return Optional<Dto> using .map(this::toDto) instead of orElseThrow(RuntimeException). Controller uses .map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build()).",
+      "pattern": "Use Optional return type + controller 404 handling instead of throwing raw RuntimeException"
+    },
+    {
+      "timestamp": "2026-04-16T06:54:00Z",
+      "issue": "Spring startup failed: UnknownPathException for 'lines' in JPQL JOIN FETCH on PurchaseInvoice",
+      "fix": "Removed JOIN FETCH i.lines from the @Query — 'lines' was a derived Java method (getLines() via GoodsReceipt), not a JPA @OneToMany field",
+      "pattern": "Only JOIN FETCH actual @OneToMany/@ManyToOne mapped fields, not derived Java methods"
+    }
+  ],
   "knownPitfalls": [
     "Flyway migration folder is empty - ensure proper migration strategy",
     "Large number of entities may need optimization with indexes",

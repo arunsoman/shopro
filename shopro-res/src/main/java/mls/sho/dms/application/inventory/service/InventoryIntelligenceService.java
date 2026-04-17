@@ -190,16 +190,52 @@ public class InventoryIntelligenceService {
 
         if (activeRecipe == null) return;
 
+        // Get recipe yield quantity (how many portions this recipe produces)
+        // Default to 1 if not set (single portion recipe)
+        BigDecimal recipeYieldQty = activeRecipe.getYieldQuantity();
+        if (recipeYieldQty == null || recipeYieldQty.compareTo(BigDecimal.ZERO) <= 0) {
+            recipeYieldQty = BigDecimal.ONE;
+        }
+
+        // Check if this is a BATCH recipe - batch recipes need yield factor applied
+        // PLATE recipes already have per-portion quantities (converted at recipe creation time)
+        boolean isBatchRecipe = activeRecipe.getRecipeType() == mls.sho.dms.common.enums.RecipeType.BATCH;
+
         // Sort lines by line number
         List<RecipeIngredientLine> sortedLines = new ArrayList<>(activeRecipe.getIngredientLines());
         sortedLines.sort(Comparator.comparing(RecipeIngredientLine::getLineNumber));
 
         for (RecipeIngredientLine recipeLine : sortedLines) {
-            BigDecimal totalUsage = quantity.multiply(recipeLine.getQuantityRu());
+            // Base calculation: order quantity * recipe unit quantity per portion
+            BigDecimal baseUsage = quantity.multiply(recipeLine.getQuantityRu());
+
+            // Apply recipe yield factor only for BATCH recipes
+            // For BATCH recipes: quantityRu is for the entire batch, so we need to scale by (orderQty / yieldQty)
+            // For PLATE recipes: quantityRu is already per-portion, so no scaling needed
+            BigDecimal totalUsage = baseUsage;
+            if (isBatchRecipe && recipeYieldQty.compareTo(BigDecimal.ONE) > 0) {
+                // For batch recipes: (orderQty * batchQty) / yieldQty
+                // Example: ordering 15 portions from a batch that makes 10 = 1.5 batches
+                totalUsage = quantity.multiply(recipeLine.getQuantityRu())
+                        .divide(recipeYieldQty, 6, RoundingMode.HALF_UP);
+            }
+
+            // Apply ingredient yield percentage (yieldPct)
+            // This accounts for inedible portions (trimming, bones, spoilage, etc.)
+            // If yieldPct is 0.85 (85% usable), we need to use more purchased quantity
+            // to get the required usable amount
+            Ingredient ingredient = recipeLine.getIngredient();
+            if (ingredient != null && ingredient.getYieldPct() != null 
+                    && ingredient.getYieldPct().compareTo(BigDecimal.ZERO) > 0
+                    && ingredient.getYieldPct().compareTo(BigDecimal.ONE) < 1) {
+                // Divide by yieldPct to get the actual purchase quantity needed
+                // e.g., need 1kg usable chicken with 85% yield = 1/0.85 = 1.176kg purchase qty
+                totalUsage = totalUsage.divide(ingredient.getYieldPct(), 6, RoundingMode.HALF_UP);
+            }
 
             // Since nested sub-recipes were removed, we only look at direct Ingredients
-            if (recipeLine.getIngredient() != null) {
-                depleteFifoBulk(restaurant, recipeLine.getIngredient(), totalUsage, 
+            if (ingredient != null) {
+                depleteFifoBulk(restaurant, ingredient, totalUsage, 
                         type, orderId, lineItemId, item.getId(), reason, null, orderDate, actor, entries, lotsToUpdate, wastes);
             }
         }
@@ -343,7 +379,9 @@ public class InventoryIntelligenceService {
                 Ingredient ing = line.getIngredient();
                 if (ing == null) continue;
 
-                BigDecimal currentPrice = getCurrentBatchPrice(item.getRestaurant().getId(), ing.getId());
+                // Use ingredient's purchase price as fallback instead of lot price
+                // to avoid pessimistic locking issues in read-only transactions
+                BigDecimal currentPrice = getCurrentBatchPriceReadOnly(item.getRestaurant().getId(), ing.getId());
                 BigDecimal lineCost = line.getQuantityRu().multiply(currentPrice).setScale(4, RoundingMode.HALF_UP);
                 totalCostBasis = totalCostBasis.add(lineCost);
 
@@ -410,6 +448,24 @@ public class InventoryIntelligenceService {
         return lots.get(0).getUnitPrice();
     }
 
+    /**
+     * Read-only version that doesn't use pessimistic locking.
+     * Uses ingredient's purchase price as fallback.
+     */
+    private BigDecimal getCurrentBatchPriceReadOnly(Long restaurantId, Long ingredientId) {
+        try {
+            List<InventoryActiveLot> lots = activeLotRepository.findAllByRestaurantIdAndActiveTrueOrderByExpiryDateAsc(restaurantId).stream()
+                    .filter(lot -> lot.getIngredient().getId().equals(ingredientId) && lot.getAvailableQty().compareTo(BigDecimal.ZERO) > 0)
+                    .toList();
+            if (!lots.isEmpty()) {
+                return lots.get(0).getUnitPrice();
+            }
+        } catch (Exception e) {
+            // Ignore - will fallback to ingredient purchase price
+        }
+        return BigDecimal.ZERO;
+    }
+
     private InventoryIngredientLedger createLedgerEntry(Restaurant restaurant, Ingredient ingredient, StockMovementType type,
                                                         BigDecimal quantity, BigDecimal unitCost, BigDecimal taxAmount,
                                                         InventoryActiveLot lot,
@@ -466,5 +522,43 @@ public class InventoryIntelligenceService {
     public BigDecimal getLiveQuantity(Long restaurantId, Long ingredientId) {
         BigDecimal qty = ledgerRepository.sumQuantityByIngredient(restaurantId, ingredientId);
         return qty != null ? qty : BigDecimal.ZERO;
+    }
+
+    /**
+     * Records cost basis update when an invoice is posted.
+     * This creates a ledger entry for price variance analysis and tracks
+     * the last purchase price for ingredient cost tracking.
+     */
+    @Transactional
+    public void recordCostBasisUpdate(Restaurant restaurant, Ingredient ingredient, BigDecimal unitPrice, BigDecimal quantity, Long invoiceId) {
+        createLedgerEntry(
+            restaurant,
+            ingredient,
+            StockMovementType.COST_BASIS_UPDATE,
+            quantity, // positive quantity to add to ledger
+            unitPrice,
+            BigDecimal.ZERO, // no tax on cost basis
+            null, // no lot
+            null, // grnId
+            null, // poId
+            null, // supplierId
+            null, // orderId
+            null, // lineItemId
+            null, // menuId
+            LocalDateTime.now(),
+            "INVOICE_POST",
+            "COST_BASIS_UPDATE"
+        );
+
+        // Record experiment metric for cost tracking
+        if (restaurant != null) {
+            BigDecimal totalValue = unitPrice.multiply(quantity);
+            experimentService.recordMetric(
+                restaurant.getId(),
+                "INVOICE_POSTED_VALUE",
+                totalValue,
+                java.util.Map.of("ingredientId", ingredient.getId().toString(), "invoiceId", String.valueOf(invoiceId))
+            );
+        }
     }
 }

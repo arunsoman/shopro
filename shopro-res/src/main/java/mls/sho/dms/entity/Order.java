@@ -4,8 +4,10 @@ import jakarta.persistence.*;
 import lombok.Data;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Order header linked to a session.
@@ -14,6 +16,8 @@ import java.util.List;
 @Table(name = "restaurant_order")
 @Data
 public class Order {
+
+    private static final AtomicLong orderCounter = new AtomicLong(System.currentTimeMillis() % 100000);
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -57,6 +61,15 @@ public class Order {
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderLine> lines = new ArrayList<>();
+
+    @PrePersist
+    public void generateOrderNumber() {
+        if (this.orderNumber == null) {
+            String datePart = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+            String uniquePart = String.format("%05d", orderCounter.incrementAndGet() % 100000);
+            this.orderNumber = "ORD-" + datePart + "-" + uniquePart;
+        }
+    }
 
     public enum OrderStatus { PENDING, PAID, CANCELLED }
 }

@@ -249,7 +249,18 @@ export default function PODetailPage() {
                               <span className="font-bold text-[10px] text-indigo-600 uppercase tracking-widest italic flex items-center gap-2">
                                  <LayoutList size={12} /> Goods Receipt
                               </span>
-                              <Badge variant="outline" className="text-[9px] uppercase tracking-widest">{grn.status}</Badge>
+                              <div className="flex items-center gap-2">
+                                 {!grn.invoiceId && (
+                                    <Button 
+                                       size="sm" 
+                                       onClick={() => { useAppStore.setState({ selectedGRNId: String(grn.id) }); navigate('purchase-invoice-editor'); }}
+                                       className="h-7 px-3 rounded-lg text-[10px] font-bold"
+                                    >
+                                       Create Invoice
+                                    </Button>
+                                 )}
+                                 <Badge variant="outline" className="text-[9px] uppercase tracking-widest">{grn.status}</Badge>
+                              </div>
                            </div>
                            <div>
                               <p className="text-2xl font-black text-foreground">GRN #{grn.id}</p>

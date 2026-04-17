@@ -8,10 +8,11 @@ export const supplierKeys = {
   search: (restaurantId: number, query: string) => [...supplierKeys.all, 'search', restaurantId, query] as const,
 }
 
-export const useSuppliers = (restaurantId: number) =>
+export const useSuppliers = (restaurantId: number, options?: { enabled?: boolean }) =>
   useQuery({
     queryKey: supplierKeys.lists(restaurantId),
     queryFn: () => api.listSuppliers(restaurantId),
+    enabled: options?.enabled ?? true,
   })
 
 export const useSearchSuppliers = (restaurantId: number, query: string) =>

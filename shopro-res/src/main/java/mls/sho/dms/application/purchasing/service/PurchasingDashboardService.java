@@ -1,11 +1,14 @@
 package mls.sho.dms.application.purchasing.service;
 
 import lombok.RequiredArgsConstructor;
+import mls.sho.dms.application.inventory.repository.IngredientRepository;
 import mls.sho.dms.application.purchasing.dto.PurchasingDashboardDTO;
+import mls.sho.dms.application.purchasing.dto.PurchasingHubCountsDTO;
 import mls.sho.dms.application.purchasing.dto.WeeklySummaryDTO;
 import mls.sho.dms.application.purchasing.repository.GoodsReceiptRepository;
 import mls.sho.dms.application.purchasing.repository.PurchaseInvoiceRepository;
 import mls.sho.dms.application.purchasing.repository.PurchaseOrderRepository;
+import mls.sho.dms.application.purchasing.repository.PurchasingHubRepository;
 import mls.sho.dms.entity.PurchaseInvoice;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +27,8 @@ public class PurchasingDashboardService {
     private final PurchaseOrderRepository poRepository;
     private final GoodsReceiptRepository grnRepository;
     private final PurchaseInvoiceRepository invoiceRepository;
+    private final IngredientRepository ingredientRepository;
+    private final PurchasingHubRepository hubRepository;
 
     public PurchasingDashboardDTO getDashboardData(Long restaurantId, LocalDate currentWeekStart) {
         // Weekly Spend
@@ -103,6 +108,33 @@ public class PurchasingDashboardService {
                 .matchingHealth(matchingHealth)
                 .spendTrend(spendTrend)
                 .latestVouchers(latestInvoices.stream().map(invoiceService::toDTO).collect(Collectors.toList()))
+                .build();
+    }
+
+    /**
+     * Get all Purchasing Hub counts in a single database query.
+     * This is optimized to fetch all counts efficiently in one round-trip.
+     *
+     * @param restaurantId the restaurant ID
+     * @return DTO containing all four count values
+     */
+    public PurchasingHubCountsDTO getHubCounts(Long restaurantId) {
+        List<Object> resultList = hubRepository.getHubCounts(restaurantId);
+        Object firstResult = resultList.get(0);
+        
+        // Native query returns Object[] when selecting multiple columns
+        Object[] counts = (Object[]) firstResult;
+        
+        long reorderStagingCount = ((Number) counts[0]).longValue();
+        long purchaseOrdersToSendCount = ((Number) counts[1]).longValue();
+        long goodsReceiptsPendingCount = ((Number) counts[2]).longValue();
+        long threeWayMatchPendingCount = ((Number) counts[3]).longValue();
+
+        return PurchasingHubCountsDTO.builder()
+                .reorderStagingCount(reorderStagingCount)
+                .purchaseOrdersToSendCount(purchaseOrdersToSendCount)
+                .goodsReceiptsPendingCount(goodsReceiptsPendingCount)
+                .threeWayMatchPendingCount(threeWayMatchPendingCount)
                 .build();
     }
 }

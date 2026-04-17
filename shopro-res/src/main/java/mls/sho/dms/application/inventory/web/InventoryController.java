@@ -111,7 +111,9 @@ public class InventoryController {
             @PathVariable Long restaurantId,
             @RequestParam(required = false) String type) {
         InventoryType invType = type != null ? InventoryType.valueOf(type.toUpperCase()) : InventoryType.FOOD;
-        return ResponseEntity.ok(physicalInventoryService.getCurrentPeriod(restaurantId, invType));
+        return physicalInventoryService.getCurrentPeriod(restaurantId, invType)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/periods/{periodId}/detail")

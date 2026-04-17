@@ -3,6 +3,7 @@ package mls.sho.dms.application.purchasing.web;
 import lombok.RequiredArgsConstructor;
 import mls.sho.dms.application.purchasing.dto.GoodsReceiptDTO;
 import mls.sho.dms.application.purchasing.dto.PurchaseInvoiceDTO;
+import mls.sho.dms.application.purchasing.dto.ReceiveStockRequest;
 import mls.sho.dms.application.purchasing.repository.SupplierRepository;
 import mls.sho.dms.application.purchasing.service.GoodsReceiptService;
 import mls.sho.dms.application.purchasing.service.PurchaseInvoiceService;
@@ -32,6 +33,20 @@ public class GoodsReceiptController {
         return goodsReceiptService.getAllByRestaurant(restaurantId).stream()
                 .map(goodsReceiptService::toDTO)
                 .toList();
+    }
+
+    @PostMapping("/receive")
+    public PurchaseInvoiceDTO receiveStock(
+            @PathVariable Long restaurantId, 
+            @RequestBody ReceiveStockRequest request) {
+        
+        // Create PO, GRN, and finalize in one go
+        PurchaseInvoice invoice = goodsReceiptService.receiveStockDirectly(
+            restaurantId,
+            request.getSupplierId(),
+            request.getLines()
+        );
+        return purchaseInvoiceService.toDTO(invoice);
     }
 
     @GetMapping("/{id}")

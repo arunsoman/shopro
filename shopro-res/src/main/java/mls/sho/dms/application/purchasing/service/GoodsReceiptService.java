@@ -13,6 +13,8 @@ import mls.sho.dms.application.purchasing.service.PurchaseInvoiceService;
 import mls.sho.dms.common.enums.PurchaseOrderStatus;
 import mls.sho.dms.application.purchasing.dto.GoodsReceiptDTO;
 import mls.sho.dms.application.purchasing.dto.PurchaseOrderLineDTO;
+import mls.sho.dms.application.purchasing.dto.ReceiveStockRequest;
+import mls.sho.dms.application.purchasing.repository.SupplierRepository;
 import mls.sho.dms.entity.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +30,7 @@ public class GoodsReceiptService {
 
     private final GoodsReceiptRepository goodsReceiptRepository;
     private final IngredientRepository ingredientRepository;
+    private final SupplierRepository supplierRepository;
     private final PurchaseOrderRepository purchaseOrderRepository;
     private final PurchaseInvoiceService purchaseInvoiceService;
     private final InventoryIntelligenceService inventoryIntelligenceService;
@@ -107,6 +110,62 @@ public class GoodsReceiptService {
         return purchaseInvoiceService.createDraftFromGRN(grn.getId());
     }
 
+    /**
+     * Receive stock directly without a PO - creates PO, GRN, and invoice in one go.
+     */
+    @Transactional
+    public PurchaseInvoice receiveStockDirectly(Long restaurantId, Long supplierId, List<ReceiveStockRequest.LineItem> lineItems) {
+        // 1. Create a temporary PO
+        PurchaseOrder po = new PurchaseOrder();
+        Restaurant restaurant = new Restaurant();
+        restaurant.setId(restaurantId);
+        po.setRestaurant(restaurant);
+        po.setSupplier(supplierRepository.findById(supplierId)
+                .orElseThrow(() -> new RuntimeException("Supplier not found")));
+        po.setIssueDate(LocalDateTime.now());
+        po.setStatus(PurchaseOrderStatus.SENT);
+        
+        // Add lines
+        for (ReceiveStockRequest.LineItem item : lineItems) {
+            PurchaseOrderLine line = new PurchaseOrderLine();
+            line.setPurchaseOrder(po);
+            line.setIngredient(ingredientRepository.findById(item.getIngredientId())
+                    .orElseThrow(() -> new RuntimeException("Ingredient not found: " + item.getIngredientId())));
+            line.setOrderedQty(item.getReceivedQty()); // Use received as ordered for direct receipt
+            line.setReceivedQty(item.getReceivedQty()); // Set received qty
+            line.setUnitPrice(item.getUnitPrice());
+            po.getLines().add(line);
+        }
+        po.calculateTotal();
+        po = purchaseOrderRepository.save(po);
+        
+        // 2. Create GRN
+        GoodsReceipt grn = new GoodsReceipt();
+        grn.setRestaurant(restaurant);
+        grn.setSupplier(po.getSupplier());
+        grn.setPurchaseOrder(po);
+        grn.setReceivedDate(LocalDateTime.now());
+        grn.setStatus(GoodsReceiptStatus.RECEIVED);
+        grn.calculateTotal();
+        grn = goodsReceiptRepository.save(grn);
+        
+        // 3. Update inventory
+        for (PurchaseOrderLine poLine : po.getLines()) {
+            Ingredient ing = poLine.getIngredient();
+            if (ing != null && poLine.getReceivedQty() != null && poLine.getReceivedQty().compareTo(BigDecimal.ZERO) > 0) {
+                BigDecimal conversionFactor = ing.getIuPerPu() != null ? ing.getIuPerPu() : BigDecimal.ONE;
+                BigDecimal increment = poLine.getReceivedQty().multiply(conversionFactor);
+                BigDecimal currentStock = ing.getOnHand() != null ? ing.getOnHand() : BigDecimal.ZERO;
+                ing.setOnHand(currentStock.add(increment));
+                ing.setUpdatedAt(LocalDateTime.now());
+                ingredientRepository.save(ing);
+            }
+        }
+        
+        // 4. Create Invoice Draft
+        return purchaseInvoiceService.createDraftFromGRN(grn.getId());
+    }
+
     @Transactional(readOnly = true)
     public List<GoodsReceipt> getStaleGRNs(Long restaurantId) {
         return goodsReceiptRepository.findStaleGRNs(restaurantId);
@@ -182,6 +241,10 @@ public class GoodsReceiptService {
             ldto.setIngredientDescription(line.getIngredient().getDescription());
             ldto.setReceivedQty(line.getReceivedQty());
             ldto.setUnitPrice(line.getUnitPrice());
+            // Calculate lineTotal = receivedQty * unitPrice
+            if (line.getReceivedQty() != null && line.getUnitPrice() != null) {
+                ldto.setLineTotal(line.getReceivedQty().multiply(line.getUnitPrice()));
+            }
             return ldto;
         }).collect(Collectors.toList()));
         

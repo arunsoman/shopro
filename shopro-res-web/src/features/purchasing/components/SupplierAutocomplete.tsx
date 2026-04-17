@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/Popover"
 import { useSuppliers } from "@/hooks/useSuppliers"
 import { Supplier } from "@/types"
+import { useRestaurantStore } from "@/store/useRestaurantStore"
 
 export interface SupplierAutocompleteProps {
   value?: number;
@@ -30,7 +31,8 @@ export interface SupplierAutocompleteProps {
 
 export function SupplierAutocomplete({ value, onChange, onAddNew, className }: SupplierAutocompleteProps) {
   const [open, setOpen] = React.useState(false)
-  const { data: suppliers = [], isLoading } = useSuppliers()
+  const { restaurantId } = useRestaurantStore()
+  const { data: suppliers = [], isLoading } = useSuppliers(restaurantId)
 
   const selectedSupplier = suppliers.find((s) => s.id === value)
 
