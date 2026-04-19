@@ -66,7 +66,7 @@ public class PurchaseOrderService {
                 .orElseThrow(() -> new RuntimeException("Supplier not found")));
 
         po.setIssueDate(dto.getIssueDate() != null ? 
-                java.time.LocalDate.parse(dto.getIssueDate()).atStartOfDay()
+                java.time.LocalDateTime.parse(dto.getIssueDate().replace("Z", ""))
                 : LocalDateTime.now());
         po.setNotes(dto.getNotes());
         po.setStatus(PurchaseOrderStatus.SENT);

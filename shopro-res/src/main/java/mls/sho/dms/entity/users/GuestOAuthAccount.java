@@ -51,6 +51,7 @@ public class GuestOAuthAccount {
     @Column(name = "token_expires_at")
     private LocalDateTime tokenExpiresAt;
     
+    @Builder.Default
     @Column(name = "linked_at")
     private LocalDateTime linkedAt = LocalDateTime.now();
 }

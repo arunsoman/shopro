@@ -5,6 +5,7 @@
  */
 
 import React, { useState } from 'react';
+import { format } from 'date-fns';
 import { BarChart3, Filter, PieChart, TrendingUp, Calendar, ArrowUpRight, TrendingDown, Target } from 'lucide-react';
 import { Button } from "@/components/ui/Button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/Tabs";

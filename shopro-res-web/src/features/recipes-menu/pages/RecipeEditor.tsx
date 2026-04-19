@@ -45,7 +45,7 @@ export default function RecipeEditor() {
   if (selectedRecipeId && isLoading) return <div className="p-10 text-center opacity-30">Loading Precision Blueprint...</div>;
 
   const totalCost = formData.ingredientLines?.reduce((sum, l) => sum + (l.lineTotal || 0), 0) || 0;
-  const costPerUnit = totalCost / (formData.yieldQuantity || 1);
+  const costPerUnit = totalCost / (formData.yieldQuantity || 3);
 
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-slate-50 dark:bg-slate-950 font-sans p-4 sm:p-10 space-y-10 mi-animate">

@@ -7,5 +7,17 @@ public enum KitchenStationType {
     SOUS_CHEF,
     DISHWASHER,
     SERVER,
-    CUSTOM
+    CUSTOM,
+    // Restaurant kitchen stations
+    SALAD,
+    FRY,
+    SAUTE,
+    GRILL,
+    OVEN,
+    BRK,
+    BAR,
+    PASS,
+    WOK,
+    PLATE,
+    PASTRY
 }

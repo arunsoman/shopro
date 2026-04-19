@@ -29,7 +29,7 @@ import { usePurchaseOrders, useMatchBundle } from "./hooks/usePurchaseOrders";
 import { currency as formatCurrency, formatDate } from "@/lib/utils";
 
 const MatchAuditPage: React.FC = () => {
-  const restaurantId = 1;
+  const restaurantId = 3;
   const [selectedPoId, setSelectedPoId] = useState<number | null>(null);
   const [showDetail, setShowDetail] = useState(false);
   

@@ -14,6 +14,8 @@ Run the following command in the project root `/home/arun/IdeaProjects/shopro-po
 ```bash
 lsof -i :8080 -t | xargs kill -9 && ./gradlew :shopro-res:bootRun
 ```
+and use this to reset the database 
+
 
 ## Troubleshooting
 

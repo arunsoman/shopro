@@ -13,6 +13,7 @@ import java.util.Random;
 import mls.sho.dms.application.kds.dto.KdsDtos.*;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.UUID;
 
 /**
  * Models the Kitchen Staff:
@@ -23,14 +24,14 @@ public class KitchenAgent extends BaseAgent {
     private final Random random = new Random();
     private final Long stationId;
     private final Long deviceId;
-    private final Long employeeId;
+    private final UUID staffId;
     private java.time.LocalDateTime shiftStartTime;
 
-    public KitchenAgent(long id, SimulationWorld world, Long stationId, Long deviceId, Long employeeId) {
+    public KitchenAgent(long id, SimulationWorld world, Long stationId, Long deviceId, UUID staffId) {
         super(id, world);
         this.stationId = stationId;
         this.deviceId = deviceId;
-        this.employeeId = employeeId;
+        this.staffId = staffId;
     }
 
     @Override
@@ -42,12 +43,12 @@ public class KitchenAgent extends BaseAgent {
         world.runAsManager(() -> {
             world.getLaborController().clockIn(
                 world.getRestaurant().getId(),
-                employeeId,
+                staffId,
                 clockInTime
             );
         });
 
-        logEvent(SimulationLogger.EVENT_START, "Kitchen Agent " + agentId + " (Emp: " + employeeId + ") at station " + stationId + " clocked in.");
+        logEvent(SimulationLogger.EVENT_START, "Kitchen Agent " + agentId + " (Staff: " + staffId + ") at station " + stationId + " clocked in.");
 
         while (running) {
             try {
@@ -85,7 +86,7 @@ public class KitchenAgent extends BaseAgent {
         world.runAsManager(() -> {
             world.getLaborController().clockOut(
                 world.getRestaurant().getId(), 
-                employeeId, 
+                staffId, 
                 clockOutTime
             );
         });

@@ -1,58 +1,149 @@
-import React from 'react'
+// ─────────────────────────────────────────────────────────────
+// components/CreateAnalysisModal.tsx (ME.12)
+// Quick-create modal for new analysis (shorter version of ME.1).
+// BE: POST /periods only accepts periodName, startDate, endDate.
+// costGroupId and popularityFactor are NOT accepted by the backend.
+// ─────────────────────────────────────────────────────────────
+
+import { useState } from "react";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/Dialog"
-import PeriodSetupForm from './PeriodSetupForm'
-import { useCreateEngineeringPeriod } from '../hooks/useMenuEngineering'
-import { useToast } from "@/providers/ToastProvider"
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalTitle,
+  ModalDescription,
+  ModalFooter,
+} from "@/components/ui/Modal";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Label } from "@/components/ui/Label";
+import { DateRangePicker } from "@/components/ui/DateRangePicker";
+import type { DateRange } from "react-day-picker";
+import { addDays, subDays, format } from "date-fns";
+import { useCreatePeriod, useRunPeriod } from "../hooks/useMenuEngineering";
+import { useRestaurantId } from "@/providers";
+import type { CreatePeriodRequest, MenuEngineeringPeriod } from "@/types/menuEngineering.types";
+import { Calendar, TrendingUp, Clock, CalendarDays } from "lucide-react";
 
 interface CreateAnalysisModalProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
+  open: boolean;
+  onClose: () => void;
+  onCreated?: (periodId: number) => void;
 }
 
-export default function CreateAnalysisModal({ open, onOpenChange }: CreateAnalysisModalProps) {
-  const toast = useToast()
-  const { mutate: createPeriod, isPending } = useCreateEngineeringPeriod()
+export function CreateAnalysisModal({
+  open,
+  onClose,
+  onCreated,
+}: CreateAnalysisModalProps) {
+  const restaurantId = useRestaurantId();
+  const createPeriod = useCreatePeriod(restaurantId);
+  const runAnalysisMut = useRunPeriod(restaurantId);
 
-  const handleCreate = (data: { periodBeginDate: string; periodEndDate: string; costGroupId?: number }) => {
-    createPeriod(data, {
-      onSuccess: () => {
-        toast.success("Engineering period initialized. View results in drafts.")
-        onOpenChange(false)
-      },
-      onError: (err: any) => {
-        toast.error(err?.response?.data?.message || "Failed to initialize and evaluate period data.")
-      }
-    })
-  }
+  const [periodName, setPeriodName] = useState("");
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: subDays(new Date(), 7), // Default to last 7 days (weekly)
+    to: new Date(),
+  });
+
+  // Quick select presets
+  const quickRanges: { label: string; days: number; icon: React.ReactNode }[] = [
+    { label: "7 Days", days: 7, icon: <Calendar className="h-3 w-3" /> },
+    { label: "30 Days", days: 30, icon: <TrendingUp className="h-3 w-3" /> },
+    { label: "90 Days", days: 90, icon: <Clock className="h-3 w-3" /> },
+    { label: "1 Year", days: 365, icon: <CalendarDays className="h-3 w-3" /> },
+  ];
+
+  const handleQuickSelect = (days: number) => {
+    setDateRange({
+      from: subDays(new Date(), days),
+      to: new Date(),
+    });
+  };
+
+  const handleSubmit = async () => {
+    if (!dateRange?.from || !dateRange?.to) return;
+
+    // NOTE: BE createPeriod only accepts periodName, startDate, endDate.
+    // costGroupId and popularityFactor are NOT part of the BE contract.
+    const body: CreatePeriodRequest = {
+      periodName: periodName || undefined,
+      startDate: format(dateRange.from, "yyyy-MM-dd"),
+      endDate:   format(dateRange.to,   "yyyy-MM-dd"),
+    };
+
+    // Type assertion: createAnalysis returns MenuEngineeringPeriod
+    const period = (await createPeriod.mutateAsync(body)) as MenuEngineeringPeriod;
+    await runAnalysisMut.mutateAsync(period.id);
+    onCreated?.(period.id);
+    onClose();
+  };
+
+  const isSubmitting = createPeriod.isPending || runAnalysisMut.isPending;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md p-0 overflow-hidden bg-white dark:bg-slate-900 border-slate-200 dark:border-white/5 shadow-2xl rounded-2xl">
-        <div className="bg-slate-50 dark:bg-black/20 px-8 py-6 border-b border-slate-100 dark:border-white/5">
-          <DialogHeader className="text-left">
-            <DialogTitle className="text-xl font-bold tracking-tight text-foreground leading-none">New Analysis Strategy</DialogTitle>
-            <DialogDescription className="text-[11px] font-bold text-muted-foreground/40 uppercase tracking-[0.2em] mt-2 italic">
-              Initialize evaluation cycle
-            </DialogDescription>
-          </DialogHeader>
+    <Modal open={open} onOpenChange={(v) => !v && onClose()}>
+      <ModalContent className="sm:max-w-md">
+        <ModalHeader>
+          <ModalTitle>New Analysis</ModalTitle>
+          <ModalDescription>Quick-create a menu engineering analysis cycle.</ModalDescription>
+        </ModalHeader>
+
+        <div className="space-y-4 py-2">
+          {/* Period Name */}
+          <div className="space-y-1.5">
+            <Label className="text-[10px] font-bold uppercase tracking-widest">Period Name</Label>
+            <Input
+              value={periodName}
+              onChange={(e) => setPeriodName(e.target.value)}
+              placeholder={`Period ${format(new Date(), "yyyy-MM-dd")}`}
+              className="h-10 rounded-xl"
+            />
+          </div>
+
+          {/* Date Range */}
+          <div className="space-y-1.5">
+            <Label className="text-[10px] font-bold uppercase tracking-widest">Period</Label>
+            <DateRangePicker
+              date={dateRange}
+              onDateChange={setDateRange}
+            />
+          </div>
+
+          {/* Quick Select Presets */}
+          <div className="space-y-1.5">
+            <Label className="text-[10px] font-bold uppercase tracking-widest">Quick Select</Label>
+            <div className="flex flex-wrap gap-2">
+              {quickRanges.map((preset) => (
+                <Button
+                  key={preset.days}
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleQuickSelect(preset.days)}
+                  className="text-xs"
+                >
+                  {preset.icon}
+                  <span className="ml-1">{preset.label}</span>
+                </Button>
+              ))}
+            </div>
+          </div>
         </div>
 
-        <div className="p-8">
-           <PeriodSetupForm onSubmit={handleCreate} isLoading={isPending} />
-        </div>
-
-        <div className="bg-slate-50 dark:bg-black/20 px-8 py-4 border-t border-slate-100 dark:border-white/5">
-           <p className="text-[10px] font-bold text-muted-foreground/30 uppercase tracking-widest leading-relaxed">
-             This process will scan all sales records in the given range and classify items into the popularity/margin matrix (Winner, Workhorse, Opportunity, Loser).
-           </p>
-        </div>
-      </DialogContent>
-    </Dialog>
-  )
+        <ModalFooter>
+          <Button variant="outline" onClick={onClose} disabled={isSubmitting} className="rounded-xl">
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSubmit}
+            disabled={isSubmitting || !dateRange?.from || !dateRange?.to}
+            className="rounded-xl"
+          >
+            {isSubmitting ? "Creating…" : "Create & Run"}
+          </Button>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
+  );
 }

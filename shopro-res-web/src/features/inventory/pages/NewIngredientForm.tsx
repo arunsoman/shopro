@@ -66,7 +66,7 @@ export default function NewIngredientForm() {
   // Live cost preview
   const price = parseFloat(form.purchaseUnitPrice) || 0
   const ruPerPuValue = parseFloat(form.ruPerPu) || 0
-  const yieldPctValue = parseFloat(form.yieldPct) || 1
+  const yieldPctValue = parseFloat(form.yieldPct) || 3
   const iuPerPuValue = parseFloat(form.iuPerPu) || 0
   const ruCost = (ruPerPuValue > 0 && yieldPctValue > 0) ? price / ruPerPuValue / yieldPctValue : null
   const iuCost = iuPerPuValue > 0 ? price / iuPerPuValue : null

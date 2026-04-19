@@ -106,6 +106,32 @@ export interface WeeklyPrimeCostReport {
   createdAt: string;
   updatedAt: string;
   budget?: WeeklyBudget;
+
+  // ── Revenue Category Breakdown ────────────────────────────────
+  // Populated from OrderLine aggregation via MenuCostGroup.revenueCategory.
+  // Replaces hardcoded 80/3/6/6/4/1 percentages in WeeklyWorksheet.
+  categorySales?: CategorySalesBreakdown;
+}
+
+// ── Revenue Category Breakdown ────────────────────────────────
+// Aggregated from OrderLine → MenuCostGroup.revenueCategory mapping.
+
+export interface CategorySalesBreakdown {
+  foodSales: number;
+  softBevSales: number;
+  liquorSales: number;
+  bottleBeerSales: number;
+  draftBeerSales: number;
+  wineSales: number;
+  merchSales: number;
+  totalSales: number;
+  foodSalesPct: number;
+  softBevSalesPct: number;
+  liquorSalesPct: number;
+  bottleBeerSalesPct: number;
+  draftBeerSalesPct: number;
+  wineSalesPct: number;
+  merchSalesPct: number;
 }
 
 // ── Weekly Budget ─────────────────────────────────────────────
@@ -306,6 +332,7 @@ export interface FinaliseReportRequest {
 }
 
 export interface MultiLocationParams {
+  restaurantId: number;
   weekStart: string;
   restaurantIds: number[];
 }

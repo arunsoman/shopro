@@ -89,7 +89,7 @@ export default function StationFullscreen({
     }
   }
 
-  const cols = visible.length <= 4 ? visible.length || 1 : Math.ceil(visible.length / 2)
+  const cols = visible.length <= 4 ? visible.length || 3 : Math.ceil(visible.length / 2)
   const rows = visible.length <= 4 ? 1 : 2
 
   return (

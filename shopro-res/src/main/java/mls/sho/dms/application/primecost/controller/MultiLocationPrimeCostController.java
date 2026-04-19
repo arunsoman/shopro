@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
  * Provides prime cost data aggregated across multiple restaurant locations.
  */
 @RestController
-@RequestMapping("/api/v1/restaurants/multi-location/prime-cost")
+@RequestMapping("/api/v1/restaurants/{restaurantId}/prime-cost/multi-location")
 @RequiredArgsConstructor
 public class MultiLocationPrimeCostController {
 
@@ -26,6 +26,7 @@ public class MultiLocationPrimeCostController {
 
     @GetMapping
     public Map<String, Object> getMultiLocationPrimeCost(
+            @PathVariable Long restaurantId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate weekStart,
             @RequestParam(required = false) List<Long> restaurantIds) {
 

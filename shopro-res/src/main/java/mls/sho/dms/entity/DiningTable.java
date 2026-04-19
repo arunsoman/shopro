@@ -1,14 +1,14 @@
 package mls.sho.dms.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import lombok.Data;
 
 /**
- * A physical dining table in the restaurant.
+ * Physical dining table on the floor plan.
  */
 @Entity
-@Table(name = "dining_table",
-       uniqueConstraints = @UniqueConstraint(columnNames = {"restaurant_id", "table_number"}))
+@Table(name = "dining_table")
+@Data
 public class DiningTable {
 
     @Id
@@ -17,10 +17,9 @@ public class DiningTable {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "restaurant_id", nullable = false)
-    @JsonIgnore
     private Restaurant restaurant;
 
-    @Column(name = "table_number", nullable = false)
+    @Column(name = "table_number")
     private String tableNumber;
 
     @Column(nullable = false)
@@ -31,25 +30,10 @@ public class DiningTable {
     private TableStatus status = TableStatus.AVAILABLE;
 
     @Column(name = "pos_x")
-    private Integer posX; // for floor map layout
+    private Integer posX;
 
     @Column(name = "pos_y")
     private Integer posY;
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public Restaurant getRestaurant() { return restaurant; }
-    public void setRestaurant(Restaurant restaurant) { this.restaurant = restaurant; }
-    public String getTableNumber() { return tableNumber; }
-    public void setTableNumber(String tableNumber) { this.tableNumber = tableNumber; }
-    public Integer getCapacity() { return capacity; }
-    public void setCapacity(Integer capacity) { this.capacity = capacity; }
-    public TableStatus getStatus() { return status; }
-    public void setStatus(TableStatus status) { this.status = status; }
-    public Integer getPosX() { return posX; }
-    public void setPosX(Integer posX) { this.posX = posX; }
-    public Integer getPosY() { return posY; }
-    public void setPosY(Integer posY) { this.posY = posY; }
-
-    public enum TableStatus { AVAILABLE, OCCUPIED, RESERVED, DIRTY }
+    public enum TableStatus { AVAILABLE, OCCUPIED, DIRTY, RESERVED }
 }

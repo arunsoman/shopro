@@ -45,24 +45,30 @@ public class Guest {
     @Column(name = "date_of_birth")
     private LocalDate dateOfBirth;
     
+    @Builder.Default
     @Column(name = "is_oauth_only")
     private Boolean isOauthOnly = false;
     
+    @Builder.Default
     @Type(JsonType.class)
     @Column(columnDefinition = "jsonb")
     private List<String> dietaryRestrictions = new ArrayList<>();
     
+    @Builder.Default
     @Type(JsonType.class)
     @Column(columnDefinition = "jsonb")
     private List<String> allergies = new ArrayList<>();
     
+    @Builder.Default
     @Type(JsonType.class)
     @Column(columnDefinition = "jsonb")
     private List<String> favoriteCuisines = new ArrayList<>();
     
+    @Builder.Default
     @Column(name = "loyalty_points")
     private Integer loyaltyPoints = 0;
     
+    @Builder.Default
     @Column(name = "loyalty_tier")
     @Enumerated(EnumType.STRING)
     private LoyaltyTier loyaltyTier = LoyaltyTier.BRONZE;
@@ -73,6 +79,7 @@ public class Guest {
     @Column(name = "last_login_ip")
     private String lastLoginIp;
     
+    @Builder.Default
     @Column(name = "is_verified")
     private Boolean isVerified = false;
     
@@ -82,9 +89,11 @@ public class Guest {
     @Column(name = "verification_expires_at")
     private LocalDateTime verificationExpiresAt;
     
+    @Builder.Default
     @Column(name = "is_active")
     private Boolean isActive = true;
     
+    @Builder.Default
     @OneToMany(mappedBy = "guest", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<GuestOAuthAccount> oauthAccounts = new ArrayList<>();
     

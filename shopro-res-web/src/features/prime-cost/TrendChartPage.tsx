@@ -62,9 +62,9 @@ const TrendChartPage: FC = () => {
     ]);
     const minV   = Math.max(0, Math.min(...allVals) - 5);
     const maxV   = Math.min(100, Math.max(...allVals) + 5);
-    const rangeV = maxV - minV || 1;
+    const rangeV = maxV - minV || 3;
 
-    const xOf = (i: number) => padL + (i / (pts.length - 1 || 1)) * chartW;
+    const xOf = (i: number) => padL + (i / (pts.length - 1 || 3)) * chartW;
     const yOf = (v: number) => padT + chartH - ((v - minV) / rangeV) * chartH;
 
     // Detect dark mode via CSS variable resolved color

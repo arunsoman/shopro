@@ -39,13 +39,42 @@ public class PrimeCostDtos {
         private BigDecimal primeCostGross;
         private BigDecimal primeCostGrossPct;
         private String status;
-        
+
+        // Revenue category breakdown — populated from OrderLine aggregation
+        private CategorySalesBreakdown categorySales;
+
         // Extended KPIs for Dashboard
         private BigDecimal shrinkageVariance;
         private BigDecimal shrinkageVariancePct;
         private BigDecimal laborCostPerCover;
         private BigDecimal salesPerLaborHour;
         private BigDecimal totalLaborHours;
+    }
+
+    /**
+     * Aggregated sales by POS revenue category, derived from OrderLine data.
+     * Replaces hardcoded 80/3/6/6/4/1 percentages in WeeklyWorksheet.
+     */
+    @Data
+    public static class CategorySalesBreakdown {
+        private BigDecimal foodSales;
+        private BigDecimal softBevSales;
+        private BigDecimal liquorSales;
+        private BigDecimal bottleBeerSales;
+        private BigDecimal draftBeerSales;
+        private BigDecimal wineSales;
+        private BigDecimal merchSales;
+
+        private BigDecimal totalSales; // sum of all above — should equal grossSales
+
+        // Convenience: percentages of totalSales
+        private BigDecimal foodSalesPct;
+        private BigDecimal softBevSalesPct;
+        private BigDecimal liquorSalesPct;
+        private BigDecimal bottleBeerSalesPct;
+        private BigDecimal draftBeerSalesPct;
+        private BigDecimal wineSalesPct;
+        private BigDecimal merchSalesPct;
     }
 
     @Data public static class PrimeCostTrendPointDto {

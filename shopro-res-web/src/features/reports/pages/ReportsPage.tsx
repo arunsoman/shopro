@@ -102,7 +102,7 @@ const Tooltip = ({ content, children }: { content: React.ReactNode, children: Re
 
 export default function ReportsPage() {
   const { session } = useAuth();
-  const restaurantId = session?.restaurantId || 1;
+  const restaurantId = session?.restaurantId || 3;
 
   const [view, setView] = useState<'month' | 'week'>('month');
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -503,7 +503,7 @@ export default function ReportsPage() {
                 </div>
                 <div className="space-y-2">
                   <h3 className="text-4xl font-black text-gray-900 dark:text-white tracking-tighter">Real-Estate Optimization</h3>
-                  <p className="text-lg text-zinc-500 font-semibold max-w-md">Your average turnover rate is <span className="text-indigo-600 font-black">{(tableData.reduce((sum, d) => sum + d.totalSessions, 0) / (tableData.length || 1)).toFixed(1)}x</span> per table. Increasing this by 15% through better pacing could add <span className="text-emerald-500 font-black">$42,000</span> to annual revenue.</p>
+                  <p className="text-lg text-zinc-500 font-semibold max-w-md">Your average turnover rate is <span className="text-indigo-600 font-black">{(tableData.reduce((sum, d) => sum + d.totalSessions, 0) / (tableData.length || 3)).toFixed(1)}x</span> per table. Increasing this by 15% through better pacing could add <span className="text-emerald-500 font-black">$42,000</span> to annual revenue.</p>
                 </div>
                 <button className="px-10 py-5 bg-indigo-600 text-white rounded-3xl font-black text-lg hover:scale-105 active:scale-95 transition-all shadow-xl shadow-indigo-500/30">
                   Launch Pacing Guide

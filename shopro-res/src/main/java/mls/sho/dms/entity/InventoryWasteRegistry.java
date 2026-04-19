@@ -3,6 +3,7 @@ package mls.sho.dms.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 /**
  * Detailed registry for all non-sales inventory loss (Misfires, Spoilage, etc).
@@ -27,8 +28,8 @@ public class InventoryWasteRegistry {
     @Column(name = "menu_id")
     private Long menuId;
 
-    @Column(name = "employee_id")
-    private Long employeeId;
+    @Column(name = "staff_id")
+    private UUID staffId;
 
     @Column(name = "reason_code", nullable = false)
     private String reasonCode;

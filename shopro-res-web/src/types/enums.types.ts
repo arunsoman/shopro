@@ -134,6 +134,32 @@ export type MenuEngClassification =
   | "OPPORTUNITY"  // High GP + Low Mix
   | "LOSER";       // Low GP  + Low Mix
 
+// Menu Engineering period statuses — aligned with BE: DRAFT | COMPLETE | FINALIZED
+export type MenuEngineeringPeriodStatus = "DRAFT" | "COMPLETE" | "FINALIZED";
+
+// Menu Engineering recommendation types — aligned with BE RecommendationType enum
+// STAR/WINNER → RETAIN/PROTECT/FEATURE/HIGHLIGHT
+// PUZZLE/OPPORTUNITY → INCREASE_VISIBILITY/REPOSITION/ENHANCE_DESCRIPTION/PROMOTE/TRAIN_STAFF
+// PLOW HORSE/WORKHORSE → REPRICE_UP/REFORMULATE/REDUCE_PORTION_COST/BUNDLE
+// DOG/LOSER → REMOVE/REDESIGN/REPLACE/SEASONAL_ONLY/CONVERT_TO_SPECIAL
+// General → MONITOR/INVESTIGATE/ANALYZE
+// Legacy aliases (backward compat) → RETAIN/REPRICE/REPLATE/RETHINK/NO_ACTION
+export type RecommendationType =
+  | "RETAIN" | "PROTECT" | "FEATURE" | "HIGHLIGHT"
+  | "INCREASE_VISIBILITY" | "REPOSITION" | "ENHANCE_DESCRIPTION" | "PROMOTE" | "TRAIN_STAFF"
+  | "REPRICE_UP" | "REFORMULATE" | "REDUCE_PORTION_COST" | "BUNDLE"
+  | "REMOVE" | "REDESIGN" | "REPLACE" | "SEASONAL_ONLY" | "CONVERT_TO_SPECIAL"
+  | "MONITOR" | "INVESTIGATE" | "ANALYZE"
+  | "RETAIN" | "REPRICE" | "REPLATE" | "RETHINK" | "NO_ACTION";
+
+// Menu Engineering recommendation statuses — aligned with BE (includes approval workflow)
+export type RecommendationStatus =
+  | "PENDING" | "IN_PROGRESS" | "COMPLETED" | "DISMISSED" | "DEFERRED"
+  | "PENDING_APPROVAL" | "APPROVED" | "REJECTED";
+
+// Menu Engineering recommendation priorities — aligned with BE
+export type RecommendationPriority = "HIGH" | "MEDIUM" | "LOW" | "CRITICAL";
+
 export type AnalysisStatus = "DRAFT" | "FINALISED";
 
 // ── POS ──────────────────────────────────────────────────────

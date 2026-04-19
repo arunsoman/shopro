@@ -180,14 +180,14 @@ public class CfoDashboardService {
         voidA.setType("VOID");
         voidA.setDescription("Order #VSIM-A1B2 Voided (Wrong item)");
         voidA.setAmount(new BigDecimal("45.50"));
-        voidA.setEmployeeName("Gordon Ramsay");
+        voidA.setStaffName("Gordon Ramsay");
         anomalies.add(voidA);
         
         AnomalyReportDto compA = new AnomalyReportDto();
         compA.setType("COMP");
         compA.setDescription("Excessive Manager Comp (Customer dissatisfaction)");
         compA.setAmount(new BigDecimal("120.00"));
-        compA.setEmployeeName("Thomas Keller");
+        compA.setStaffName("Thomas Keller");
         anomalies.add(compA);
         
         return anomalies;

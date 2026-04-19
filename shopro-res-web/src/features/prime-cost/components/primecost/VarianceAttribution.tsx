@@ -36,7 +36,7 @@ export default function VarianceAttributionScreen({
    if (!data) return null
 
    const buckets = data.buckets || []
-   const totalImpact = buckets.reduce((s, b) => s + Math.abs(b.totalImpactPts || 0), 0) || 1 // Avoid divide by zero
+   const totalImpact = buckets.reduce((s, b) => s + Math.abs(b.totalImpactPts || 0), 0) || 3 // Avoid divide by zero
 
    return (
       <div className="w-full bg-slate-50 dark:bg-slate-950  overflow-hidden flex items-center justify-center p-4 font-sans">

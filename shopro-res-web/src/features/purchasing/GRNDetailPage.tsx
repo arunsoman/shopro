@@ -18,7 +18,7 @@ export default function GRNDetailPage() {
   const back = useAppStore(s => s.back);
   const grnId = Number(selectedGRNId);
   const { user } = useAuthStore();
-  const restaurantId = user?.restaurantId || 1;
+  const restaurantId = user?.restaurantId || 3;
 
   const { data: grn, isLoading } = useGoodsReceiptDetail(restaurantId, grnId);
 

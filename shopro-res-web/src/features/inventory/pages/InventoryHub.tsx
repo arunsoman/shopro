@@ -46,6 +46,7 @@ const navCards: NavCardContent[] = [
 
 export default function InventoryHub() {
   const navigate = useAppStore((s) => s.navigate)
+  const back = useAppStore((s) => s.back)
   const { data: foodLatest, isLoading: foodLoading } = useLatestInventory('FOOD')
   const { data: barLatest, isLoading: barLoading } = useLatestInventory('BAR')
   const { data: alerts } = useLowStockAlerts()
@@ -58,7 +59,7 @@ export default function InventoryHub() {
           title="Inventory Control"
           subtitle="Supply Operations"
           icon={Warehouse}
-          onBack={() => navigate('dashboard')}
+          onBack={() => back()}
         >
           <Button
             onClick={() => navigate('inventory-new-ingredient')}

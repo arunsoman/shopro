@@ -10,6 +10,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.repository.query.Param;
 
 @Repository
 public interface StaffShiftRepository extends JpaRepository<StaffShift, UUID> {
@@ -43,4 +45,10 @@ public interface StaffShiftRepository extends JpaRepository<StaffShift, UUID> {
            "AND s.clockIn BETWEEN :start AND :end " +
            "GROUP BY s.staff.staffId, s.staff.displayName, c.standardWeeklyHours, c.overtimeRate, c.baseHourlyRate")
     List<Object[]> findWeeklyStaffLaborStats(Long restaurantId, LocalDateTime start, LocalDateTime end);
+
+    @Modifying
+    @Query("UPDATE StaffShift s SET s.isActive = false, s.clockOut = :closeTime, " +
+           "s.durationMinutes = CAST(FUNCTION('floor', (CAST(:closeTime AS double) - CAST(s.clockIn AS double)) / 60.0) AS Long) " +
+           "WHERE s.restaurantId = :restaurantId AND s.isActive = true")
+    int closeAllActive(@Param("restaurantId") Long restaurantId, @Param("closeTime") LocalDateTime closeTime);
 }

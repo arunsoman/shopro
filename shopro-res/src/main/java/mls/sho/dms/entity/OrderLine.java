@@ -1,5 +1,7 @@
 package mls.sho.dms.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.math.BigDecimal;
@@ -18,11 +20,17 @@ public class OrderLine {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id", nullable = false)
+    @JsonIgnore
     private Order order;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "menu_item_id", nullable = false)
+    @JoinColumn(name = "menu_item_id", nullable = false, insertable = false, updatable = false)
+//    @JsonIgnore
     private MenuItem menuItem;
+
+    @Column(name = "menu_item_id", nullable = false)
+    @JsonProperty("menuItemId")
+    private Long menuItemId;
 
     @Column(nullable = false)
     private Integer quantity;

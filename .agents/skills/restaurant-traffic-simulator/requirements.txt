@@ -1,0 +1,2 @@
+# Restaurant Traffic Simulator Dependencies
+requests>=2.28.0

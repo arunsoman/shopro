@@ -3,7 +3,6 @@ package mls.sho.dms.entity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-
 import mls.sho.dms.entity.users.Guest;
 import java.time.LocalDateTime;
 
@@ -48,5 +47,4 @@ public class TableSession {
 
     @OneToOne(mappedBy = "session", cascade = CascadeType.ALL)
     private Order order;
-
 }

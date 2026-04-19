@@ -69,7 +69,7 @@ public class CfoDashboardDtos {
         private String type; // VOID, COMP, DISCOUNT
         private String description;
         private BigDecimal amount;
-        private String employeeName;
+        private String staffName;
     }
 
     @Data

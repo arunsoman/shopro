@@ -19,6 +19,8 @@ public interface StaffRepository extends JpaRepository<Staff, UUID> {
     
     List<Staff> findByRestaurantIdAndIsActiveTrue(Long restaurantId);
     
+    Optional<Staff> findByDisplayNameIgnoreCaseAndRestaurantId(String displayName, Long restaurantId);
+    
     List<Staff> findByRestaurantIdAndShiftActiveTrue(Long restaurantId);
     
     @Query("SELECT s FROM Staff s WHERE s.restaurantId = :restaurantId AND s.isActive = true AND s.role = :role")

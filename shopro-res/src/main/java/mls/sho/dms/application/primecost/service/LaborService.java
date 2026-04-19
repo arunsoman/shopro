@@ -5,9 +5,14 @@ import mls.sho.dms.application.primecost.entity.*;
 import mls.sho.dms.application.primecost.repository.*;
 import mls.sho.dms.application.primecost.dto.LaborDtos.*;
 import mls.sho.dms.entity.Restaurant;
+import mls.sho.dms.entity.users.Staff;
+import mls.sho.dms.entity.users.StaffShift;
 import mls.sho.dms.application.pos.repository.RestaurantRepository;
+import mls.sho.dms.application.users.repo.StaffRepository;
+import mls.sho.dms.application.users.repo.StaffShiftRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.UUID;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -22,97 +27,111 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class LaborService {
 
-    private final EmployeeRepository employeeRepository;
-    private final EmployeeLaborRecordRepository laborRecordRepository;
+    private final StaffRepository staffRepository;
+    private final StaffLaborRecordRepository laborRecordRepository;
     private final ScheduledShiftRepository shiftRepository;
     private final RestaurantRepository restaurantRepository;
-    private final EmployeeAttendanceRepository attendanceRepository;
+    private final StaffShiftRepository staffShiftRepository;
 
-    // -- Employee Management -----------------------------------
+    // -- Staff Management --------------------------------------
 
     @Transactional
-    public Employee createEmployee(Long restaurantId, CreateEmployeeRequest req) {
+    public Staff createStaff(Long restaurantId, CreateStaffRequest req) {
         Restaurant restaurant = restaurantRepository.findById(restaurantId)
                 .orElseThrow(() -> new RuntimeException("Restaurant not found"));
         
-        Employee employee = new Employee();
-        employee.setRestaurant(restaurant);
-        employee.setName(req.getName());
-        employee.setEmployeeType(req.getEmployeeType());
-        employee.setHourlyRate(req.getHourlyRate());
-        employee.setAnnualSalary(req.getAnnualSalary());
-        return employeeRepository.save(employee);
+        Staff staff = Staff.builder()
+                .restaurantId(restaurantId)
+                .displayName(req.getName())
+                .employeeType(req.getEmployeeType())
+                .hourlyRate(req.getHourlyRate())
+                .annualSalary(req.getAnnualSalary())
+                .role(mls.sho.dms.entity.users.StaffRole.LINE_COOK) // Default
+                .pinHash("MIGRATED") // Placeholder
+                .pinLength(4)
+                .isActive(true)
+                .build();
+        return staffRepository.save(staff);
     }
 
     @Transactional(readOnly = true)
-    public List<EmployeeDto> listEmployees(Long restaurantId, Employee.EmployeeType type) {
-        List<Employee> employees = (type == null) 
-            ? employeeRepository.findAllByRestaurantId(restaurantId)
-            : employeeRepository.findAllByRestaurantIdAndEmployeeTypeAndActive(restaurantId, type, true);
+    public List<StaffDto> listStaff(Long restaurantId, Staff.EmployeeType type) {
+        List<Staff> staffList = (type == null) 
+            ? staffRepository.findByRestaurantIdAndIsActiveTrue(restaurantId)
+            : staffListWithFilter(restaurantId, type);
         
-        return employees.stream().map(this::mapToEmployeeDto).collect(Collectors.toList());
+        return staffList.stream().map(this::mapToStaffDto).collect(Collectors.toList());
+    }
+
+    private List<Staff> staffListWithFilter(Long restaurantId, Staff.EmployeeType type) {
+        return staffRepository.findByRestaurantIdAndIsActiveTrue(restaurantId).stream()
+                .filter(s -> s.getEmployeeType() == type)
+                .collect(Collectors.toList());
     }
 
     @Transactional
-    public Employee updateEmployee(Long restaurantId, Long employeeId, UpdateEmployeeRequest req) {
-        Employee employee = employeeRepository.findById(employeeId)
-                .orElseThrow(() -> new RuntimeException("Employee not found"));
+    public Staff updateStaff(Long restaurantId, UUID staffId, UpdateStaffRequest req) {
+        Staff staff = staffRepository.findById(staffId)
+                .orElseThrow(() -> new RuntimeException("Staff not found"));
         
-        if (!employee.getRestaurant().getId().equals(restaurantId)) {
-            throw new RuntimeException("Unhauthorized access to employee");
+        if (!staff.getRestaurantId().equals(restaurantId)) {
+            throw new RuntimeException("Unauthorized access to staff");
         }
 
-        employee.setName(req.getName());
-        employee.setHourlyRate(req.getHourlyRate());
-        employee.setAnnualSalary(req.getAnnualSalary());
-        employee.setActive(req.isActive());
-        return employeeRepository.save(employee);
+        staff.setDisplayName(req.getName());
+        staff.setHourlyRate(req.getHourlyRate());
+        staff.setAnnualSalary(req.getAnnualSalary());
+        staff.setIsActive(req.isActive());
+        return staffRepository.save(staff);
     }
 
     // -- Weekly Hours tracking ---------------------------------
 
     @Transactional
-    public EmployeeAttendance clockIn(Long restaurantId, Long employeeId, java.time.LocalDateTime clockInTime) {
-        Employee employee = employeeRepository.findById(employeeId)
-                .orElseThrow(() -> new RuntimeException("Employee not found"));
+    public StaffShift clockIn(Long restaurantId, UUID staffId, java.time.LocalDateTime clockInTime) {
+        Staff staff = staffRepository.findById(staffId)
+                .orElseThrow(() -> new RuntimeException("Staff not found"));
         
         // Ensure no existing active punch
-        attendanceRepository.findByEmployeeIdAndStatus(employeeId, EmployeeAttendance.AttendanceStatus.ACTIVE)
-                .ifPresent(p -> { throw new IllegalStateException("Employee already clocked in"); });
+        staffShiftRepository.findTopByStaffStaffIdAndIsActiveTrueOrderByClockInDesc(staffId)
+                .ifPresent(p -> { throw new IllegalStateException("Staff already clocked in"); });
         
-        EmployeeAttendance attendance = new EmployeeAttendance();
-        attendance.setEmployee(employee);
-        attendance.setRestaurant(employee.getRestaurant());
-        attendance.setClockInTime(clockInTime);
-        attendance.setStatus(EmployeeAttendance.AttendanceStatus.ACTIVE);
+        StaffShift shift = StaffShift.builder()
+                .staff(staff)
+                .restaurantId(restaurantId)
+                .clockIn(clockInTime)
+                .isActive(true)
+                .build();
         
-        return attendanceRepository.save(attendance);
+        return staffShiftRepository.save(shift);
     }
 
     @Transactional
-    public EmployeeAttendance clockOut(Long restaurantId, Long employeeId, java.time.LocalDateTime clockOutTime) {
-        EmployeeAttendance attendance = attendanceRepository.findByEmployeeIdAndStatus(employeeId, EmployeeAttendance.AttendanceStatus.ACTIVE)
-                .orElseThrow(() -> new RuntimeException("No active clock-in found for employee"));
+    public StaffShift clockOut(Long restaurantId, UUID staffId, java.time.LocalDateTime clockOutTime) {
+        StaffShift shift = staffShiftRepository.findTopByStaffStaffIdAndIsActiveTrueOrderByClockInDesc(staffId)
+                .orElseThrow(() -> new RuntimeException("No active shift found for staff"));
         
-        attendance.setClockOutTime(clockOutTime);
-        attendance.setStatus(EmployeeAttendance.AttendanceStatus.COMPLETED);
+        shift.setClockOut(clockOutTime);
+        shift.setIsActive(false);
         
+        long mins = java.time.Duration.between(shift.getClockIn(), clockOutTime).toMinutes();
+        shift.setDurationMinutes(mins);
+
         // Update the weekly labor record aggregation
-        Employee employee = attendance.getEmployee();
-        LocalDate shiftDate = attendance.getClockInTime().toLocalDate();
+        Staff staff = shift.getStaff();
+        LocalDate shiftDate = shift.getClockIn().toLocalDate();
         LocalDate weekStart = shiftDate.with(java.time.DayOfWeek.MONDAY);
         
-        EmployeeLaborRecord record = laborRecordRepository.findByEmployeeIdAndWeekStartDate(employee.getId(), weekStart)
+        StaffLaborRecord record = laborRecordRepository.findByStaffStaffIdAndWeekStartDate(staff.getStaffId(), weekStart)
                 .orElseGet(() -> {
-                    EmployeeLaborRecord r = new EmployeeLaborRecord();
-                    r.setEmployee(employee);
-                    r.setRestaurant(employee.getRestaurant());
+                    StaffLaborRecord r = new StaffLaborRecord();
+                    r.setStaff(staff);
+                    r.setRestaurant(restaurantRepository.findById(restaurantId).get()); // Simple lookup
                     r.setWeekStartDate(weekStart);
-                    r.setRateSnapshot(employee.getHourlyRate());
+                    r.setRateSnapshot(staff.getHourlyRate());
                     return r;
                 });
         
-        long mins = java.time.Duration.between(attendance.getClockInTime(), clockOutTime).toMinutes();
         BigDecimal hours = BigDecimal.valueOf(mins).divide(BigDecimal.valueOf(60), 2, java.math.RoundingMode.HALF_UP);
         
         switch (shiftDate.getDayOfWeek()) {
@@ -128,28 +147,31 @@ public class LaborService {
         record.setUpdatedAt(java.time.LocalDateTime.now());
         laborRecordRepository.save(record);
         
-        return attendanceRepository.save(attendance);
+        return staffShiftRepository.save(shift);
     }
 
     @Transactional(readOnly = true)
     public LaborWeekSummaryDto getWeeklySummary(Long restaurantId, LocalDate weekStart) {
         // 1. Fetch all relevant data
-        List<Employee> hourlyEmployees = employeeRepository.findAllByRestaurantIdAndEmployeeTypeAndActive(restaurantId, Employee.EmployeeType.HOURLY, true);
-        Map<Long, EmployeeLaborRecord> recordsMap = laborRecordRepository.findAllByRestaurantIdAndWeekStartDate(restaurantId, weekStart)
-                .stream().collect(Collectors.toMap(r -> r.getEmployee().getId(), r -> r));
+        List<Staff> hourlyStaff = staffRepository.findByRestaurantIdAndIsActiveTrue(restaurantId).stream()
+                .filter(s -> s.getEmployeeType() == Staff.EmployeeType.HOURLY)
+                .collect(Collectors.toList());
+        
+        Map<UUID, StaffLaborRecord> recordsMap = laborRecordRepository.findAllByRestaurantIdAndWeekStartDate(restaurantId, weekStart)
+                .stream().collect(Collectors.toMap(r -> r.getStaff().getStaffId(), r -> r));
         
         LocalDate weekEnd = weekStart.plusDays(6);
         List<ScheduledShift> shifts = shiftRepository.findAllByRestaurantIdAndShiftDateBetween(restaurantId, weekStart, weekEnd);
-        Map<Long, List<ScheduledShift>> shiftsMap = shifts.stream().collect(Collectors.groupingBy(s -> s.getEmployee().getId()));
+        Map<UUID, List<ScheduledShift>> shiftsMap = shifts.stream().collect(Collectors.groupingBy(s -> s.getStaff().getStaffId()));
 
-        // 2. Build per-employee summaries
-        List<EmployeeLaborSummaryDto> employees = hourlyEmployees.stream().map(emp -> {
-            EmployeeLaborRecord record = recordsMap.get(emp.getId());
-            List<ScheduledShift> empShifts = shiftsMap.getOrDefault(emp.getId(), new ArrayList<>());
+        // 2. Build per-staff summaries
+        List<StaffLaborSummaryDto> staffSummaries = hourlyStaff.stream().map(st -> {
+            StaffLaborRecord record = recordsMap.get(st.getStaffId());
+            List<ScheduledShift> empShifts = shiftsMap.getOrDefault(st.getStaffId(), new ArrayList<>());
             
-            EmployeeLaborSummaryDto dto = (record != null) ? calcEmployeeLaborSummary(record) : new EmployeeLaborSummaryDto();
-            dto.setEmployee(mapToEmployeeDto(emp));
-            dto.setEmployeeId(emp.getId());
+            StaffLaborSummaryDto dto = (record != null) ? calcStaffLaborSummary(record) : new StaffLaborSummaryDto();
+            dto.setStaff(mapToStaffDto(st));
+            dto.setStaffId(st.getStaffId());
 
             // Add schedule data
             BigDecimal schedHrs = empShifts.stream()
@@ -172,19 +194,22 @@ public class LaborService {
         }).collect(Collectors.toList());
 
         // 3. Aggregate totals
-        BigDecimal totalHourly = employees.stream()
+        BigDecimal totalHourly = staffSummaries.stream()
                 .map(e -> nvl(e.getTotalCost()))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         
-        BigDecimal totalScheduled = employees.stream()
+        BigDecimal totalScheduled = staffSummaries.stream()
                 .map(e -> nvl(e.getScheduledCost()))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        BigDecimal totalHours = employees.stream()
+        BigDecimal totalHours = staffSummaries.stream()
                 .map(e -> nvl(e.getTotalHours()))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        List<Employee> mgmt = employeeRepository.findAllByRestaurantIdAndEmployeeTypeAndActive(restaurantId, Employee.EmployeeType.MANAGEMENT, true);
+        List<Staff> mgmt = staffRepository.findByRestaurantIdAndIsActiveTrue(restaurantId).stream()
+                .filter(s -> s.getEmployeeType() == Staff.EmployeeType.MANAGEMENT)
+                .collect(Collectors.toList());
+        
         BigDecimal totalMgmt = mgmt.stream()
                 .map(e -> e.getAnnualSalary() != null ? e.getAnnualSalary().divide(BigDecimal.valueOf(52), 2, RoundingMode.HALF_UP) : BigDecimal.ZERO)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -195,7 +220,7 @@ public class LaborService {
         
         LaborWeekSummaryDto summary = new LaborWeekSummaryDto();
         summary.setWeekStartDate(weekStart);
-        summary.setEmployees(employees);
+        summary.setStaffList(staffSummaries);
         summary.setTotalHourlyLaborCost(totalHourly);
         summary.setTotalManagementLaborCost(totalMgmt);
         summary.setEstimatedBenefitsCost(benefits);
@@ -206,7 +231,7 @@ public class LaborService {
         return summary;
     }
 
-    private EmployeeLaborSummaryDto calcEmployeeLaborSummary(EmployeeLaborRecord record) {
+    private StaffLaborSummaryDto calcStaffLaborSummary(StaffLaborRecord record) {
         BigDecimal mon = nvl(record.getHoursMon());
         BigDecimal tue = nvl(record.getHoursTue());
         BigDecimal wed = nvl(record.getHoursWed());
@@ -233,8 +258,8 @@ public class LaborService {
             totalCost = totalCost.add(otPremium);
         }
         
-        EmployeeLaborSummaryDto dto = new EmployeeLaborSummaryDto();
-        dto.setEmployeeId(record.getEmployee().getId());
+        StaffLaborSummaryDto dto = new StaffLaborSummaryDto();
+        dto.setStaffId(record.getStaff().getStaffId());
         dto.setTotalHours(totalHours);
         dto.setTotalCost(totalCost.setScale(2, RoundingMode.HALF_UP));
         dto.setDailyHours(dailyHours);
@@ -252,10 +277,10 @@ public class LaborService {
             : new ScheduledShift();
         
         if (shift.getId() == null) {
-            Employee employee = employeeRepository.findById(req.getEmployeeId())
-                    .orElseThrow(() -> new RuntimeException("Employee not found"));
-            shift.setEmployee(employee);
-            shift.setRestaurant(employee.getRestaurant());
+            Staff staff = staffRepository.findById(req.getStaffId())
+                    .orElseThrow(() -> new RuntimeException("Staff not found"));
+            shift.setStaff(staff);
+            shift.setRestaurant(restaurantRepository.findById(restaurantId).get());
         }
         
         shift.setShiftDate(req.getShiftDate());
@@ -306,42 +331,42 @@ public class LaborService {
     // -- Simulation helpers ------------------------------------
 
     /**
-     * Bulk-closes all ACTIVE attendance records for a restaurant.
+     * Simulation-only: bulk-closes all ACTIVE attendance records for a restaurant.
      * Used by the simulator to clean up stale clock-ins at the start of each day
      * (handles both missed clock-outs from a prior run AND from the previous sim day).
      */
     @Transactional
     public int forceCloseAllActive(Long restaurantId, java.time.LocalDateTime closeTime) {
-        return attendanceRepository.closeAllActive(restaurantId, closeTime);
+        return staffShiftRepository.closeAllActive(restaurantId, closeTime);
     }
 
     // -- Additional Operations ---------------------------------
 
     @Transactional
-    public Employee deactivateEmployee(Long restaurantId, Long employeeId) {
-        Employee employee = employeeRepository.findById(employeeId)
-                .orElseThrow(() -> new RuntimeException("Employee not found"));
-        if (!employee.getRestaurant().getId().equals(restaurantId)) {
-            throw new RuntimeException("Unauthorized access to employee");
+    public Staff deactivateStaff(Long restaurantId, UUID staffId) {
+        Staff staff = staffRepository.findById(staffId)
+                .orElseThrow(() -> new RuntimeException("Staff not found"));
+        if (!staff.getRestaurantId().equals(restaurantId)) {
+            throw new RuntimeException("Unauthorized access to staff");
         }
-        employee.setActive(false);
-        return employeeRepository.save(employee);
+        staff.setIsActive(false);
+        return staffRepository.save(staff);
     }
 
     @Transactional
-    public EmployeeLaborRecord logEmployeeHours(Long restaurantId, Long employeeId,
-                                                LocalDate weekStart, Map<String, Object> body) {
-        Employee employee = employeeRepository.findById(employeeId)
-                .orElseThrow(() -> new RuntimeException("Employee not found"));
+    public StaffLaborRecord logStaffHours(Long restaurantId, UUID staffId,
+                                                  LocalDate weekStart, Map<String, Object> body) {
+        Staff staff = staffRepository.findById(staffId)
+                .orElseThrow(() -> new RuntimeException("Staff not found"));
 
-        EmployeeLaborRecord record = laborRecordRepository
-                .findByEmployeeIdAndWeekStartDate(employee.getId(), weekStart)
+        StaffLaborRecord record = laborRecordRepository
+                .findByStaffStaffIdAndWeekStartDate(staff.getStaffId(), weekStart)
                 .orElseGet(() -> {
-                    EmployeeLaborRecord r = new EmployeeLaborRecord();
-                    r.setEmployee(employee);
-                    r.setRestaurant(employee.getRestaurant());
+                    StaffLaborRecord r = new StaffLaborRecord();
+                    r.setStaff(staff);
+                    r.setRestaurant(restaurantRepository.findById(restaurantId).get());
                     r.setWeekStartDate(weekStart);
-                    r.setRateSnapshot(employee.getHourlyRate());
+                    r.setRateSnapshot(staff.getHourlyRate());
                     return r;
                 });
 
@@ -369,22 +394,22 @@ public class LaborService {
 
     // -- Helpers -----------------------------------------------
 
-    private EmployeeDto mapToEmployeeDto(Employee e) {
-        EmployeeDto dto = new EmployeeDto();
-        dto.setId(e.getId());
-        dto.setName(e.getName());
+    private StaffDto mapToStaffDto(Staff e) {
+        StaffDto dto = new StaffDto();
+        dto.setId(e.getStaffId());
+        dto.setStaffName(e.getDisplayName());
         dto.setEmployeeType(e.getEmployeeType());
         dto.setHourlyRate(e.getHourlyRate());
         dto.setAnnualSalary(e.getAnnualSalary());
-        dto.setActive(e.isActive());
+        dto.setActive(e.getIsActive());
         return dto;
     }
 
     private ScheduledShiftDto mapToShiftDto(ScheduledShift s) {
         ScheduledShiftDto dto = new ScheduledShiftDto();
         dto.setId(s.getId());
-        dto.setEmployeeId(s.getEmployee().getId());
-        dto.setEmployeeName(s.getEmployee().getName());
+        dto.setStaffId(s.getStaff().getStaffId());
+        dto.setStaffName(s.getStaff().getDisplayName());
         dto.setShiftDate(s.getShiftDate());
         dto.setStartTime(s.getStartTime());
         dto.setEndTime(s.getEndTime());
@@ -395,7 +420,7 @@ public class LaborService {
         BigDecimal hours = BigDecimal.valueOf(mins).divide(BigDecimal.valueOf(60), 2, RoundingMode.HALF_UP);
         dto.setScheduledHours(hours);
         
-        BigDecimal rate = s.getEmployee().getHourlyRate() != null ? s.getEmployee().getHourlyRate() : BigDecimal.ZERO;
+        BigDecimal rate = s.getStaff().getHourlyRate() != null ? s.getStaff().getHourlyRate() : BigDecimal.ZERO;
         dto.setScheduledCost(hours.multiply(rate).setScale(2, RoundingMode.HALF_UP));
         return dto;
     }

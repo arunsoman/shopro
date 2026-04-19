@@ -7,7 +7,7 @@ import mls.sho.dms.application.inventory.repository.*;
 import mls.sho.dms.application.pos.repository.*;
 import mls.sho.dms.application.purchasing.repository.*;
 import mls.sho.dms.application.kds.repository.*;
-import mls.sho.dms.application.primecost.repository.EmployeeRepository;
+
 import mls.sho.dms.application.kds.entity.Outlet;
 import mls.sho.dms.application.kds.entity.KdsStation;
 import mls.sho.dms.application.kds.entity.KdsDevice;
@@ -45,6 +45,7 @@ public class SimulatorInternalService {
     private final KdsDeviceRepository kdsDeviceRepository;
     private final KdsTicketRepository kdsTicketRepository;
     private final IngredientRepository ingredientRepository;
+    private final InventoryBalanceRepository balanceRepository;
 
     @Transactional
     public void cleanup(Long restaurantId) {
@@ -59,7 +60,7 @@ public class SimulatorInternalService {
         poLineRepository.deleteByPurchaseOrderRestaurantId(restaurantId);
         poRepository.deleteByRestaurantId(restaurantId);
         kdsTicketRepository.deleteAll();
-        ingredientRepository.zeroOutStockByRestaurantId(restaurantId);
+        balanceRepository.deleteByRestaurantId(restaurantId);
     }
 
     @Transactional(readOnly = true)

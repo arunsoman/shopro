@@ -1,6 +1,7 @@
 package mls.sho.dms.application.analytics.web;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import mls.sho.dms.application.analytics.dto.*;
 import mls.sho.dms.application.analytics.service.ReportService;
 import mls.sho.dms.common.enums.InventoryType;
@@ -8,12 +9,14 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/restaurants/{restaurantId}/reports")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
+@Slf4j
 public class ReportController {
 
     private final ReportService reportService;
@@ -50,7 +53,7 @@ public class ReportController {
     @GetMapping("/category-distribution")
     public List<CategoryDistributionDto> getCategoryDistribution(
             @PathVariable Long restaurantId,
-            @RequestParam(defaultValue = "INVENTORY") InventoryType type) {
+            @RequestParam(defaultValue = "FOOD") InventoryType type) {
         return reportService.getCategoryDistribution(restaurantId, type);
     }
 
@@ -90,7 +93,12 @@ public class ReportController {
             @PathVariable Long restaurantId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
-        return reportService.getInventoryVarianceReport(restaurantId, startDate, endDate);
+        try {
+            return reportService.getInventoryVarianceReport(restaurantId, startDate, endDate);
+        } catch (Exception e) {
+            log.error("Error generating inventory variance report for restaurant {}: {}", restaurantId, e.getMessage(), e);
+            return Collections.emptyList();
+        }
     }
 
     @GetMapping("/waste-summary")
@@ -101,33 +109,4 @@ public class ReportController {
         return reportService.getWasteSummary(restaurantId, startDate, endDate);
     }
 
-    // -- Global Endpoints (Not under restaurantId) --
-
-    @GetMapping("/api/v1/reports/guest-heatmap")
-    public List<GuestArrivalReportDto> getGlobalGuestArrivalHeatmap(
-            @RequestParam(defaultValue = "month") String view,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate) {
-        return reportService.getGuestArrivalHeatmap(null, view, startDate);
-    }
-
-    @GetMapping("/api/v1/reports/revenue-heatmap")
-    public List<RevenueReportDto> getGlobalRevenueHeatmap(
-            @RequestParam(defaultValue = "month") String view,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate) {
-        return reportService.getRevenueHeatmap(null, view, startDate);
-    }
-
-    @GetMapping("/api/v1/reports/labor-heatmap")
-    public List<LaborAnalyticsDto> getGlobalLaborAnalyticsHeatmap(
-            @RequestParam(defaultValue = "month") String view,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate) {
-        return reportService.getLaborAnalyticsHeatmap(null, view, startDate);
-    }
-
-    @GetMapping("/api/v1/reports/prime-cost")
-    public List<PrimeCostReportDto> getGlobalPrimeCostAnalytics(
-            @RequestParam(defaultValue = "month") String view,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate) {
-        return reportService.getPrimeCostAnalytics(null, view, startDate);
-    }
 }

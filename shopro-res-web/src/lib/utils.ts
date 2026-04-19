@@ -6,7 +6,8 @@ export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs))
 }
 
-export function currency(value: number, decimals = 2): string {
+export function currency(value: number | null | undefined, decimals = 2): string {
+  if (value === null || value === undefined || isNaN(value)) return '$0.00'
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
@@ -15,7 +16,8 @@ export function currency(value: number, decimals = 2): string {
   }).format(value)
 }
 
-export function percent(value: number, decimals = 1): string {
+export function percent(value: number | null | undefined, decimals = 1): string {
+  if (value === null || value === undefined || isNaN(value)) return '0.0%'
   return `${(value * 100).toFixed(decimals)}%`
 }
 

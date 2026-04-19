@@ -89,7 +89,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             
             // Sync with useRestaurantStore (Legacy/Alternative)
             if (newSession.token) {
-                setAuth(newSession.token, newSession.restaurantId || 1, newSession.restaurantName || 'Bistro Verde');
+                setAuth(newSession.token, newSession.restaurantId || 3, newSession.restaurantName || 'The Market Table');
             }
 
             // Sync with useAuthStore (Primary for RestaurantProvider)
@@ -99,7 +99,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     email: "", // User session doesn't always have email here
                     name: newSession.fullName,
                     role: (newSession.role as any),
-                    restaurantId: newSession.restaurantId || 1,
+                    restaurantId: newSession.restaurantId || 3,
                     active: true,
                     createdAt: new Date().toISOString()
                 },

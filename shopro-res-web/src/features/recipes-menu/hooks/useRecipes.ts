@@ -3,6 +3,28 @@ import api from '@/lib/api/client'
 import { useRestaurantStore } from '@/store/useRestaurantStore'
 
 // ── Types ──────────────────────────────────────────────────────
+// ── Revenue category (POS sales-mix mapping) ────────────────
+/** Maps a MenuCostGroup to a POS revenue bucket for WeeklyWorksheet sales mix. */
+export type RevenueCategory = 'FOOD' | 'SOFT_BEV' | 'LIQUOR' | 'BEER' | 'WINE' | 'MERCH'
+
+export const REVENUE_CATEGORY_LABELS: Record<RevenueCategory, string> = {
+  FOOD:     'Food',
+  SOFT_BEV: 'Soft Bev',
+  LIQUOR:   'Spirits',
+  BEER:     'Beer',
+  WINE:     'Wine',
+  MERCH:    'Merchandise',
+}
+
+export const REVENUE_CATEGORY_COLORS: Record<RevenueCategory, string> = {
+  FOOD:     'bg-orange-500/10 text-orange-600 border-orange-500/20',
+  SOFT_BEV: 'bg-sky-500/10 text-sky-600 border-sky-500/20',
+  LIQUOR:   'bg-purple-500/10 text-purple-600 border-purple-500/20',
+  BEER:     'bg-amber-500/10 text-amber-600 border-amber-500/20',
+  WINE:     'bg-rose-500/10 text-rose-600 border-rose-500/20',
+  MERCH:    'bg-slate-500/10 text-slate-600 border-slate-500/20',
+}
+
 export interface MenuCostGroup {
   id: number
   restaurantId: number
@@ -10,6 +32,8 @@ export interface MenuCostGroup {
   displayOrder: number
   targetFoodCostPct: number | null
   active: boolean
+  /** POS revenue bucket for sales-mix reporting (Prime Cost). */
+  revenueCategory?: RevenueCategory
 }
 
 export interface RecipeProcedureStep {
@@ -89,6 +113,27 @@ export function useCreateCostGroup() {
   return useMutation({
     mutationFn: (body: Partial<MenuCostGroup>) =>
       api.post(`/restaurants/${restaurantId}/cost-groups`, body).then(r => r.data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['cost-groups', restaurantId] }),
+  })
+}
+
+export function useUpdateCostGroup() {
+  const qc = useQueryClient()
+  const { restaurantId } = useRestaurantStore()
+  return useMutation({
+    mutationFn: ({ id, body }: { id: number; body: Partial<MenuCostGroup> }) =>
+      api.put(`/restaurants/${restaurantId}/cost-groups/${id}`, body).then(r => r.data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['cost-groups', restaurantId] }),
+  })
+}
+
+/** Targeted update — only revenueCategory. Used for Prime Cost sales-mix mapping. */
+export function useUpdateRevenueCategory() {
+  const qc = useQueryClient()
+  const { restaurantId } = useRestaurantStore()
+  return useMutation({
+    mutationFn: ({ id, revenueCategory }: { id: number; revenueCategory: RevenueCategory }) =>
+      api.patch(`/restaurants/${restaurantId}/cost-groups/${id}/revenue-category`, revenueCategory).then(r => r.data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['cost-groups', restaurantId] }),
   })
 }

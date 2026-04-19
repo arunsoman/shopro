@@ -9,7 +9,7 @@ import java.util.List;
 
 @Repository
 public interface ScheduledShiftRepository extends JpaRepository<ScheduledShift, Long> {
-    @EntityGraph(attributePaths = {"employee"})
+    @EntityGraph(attributePaths = {"staff"})
     List<ScheduledShift> findAllByRestaurantIdAndShiftDateBetween(Long restaurantId, LocalDate from, LocalDate to);
     List<ScheduledShift> findAllByRestaurantIdAndShiftDate(Long restaurantId, LocalDate shiftDate);
 }

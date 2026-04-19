@@ -18,7 +18,7 @@ import type { GoodsReceipt, GoodsReceiptLine } from '@/types/goodsReceipt.types'
 export default function GRNConflictPage() {
   const back = useAppStore(s => s.back);
   const { user } = useAuthStore();
-  const restaurantId = user?.restaurantId || 1;
+  const restaurantId = user?.restaurantId || 3;
 
   const { data: conflictGRNs = [], isLoading, refetch } = useGRNConflicts(restaurantId);
   const resolveConflict = useResolveLineConflict(restaurantId);

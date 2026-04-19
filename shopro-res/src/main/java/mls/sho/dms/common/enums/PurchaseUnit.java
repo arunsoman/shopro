@@ -22,5 +22,7 @@ public enum PurchaseUnit {
     BUNCH,
     DOZEN,
     GALLON,
-    HALF_GALLON
+    HALF_GALLON,
+    LITER,
+    ML
 }

@@ -288,7 +288,7 @@ public class PrimeCostService {
             LaborWeekSummaryDto labor = laborService.getWeeklySummary(restaurantId, date.minusDays(date.getDayOfWeek().getValue() % 7));
             // Find employee record for that day
             int dayIndex = date.getDayOfWeek().getValue() % 7;
-            BigDecimal dayLabor = labor.getEmployees().stream()
+            BigDecimal dayLabor = labor.getStaffList().stream()
                 .filter(e -> e.getDailyCosts() != null && e.getDailyCosts().size() > dayIndex)
                 .map(e -> e.getDailyCosts().get(dayIndex))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);

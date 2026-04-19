@@ -44,4 +44,4 @@ export const getDailyPrimeCostTrend = (restaurantId: number, days: number): Prom
   apiGet(`${BASE}/${restaurantId}/prime-cost/trend/daily?days=${days}`);
 
 export const getMultiLocationSummary = (params: MultiLocationParams): Promise<MultiLocationSummaryDto> =>
-  apiGet(`${BASE}/multi-location/prime-cost?weekStart=${params.weekStart}&restaurantIds=${params.restaurantIds.join(",")}`);
+  apiGet(`${BASE}/${params.restaurantId}/prime-cost/multi-location?weekStart=${params.weekStart}&restaurantIds=${params.restaurantIds.join(",")}`);

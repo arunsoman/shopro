@@ -63,7 +63,7 @@ const routes: RouteObject[] = [
         // AppShell wraps all authenticated pages — injected at runtime
         // to avoid circular import with providers
         lazy: async () => {
-          const { AppShell } = await import("@/components/layout/AppShell");
+          const { default: AppShell } = await import("@/components/layout/AppShell");
           return { Component: AppShell };
         },
         children: [
@@ -81,7 +81,7 @@ const routes: RouteObject[] = [
           // ── SS1: Inventory ──────────────────────────────────
           {
             path: ROUTES.INVENTORY,
-            element: <Lazy><P.InventoryHubPage /></Lazy>,
+            element: <Lazy><P.InventoryHub /></Lazy>,
           },
           {
             path: ROUTES.INGREDIENT_LIST,

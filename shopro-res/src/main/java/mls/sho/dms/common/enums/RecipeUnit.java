@@ -20,5 +20,7 @@ public enum RecipeUnit {
     SLICE,
     WHOLE,       // e.g. "whole" cake
     LITER,
-    ML
+    ML,
+    OZ,
+    JAR
 }

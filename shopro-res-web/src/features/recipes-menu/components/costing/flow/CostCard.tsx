@@ -30,7 +30,7 @@ export default function PrecisionCostCard({ itemId, onBack }: Props) {
   if (isLoading) return <div className="p-8 text-center opacity-50">Loading Precision Ledger...</div>;
   if (!card) return <div className="p-8 text-center text-rose-500">Error: Card not found.</div>;
 
-  const currentFoodCostPct = card.totalCost / (card.sellPrice || 1);
+  const currentFoodCostPct = card.totalCost / (card.sellPrice || 3);
   const currentMarginPct = 1 - currentFoodCostPct;
 
   return (

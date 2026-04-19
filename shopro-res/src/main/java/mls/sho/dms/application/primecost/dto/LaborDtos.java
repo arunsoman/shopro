@@ -1,34 +1,35 @@
 package mls.sho.dms.application.primecost.dto;
 
 import lombok.Data;
-import mls.sho.dms.application.primecost.entity.Employee;
+import mls.sho.dms.entity.users.Staff;
 import mls.sho.dms.common.enums.KitchenStationType;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.UUID;
 
 @Data
 public class LaborDtos {
 
-    @Data public static class CreateEmployeeRequest {
+    @Data public static class CreateStaffRequest {
         private String name;
-        private Employee.EmployeeType employeeType;
+        private Staff.EmployeeType employeeType;
         private BigDecimal hourlyRate;
         private BigDecimal annualSalary;
     }
 
-    @Data public static class UpdateEmployeeRequest {
+    @Data public static class UpdateStaffRequest {
         private String name;
         private BigDecimal hourlyRate;
         private BigDecimal annualSalary;
         private boolean active;
     }
 
-    @Data public static class EmployeeDto {
-        private Long id;
-        private String name;
-        private Employee.EmployeeType employeeType;
+    @Data public static class StaffDto {
+        private UUID id;
+        private String staffName;
+        private Staff.EmployeeType employeeType;
         private BigDecimal hourlyRate;
         private BigDecimal annualSalary;
         private boolean active;
@@ -46,7 +47,7 @@ public class LaborDtos {
 
     @Data public static class LaborWeekSummaryDto {
         private LocalDate weekStartDate;
-        private List<EmployeeLaborSummaryDto> employees;
+        private List<StaffLaborSummaryDto> staffList;
         private BigDecimal totalHourlyLaborCost;
         private BigDecimal totalManagementLaborCost;
         private BigDecimal estimatedBenefitsCost;
@@ -55,9 +56,9 @@ public class LaborDtos {
         private BigDecimal totalHours;
     }
 
-    @Data public static class EmployeeLaborSummaryDto {
-        private Long employeeId;
-        private EmployeeDto employee; 
+    @Data public static class StaffLaborSummaryDto {
+        private UUID staffId;
+        private StaffDto staff; 
         private BigDecimal totalHours;
         private BigDecimal totalCost;
         private BigDecimal scheduledHours;
@@ -70,7 +71,7 @@ public class LaborDtos {
 
     @Data public static class UpsertShiftRequest {
         private Long id; // null for new
-        private Long employeeId;
+        private UUID staffId;
         private LocalDate shiftDate;
         private LocalTime startTime;
         private LocalTime endTime;
@@ -80,8 +81,8 @@ public class LaborDtos {
 
     @Data public static class ScheduledShiftDto {
         private Long id;
-        private Long employeeId;
-        private String employeeName;
+        private UUID staffId;
+        private String staffName;
         private LocalDate shiftDate;
         private LocalTime startTime;
         private LocalTime endTime;

@@ -69,20 +69,21 @@ public class AuditLogService {
                 
                 // Success: reset circuit breaker
                 consecutiveFailures.set(0);
-                log.debug("Audit log saved: {} -> {} [{}:{}]", username, action, entityName, entityId);
+                log.debug("Audit log saved: user='{}' action={} entity='{}' id={} details='{}' ip={}",
+                        username, action, entityName, entityId, details, ipAddress);
                 return;
 
             } catch (Exception e) {
                 attempt++;
                 consecutiveFailures.incrementAndGet();
                 
-                log.warn("Failed to save audit log (attempt {}/{}): {}", 
-                         attempt, MAX_RETRIES, e.getMessage());
+                log.warn("Failed to save audit log for user='{}' action={} entity='{}' id={} (attempt {}/{}): {}",
+                         username, action, entityName, entityId, attempt, MAX_RETRIES, e.getMessage());
 
                 // Check circuit breaker
                 if (consecutiveFailures.get() >= CIRCUIT_BREAKER_THRESHOLD) {
-                    log.error("CIRCUIT BREAKER TRIGGERED: {} consecutive failures logging audit. " +
-                              "Alerting admin!", consecutiveFailures.get());
+                    log.error("CIRCUIT BREAKER TRIGGERED: {} consecutive failures logging audit for user='{}' action={} entity='{}' id={}. Alerting admin!",
+                              consecutiveFailures.get(), username, action, entityName, entityId);
                     // Alert admin - in production, this would send alert
                     fallbackLog(username, action, entityName, entityId, details, ipAddress);
                     return;

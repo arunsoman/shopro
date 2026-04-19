@@ -674,14 +674,14 @@ The reports interface shall provide:
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/api/v1/menu-engineering/analyses` | GET | List all analyses |
-| `/api/v1/menu-engineering/analyses` | POST | Create new analysis |
-| `/api/v1/menu-engineering/analyses/{id}` | GET | Get analysis details |
-| `/api/v1/menu-engineering/analyses/{id}/matrix` | GET | Get menu engineering matrix |
-| `/api/v1/menu-engineering/analyses/{id}/recommendations` | GET | Get recommendations |
-| `/api/v1/menu-engineering/items/{id}/metrics` | GET | Get item-level metrics |
-| `/api/v1/menu-engineering/reports` | POST | Generate report |
-| `/api/v1/menu-engineering/export` | POST | Export data |
+| `/api/v1/restaurants/{restaurantId}/menu-engineering/analyses` | GET | List all analyses |
+| `/api/v1/restaurants/{restaurantId}/menu-engineering/analyses` | POST | Create new analysis |
+| `/api/v1/restaurants/{restaurantId}/menu-engineering/analyses/{id}` | GET | Get analysis details |
+| `/api/v1/restaurants/{restaurantId}/menu-engineering/analyses/{id}/matrix` | GET | Get menu engineering matrix |
+| `/api/v1/restaurants/{restaurantId}/menu-engineering/analyses/{id}/recommendations` | GET | Get recommendations |
+| `/api/v1/restaurants/{restaurantId}/menu-engineering/items/{id}/metrics` | GET | Get item-level metrics |
+| `/api/v1/restaurants/{restaurantId}/menu-engineering/reports` | POST | Generate report |
+| `/api/v1/restaurants/{restaurantId}/menu-engineering/export` | POST | Export data |
 
 #### 5.2.2 Webhook Events
 

@@ -32,7 +32,7 @@ interface Adjustment {
 /* ── Step 1: GRN Picker ── */
 function GRNPickerStep({ onSelect }: { onSelect: (grnId: number) => void }) {
   const { user } = useAuthStore();
-  const restaurantId = user?.restaurantId || 1;
+  const restaurantId = user?.restaurantId || 3;
   const [search, setSearch] = useState('');
   
   const { data: grns = [], isLoading } = useGoodsReceipts(restaurantId, { status: 'RECEIVED' } as any);
@@ -110,7 +110,7 @@ function InvoiceDetailsStep({
   onBack: () => void;
 }) {
   const { user } = useAuthStore();
-  const restaurantId = user?.restaurantId || 1;
+  const restaurantId = user?.restaurantId || 3;
   
   const { data: grns = [] } = useGoodsReceipts(restaurantId, { status: 'FINALISED' } as any);
   const grn = grns.find((g: any) => g.id === grnId);
@@ -341,7 +341,7 @@ function ReviewStep({
   onSuccess: () => void;
 }) {
   const { user } = useAuthStore();
-  const restaurantId = user?.restaurantId || 1;
+  const restaurantId = user?.restaurantId || 3;
   
   const { data: grns = [] } = useGoodsReceipts(restaurantId, { status: 'RECEIVED' } as any);
   const grn = grns.find((g: any) => g.id === grnId);

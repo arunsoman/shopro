@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import mls.sho.dms.common.enums.KitchenStationType;
 import mls.sho.dms.entity.Restaurant;
+import mls.sho.dms.entity.users.Staff;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -22,8 +23,8 @@ public class ScheduledShift {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "employee_id", nullable = false)
-    private Employee employee;
+    @JoinColumn(name = "staff_id", nullable = false)
+    private Staff staff;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "restaurant_id", nullable = false)

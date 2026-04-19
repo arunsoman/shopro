@@ -1,6 +1,7 @@
 package mls.sho.dms.application.pos.service;
 
 import lombok.RequiredArgsConstructor;
+import mls.sho.dms.application.pos.repository.DiningTableRepository;
 import mls.sho.dms.application.pos.repository.TableSessionRepository;
 import mls.sho.dms.entity.DiningTable;
 import mls.sho.dms.entity.Restaurant;
@@ -14,11 +15,12 @@ import java.time.LocalDateTime;
 public class TableSessionService {
     private final TableSessionRepository repository;
     private final DiningTableService tableService;
+    private final DiningTableRepository tableRepository;
 
     @Transactional
     public TableSession openSession(Restaurant restaurant, Long tableId, int guests, LocalDateTime openedAt) {
         TableSession session = new TableSession();
-        DiningTable table = new DiningTable(); // Simplified mapping
+        DiningTable table = new DiningTable();
         table.setId(tableId);
         session.setTable(table);
         session.setRestaurant(restaurant);
@@ -27,6 +29,13 @@ public class TableSessionService {
         
         tableService.updateStatus(tableId, DiningTable.TableStatus.OCCUPIED);
         return repository.save(session);
+    }
+
+    @Transactional
+    public TableSession openSession(Long restaurantId, Long tableId, int guests) {
+        Restaurant restaurant = new Restaurant();
+        restaurant.setId(restaurantId);
+        return openSession(restaurant, tableId, guests, null);
     }
 
     @Transactional(readOnly = true)
@@ -42,10 +51,22 @@ public class TableSessionService {
     }
 
     @Transactional
+    public void closeSession(Long sessionId) {
+        TableSession session = repository.findById(sessionId).orElseThrow();
+        session.setClosedAt(LocalDateTime.now());
+        if (session.getTable() != null) {
+            tableService.updateStatus(session.getTable().getId(), DiningTable.TableStatus.DIRTY);
+        }
+        repository.save(session);
+    }
+
+    @Transactional
     public void closeSession(Long sessionId, LocalDateTime closedAt) {
         TableSession session = repository.findById(sessionId).orElseThrow();
         session.setClosedAt(closedAt != null ? closedAt : LocalDateTime.now());
-        tableService.updateStatus(session.getTable().getId(), DiningTable.TableStatus.DIRTY);
+        if (session.getTable() != null) {
+            tableService.updateStatus(session.getTable().getId(), DiningTable.TableStatus.DIRTY);
+        }
         repository.save(session);
     }
 }

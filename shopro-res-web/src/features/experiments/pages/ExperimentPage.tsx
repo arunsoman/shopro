@@ -658,7 +658,7 @@ export const ExperimentPage: React.FC = () => {
                { 
                  label: 'Primary KPI Lift', 
                  val: `${(selectedExp.results?.primaryLift || 0) > 0 ? '+' : ''}${selectedExp.results?.primaryLift ?? '0.00'}%`, 
-                 sub: `vs ${selectedExp.hypothesis?.expectedValue || 10}% target`, 
+                 sub: `vs ${selectedExp.hypothesis?.expectedValue || 30}% target`, 
                  color: 'bg-emerald-50 text-emerald-700', 
                  icon: TrendingUp 
                },

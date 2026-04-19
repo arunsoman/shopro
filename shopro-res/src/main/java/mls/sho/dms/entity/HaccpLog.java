@@ -3,6 +3,7 @@ package mls.sho.dms.entity;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 /**
  * HACCP compliance logs for food safety and cooler monitoring.
@@ -34,8 +35,8 @@ public class HaccpLog {
     @Column(name = "corrective_action", length = 500)
     private String correctiveAction;
 
-    @Column(name = "employee_id")
-    private Long employeeId;
+    @Column(name = "staff_id")
+    private UUID staffId;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
@@ -55,8 +56,8 @@ public class HaccpLog {
     public void setCompliant(boolean compliant) { this.compliant = compliant; }
     public String getCorrectiveAction() { return correctiveAction; }
     public void setCorrectiveAction(String correctiveAction) { this.correctiveAction = correctiveAction; }
-    public Long getEmployeeId() { return employeeId; }
-    public void setEmployeeId(Long employeeId) { this.employeeId = employeeId; }
+    public UUID getStaffId() { return staffId; }
+    public void setStaffId(UUID staffId) { this.staffId = staffId; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }

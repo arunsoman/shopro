@@ -5,6 +5,9 @@ plugins {
 }
 
 dependencies {
+    // Onboarding module — runtimeOnly to avoid circular dependency
+    // (shopro-onboarding depends on shopro-res for entities, so we can't use 'implementation')
+
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     implementation 'org.springframework.boot:spring-boot-starter-web'

@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/restaurants/{restaurantId}/inventory/intelligence")
@@ -39,12 +40,12 @@ public class InventoryIntelligenceController {
             @RequestParam Long menuId,
             @RequestParam(required = false) Long orderId,
             @RequestParam String reason,
-            @RequestParam Long employeeId) {
+            @RequestParam java.util.UUID staffId) {
         
         MenuItem item = menuItemRepository.findById(menuId)
                 .orElseThrow(() -> new RuntimeException("Menu item not found"));
         
-        intelligenceService.recordMisfire(item.getRestaurant(), item, orderId, reason, employeeId);
+        intelligenceService.recordMisfire(item.getRestaurant(), item, orderId, reason, staffId);
         return ResponseEntity.ok().build();
     }
 

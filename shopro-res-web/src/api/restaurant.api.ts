@@ -10,7 +10,7 @@ export async function getRestaurantById(id: number): Promise<Restaurant> {
 
   return {
     id,
-    name: "Bistro Verde",
+    name: "The Market Table",
     timezone: "UTC",
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -20,7 +20,7 @@ export async function getRestaurantById(id: number): Promise<Restaurant> {
 export async function updateRestaurant(id: number, data: Partial<Restaurant>): Promise<Restaurant> {
   return {
       id,
-      name: data.name || "Bistro Verde",
+      name: data.name || "The Market Table",
       timezone: data.timezone || "UTC",
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),

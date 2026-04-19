@@ -3,20 +3,19 @@ package mls.sho.dms.application.primecost.controller;
 import lombok.RequiredArgsConstructor;
 import mls.sho.dms.application.primecost.service.LaborService;
 import mls.sho.dms.application.primecost.dto.LaborDtos.*;
-import mls.sho.dms.application.primecost.entity.Employee;
-import mls.sho.dms.application.primecost.entity.EmployeeAttendance;
-import mls.sho.dms.application.primecost.entity.EmployeeLaborRecord;
-import mls.sho.dms.application.primecost.entity.ScheduledShift;
+import mls.sho.dms.entity.users.Staff;
+import mls.sho.dms.entity.users.StaffShift;
+import mls.sho.dms.application.primecost.entity.*;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/restaurants/{restaurantId}/labor")
+@RequestMapping("/api/v1/restaurants/{restaurantId}/prime-cost/labor")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
 public class LaborController {
@@ -26,41 +25,41 @@ public class LaborController {
     // -- Employee Management -----------------------------------
 
     @PostMapping("/employees")
-    public ResponseEntity<Employee> createEmployee(@PathVariable Long restaurantId, @RequestBody CreateEmployeeRequest req) {
-        return ResponseEntity.ok(laborService.createEmployee(restaurantId, req));
+    public ResponseEntity<Staff> createStaff(@PathVariable Long restaurantId, @RequestBody CreateStaffRequest req) {
+        return ResponseEntity.ok(laborService.createStaff(restaurantId, req));
     }
 
     @GetMapping("/employees")
-    public ResponseEntity<List<EmployeeDto>> listEmployees(
+    public ResponseEntity<List<StaffDto>> listStaff(
             @PathVariable Long restaurantId, 
-            @RequestParam(required = false) Employee.EmployeeType type) {
-        return ResponseEntity.ok(laborService.listEmployees(restaurantId, type));
+            @RequestParam(required = false) Staff.EmployeeType type) {
+        return ResponseEntity.ok(laborService.listStaff(restaurantId, type));
     }
 
-    @PutMapping("/employees/{employeeId}")
-    public ResponseEntity<Employee> updateEmployee(
+    @PutMapping("/employees/{staffId}")
+    public ResponseEntity<Staff> updateStaff(
             @PathVariable Long restaurantId, 
-            @PathVariable Long employeeId, 
-            @RequestBody UpdateEmployeeRequest req) {
-        return ResponseEntity.ok(laborService.updateEmployee(restaurantId, employeeId, req));
+            @PathVariable UUID staffId, 
+            @RequestBody UpdateStaffRequest req) {
+        return ResponseEntity.ok(laborService.updateStaff(restaurantId, staffId, req));
     }
 
     // -- Labor Tracking -----------------------------------------
 
-    @PostMapping("/employees/{employeeId}/clock-in")
-    public ResponseEntity<EmployeeAttendance> clockIn(
+    @PostMapping("/employees/{staffId}/clock-in")
+    public ResponseEntity<StaffShift> clockIn(
             @PathVariable Long restaurantId,
-            @PathVariable Long employeeId,
+            @PathVariable UUID staffId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) java.time.LocalDateTime clockInTime) {
-        return ResponseEntity.ok(laborService.clockIn(restaurantId, employeeId, clockInTime));
+        return ResponseEntity.ok(laborService.clockIn(restaurantId, staffId, clockInTime));
     }
 
-    @PostMapping("/employees/{employeeId}/clock-out")
-    public ResponseEntity<EmployeeAttendance> clockOut(
+    @PostMapping("/employees/{staffId}/clock-out")
+    public ResponseEntity<StaffShift> clockOut(
             @PathVariable Long restaurantId,
-            @PathVariable Long employeeId,
+            @PathVariable UUID staffId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) java.time.LocalDateTime clockOutTime) {
-        return ResponseEntity.ok(laborService.clockOut(restaurantId, employeeId, clockOutTime));
+        return ResponseEntity.ok(laborService.clockOut(restaurantId, staffId, clockOutTime));
     }
 
     @GetMapping("/weekly-summary")
@@ -105,21 +104,21 @@ public class LaborController {
         return ResponseEntity.ok(Map.of("closed", closed));
     }
 
-    @PostMapping("/employees/{employeeId}/deactivate")
-    public ResponseEntity<Employee> deactivateEmployee(
+    @PostMapping("/employees/{staffId}/deactivate")
+    public ResponseEntity<Staff> deactivateStaff(
             @PathVariable Long restaurantId,
-            @PathVariable Long employeeId) {
-        return ResponseEntity.ok(laborService.deactivateEmployee(restaurantId, employeeId));
+            @PathVariable UUID staffId) {
+        return ResponseEntity.ok(laborService.deactivateStaff(restaurantId, staffId));
     }
 
-    @PostMapping("/employees/{employeeId}/hours")
-    public ResponseEntity<EmployeeLaborRecord> logEmployeeHours(
+    @PostMapping("/employees/{staffId}/hours")
+    public ResponseEntity<StaffLaborRecord> logStaffHours(
             @PathVariable Long restaurantId,
-            @PathVariable Long employeeId,
+            @PathVariable UUID staffId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate weekStart,
             @RequestBody(required = false) Map<String, Object> body) {
         LocalDate effective = weekStart != null ? weekStart : LocalDate.now().with(java.time.DayOfWeek.MONDAY);
-        return ResponseEntity.ok(laborService.logEmployeeHours(restaurantId, employeeId, effective,
+        return ResponseEntity.ok(laborService.logStaffHours(restaurantId, staffId, effective,
                 body != null ? body : Map.of()));
     }
 

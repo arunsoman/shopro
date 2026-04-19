@@ -34,7 +34,7 @@ interface LineState {
 /* ── Step 1: PO Picker ── */
 function POPickerStep({ onSelect }: { onSelect: (poId: number) => void }) {
   const { user } = useAuthStore();
-  const restaurantId = user?.restaurantId || 1;
+  const restaurantId = user?.restaurantId || 3;
   const [search, setSearch] = useState('');
   const { data: pos = [], isLoading } = usePurchaseOrders(restaurantId, { status: 'SENT' } as any);
 
@@ -102,7 +102,7 @@ function POPickerStep({ onSelect }: { onSelect: (poId: number) => void }) {
 /* ── Step 2: Reception Matrix ── */
 function ReceptionStep({ poId }: { poId: number }) {
   const { user } = useAuthStore();
-  const restaurantId = user?.restaurantId || 1;
+  const restaurantId = user?.restaurantId || 3;
   const navigate = useAppStore(s => s.navigate);
   const back = useAppStore(s => s.back);
 

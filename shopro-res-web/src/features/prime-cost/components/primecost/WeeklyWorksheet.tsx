@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { useWeeklyReport, useFinaliseReport } from "@/hooks/usePrimeCost"
-import type { WeeklyPrimeCostReport } from "@/types"
+import type { WeeklyPrimeCostReport, WeeklyBudget } from "@/types"
 import { LoadingState, ErrorState, Money, Pct, weekOffset, formatWeek } from "../ui/shared"
 import { cn } from '@/lib/utils'
 import { Button } from "@/components/ui/Button"
@@ -105,12 +105,42 @@ export default function WeeklyWorksheet({
                      <ColHeaders />
 
                      <Section label="Revenue Distribution">
-                        <DataRow label="Product Sales (Food)" indent actualD={data.grossSales * 0.80} actualPct={0.80} budgetD={budget ? budget.totalSalesForecast * budget.foodSalesPct : null} budgetPct={budget?.foodSalesPct ?? null} />
-                        <DataRow label="Support Beverage" indent actualD={data.grossSales * 0.03} actualPct={0.03} budgetD={null} budgetPct={budget?.softBevSalesPct ?? null} />
-                        <DataRow label="Refined Spirits" indent actualD={data.grossSales * 0.06} actualPct={0.06} budgetD={null} budgetPct={budget?.liquorSalesPct ?? null} />
-                        <DataRow label="Brewed Selections" indent actualD={data.grossSales * 0.06} actualPct={0.06} budgetD={null} budgetPct={null} />
-                        <DataRow label="Cellar Operations" indent actualD={data.grossSales * 0.04} actualPct={0.04} budgetD={null} budgetPct={null} />
-                        <DataRow label="Ancillary Revenue" indent actualD={data.grossSales * 0.01} actualPct={0.01} budgetD={null} budgetPct={null} />
+                        <DataRow label="Product Sales (Food)" indent
+                           actualD={data.categorySales?.foodSales ?? data.grossSales * 0.80}
+                           actualPct={data.categorySales?.foodSalesPct ?? 0.80}
+                           budgetD={budget ? budget.totalSalesForecast * budget.foodSalesPct : null}
+                           budgetPct={budget?.foodSalesPct ?? null}
+                        />
+                        <DataRow label="Support Beverage" indent
+                           actualD={data.categorySales?.softBevSales ?? data.grossSales * 0.03}
+                           actualPct={data.categorySales?.softBevSalesPct ?? 0.03}
+                           budgetD={null}
+                           budgetPct={budget?.softBevSalesPct ?? null}
+                        />
+                        <DataRow label="Refined Spirits" indent
+                           actualD={data.categorySales?.liquorSales ?? data.grossSales * 0.06}
+                           actualPct={data.categorySales?.liquorSalesPct ?? 0.06}
+                           budgetD={null}
+                           budgetPct={budget?.liquorSalesPct ?? null}
+                        />
+                        <DataRow label="Brewed Selections" indent
+                           actualD={(data.categorySales?.bottleBeerSales ?? 0) + (data.categorySales?.draftBeerSales ?? 0)}
+                           actualPct={(data.categorySales?.bottleBeerSalesPct ?? 0) + (data.categorySales?.draftBeerSalesPct ?? 0)}
+                           budgetD={null}
+                           budgetPct={budget ? (budget.bottleBeerSalesPct ?? 0) + (budget.draftBeerSalesPct ?? 0) : null}
+                        />
+                        <DataRow label="Cellar Operations" indent
+                           actualD={data.categorySales?.wineSales ?? data.grossSales * 0.04}
+                           actualPct={data.categorySales?.wineSalesPct ?? 0.04}
+                           budgetD={null}
+                           budgetPct={budget?.wineSalesPct ?? null}
+                        />
+                        <DataRow label="Ancillary Revenue" indent
+                           actualD={data.categorySales?.merchSales ?? data.grossSales * 0.01}
+                           actualPct={data.categorySales?.merchSalesPct ?? 0.01}
+                           budgetD={null}
+                           budgetPct={null}
+                        />
                         <DataRow label="Aggregate Gross Intake" bold actualD={data.grossSales} actualPct={1.0} budgetD={budget?.totalSalesForecast ?? null} budgetPct={1.0} />
                         <DataRow label="Compensatory Credits" indent actualD={-data.compsDiscounts} actualPct={-(data.compsDiscounts / data.grossSales)} budgetD={null} budgetPct={-(budget?.compsPct ?? 0)} />
                         <DataRow label="Net Operational Intake" bold actualD={data.netSales} actualPct={data.netSales / data.grossSales} budgetD={null} budgetPct={null} />

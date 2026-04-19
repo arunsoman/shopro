@@ -12,8 +12,8 @@ interface RestaurantStore {
 export const useRestaurantStore = create<RestaurantStore>()(
   persist(
     (set) => ({
-      restaurantId: 1,
-      restaurantName: 'Bistro Verde',
+      restaurantId: 3,
+      restaurantName: 'The Market Table',
       authToken: null,
       setAuth: (token, restaurantId, name) =>
         set({ authToken: token, restaurantId, restaurantName: name }),

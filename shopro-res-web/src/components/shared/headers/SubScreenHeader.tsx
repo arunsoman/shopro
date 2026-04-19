@@ -20,6 +20,7 @@ export function SubScreenHeader({ title, subtitle, icon: Icon, onBack, children 
               variant="outline"
               size="icon"
               onClick={onBack}
+              data-testid="back-button"
               className="rounded-xl h-9 w-9 border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors shrink-0"
             >
               <ArrowLeft className="h-4 w-4" />

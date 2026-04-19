@@ -24,7 +24,7 @@ export default function PODetailPage() {
    const back = useAppStore(s => s.back);
    const poId = Number(selectedPOId);
    const { user } = useAuthStore();
-   const restaurantId = user?.restaurantId || 1;
+   const restaurantId = user?.restaurantId || 3;
 
    const [activeTab, setActiveTab] = useState("details");
    const [paymentStaged, setPaymentStaged] = useState(false);

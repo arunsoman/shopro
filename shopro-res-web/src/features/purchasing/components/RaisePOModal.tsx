@@ -18,11 +18,12 @@ interface LineEdit {
 interface RaisePOModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  selectedItems: StagingItem[];
+  selectedItems: (StagingItem & { unitCost?: number })[];
   onSuccess: () => void;
+  defaultSupplierId?: number;
 }
 
-export function RaisePOModal({ open, onOpenChange, selectedItems, onSuccess }: RaisePOModalProps) {
+export function RaisePOModal({ open, onOpenChange, selectedItems, onSuccess, defaultSupplierId }: RaisePOModalProps) {
   const { restaurantId } = useRestaurantStore();
   const queryClient = useQueryClient();
   const createPO = useCreatePurchaseOrder(restaurantId);
@@ -37,14 +38,18 @@ export function RaisePOModal({ open, onOpenChange, selectedItems, onSuccess }: R
   // Reset state when dialog opens
   useEffect(() => {
     if (open) {
-      // Default to first supplier if available
-      if (suppliers.length > 0) {
+      // Default to provided supplierId, then first supplier, then null
+      if (defaultSupplierId) {
+        setSelectedSupplierId(defaultSupplierId);
+      } else if (suppliers.length > 0) {
         setSelectedSupplierId(prev => prev ?? suppliers[0].id);
       }
       
       const initial: Record<number, LineEdit> = {};
       selectedItems.forEach(i => {
-        initial[i.id] = { qty: String(Math.abs(i.shortfall)), unitPrice: '' };
+        // Use unitCost from preferred vendor if available, otherwise use shortfall as qty
+        const unitPrice = i.unitCost ? i.unitCost.toFixed(2) : '';
+        initial[i.id] = { qty: String(Math.abs(i.shortfall)), unitPrice };
       });
       setLineEdits(initial);
     } else {
@@ -52,7 +57,8 @@ export function RaisePOModal({ open, onOpenChange, selectedItems, onSuccess }: R
       setSelectedSupplierId(null);
       setLineEdits({});
     }
-  }, [open, selectedItems, suppliers]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   const setField = (id: number, field: keyof LineEdit, value: string) =>
     setLineEdits(prev => ({ ...prev, [id]: { ...prev[id], [field]: value } }));

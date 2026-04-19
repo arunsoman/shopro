@@ -118,7 +118,7 @@ const StrategicPanel: React.FC<{ data: any }> = ({ data }) => (
 /* ══ MAIN CFO DASHBOARD ════════════════════════════════════════════════ */
 export const CfoDashboard: React.FC = () => {
   const { session } = useAuth();
-  const { data: snapshot, isLoading, isError, refetch } = useCfoSnapshot(session?.restaurantId || 1);
+  const { data: snapshot, isLoading, isError, refetch } = useCfoSnapshot(session?.restaurantId || 3);
 
   const panels = [
     { id: 'pulse', label: 'Financial Pulse', icon: TrendingUp },

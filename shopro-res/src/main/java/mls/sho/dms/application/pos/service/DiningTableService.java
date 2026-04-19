@@ -18,6 +18,11 @@ public class DiningTableService {
         return repository.findAllByRestaurantId(restaurantId);
     }
 
+    @Transactional(readOnly = true)
+    public List<DiningTable> getAvailableTables(Long restaurantId, int guests) {
+        return repository.findAllByRestaurantIdAndStatusAndCapacityGreaterThanEqual(restaurantId, DiningTable.TableStatus.AVAILABLE, guests);
+    }
+
     @Transactional
     public void updateStatus(Long tableId, DiningTable.TableStatus status) {
         DiningTable table = repository.findById(tableId).orElseThrow();

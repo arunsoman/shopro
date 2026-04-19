@@ -24,7 +24,7 @@ const LeakDetectionPanel: React.FC<{ data: any[] }> = ({ data = [] }) => {
 
       <div className="grid grid-cols-3 gap-3">
         {[
-          { label: 'Avg Station Variance', val: `+${(data.reduce((acc, curr) => acc + curr.variancePct, 0) / (data.length || 1) * 100).toFixed(1)}%`, color: 'text-amber-500' },
+          { label: 'Avg Station Variance', val: `+${(data.reduce((acc, curr) => acc + curr.variancePct, 0) / (data.length || 3) * 100).toFixed(1)}%`, color: 'text-amber-500' },
           { label: 'Stations Audited', val: data.length, color: 'text-slate-900' },
           { label: 'Risk Stations', val: data.filter(s => s.variancePct > 0.03).length, color: 'text-red-500' },
         ].map(({ label, val, color }) => (

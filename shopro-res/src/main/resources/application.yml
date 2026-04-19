@@ -7,11 +7,15 @@ spring:
     password: password
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: none
     show-sql: false
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    validate-on-migrate: false
 
 app:
   frontend:
@@ -22,10 +26,6 @@ app:
 mfa:
   encryption:
     key: ${MFA_ENCRYPTION_KEY:32-char-encryption-key-for-mfa-s} # Must be 32 chars for AES-256
-  flyway:
-    enabled: false
-    baseline-on-migrate: true
-    validate-on-migrate: false
 oauth:
   google:
     client-id: ${GOOGLE_CLIENT_ID:dummy-google-client-id}
@@ -56,3 +56,13 @@ logging:
     org.springframework.web: INFO
     org.springframework.messaging: DEBUG
     fapi-audit: INFO
+
+# HikariCP Connection Pool - Increased for simulation
+  datasource:
+    hikari:
+      maximum-pool-size: 30
+      minimum-idle: 10
+      connection-timeout: 10000  # 10 seconds
+      idle-timeout: 300000       # 5 minutes
+      max-lifetime: 1800000      # 30 minutes
+      pool-name: ShoproHikariPool

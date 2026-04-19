@@ -46,6 +46,7 @@ function TrendSkeleton() {
 
 const PrimeCostHubPage: FC = () => {
   const navigate = useAppStore(s => s.navigate);
+  const back = useAppStore(s => s.back);
   const restaurantId = useRestaurantId();
   const { weekStart, label, prev, next, isCurrentWeek } = useWeekNav();
 
@@ -73,7 +74,7 @@ const PrimeCostHubPage: FC = () => {
         subtitle="Financial Command"
         icon={BarChart3}
         loading={live.isLoading}
-        onBack={() => navigate('dashboard')}
+        onBack={() => back()}
       >
         {/* Week nav */}
         <div className="flex items-center gap-2">

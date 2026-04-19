@@ -17,6 +17,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -27,6 +28,7 @@ public class InventoryIntelligenceService {
     private final InventoryActiveLotRepository activeLotRepository;
     private final InventoryWasteRepository wasteRepository;
     private final mls.sho.dms.application.analytics.service.ExperimentService experimentService;
+    private final InventoryBalanceService balanceService;
 
     /**
      * Records physical shipment intake. 
@@ -151,6 +153,7 @@ public class InventoryIntelligenceService {
         }
         if (!bulkLedgerEntries.isEmpty()) {
             ledgerRepository.saveAll(bulkLedgerEntries);
+            balanceService.applyLedgerEntries(bulkLedgerEntries);
         }
         if (!bulkWasteEntries.isEmpty()) {
             wasteRepository.saveAll(bulkWasteEntries);
@@ -162,7 +165,7 @@ public class InventoryIntelligenceService {
      * Depletes stock physically but categorizes as controllable loss.
      */
     @Transactional
-    public void recordMisfire(Restaurant restaurant, MenuItem item, Long orderId, String reason, Long employeeId) {
+    public void recordMisfire(Restaurant restaurant, MenuItem item, Long orderId, String reason, UUID staffId) {
         List<InventoryIngredientLedger> bulkLedgerEntries = new ArrayList<>();
         List<InventoryActiveLot> bulkLotUpdates = new ArrayList<>();
         List<InventoryWasteRegistry> bulkWasteEntries = new ArrayList<>();
@@ -173,7 +176,10 @@ public class InventoryIntelligenceService {
                 bulkLedgerEntries, bulkLotUpdates, bulkWasteEntries);
 
         if (!bulkLotUpdates.isEmpty()) activeLotRepository.saveAllAndFlush(bulkLotUpdates);
-        if (!bulkLedgerEntries.isEmpty()) ledgerRepository.saveAllAndFlush(bulkLedgerEntries);
+        if (!bulkLedgerEntries.isEmpty()) {
+            ledgerRepository.saveAllAndFlush(bulkLedgerEntries);
+            balanceService.applyLedgerEntries(bulkLedgerEntries);
+        }
         if (!bulkWasteEntries.isEmpty()) wasteRepository.saveAllAndFlush(bulkWasteEntries);
     }
 
@@ -243,7 +249,7 @@ public class InventoryIntelligenceService {
 
     private void depleteFifoBulk(Restaurant restaurant, Ingredient ingredient, BigDecimal quantityToDeplete, 
                               StockMovementType type, Long orderId, Long lineItemId, Long menuId, 
-                              String reason, Long employeeId, LocalDateTime orderDate, String actor,
+                              String reason, UUID staffId, LocalDateTime orderDate, String actor,
                               List<InventoryIngredientLedger> entriesAccumulator, List<InventoryActiveLot> lotsAccumulator,
                               List<InventoryWasteRegistry> wastesAccumulator) {
         
@@ -288,7 +294,7 @@ public class InventoryIntelligenceService {
             entriesAccumulator.add(entry);
             
             if (type == StockMovementType.MISFIRE || type == StockMovementType.DISCARD) {
-                wastesAccumulator.add(buildWasteRegistry(entry, orderId, menuId, employeeId, reason != null ? reason : "UNSPECIFIED"));
+                wastesAccumulator.add(buildWasteRegistry(entry, orderId, menuId, staffId, reason != null ? reason : "UNSPECIFIED"));
             }
 
             remainingToDeplete = remainingToDeplete.subtract(amountFromThisLot);
@@ -320,7 +326,7 @@ public class InventoryIntelligenceService {
             entriesAccumulator.add(entry);
 
             if (type == StockMovementType.MISFIRE || type == StockMovementType.DISCARD) {
-                wastesAccumulator.add(buildWasteRegistry(entry, orderId, menuId, employeeId, 
+                wastesAccumulator.add(buildWasteRegistry(entry, orderId, menuId, staffId, 
                         (reason != null ? reason : "OVER_DEPLETION_STOCKOUT")));
             }
         }
@@ -342,25 +348,27 @@ public class InventoryIntelligenceService {
         
         createLedgerEntry(restaurant, ingredient, StockMovementType.RECONCILIATION, 
                 adjustmentQty, unitCost, null, null, null, null, null, null, null, null, null, actor, "PHYSICAL_COUNT");
-        
-        // Update the cached onHand value in the ingredient master
-        ingredient.setOnHand(physicalCount);
+        // Balance is updated inside createLedgerEntry() via InventoryBalanceService.
+        // Ingredient.onHand is deprecated and no longer written.
     }
 
     /**
      * Records manual spoilage or discard.
      */
     @Transactional
-    public void recordDiscard(Restaurant restaurant, Ingredient ingredient, BigDecimal qty, String reason, Long employeeId) {
+    public void recordDiscard(Restaurant restaurant, Ingredient ingredient, BigDecimal qty, String reason, UUID staffId) {
         List<InventoryIngredientLedger> entries = new ArrayList<>();
         List<InventoryActiveLot> lots = new ArrayList<>();
         List<InventoryWasteRegistry> wastes = new ArrayList<>();
         
         depleteFifoBulk(restaurant, ingredient, qty, StockMovementType.DISCARD, 
-                null, null, null, reason, employeeId, LocalDateTime.now(), "MANUAL_DISCARD", entries, lots, wastes);
+                null, null, null, reason, staffId, LocalDateTime.now(), "MANUAL_DISCARD", entries, lots, wastes);
         
         if (!lots.isEmpty()) activeLotRepository.saveAll(lots);
-        if (!entries.isEmpty()) ledgerRepository.saveAll(entries);
+        if (!entries.isEmpty()) {
+            ledgerRepository.saveAll(entries);
+            balanceService.applyLedgerEntries(entries);
+        }
         if (!wastes.isEmpty()) wasteRepository.saveAll(wastes);
     }
 
@@ -498,15 +506,17 @@ public class InventoryIntelligenceService {
         BigDecimal tax = taxAmount != null ? taxAmount : BigDecimal.ZERO;
         entry.setTotalValue(qty.multiply(cost).add(tax).setScale(4, RoundingMode.HALF_UP));
 
-        return ledgerRepository.saveAndFlush(entry);
+        InventoryIngredientLedger saved = ledgerRepository.saveAndFlush(entry);
+        balanceService.applyLedgerEntry(saved);
+        return saved;
     }
 
-    private InventoryWasteRegistry buildWasteRegistry(InventoryIngredientLedger ledger, Long orderId, Long menuId, Long employeeId, String reason) {
+    private InventoryWasteRegistry buildWasteRegistry(InventoryIngredientLedger ledger, Long orderId, Long menuId, UUID staffId, String reason) {
         InventoryWasteRegistry waste = new InventoryWasteRegistry();
         waste.setLedger(ledger);
         waste.setOrderId(orderId);
         waste.setMenuId(menuId);
-        waste.setEmployeeId(employeeId);
+        waste.setStaffId(staffId);
         waste.setReasonCode(reason);
 
         // Record experiment metric

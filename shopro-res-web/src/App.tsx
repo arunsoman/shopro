@@ -8,8 +8,14 @@ import Dashboard from "@/features/dashboard/pages/DashboardPage";
 import InventoryHub from "@/features/inventory/pages/InventoryHub";
 import PurchasingHub from "@/features/purchasing/PurchasingHubPage";
 import RecipeHub from "@/features/recipes-menu/pages/RecipeHub";
-import EngineeringHub from "@/features/menu-engineering/pages/EngineeringScreens";
-import PrimeCostHub from "@/features/prime-cost/components/primecost/PrimeCostHub";
+import EngineeringHubPage from "@/features/menu-engineering/pages/EngineeringHubPage";
+import PeriodSetupPage from "@/features/menu-engineering/pages/PeriodSetupPage";
+import PeriodDetailPage from "@/features/menu-engineering/pages/PeriodDetailPage";
+import LiveSalesCounterPage from "@/features/menu-engineering/pages/LiveSalesCounterPage";
+import PeriodHistoryPage from "@/features/menu-engineering/pages/PeriodHistoryPage";
+import WhatIfSimulatorPage from "@/features/menu-engineering/pages/WhatIfSimulatorPage";
+import PeriodComparisonPage from "@/features/menu-engineering/pages/PeriodComparisonPage";
+
 import ExpoKds from "@/features/kds/ExpoKds";
 import IngredientMasterPage from "@/features/inventory/pages/IngredientMasterPage";
 import InventoryCountEntry from "@/features/inventory/pages/InventoryCountEntry";
@@ -42,14 +48,12 @@ import MatchAuditPage from "@/features/purchasing/MatchAuditPage";
 import SalesMenuCosting from "@/features/recipes-menu/pages/SalesMenuCosting";
 import RecipeScreens from "@/features/recipes-menu/pages/RecipeScreens";
 import RecipeDetail from "@/features/recipes-menu/pages/RecipeDetail";
-// import LocationPrimeCost from "@/features/prime-cost/components/primecost/MultiLocationPrimeCost";
-import ResultsTable from "@/features/menu-engineering/pages/ResultsTable";
-import QuadrantMatrix from "@/features/menu-engineering/pages/QuadrantMatrix";
-import ComparisonResults from "@/features/menu-engineering/pages/ComparisonResults";
+// LocationPrimeCost removed — use PRIME_COST_LOCATIONS route
+// (menu-engineering screens above)
 import RecipeEditor from "@/features/recipes-menu/pages/RecipeEditor";
 import { ExperimentPage } from "@/features/experiments/pages/ExperimentPage";
 import ReportsPage from "@/features/reports/pages/ReportsPage";
-import LaborSchedule from "@/features/prime-cost/components/primecost/LaborSchedule";
+import { PrimeCostHubPage, LaborSchedulePage } from "@/router/LazyPages";
 import PaymentFeature from "@/features/payments/PaymentFeature";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
@@ -106,7 +110,7 @@ export type Screen =
   | "recipe-menu-items" | "recipe-menu-item-editor" 
   | "recipe-list" | "recipe-editor" | "recipe-editor-detail"
   | "recipe-cost-groups" | "recipe-converter"
-  | "engineering" | "engineering-results" | "engineering-quadrant" | "engineering-comparison"
+  | "engineering" | "engineering-setup" | "engineering-detail" | "engineering-results" | "engineering-quadrant" | "engineering-categories" | "engineering-live" | "engineering-history" | "engineering-whatif" | "engineering-comparison"
   | "kds" | "prime-cost" | "prime-cost-multi" | "labor-staffing" | "supplier-pay" | "experiment-lab" | "reports";
 
 interface ShellState {
@@ -200,12 +204,15 @@ export const useAppStore = createStore<AppState>((set) => ({
   closeCard: () => set({ selectedCard: null, screen: "dashboard", sideNavOpen: false }),
   openIngredientDetail: (id: number) => set({ selectedIngredientId: id, screen: "inventory-ingredient-detail" }),
   openPeriodDetail: (id: number) => set({ selectedPeriodId: id, screen: "inventory-period-detail" }),
-  openEngineeringDetail: (id: number) => set({ selectedEngineeringId: id, screen: "engineering-results" }),
+  openEngineeringDetail: (id: number) => set({ selectedEngineeringId: id, screen: "engineering-detail" }),
   openEngineeringComparison: (id1: number, id2: number) => set({ selectedComparisonIds: { id1, id2 }, screen: "engineering-comparison" }),
   openRecipeDetail: (id: number) => set({ selectedRecipeId: id, screen: "recipe-editor-detail" }),
   openMenuItemDetail: (id: number) => set({ selectedMenuItemId: id, screen: "recipe-menu-item-editor" }),
   toggleSideNav: () => set((s) => ({ sideNavOpen: !s.sideNavOpen })),
 }));
+
+// ── EXPOSE STORE FOR PLAYWRIGHT ──────────────────────────────────────────────
+if (typeof window !== 'undefined') { (window as any).__APP_STORE__ = useAppStore; }
 
 // ─── DATA ─────────────────────────────────────────────────────────────────────
 
@@ -383,7 +390,7 @@ function SideNav() {
     <aside style={{ width: open ? 220 : 0, flexShrink: 0, overflow: "hidden", transition: "width 0.32s cubic-bezier(0.4,0,0.2,1)", background: "var(--snv)", borderRight: "1px solid var(--brd)" }}>
       <div style={{ width: 220, padding: "12px 0", opacity: open ? 1 : 0, transition: "opacity 0.2s", display: "flex", flexDirection: "column", height: "100%" }}>
         {navItems.map((item) => (
-          <button key={item.label} onClick={() => navigate(item.screen as Screen)} className="ni" style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 18px", background: "transparent", border: "none", cursor: "pointer", color: "var(--mu)", fontSize: 13, fontWeight: 600, textAlign: "left", transition: 'all 0.2s ease' }}>
+          <button key={item.label} data-testid={`nav-${item.screen}`} onClick={() => navigate(item.screen as Screen)} className="ni" style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 18px", background: "transparent", border: "none", cursor: "pointer", color: "var(--mu)", fontSize: 13, fontWeight: 600, textAlign: "left", transition: 'all 0.2s ease' }}>
             <Ic d={item.d} size={15} />
             {item.label}
           </button>
@@ -442,7 +449,7 @@ function Canvas() {
       <SideNav />
       <div style={{ flex: 1, display: "flex", overflow: "hidden", flexDirection: "column" }}>
         <div style={{ flex: 1, overflowY: "hidden", position: "relative" }}>
-          <ErrorBoundary label={`Screen: ${displayScreen}`}>
+          <ErrorBoundary key={displayScreen} label={`Screen: ${displayScreen}`}>
           {displayScreen === "dashboard" && <Dashboard />}
           {displayScreen === "inventory" && <InventoryHub />}
           {displayScreen === "inventory-ingredients" && <IngredientMasterPage />}
@@ -479,24 +486,20 @@ function Canvas() {
           {displayScreen === "recipe-editor-detail" && <RecipeDetail />}
           {displayScreen === "recipe-cost-groups" && <StubPage title="Cost Groups" />}
           {displayScreen === "recipe-converter" && <StubPage title="Unit Converter" />}
-          {displayScreen === "engineering" && <EngineeringHub />}
-          {displayScreen === "engineering-results" && <ResultsTable />}
-          {displayScreen === "engineering-quadrant" && <QuadrantMatrix />}
-          {displayScreen === "engineering-comparison" && <ComparisonResults />}
-          {displayScreen === "kds" && <ExpoKds outletId={session?.restaurantId || 1} />}
-          {displayScreen === "prime-cost" && <PrimeCostHub restaurantId={session?.restaurantId || 1} />}
-          {displayScreen === "labor-staffing" && (
-            <div className="absolute inset-0 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100">
-              <LaborSchedule 
-                restaurantId={session?.restaurantId || 1} 
-                onBack={() => useAppStore.getState().navigate("dashboard")} 
-              />
-            </div>
-          )}
+          {displayScreen === "engineering" && <EngineeringHubPage />}
+          {displayScreen === "engineering-setup" && <PeriodSetupPage />}
+          {displayScreen === "engineering-detail" && <PeriodDetailPage periodId={useAppStore.getState().selectedEngineeringId} />}
+          {displayScreen === "engineering-live" && <LiveSalesCounterPage />}
+          {displayScreen === "engineering-history" && <PeriodHistoryPage />}
+          {displayScreen === "engineering-whatif" && <WhatIfSimulatorPage periodId={useAppStore.getState().selectedEngineeringId} />}
+          {displayScreen === "engineering-comparison" && <PeriodComparisonPage />}
+          {displayScreen === "kds" && <ExpoKds outletId={session?.restaurantId || 3} />}
+          {displayScreen === "prime-cost" && <PrimeCostHubPage />}
+          {displayScreen === "labor-staffing" && <LaborSchedulePage />}
           {displayScreen === "supplier-pay" && <PaymentFeature />}
           {displayScreen === "experiment-lab" && <ExperimentPage />}
           {displayScreen === "reports" && <ReportsPage />}
-          {/* {displayScreen === "prime-cost-multi" && <MultiLocationPrimeCost restaurantIds={[session?.restaurantId || 1]} />} */}
+          {/* {displayScreen === "prime-cost-multi" && <MultiLocationPrimeCost restaurantIds={[session?.restaurantId || 3]} />} */}
           </ErrorBoundary>
         </div>
       </div>
@@ -569,6 +572,8 @@ function RouteSync() {
       store.navigate("supplier-pay");
     } else if (matchPath("/labor", pathname)) {
       store.navigate("labor-staffing");
+    } else if (matchPath("/prime-cost", pathname)) {
+      store.navigate("prime-cost");
     }
 
     // ── SS0: Dashboard ──────────────────────────────────
@@ -588,6 +593,25 @@ function RouteSync() {
     // ── SS3: Recipes ────────────────────────────────────
     else if (matchPath("/recipes", pathname)) {
       store.navigate("recipes");
+    }
+
+    // ── SS4: Engineering ────────────────────────────────
+    else if (matchPath("/engineering", pathname)) {
+      store.navigate("engineering");
+    } else if (matchPath("/engineering/new", pathname)) {
+      store.navigate("engineering-setup");
+    } else if (matchPath("/engineering/live", pathname)) {
+      store.navigate("engineering-live");
+    } else if (matchPath("/engineering/history", pathname)) {
+      store.navigate("engineering-history");
+    } else if (matchPath("/engineering/compare", pathname)) {
+      store.navigate("engineering-comparison");
+    } else if (matchPath("/engineering/periods/:id/whatif", pathname)) {
+      const match = matchPath("/engineering/periods/:id/whatif", pathname);
+      useAppStore.setState({ screen: "engineering-whatif", selectedEngineeringId: match?.params.id ? Number(match.params.id) : null });
+    } else if (matchPath("/engineering/periods/:id", pathname)) {
+      const match = matchPath("/engineering/periods/:id", pathname);
+      useAppStore.setState({ screen: "engineering-detail", selectedEngineeringId: match?.params.id ? Number(match.params.id) : null });
     }
   }, [pathname]);
 

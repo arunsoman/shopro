@@ -234,10 +234,10 @@ export default function PrimeCostHub({ restaurantId }: { restaurantId: number })
                 <p className="text-[10px] text-muted-foreground/60 mb-6">Breakdown of Prime Cost components</p>
 
                 <div className="flex-1 space-y-5">
-                  <CostMetric label="Theoretical Food" value={weekly.data?.theoreticalCos || 0} total={weekly.data?.netSales || 1} color="bg-blue-500" />
-                  <CostMetric label="Labor Accrual" value={weekly.data?.hourlyLabor || 0} total={weekly.data?.netSales || 1} color="bg-indigo-500" />
-                  <CostMetric label="Inventory Waste" value={weekly.data?.shrinkageVariance || 0} total={weekly.data?.netSales || 1} color="bg-rose-500" />
-                  <CostMetric label="Management Cost" value={weekly.data?.mgmtLabor || 0} total={weekly.data?.netSales || 1} color="bg-slate-400" />
+                  <CostMetric label="Theoretical Food" value={weekly.data?.theoreticalCos || 0} total={weekly.data?.netSales || 3} color="bg-blue-500" />
+                  <CostMetric label="Labor Accrual" value={weekly.data?.hourlyLabor || 0} total={weekly.data?.netSales || 3} color="bg-indigo-500" />
+                  <CostMetric label="Inventory Waste" value={weekly.data?.shrinkageVariance || 0} total={weekly.data?.netSales || 3} color="bg-rose-500" />
+                  <CostMetric label="Management Cost" value={weekly.data?.mgmtLabor || 0} total={weekly.data?.netSales || 3} color="bg-slate-400" />
                 </div>
 
                 <div className="mt-8 pt-6 border-t border-slate-100 dark:border-white/5">

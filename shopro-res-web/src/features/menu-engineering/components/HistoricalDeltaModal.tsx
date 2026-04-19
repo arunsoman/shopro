@@ -1,69 +1,85 @@
-import React, { useState } from 'react'
+// ─────────────────────────────────────────────────────────────
+// HistoricalDeltaModal.tsx (ME.9)
+// Modal showing delta summary between two periods.
+// ─────────────────────────────────────────────────────────────
+
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/Dialog"
-import PeriodComparisonSelector from './PeriodComparisonSelector'
-import { useAppStore } from '@/App'
-import { Button } from '@/components/ui/Button'
-import { GitCompare, Loader2 } from 'lucide-react'
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalTitle,
+  ModalDescription,
+  ModalFooter,
+} from "@/components/ui/Modal";
+import { KpiCard } from "@/components/shared/cards/KpiCard";
+import { Button } from "@/components/ui/Button";
+import { formatCurrency } from "../hooks/useMenuEngineering";
+import type { ComparisonDto } from "@/types/menuEngineering.types";
 
 interface HistoricalDeltaModalProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
+  open: boolean;
+  onClose: () => void;
+  comparison: ComparisonDto | null;
 }
 
-export default function HistoricalDeltaModal({ open, onOpenChange }: HistoricalDeltaModalProps) {
-  const openEngineeringComparison = useAppStore((s: any) => s.openEngineeringComparison)
-  const [id1, setId1] = useState<number | null>(null)
-  const [id2, setId2] = useState<number | null>(null)
+export function HistoricalDeltaModal({ open, onClose, comparison }: HistoricalDeltaModalProps) {
+  if (!comparison) return null;
 
-  const handleExecute = () => {
-    if (id1 && id2) {
-      openEngineeringComparison(id1, id2)
-      onOpenChange(false)
-    }
-  }
-
-  const isValid = id1 && id2 && id1 !== id2
+  const rows = comparison.rows ?? [];
+  const changedRows = rows.filter((r) => r.changed);
+  const improved = changedRows.filter((r) => r.grossProfitP2 > r.grossProfitP1).length;
+  const declined  = changedRows.filter((r) => r.grossProfitP2 < r.grossProfitP1).length;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md p-0 overflow-hidden bg-white dark:bg-slate-900 border-slate-200 dark:border-white/5 shadow-2xl rounded-2xl">
-        <div className="bg-slate-50 dark:bg-black/20 px-8 py-6 border-b border-slate-100 dark:border-white/5">
-          <DialogHeader className="text-left">
-            <DialogTitle className="text-xl font-bold tracking-tight text-foreground leading-none">Historical Comparison</DialogTitle>
-            <DialogDescription className="text-[11px] font-bold text-muted-foreground/40 uppercase tracking-[0.2em] mt-2 italic">
-              Select two finalized audits
-            </DialogDescription>
-          </DialogHeader>
+    <Modal open={open} onOpenChange={(v) => !v && onClose()}>
+      <ModalContent className="sm:max-w-md">
+        <ModalHeader>
+          <ModalTitle>Period Delta Summary</ModalTitle>
+          <ModalDescription>
+            {comparison.periodName1} vs {comparison.periodName2}
+          </ModalDescription>
+        </ModalHeader>
+
+        <div className="space-y-4 py-4">
+          <div className="grid grid-cols-3 gap-3">
+            <KpiCard
+              title="Revenue Δ"
+              value={formatCurrency(comparison.revenueDelta)}
+              delta={comparison.revenueDelta >= 0 ? "+" : ""}
+              deltaDir={comparison.revenueDelta >= 0 ? "up" : "down"}
+            />
+            <KpiCard title="Improved" value={String(improved)} deltaDir="up" />
+            <KpiCard title="Declined"  value={String(declined)} deltaDir="down" />
+          </div>
+
+          <div className="rounded-xl border border-border bg-surface-2 p-4 space-y-3">
+            <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Classification Migration</h4>
+            {changedRows.length === 0 ? (
+              <p className="text-xs text-muted-foreground">No classification changes between periods.</p>
+            ) : (
+              <div className="space-y-1">
+                {changedRows.slice(0, 10).map((r) => (
+                  <div key={r.menuItemId} className="flex items-center gap-2 text-xs">
+                    <span className="font-semibold truncate flex-1">{r.itemName}</span>
+                    <span className="text-muted-foreground text-[10px]">
+                      {r.classificationPeriod1} → {r.classificationPeriod2}
+                    </span>
+                  </div>
+                ))}
+                {changedRows.length > 10 && (
+                  <p className="text-[10px] text-muted-foreground/60">
+                    +{changedRows.length - 10} more changes
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
-        <div className="p-8">
-           <PeriodComparisonSelector 
-             selectedId1={id1} 
-             selectedId2={id2} 
-             onSelectionChange={(sid1, sid2) => { setId1(sid1); setId2(sid2); }} 
-           />
-        </div>
-
-        <div className="bg-slate-50 dark:bg-black/20 px-8 py-5 border-t border-slate-100 dark:border-white/5 flex flex-col gap-4">
-           <Button 
-             onClick={handleExecute} 
-             disabled={!isValid}
-             className="w-full h-12 bg-slate-900 dark:bg-white text-white dark:text-black font-bold uppercase tracking-[0.2em] shadow-xl rounded-2xl transition-all active:scale-[0.98] group disabled:opacity-20"
-           >
-              <GitCompare size={14} className="mr-2 group-hover:rotate-180 transition-transform duration-500" />
-              Compute Profit Drift
-           </Button>
-           <p className="text-[9px] font-bold text-muted-foreground/30 uppercase tracking-widest text-center">
-             Verified registry audit active
-           </p>
-        </div>
-      </DialogContent>
-    </Dialog>
-  )
+        <ModalFooter>
+          <Button onClick={onClose} className="rounded-xl">Close</Button>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
+  );
 }

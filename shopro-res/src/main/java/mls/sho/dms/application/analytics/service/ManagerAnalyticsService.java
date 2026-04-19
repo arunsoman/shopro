@@ -79,7 +79,7 @@ public class ManagerAnalyticsService {
         List<TableSession> activeSessions = sessionRepository.findAllByTableRestaurantIdAndClosedAtIsNull(restaurantId);
         dto.setTableStatuses(activeSessions.stream().map(s -> {
             ManagerCommonDtos.TableStatusDto t = new ManagerCommonDtos.TableStatusDto();
-            t.setTableNumber(s.getTable().getTableNumber());
+            t.setTableNumber(s.getTable().getTableNumber() != null ? s.getTable().getTableNumber().toString() : null);
             t.setMinutesSeated((int) java.time.Duration.between(s.getOpenedAt(), LocalDateTime.now()).toMinutes());
             t.setStatus(t.getMinutesSeated() > 60 ? "LONG_OCCUPANCY" : "SEATED");
             return t;

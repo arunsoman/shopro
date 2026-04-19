@@ -86,7 +86,14 @@ public class Ingredient {
     @Column(name = "par_level", precision = 10, scale = 3)
     private BigDecimal parLevel;
 
-    @Column(name = "on_hand", precision = 10, scale = 3)
+    /**
+     * @deprecated Use {@link mls.sho.dms.entity.InventoryIngredientBalance#getCurrentBalance()}
+     *             as the authoritative stock-on-hand balance.
+     *             This column is kept for backward reference only and is no longer written
+     *             by the application. It will be dropped in a future migration.
+     */
+    @Deprecated
+    @Column(name = "on_hand", precision = 10, scale = 3, insertable = false, updatable = false)
     private BigDecimal onHand = BigDecimal.ZERO;
 
     // -- Image -------------------------------------------------

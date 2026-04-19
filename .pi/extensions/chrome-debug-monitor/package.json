@@ -1,0 +1,10 @@
+{
+  "name": "chrome-debug-monitor",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Pi extension: monitors Chrome for console errors, network failures, and user actions via CDP",
+  "private": true,
+  "pi": {
+    "extensions": ["./index.ts"]
+  }
+}

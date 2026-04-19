@@ -2,6 +2,7 @@ package mls.sho.dms.application.inventory.service;
 
 import lombok.RequiredArgsConstructor;
 import mls.sho.dms.application.inventory.repository.IngredientRepository;
+import mls.sho.dms.application.inventory.repository.InventoryBalanceRepository;
 import mls.sho.dms.entity.Ingredient;
 import mls.sho.dms.entity.Restaurant;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,7 @@ import java.util.stream.Collectors;
 public class IngredientService {
 
     private final IngredientRepository repository;
+    private final InventoryBalanceRepository balanceRepository;
 
     @Transactional(readOnly = true)
     public IngredientCostDto getIngredientCosts(Long id) {
@@ -62,20 +64,23 @@ public class IngredientService {
     @Transactional(readOnly = true)
     public List<LowStockAlertDto> getLowStockAlerts(Long restaurantId) {
         List<Ingredient> lowStockIngredients = repository.findAllLowStock(restaurantId);
-        
+
         return lowStockIngredients.stream()
             .map(ingredient -> {
                 BigDecimal parLevel = ingredient.getParLevel() != null ? ingredient.getParLevel() : BigDecimal.ZERO;
-                BigDecimal onHand = ingredient.getOnHand() != null ? ingredient.getOnHand() : BigDecimal.ZERO;
-                BigDecimal shortfallAmount = parLevel.subtract(onHand);
-                
+                // Read the authoritative balance from InventoryIngredientBalance, not the deprecated onHand
+                BigDecimal currentBalance = balanceRepository
+                        .findCurrentBalance(restaurantId, ingredient.getId())
+                        .orElse(BigDecimal.ZERO);
+                BigDecimal shortfallAmount = parLevel.subtract(currentBalance);
+
                 return LowStockAlertDto.builder()
                     .ingredientId(ingredient.getId())
                     .itemCode(ingredient.getItemCode())
                     .description(ingredient.getDescription())
                     .inventoryUnit(ingredient.getInventoryUnit() != null ? ingredient.getInventoryUnit().name() : null)
                     .parLevel(parLevel)
-                    .onHand(onHand)
+                    .onHand(currentBalance)
                     .shortfallAmount(shortfallAmount)
                     .build();
             })

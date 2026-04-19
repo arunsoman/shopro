@@ -8,4 +8,6 @@ import java.util.List;
 @Repository
 public interface DiningTableRepository extends JpaRepository<DiningTable, Long> {
     List<DiningTable> findAllByRestaurantId(Long restaurantId);
+    List<DiningTable> findAllByRestaurantIdAndStatus(Long restaurantId, DiningTable.TableStatus status);
+    List<DiningTable> findAllByRestaurantIdAndStatusAndCapacityGreaterThanEqual(Long restaurantId, DiningTable.TableStatus status, Integer capacity);
 }

@@ -18,5 +18,8 @@ public enum InventoryUnit {
     DOZEN,
     GALLON,
     KG,
+    ML,
+    LITER,
+    OZ_FLUID,
     BUNCH
 }

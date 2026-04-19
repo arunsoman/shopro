@@ -20,10 +20,11 @@ export const SettingsPage = lazy(
   () => import(/* webpackChunkName: "settings" */ "@/features/settings/SettingsPage"),
 );
 
-// ── SS1: Inventory ────────────────────────────────────────────
-export const InventoryHubPage = lazy(
-  () => import(/* webpackChunkName: "inventory" */ "@/features/inventory/InventoryHubPage"),
+// ── SS1: Inventory ──────────────────────────────────────────
+export const InventoryHub = lazy(
+  () => import(/* webpackChunkName: "inventory" */ "@/features/inventory/pages/InventoryHub"),
 );
+
 export const IngredientListPage = lazy(
   () => import(/* webpackChunkName: "inventory" */ "@/features/inventory/IngredientListPage"),
 );
@@ -115,31 +116,31 @@ export const ManualEntryEditorPage = lazy(
 
 // ── SS4: Menu Engineering ─────────────────────────────────────
 export const EngineeringHubPage = lazy(
-  () => import(/* webpackChunkName: "engineering" */ "@/features/menu-engineering/EngineeringHubPage"),
+  () => import(/* webpackChunkName: "engineering" */ "@/features/menu-engineering/pages/EngineeringHubPage.tsx"),
 );
 export const PeriodSetupPage = lazy(
-  () => import(/* webpackChunkName: "engineering" */ "@/features/menu-engineering/PeriodSetupPage"),
+  () => import(/* webpackChunkName: "engineering" */ "@/features/menu-engineering/pages/PeriodSetupPage.tsx"),
 );
 export const ResultsTablePage = lazy(
-  () => import(/* webpackChunkName: "engineering" */ "@/features/menu-engineering/ResultsTablePage"),
+  () => import(/* webpackChunkName: "engineering" */ "@/features/menu-engineering/pages/ResultsTablePage.tsx"),
 );
 export const QuadrantMatrixPage = lazy(
-  () => import(/* webpackChunkName: "engineering" */ "@/features/menu-engineering/QuadrantMatrixPage"),
+  () => import(/* webpackChunkName: "engineering" */ "@/features/menu-engineering/pages/QuadrantMatrixPage.tsx"),
 );
 export const CategorySummaryPage = lazy(
-  () => import(/* webpackChunkName: "engineering" */ "@/features/menu-engineering/CategorySummaryPage"),
+  () => import(/* webpackChunkName: "engineering" */ "@/features/menu-engineering/pages/CategorySummaryPage.tsx"),
 );
 export const EngineeringHistoryPage = lazy(
-  () => import(/* webpackChunkName: "engineering" */ "@/features/menu-engineering/PeriodHistoryPage"),
+  () => import(/* webpackChunkName: "engineering" */ "@/features/menu-engineering/pages/PeriodHistoryPage.tsx"),
 );
 export const LiveSalesCounterPage = lazy(
-  () => import(/* webpackChunkName: "engineering" */ "@/features/menu-engineering/LiveSalesCounterPage"),
+  () => import(/* webpackChunkName: "engineering" */ "@/features/menu-engineering/pages/LiveSalesCounterPage.tsx"),
 );
 export const WhatIfSimulatorPage = lazy(
-  () => import(/* webpackChunkName: "engineering" */ "@/features/menu-engineering/WhatIfSimulatorPage"),
+  () => import(/* webpackChunkName: "engineering" */ "@/features/menu-engineering/pages/WhatIfSimulatorPage.tsx"),
 );
 export const EngineeringComparisonPage = lazy(
-  () => import(/* webpackChunkName: "engineering" */ "@/features/menu-engineering/PeriodComparisonPage"),
+  () => import(/* webpackChunkName: "engineering" */ "@/features/menu-engineering/pages/PeriodComparisonPage.tsx"),
 );
 
 // ── SS5: Prime Cost ───────────────────────────────────────────

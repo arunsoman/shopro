@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import type { StagingItem } from '../hooks/usePOStaging';
 
 interface StagingTableProps {
-  items: StagingItem[];
+  items: (StagingItem & { unitCost?: number })[];
   selectedIds: number[];
   onToggleSelect: (id: number) => void;
   onSelectAll: (ids: number[]) => void;
@@ -31,7 +31,7 @@ export function StagingTable({ items, selectedIds, onToggleSelect, onSelectAll }
               <th className="p-6 py-4 text-[10px] font-bold text-muted-foreground/40 uppercase tracking-[0.2em] italic">Identity</th>
               <th className="p-6 py-4 text-[10px] font-bold text-muted-foreground/40 uppercase tracking-[0.2em] italic text-center">On Hand</th>
               <th className="p-6 py-4 text-[10px] font-bold text-muted-foreground/40 uppercase tracking-[0.2em] italic text-center">Shortfall</th>
-              <th className="p-6 py-4 text-[10px] font-bold text-muted-foreground/40 uppercase tracking-[0.2em] italic text-center">Basis</th>
+              <th className="p-6 py-4 text-[10px] font-bold text-muted-foreground/40 uppercase tracking-[0.2em] italic text-center">Unit Cost</th>
               <th className="p-6 py-4 text-right pr-10 text-[10px] font-bold text-muted-foreground/40 uppercase tracking-[0.2em] italic">Action</th>
             </tr>
           </thead>
@@ -79,7 +79,14 @@ export function StagingTable({ items, selectedIds, onToggleSelect, onSelectAll }
                     </Badge>
                   </td>
                   <td className="p-6 text-center">
-                     <span className="text-xs font-bold text-muted-foreground/40 lowercase italic">{item.unit} basis</span>
+                    {item.unitCost ? (
+                      <div className="inline-flex flex-col items-center">
+                        <span className="text-sm font-black text-emerald-600 dark:text-emerald-400">${item.unitCost.toFixed(2)}</span>
+                        <span className="text-[9px] font-bold text-muted-foreground/30 uppercase">per {item.unit}</span>
+                      </div>
+                    ) : (
+                      <span className="text-xs font-bold text-muted-foreground/30 italic">Not set</span>
+                    )}
                   </td>
                   <td className="p-6 text-right pr-10">
                      <button className="h-10 w-10 rounded-2xl bg-slate-50 dark:bg-white/5 flex items-center justify-center text-muted-foreground/20 hover:bg-rose-500 hover:text-white hover:shadow-xl hover:shadow-rose-500/20 transition-all ml-auto group/btn">
