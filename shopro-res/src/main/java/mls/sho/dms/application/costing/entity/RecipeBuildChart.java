@@ -2,6 +2,8 @@ package mls.sho.dms.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import mls.sho.dms.application.pos.entity.MenuItem;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;

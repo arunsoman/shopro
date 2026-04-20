@@ -2,6 +2,8 @@ package mls.sho.dms.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import mls.sho.dms.application.inventory.entity.Ingredient;
+
 import java.math.BigDecimal;
 
 @Entity

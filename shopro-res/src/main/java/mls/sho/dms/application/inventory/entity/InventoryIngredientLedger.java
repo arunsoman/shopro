@@ -71,6 +71,9 @@ public class InventoryIngredientLedger {
     @Column(name = "recipe_id")
     private Long recipeId;
 
+    @Column(name = "fulfillment_key", length = 64)
+    private String fulfillmentKey;
+
     @Column(name = "reason_code")
     private String reasonCode;
 

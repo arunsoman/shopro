@@ -19,7 +19,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @Data
 public class Order {
 
-    private static final AtomicLong orderCounter = new AtomicLong(System.currentTimeMillis() % 100000);
+    // AtomicLong removed - using OrderNumberGeneratorService and sequence
+
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -71,14 +72,8 @@ public class Order {
     @JsonProperty("lines")
     private List<OrderLine> lines = new ArrayList<>();
 
-    @PrePersist
-    public void generateOrderNumber() {
-        if (this.orderNumber == null) {
-            String datePart = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-            String uniquePart = String.format("%05d", orderCounter.incrementAndGet() % 100000);
-            this.orderNumber = "ORD-" + datePart + "-" + uniquePart;
-        }
-    }
+    // Order number generation moved to OrderService
+
 
     public enum OrderStatus { PENDING, PAID, CANCELLED }
 }

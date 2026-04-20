@@ -3,6 +3,8 @@ package mls.sho.dms.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
+import mls.sho.dms.application.inventory.entity.Ingredient;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 

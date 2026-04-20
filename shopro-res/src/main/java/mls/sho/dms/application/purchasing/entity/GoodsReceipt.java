@@ -3,6 +3,9 @@ package mls.sho.dms.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
+import mls.sho.dms.application.purchasing.entity.PurchaseOrder;
+import mls.sho.dms.application.purchasing.entity.PurchaseOrderLine;
+import mls.sho.dms.application.purchasing.entity.Supplier;
 import mls.sho.dms.common.enums.GoodsReceiptStatus;
 
 import java.math.BigDecimal;

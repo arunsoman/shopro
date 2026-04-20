@@ -2,6 +2,7 @@ package mls.sho.dms.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import mls.sho.dms.application.pos.entity.MenuItem;
 import mls.sho.dms.common.enums.KitchenStationType;
 import mls.sho.dms.common.enums.RecipeType;
 import mls.sho.dms.common.enums.RecipeUnit;

@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Data;
+import mls.sho.dms.application.inventory.entity.Ingredient;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
