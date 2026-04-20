@@ -1,7 +1,11 @@
-package mls.sho.dms.entity;
+package mls.sho.dms.application.inventory.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import mls.sho.dms.application.purchasing.entity.GoodsReceipt;
+import mls.sho.dms.entity.Restaurant;
+import mls.sho.dms.application.purchasing.entity.Supplier;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;

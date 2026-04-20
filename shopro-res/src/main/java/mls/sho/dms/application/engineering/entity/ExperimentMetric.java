@@ -1,4 +1,4 @@
-package mls.sho.dms.entity.experiment;
+package mls.sho.dms.application.engineering.entity;
 
 import io.hypersistence.utils.hibernate.type.json.JsonType;
 import jakarta.persistence.*;

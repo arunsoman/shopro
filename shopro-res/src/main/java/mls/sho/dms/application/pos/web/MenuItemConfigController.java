@@ -1,8 +1,9 @@
 package mls.sho.dms.application.pos.web;
 
 import lombok.RequiredArgsConstructor;
+import mls.sho.dms.application.costing.entity.RecipeIngredientLine;
 import mls.sho.dms.application.pos.service.MenuItemConfigService;
-import mls.sho.dms.entity.MenuItem;
+import mls.sho.dms.application.pos.entity.MenuItem;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,14 +18,15 @@ import java.util.List;
 public class MenuItemConfigController {
 
     private final MenuItemConfigService configService;
+    private final mls.sho.dms.application.common.TenantGuard tenantGuard;
 
     @PostMapping("/{menuItemId}/linkage")
     public MenuItem updateLinkage(
             @PathVariable Long restaurantId,
             @PathVariable Long menuItemId,
-            @RequestBody List<mls.sho.dms.entity.RecipeIngredientLine> lines) {
+            @RequestBody List<RecipeIngredientLine> lines) {
         
-        // In a full implementation, we would verify the restaurantId matches the MenuItem
+        tenantGuard.menuItem(restaurantId, menuItemId);
         return configService.updatePrecisionLinkage(menuItemId, lines);
     }
 }

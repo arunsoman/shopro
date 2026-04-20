@@ -4,15 +4,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import mls.sho.dms.application.simulator.core.SimulationLogger;
 import mls.sho.dms.application.simulator.core.SimulationWorld;
-import mls.sho.dms.application.simulator.events.SimulationEvents;
-import mls.sho.dms.entity.Order;
-import mls.sho.dms.entity.OrderLine;
+
 import java.time.Duration;
-import java.util.List;
 import java.util.Random;
 import mls.sho.dms.application.kds.dto.KdsDtos.*;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
+
 import java.util.UUID;
 
 /**

@@ -3,7 +3,7 @@ package mls.sho.dms.application.inventory.service;
 import lombok.RequiredArgsConstructor;
 import mls.sho.dms.application.kds.event.PosTicketReadyEvent;
 import mls.sho.dms.application.pos.repository.OrderRepository;
-import mls.sho.dms.entity.Order;
+import mls.sho.dms.application.pos.entity.Order;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;

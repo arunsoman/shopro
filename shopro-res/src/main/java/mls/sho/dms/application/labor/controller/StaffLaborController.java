@@ -2,9 +2,11 @@ package mls.sho.dms.application.labor.controller;
 
 import lombok.RequiredArgsConstructor;
 import mls.sho.dms.application.primecost.service.LaborService;
+import mls.sho.dms.application.primecost.dto.LaborDtos;
 import mls.sho.dms.application.primecost.dto.LaborDtos.*;
 import mls.sho.dms.application.primecost.entity.ScheduledShift;
 import mls.sho.dms.application.primecost.entity.StaffLaborRecord;
+import mls.sho.dms.entity.users.StaffShift;
 import mls.sho.dms.entity.users.Staff;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -106,15 +108,11 @@ public class StaffLaborController {
     }
 
     @PostMapping("/employees/{staffId}/clock-in")
-    public ResponseEntity<StaffLaborRecord> clockIn(
+    public ResponseEntity<StaffShift> clockIn(
             @PathVariable Long restaurantId,
             @PathVariable UUID staffId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) java.time.LocalDateTime clockInTime) {
-        // Reuse the attendance entity from prime-cost/labor
-        var result = laborService.clockIn(restaurantId, staffId, clockInTime);
-        // Convert — return the labor record instead
-        return ResponseEntity.ok(laborService.logStaffHours(restaurantId, staffId,
-                clockInTime.toLocalDate().with(java.time.DayOfWeek.MONDAY), Map.of("clockIn", clockInTime.toString())));
+        return ResponseEntity.ok(laborService.clockIn(restaurantId, staffId, clockInTime));
     }
 
     @PostMapping("/employees/{staffId}/clock-out")
@@ -124,5 +122,18 @@ public class StaffLaborController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) java.time.LocalDateTime clockOutTime) {
         laborService.clockOut(restaurantId, staffId, clockOutTime);
         return ResponseEntity.ok(Map.of("clockedOut", true, "staffId", staffId, "time", clockOutTime.toString()));
+    }
+
+    @GetMapping("/clocked-in")
+    public ResponseEntity<List<LaborDtos.ClockedInShiftDto>> getClockedInStaff(
+            @PathVariable Long restaurantId) {
+        return ResponseEntity.ok(laborService.getClockedInStaff(restaurantId));
+    }
+
+    @GetMapping("/actual-labor")
+    public ResponseEntity<List<LaborDtos.ClockedInShiftDto>> getActualLabor(
+            @PathVariable Long restaurantId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate weekStart) {
+        return ResponseEntity.ok(laborService.getActualLabor(restaurantId, weekStart));
     }
 }

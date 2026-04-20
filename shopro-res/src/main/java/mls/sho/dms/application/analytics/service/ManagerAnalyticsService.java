@@ -10,8 +10,7 @@ import mls.sho.dms.application.primecost.service.PrimeCostService;
 import mls.sho.dms.application.primecost.service.LaborService;
 import mls.sho.dms.application.pos.repository.TableSessionRepository;
 import mls.sho.dms.application.pos.repository.OrderLineRepository;
-import mls.sho.dms.entity.TableSession;
-import mls.sho.dms.entity.WaitlistEntry;
+import mls.sho.dms.application.pos.entity.TableSession;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

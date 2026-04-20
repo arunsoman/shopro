@@ -1,10 +1,13 @@
-package mls.sho.dms.entity;
+package mls.sho.dms.application.inventory.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
 import mls.sho.dms.common.enums.StockMovementType;
+import mls.sho.dms.entity.Restaurant;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 /**
  * Immutable audit log of every ingredient movement in the kitchen.
@@ -52,6 +55,12 @@ public class InventoryIngredientLedger {
 
     @Column(name = "order_id")
     private Long orderId;
+
+    @Column(name = "table_id")
+    private Long tableId;
+
+    @Column(name = "staff_id")
+    private UUID staffId;
 
     @Column(name = "grn_id")
     private Long grnId;

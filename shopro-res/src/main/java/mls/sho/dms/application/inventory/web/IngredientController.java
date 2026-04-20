@@ -3,7 +3,7 @@ package mls.sho.dms.application.inventory.web;
 import lombok.RequiredArgsConstructor;
 import mls.sho.dms.application.inventory.service.IngredientService;
 import mls.sho.dms.application.inventory.dto.InventoryDtos.LowStockAlertDto;
-import mls.sho.dms.entity.Ingredient;
+import mls.sho.dms.application.inventory.entity.Ingredient;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -16,6 +16,7 @@ import java.util.List;
 public class IngredientController {
 
     private final IngredientService ingredientService;
+    private final mls.sho.dms.application.common.TenantGuard tenantGuard;
 
     @GetMapping
     public List<Ingredient> getIngredients(
@@ -41,6 +42,7 @@ public class IngredientController {
 
     @GetMapping("/{id}")
     public Ingredient getIngredient(@PathVariable Long restaurantId, @PathVariable Long id) {
+        tenantGuard.ingredient(restaurantId, id);
         return ingredientService.getIngredient(id);
     }
 
@@ -48,6 +50,7 @@ public class IngredientController {
     public mls.sho.dms.application.inventory.dto.IngredientCostDto getIngredientCosts(
             @PathVariable Long restaurantId,
             @PathVariable Long id) {
+        tenantGuard.ingredient(restaurantId, id);
         return ingredientService.getIngredientCosts(id);
     }
 
@@ -68,6 +71,7 @@ public class IngredientController {
 
     @DeleteMapping("/{id}")
     public void deactivateIngredient(@PathVariable Long restaurantId, @PathVariable Long id) {
+        tenantGuard.ingredient(restaurantId, id);
         ingredientService.deactivateIngredient(id);
     }
 }

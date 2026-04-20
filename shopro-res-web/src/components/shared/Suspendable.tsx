@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils';
 
 interface SuspendableProps {
   isLoading: boolean;
-  skeleton: React.ReactNode;
+  skeleton?: React.ReactNode;
   children: React.ReactNode;
   className?: string;
 }

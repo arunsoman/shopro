@@ -9,24 +9,24 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/restaurants/{restaurantId}/staff/{staffId}/shifts")
+@RequestMapping("/api/v1/restaurants/{restaurantId}/staff/shifts")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
 public class StaffShiftController {
 
     private final StaffShiftService shiftService;
 
-    @PostMapping("/clock-in")
+    @PostMapping("/{staffId}/clock-in")
     public StaffShift clockIn(@PathVariable Long restaurantId, @PathVariable UUID staffId) {
         return shiftService.clockIn(staffId, restaurantId);
     }
 
-    @PostMapping("/clock-out")
+    @PostMapping("/{staffId}/clock-out")
     public StaffShift clockOut(@PathVariable UUID staffId) {
         return shiftService.clockOut(staffId);
     }
 
-    @GetMapping
+    @GetMapping("/{staffId}")
     public List<StaffShift> getShiftHistory(@PathVariable UUID staffId) {
         return shiftService.getStaffShiftHistory(staffId);
     }

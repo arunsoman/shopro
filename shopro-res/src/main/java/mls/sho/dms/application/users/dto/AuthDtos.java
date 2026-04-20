@@ -80,6 +80,7 @@ public class AuthDtos {
         private String name;
         private String role;
         private boolean shiftActive;
+        private java.math.BigDecimal hourlyRate;
     }
 
     @Data

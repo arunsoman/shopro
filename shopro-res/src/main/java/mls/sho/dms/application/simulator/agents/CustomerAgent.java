@@ -2,12 +2,10 @@ package mls.sho.dms.application.simulator.agents;
 
 import lombok.RequiredArgsConstructor;
 import mls.sho.dms.application.simulator.core.SimulationWorld;
-import mls.sho.dms.entity.DiningTable;
-import mls.sho.dms.entity.Order;
-import mls.sho.dms.entity.TableSession;
+import mls.sho.dms.application.pos.entity.DiningTable;
+import mls.sho.dms.application.pos.entity.TableSession;
 import org.springframework.stereotype.Component;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Random;
 

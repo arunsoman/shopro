@@ -2,15 +2,12 @@ package mls.sho.dms.application.pos.web;
 
 import lombok.RequiredArgsConstructor;
 import mls.sho.dms.application.pos.dto.*;
+import mls.sho.dms.application.pos.entity.*;
 import mls.sho.dms.application.pos.repository.RestaurantRepository;
 import mls.sho.dms.application.pos.service.DiningTableService;
 import mls.sho.dms.application.pos.service.OrderService;
 import mls.sho.dms.application.pos.service.TableSessionService;
 import mls.sho.dms.application.inventory.service.InventoryIntelligenceService;
-import mls.sho.dms.entity.DiningTable;
-import mls.sho.dms.entity.Order;
-import mls.sho.dms.entity.OrderLine;
-import mls.sho.dms.entity.TableSession;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -30,6 +27,7 @@ public class PosController {
 
     @GetMapping("/menu-items")
     public List<MenuItemDto> getMenuItems(@PathVariable Long restaurantId) {
+        // Use lightweight query without EntityGraph - recipes not needed for POS display
         return menuItemRepository.findAllByRestaurantId(restaurantId).stream()
                 .map(this::mapToMenuItemDto)
                 .collect(Collectors.toList());
@@ -79,7 +77,7 @@ public class PosController {
     
     @PatchMapping("/sessions/{id}/guests")
     public void updateGuestCount(@PathVariable Long restaurantId, @PathVariable Long id, @RequestParam int guests) {
-        sessionService.updateGuestCount(id, guests);
+        sessionService.updateGuestCount(restaurantId, id, guests);
     }
 
     @PostMapping("/sessions/{id}/close")
@@ -87,7 +85,7 @@ public class PosController {
             @PathVariable Long restaurantId,
             @PathVariable Long id,
             @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME) java.time.LocalDateTime closedAt) {
-        sessionService.closeSession(id, closedAt);
+        sessionService.closeSession(restaurantId, id, closedAt);
     }
 
     // -- Orders -----------------------------------------------
@@ -112,25 +110,27 @@ public class PosController {
     @PatchMapping("/orders/{id}/void")
     public void voidOrder(@PathVariable Long restaurantId, @PathVariable Long id,
          @RequestParam String reason) {
-        orderService.voidOrder(id, reason);
+        orderService.voidOrder(restaurantId, id, reason);
     }
 
     @PostMapping("/orders/{id}/items")
     public void addItemsToOrder(@PathVariable Long restaurantId, @PathVariable Long id, 
         @RequestBody List<OrderLineDto> items) {
-        orderService.addItems(id, items);
+        orderService.addItems(restaurantId, id, items);
     }
     
     @PatchMapping("/tables/{tableId}/pay/{orderId}")
     public void payOrder(@PathVariable Long restaurantId, @PathVariable Long tableId,
          @PathVariable Long orderId) {
-            Order order = orderService.completeOrder(orderId);
-        inventoryIntelligence.orderFulfillment(order);
+        // DEPLETION REMOVED: completeOrder() now handles fallback depletion for quick-serve/takeout.
+        // For dine-in, KDS already depleted via PosTicketReadyEvent.
+        // The fulfillment_key constraint prevents double-depletion.
+        orderService.completeOrder(restaurantId, orderId);
         tableService.updateStatus(tableId, DiningTable.TableStatus.DIRTY);
     }
     // -- Mappers (Private) ------------------------------------
 
-    private MenuItemDto mapToMenuItemDto(mls.sho.dms.entity.MenuItem item) {
+    private MenuItemDto mapToMenuItemDto(MenuItem item) {
         MenuItemDto dto = new MenuItemDto();
         dto.setId(item.getId());
         dto.setPosId(item.getPosId());

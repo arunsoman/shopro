@@ -1,13 +1,15 @@
-package mls.sho.dms.entity;
+package mls.sho.dms.application.pos.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import mls.sho.dms.application.costing.entity.MenuCostGroup;
+import mls.sho.dms.application.costing.entity.Recipe;
+import mls.sho.dms.entity.Restaurant;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
 /**

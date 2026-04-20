@@ -1,7 +1,8 @@
-package mls.sho.dms.entity;
+package mls.sho.dms.application.pos.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import mls.sho.dms.entity.Restaurant;
 
 /**
  * Physical dining table on the floor plan.

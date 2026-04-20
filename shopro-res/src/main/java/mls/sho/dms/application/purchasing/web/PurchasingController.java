@@ -5,13 +5,11 @@ import mls.sho.dms.application.inventory.service.IngredientService;
 import mls.sho.dms.application.purchasing.service.PurchaseInvoiceService;
 import mls.sho.dms.application.purchasing.service.SupplierService;
 import mls.sho.dms.application.purchasing.dto.PurchaseInvoiceDTO;
-import mls.sho.dms.application.purchasing.dto.SupplierDTO;
 import mls.sho.dms.application.purchasing.dto.WeeklySummaryDTO;
-import mls.sho.dms.entity.PurchaseInvoice;
-import mls.sho.dms.entity.Supplier;
+import mls.sho.dms.application.purchasing.entity.PurchaseInvoice;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.http.ResponseEntity;
+
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;

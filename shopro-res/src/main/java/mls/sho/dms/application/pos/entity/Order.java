@@ -1,15 +1,15 @@
-package mls.sho.dms.entity;
+package mls.sho.dms.application.pos.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
+import mls.sho.dms.entity.Restaurant;
 
 /**
  * Order header linked to a session.

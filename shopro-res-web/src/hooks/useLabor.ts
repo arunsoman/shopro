@@ -10,6 +10,7 @@ import type {
   CreateEmployeeRequest,
   UpdateEmployeeRequest,
 } from "../types";
+import { apiGet } from "../api/client";
 
 export const laborKeys = {
   employees:       (rId: number)               => ["labor", rId, "employees"]         as const,
@@ -17,6 +18,7 @@ export const laborKeys = {
   shifts:          (rId: number, ws: string)   => ["labor", rId, "shifts", ws]        as const,
   scheduleSummary: (rId: number, ws: string)   => ["labor", rId, "schedule", ws]      as const,
   scheduleVsActual:(rId: number, ws: string)   => ["labor", rId, "sva", ws]           as const,
+  clockedIn:       (rId: number)               => ["labor", rId, "clockedIn"]        as const,
 };
 
 export function useEmployees(restaurantId: number) {
@@ -25,6 +27,31 @@ export function useEmployees(restaurantId: number) {
     queryFn:  () => api.listEmployees(restaurantId),
     enabled:  restaurantId > 0,
     staleTime: Infinity, // employees rarely change
+  });
+}
+
+export function useClockedInStaff(restaurantId: number) {
+  return useQuery({
+    queryKey: laborKeys.clockedIn(restaurantId),
+    queryFn:  () => api.getClockedInStaff(restaurantId),
+    enabled:  restaurantId > 0,
+    refetchInterval: 30000, // Poll every 30 seconds
+  });
+}
+
+export function useActualLabor(restaurantId: number, weekStart: string) {
+  return useQuery({
+    queryKey: laborKeys.weeklySummary(restaurantId, weekStart, "actual"),
+    queryFn:  () => api.getActualLabor(restaurantId, weekStart),
+    enabled:  restaurantId > 0 && !!weekStart,
+  });
+}
+
+export function useEmployee(restaurantId: number, employeeId: number) {
+  return useQuery({
+    queryKey: ["labor", restaurantId, "employee", employeeId],
+    queryFn:  () => api.getEmployee(restaurantId, employeeId),
+    enabled:  restaurantId > 0 && employeeId > 0,
   });
 }
 

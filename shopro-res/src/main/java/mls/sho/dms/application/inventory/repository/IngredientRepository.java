@@ -1,6 +1,6 @@
 package mls.sho.dms.application.inventory.repository;
 
-import mls.sho.dms.entity.Ingredient;
+import mls.sho.dms.application.inventory.entity.Ingredient;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -13,10 +13,6 @@ public interface IngredientRepository extends JpaRepository<Ingredient, Long> {
     Optional<Ingredient> findByRestaurantIdAndItemCode(Long restaurantId, String itemCode);
     long countByRestaurantId(Long restaurantId);
 
-    /**
-     * Returns active ingredients whose live balance (from {@code inventory_ingredient_balance})
-     * is below par level AND have no open / in-flight PO lines.
-     */
     @Query("""
         SELECT i FROM Ingredient i
         JOIN InventoryIngredientBalance b
@@ -25,14 +21,20 @@ public interface IngredientRepository extends JpaRepository<Ingredient, Long> {
           AND i.parLevel IS NOT NULL
           AND b.currentBalance < i.parLevel
           AND i.active = true
-          AND NOT EXISTS (
-              SELECT 1 FROM PurchaseOrderLine pol
-              JOIN pol.purchaseOrder po
-              WHERE pol.ingredient = i
-                AND po.status IN ('DRAFT', 'SENT', 'PARTIAL')
-          )
+          AND i.id NOT IN :onOrderIds
     """)
-    List<Ingredient> findAllLowStock(@org.springframework.data.repository.query.Param("restaurantId") Long restaurantId);
+    List<Ingredient> findAllLowStockNotIn(@org.springframework.data.repository.query.Param("restaurantId") Long restaurantId, @org.springframework.data.repository.query.Param("onOrderIds") List<Long> onOrderIds);
+
+    @Query("""
+        SELECT i FROM Ingredient i
+        JOIN InventoryIngredientBalance b
+            ON b.ingredient = i AND b.restaurant = i.restaurant
+        WHERE i.restaurant.id = :restaurantId
+          AND i.parLevel IS NOT NULL
+          AND b.currentBalance < i.parLevel
+          AND i.active = true
+    """)
+    List<Ingredient> findAllLowStockNoExits(@org.springframework.data.repository.query.Param("restaurantId") Long restaurantId);
 
     @Query("""
         SELECT COUNT(i) FROM Ingredient i
@@ -42,14 +44,20 @@ public interface IngredientRepository extends JpaRepository<Ingredient, Long> {
           AND i.parLevel IS NOT NULL
           AND b.currentBalance < i.parLevel
           AND i.active = true
-          AND NOT EXISTS (
-              SELECT 1 FROM PurchaseOrderLine pol
-              JOIN pol.purchaseOrder po
-              WHERE pol.ingredient = i
-                AND po.status IN ('DRAFT', 'SENT', 'PARTIAL')
-          )
+          AND i.id NOT IN :onOrderIds
     """)
-    long countLowStock(@org.springframework.data.repository.query.Param("restaurantId") Long restaurantId);
+    long countLowStockNotIn(@org.springframework.data.repository.query.Param("restaurantId") Long restaurantId, @org.springframework.data.repository.query.Param("onOrderIds") List<Long> onOrderIds);
+
+    @Query("""
+        SELECT COUNT(i) FROM Ingredient i
+        JOIN InventoryIngredientBalance b
+            ON b.ingredient = i AND b.restaurant = i.restaurant
+        WHERE i.restaurant.id = :restaurantId
+          AND i.parLevel IS NOT NULL
+          AND b.currentBalance < i.parLevel
+          AND i.active = true
+    """)
+    long countLowStockNoExits(@org.springframework.data.repository.query.Param("restaurantId") Long restaurantId);
 
     @Query("""
         SELECT COUNT(i) FROM Ingredient i
@@ -58,14 +66,19 @@ public interface IngredientRepository extends JpaRepository<Ingredient, Long> {
         WHERE i.parLevel IS NOT NULL
           AND b.currentBalance < i.parLevel
           AND i.active = true
-          AND NOT EXISTS (
-              SELECT 1 FROM PurchaseOrderLine pol
-              JOIN pol.purchaseOrder po
-              WHERE pol.ingredient = i
-                AND po.status IN ('DRAFT', 'SENT', 'PARTIAL')
-          )
+          AND i.id NOT IN :onOrderIds
     """)
-    long countBelowParGlobal();
+    long countBelowParGlobalNotIn(@org.springframework.data.repository.query.Param("onOrderIds") List<Long> onOrderIds);
+
+    @Query("""
+        SELECT COUNT(i) FROM Ingredient i
+        JOIN InventoryIngredientBalance b
+            ON b.ingredient = i AND b.restaurant = i.restaurant
+        WHERE i.parLevel IS NOT NULL
+          AND b.currentBalance < i.parLevel
+          AND i.active = true
+    """)
+    long countBelowParGlobalNoExits();
 
     @Query("SELECT i FROM Ingredient i WHERE i.restaurant.id = :restaurantId " +
            "AND (:type IS NULL OR i.inventoryType = :type) " +

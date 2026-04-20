@@ -1,4 +1,4 @@
-package mls.sho.dms.entity.experiment;
+package mls.sho.dms.application.engineering.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;

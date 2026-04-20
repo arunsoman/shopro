@@ -7,8 +7,10 @@ import mls.sho.dms.application.inventory.service.BusinessSimulatorService;
 import mls.sho.dms.application.inventory.service.BusinessSimulatorService.SimJobStatus;
 import mls.sho.dms.application.inventory.service.SimulatorInternalService;
 import mls.sho.dms.entity.Restaurant;
+import org.springframework.context.annotation.Profile;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -71,6 +73,8 @@ public class SimulationController {
 
     @PostMapping("/reset-data/{restaurantId}")
     @Operation(summary = "Purges all historical simulation data for a restaurant")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Profile("!prod")
     public ResponseEntity<Void> resetData(@PathVariable Long restaurantId) {
         internalService.cleanup(restaurantId);
         return ResponseEntity.ok().build();

@@ -8,11 +8,13 @@ import mls.sho.dms.application.inventory.entity.PhysicalInventoryPeriod;
 import mls.sho.dms.application.inventory.entity.PhysicalInventoryPeriod.PeriodStatus;
 import mls.sho.dms.application.inventory.repository.IngredientRepository;
 import mls.sho.dms.application.inventory.repository.InventoryLedgerRepository;
+import mls.sho.dms.application.inventory.repository.InventoryBalanceRepository;
 import mls.sho.dms.application.inventory.repository.PhysicalInventoryLineRepository;
 import mls.sho.dms.application.inventory.repository.PhysicalInventoryPeriodRepository;
 import mls.sho.dms.application.pos.repository.RestaurantRepository;
 import mls.sho.dms.common.enums.InventoryType;
-import mls.sho.dms.entity.Ingredient;
+import mls.sho.dms.application.inventory.entity.Ingredient;
+import mls.sho.dms.application.inventory.entity.InventoryIngredientBalance;
 import mls.sho.dms.entity.Restaurant;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,6 +35,7 @@ public class PhysicalInventoryService {
     private final PhysicalInventoryLineRepository lineRepository;
     private final IngredientRepository ingredientRepository;
     private final InventoryLedgerRepository ledgerRepository;
+    private final InventoryBalanceRepository balanceRepository;
     private final RestaurantRepository restaurantRepository;
     private final InventoryIntelligenceService intelligenceService;
 
@@ -85,8 +88,11 @@ public class PhysicalInventoryService {
         List<Ingredient> ingredients = ingredientRepository.findFiltered(
                 restaurantId, type, null, true, null);
 
+        Map<Long, BigDecimal> balances = balanceRepository.findAllByRestaurantId(restaurantId).stream()
+                .collect(Collectors.toMap(b -> b.getIngredient().getId(), InventoryIngredientBalance::getCurrentBalance));
+
         for (Ingredient ing : ingredients) {
-            BigDecimal expected = ledgerRepository.sumQuantityByIngredient(restaurantId, ing.getId());
+            BigDecimal expected = balances.getOrDefault(ing.getId(), BigDecimal.ZERO);
 
             PhysicalInventoryLine line = new PhysicalInventoryLine();
             line.setPeriod(period);
@@ -116,10 +122,31 @@ public class PhysicalInventoryService {
     public List<PhysicalInventoryLineDto> batchUpdateLines(Long restaurantId, Long periodId,
                                                            List<Map<String, Object>> updates) {
         findPeriod(restaurantId, periodId); // validate ownership
-        return updates.stream().map(upd -> {
+        
+        List<Long> lineIds = updates.stream()
+                .map(u -> Long.parseLong(u.get("lineId").toString()))
+                .collect(Collectors.toList());
+        
+        Map<Long, PhysicalInventoryLine> linesMap = lineRepository.findAllById(lineIds).stream()
+                .collect(Collectors.toMap(PhysicalInventoryLine::getId, l -> l));
+
+        List<PhysicalInventoryLine> updatedLines = new java.util.ArrayList<>();
+        
+        for (Map<String, Object> upd : updates) {
             Long lineId = Long.parseLong(upd.get("lineId").toString());
-            return updateLineCount(restaurantId, periodId, lineId, upd);
-        }).collect(Collectors.toList());
+            PhysicalInventoryLine line = linesMap.get(lineId);
+            if (line == null) throw new RuntimeException("Line not found: " + lineId);
+            
+            BigDecimal counted = new BigDecimal(upd.get("countedQty").toString());
+            line.setCountedQty(counted);
+            line.setVariance(counted.subtract(line.getExpectedQty()));
+            line.setUpdatedAt(LocalDateTime.now());
+            updatedLines.add(line);
+        }
+        
+        return lineRepository.saveAll(updatedLines).stream()
+                .map(this::toLineDto)
+                .collect(Collectors.toList());
     }
 
     @Transactional

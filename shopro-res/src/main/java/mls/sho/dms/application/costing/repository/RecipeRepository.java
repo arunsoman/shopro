@@ -1,6 +1,6 @@
 package mls.sho.dms.application.costing.repository;
 
-import mls.sho.dms.entity.Recipe;
+import mls.sho.dms.application.costing.entity.Recipe;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.stereotype.Repository;

@@ -53,7 +53,7 @@ import RecipeDetail from "@/features/recipes-menu/pages/RecipeDetail";
 import RecipeEditor from "@/features/recipes-menu/pages/RecipeEditor";
 import { ExperimentPage } from "@/features/experiments/pages/ExperimentPage";
 import ReportsPage from "@/features/reports/pages/ReportsPage";
-import { PrimeCostHubPage, LaborSchedulePage } from "@/router/LazyPages";
+import { PrimeCostHubPage, StaffManagementPage, StaffManagementHubPage, TableStaffMapPage, SalaryDisbursementPage, ChartOfAccountsPage, FinanceHubPage, PnLStatementPage, ExpenseEntryPage, CashManagementPage, SalesEntryPage } from "@/router/LazyPages";
 import PaymentFeature from "@/features/payments/PaymentFeature";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
@@ -100,6 +100,7 @@ function createStore<T extends object>(
 
 export type Screen = 
   | "login" | "dashboard" | "card-detail" | "inventory" | "kds" | "prime-cost" | "engineering" | "purchasing" | "recipes" 
+  | "finance-hub" | "finance-pnl" | "finance-expenses" | "finance-cash" | "finance-sales" | "accounting" | "accounting-salary" | "accounting-accounts" 
   | "inventory-ingredients" | "inventory-count" | "inventory-history" | "inventory-alerts" | "inventory-new-ingredient" | "inventory-ingredient-detail" | "inventory-period-detail"
   | "purchase-suppliers" | "purchase-invoice-entry" | "purchase-invoice-log" | "purchase-invoice-editor"
   | "purchase-weekly" | "purchase-trend" | "purchase-alerts"
@@ -111,7 +112,7 @@ export type Screen =
   | "recipe-list" | "recipe-editor" | "recipe-editor-detail"
   | "recipe-cost-groups" | "recipe-converter"
   | "engineering" | "engineering-setup" | "engineering-detail" | "engineering-results" | "engineering-quadrant" | "engineering-categories" | "engineering-live" | "engineering-history" | "engineering-whatif" | "engineering-comparison"
-  | "kds" | "prime-cost" | "prime-cost-multi" | "labor-staffing" | "supplier-pay" | "experiment-lab" | "reports";
+  | "kds" | "prime-cost" | "prime-cost-multi" | "labor-staffing" | "staff-management" | "supplier-pay" | "experiment-lab" | "reports" | "finance-hub" | "accounting" | "accounting-salary" | "accounting-accounts";
 
 interface ShellState {
   homeIcon: boolean; searchBar: boolean; themeSwitcher: boolean;
@@ -382,8 +383,9 @@ function SideNav() {
     { label: "Experiments", screen: "experiment-lab", d: "M4.5 3h15M6 3v16a2 2 0 002 2h8a2 2 0 002-2V3M6 14h12" },
     { label: "Reports",     screen: "reports",        d: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" },
     { label: "Supplier Pay", screen: "supplier-pay", d: "M3 10h18M7 15h1m4 0h1m-7 4h12a2 2 0 002-2V7a2 2 0 00-2-2H6a2 2 0 00-2 2v10a2 2 0 002 2z" },
-    { label: "Staff & Labor", screen: "labor-staffing", d: "M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2 M9 7a4 4 0 110 8 4 4 0 010-8z M23 21v-2a4 4 0 00-3-3.87 M16 3.13a4 4 0 010 7.75" },
+    { label: "Staff Mgmt",  screen: "staff-management", d: "M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2 M9 7a4 4 0 110 8 4 4 0 010-8z M23 21v-2a4 4 0 00-3-3.87 M16 3.13a4 4 0 010 7.75" },
     { label: "Kitchen Costs", screen: "recipes",     d: "M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" },
+    { label: "Finance",     screen: "finance-hub",   d: "M9 7h6m0 10v-3.5c0-1.5-1.5-2.5-3-2.5m-6 4h4m-4 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 114 0 2 2 0 01-4 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" },
   ];
 
   return (
@@ -495,7 +497,16 @@ function Canvas() {
           {displayScreen === "engineering-comparison" && <PeriodComparisonPage />}
           {displayScreen === "kds" && <ExpoKds outletId={session?.restaurantId || 3} />}
           {displayScreen === "prime-cost" && <PrimeCostHubPage />}
-          {displayScreen === "labor-staffing" && <LaborSchedulePage />}
+          {displayScreen === "staff-management" && <StaffManagementHubPage />}
+          {displayScreen === "table-staff-map" && <TableStaffMapPage />}
+          {displayScreen === "labor-staffing" && <StaffManagementPage />}
+          {displayScreen === "finance-hub" && <FinanceHubPage />}
+          {displayScreen === "finance-pnl" && <PnLStatementPage />}
+          {displayScreen === "finance-expenses" && <ExpenseEntryPage />}
+          {displayScreen === "finance-cash" && <CashManagementPage />}
+          {displayScreen === "finance-sales" && <SalesEntryPage />}
+          {displayScreen === "accounting-salary" && <SalaryDisbursementPage />}
+          {displayScreen === "accounting-accounts" && <ChartOfAccountsPage />}
           {displayScreen === "supplier-pay" && <PaymentFeature />}
           {displayScreen === "experiment-lab" && <ExperimentPage />}
           {displayScreen === "reports" && <ReportsPage />}
@@ -572,8 +583,16 @@ function RouteSync() {
       store.navigate("supplier-pay");
     } else if (matchPath("/labor", pathname)) {
       store.navigate("labor-staffing");
+    } else if (matchPath("/staff-management", pathname)) {
+      store.navigate("staff-management");
     } else if (matchPath("/prime-cost", pathname)) {
       store.navigate("prime-cost");
+    } else if (matchPath("/accounting/salary", pathname)) {
+      store.navigate("accounting-salary");
+    } else if (matchPath("/accounting/accounts", pathname)) {
+      store.navigate("accounting-accounts");
+    } else if (matchPath("/accounting", pathname)) {
+      store.navigate("accounting-salary");
     }
 
     // ── SS0: Dashboard ──────────────────────────────────

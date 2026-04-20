@@ -270,6 +270,30 @@ const routes: RouteObject[] = [
             element: <Lazy><P.MultiLocationPage /></Lazy>,
           },
 
+          // ── Staff Management ────────────────────────────────────
+          {
+            path: ROUTES.STAFF_MANAGEMENT,
+            element: <Lazy><P.StaffManagementHubPage /></Lazy>,
+          },
+          {
+            path: ROUTES.STAFF_ATTENDANCE,
+            element: <Lazy><P.StaffLaborPage /></Lazy>,
+          },
+          {
+            path: ROUTES.TABLE_STAFF_MAP,
+            element: <Lazy><P.TableStaffMapPage /></Lazy>,
+          },
+
+          // ── Accounting ────────────────────────────────────────
+          {
+            path: ROUTES.SALARY_DISBURSEMENT,
+            element: <Lazy><P.SalaryDisbursementPage /></Lazy>,
+          },
+          {
+            path: ROUTES.CHART_OF_ACCOUNTS,
+            element: <Lazy><P.ChartOfAccountsPage /></Lazy>,
+          },
+
           // ── SS6: POS / Floor ────────────────────────────────
           {
             path: ROUTES.FLOOR,

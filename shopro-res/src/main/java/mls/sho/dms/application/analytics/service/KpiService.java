@@ -3,17 +3,15 @@ package mls.sho.dms.application.analytics.service;
 import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
-import mls.sho.dms.application.inventory.repository.IngredientRepository;
 import mls.sho.dms.application.pos.repository.OrderRepository;
 import mls.sho.dms.application.pos.repository.TableSessionRepository;
 import mls.sho.dms.application.purchasing.repository.PurchaseInvoiceRepository;
 import mls.sho.dms.application.primecost.entity.PrimeCostReport;
-import mls.sho.dms.application.primecost.entity.WeeklyBudget;
 import mls.sho.dms.application.primecost.repository.PrimeCostReportRepository;
 import mls.sho.dms.application.primecost.repository.WeeklyBudgetRepository;
 import mls.sho.dms.application.primecost.service.PrimeCostService;
 import mls.sho.dms.application.primecost.dto.PrimeCostDtos.PrimeCostReportDto;
-import mls.sho.dms.entity.Order;
+import mls.sho.dms.application.pos.entity.Order;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -30,7 +28,7 @@ public class KpiService {
 
     private final OrderRepository orderRepository;
     private final TableSessionRepository tableSessionRepository;
-    private final IngredientRepository ingredientRepository;
+    private final mls.sho.dms.application.inventory.service.IngredientService ingredientService;
     private final PurchaseInvoiceRepository invoiceRepository;
     private final PrimeCostReportRepository reportRepository;
     private final WeeklyBudgetRepository budgetRepository;
@@ -74,7 +72,7 @@ public class KpiService {
                 .foodCostPctDelta(0.5) // Standard delta for demo, can be expanded to historical COS comparison
                 .openSessionsNow(tableSessionRepository.countActiveSessions(restaurantId))
                 .topSellerToday(getTopSellerToday(restaurantId, startOfToday))
-                .lowStockCount(ingredientRepository.countLowStock(restaurantId))
+                .lowStockCount(ingredientService.getLowStockCount(restaurantId))
                 .draftInvoiceCount(invoiceRepository.countDraftInvoices(restaurantId))
                 .primeCostTrend(getPrimeCostTrend(restaurantId, 8))
                 .primeCostTarget(getPrimeCostTarget(restaurantId))

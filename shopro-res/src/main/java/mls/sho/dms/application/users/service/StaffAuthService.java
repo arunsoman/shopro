@@ -121,6 +121,23 @@ public class StaffAuthService {
             .name(staff.getDisplayName())
             .role(staff.getRole().name())
             .shiftActive(Boolean.TRUE.equals(staff.getShiftActive()))
+            .hourlyRate(staff.getHourlyRate())
             .build();
+    }
+    
+    @Transactional(readOnly = true)
+    public StaffDto getStaffById(UUID staffId) {
+        Staff staff = staffRepo.findById(staffId)
+            .orElseThrow(() -> new AuthException("Staff not found"));
+        return mapToDto(staff);
+    }
+    
+    @Transactional
+    public StaffDto updateHourlyRate(UUID staffId, java.math.BigDecimal hourlyRate) {
+        Staff staff = staffRepo.findById(staffId)
+            .orElseThrow(() -> new AuthException("Staff not found"));
+        staff.setHourlyRate(hourlyRate);
+        staffRepo.save(staff);
+        return mapToDto(staff);
     }
 }

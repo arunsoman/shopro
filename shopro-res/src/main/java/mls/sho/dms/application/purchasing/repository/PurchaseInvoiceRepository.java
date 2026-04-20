@@ -1,6 +1,6 @@
 package mls.sho.dms.application.purchasing.repository;
 
-import mls.sho.dms.entity.PurchaseInvoice;
+import mls.sho.dms.application.purchasing.entity.PurchaseInvoice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -23,6 +23,8 @@ public interface PurchaseInvoiceRepository extends JpaRepository<PurchaseInvoice
             @Param("to") LocalDate to);
 
     java.util.Optional<PurchaseInvoice> findByGoodsReceiptId(Long grnId);
+    
+    List<PurchaseInvoice> findByGoodsReceiptIdIn(List<Long> grnIds);
 
     List<PurchaseInvoice> findTop3ByRestaurantIdOrderByCreatedAtDesc(Long restaurantId);
 }

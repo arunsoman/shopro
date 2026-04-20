@@ -1,6 +1,6 @@
 package mls.sho.dms.application.purchasing.repository;
 
-import mls.sho.dms.entity.PurchaseOrder;
+import mls.sho.dms.application.purchasing.entity.PurchaseOrder;
 import mls.sho.dms.common.enums.PurchaseOrderStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -35,4 +35,10 @@ public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, Lo
     @Transactional
     @Query("DELETE FROM PurchaseOrder p WHERE p.restaurant.id = :restaurantId")
     void deleteByRestaurantId(@Param("restaurantId") Long restaurantId);
+
+    @Query("SELECT DISTINCT pol.ingredient.id FROM PurchaseOrderLine pol WHERE pol.purchaseOrder.restaurant.id = :restaurantId AND pol.purchaseOrder.status IN ('DRAFT', 'SENT', 'PARTIAL')")
+    List<Long> findIngredientsOnOrder(@Param("restaurantId") Long restaurantId);
+
+    @Query("SELECT DISTINCT pol.ingredient.id FROM PurchaseOrderLine pol WHERE pol.purchaseOrder.status IN ('DRAFT', 'SENT', 'PARTIAL')")
+    List<Long> findGlobalIngredientsOnOrder();
 }

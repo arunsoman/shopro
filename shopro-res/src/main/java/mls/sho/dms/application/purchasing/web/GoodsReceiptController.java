@@ -7,11 +7,11 @@ import mls.sho.dms.application.purchasing.dto.ReceiveStockRequest;
 import mls.sho.dms.application.purchasing.repository.SupplierRepository;
 import mls.sho.dms.application.purchasing.service.GoodsReceiptService;
 import mls.sho.dms.application.purchasing.service.PurchaseInvoiceService;
-import mls.sho.dms.entity.GoodsReceipt;
-import mls.sho.dms.entity.PurchaseInvoice;
-import mls.sho.dms.entity.PurchaseOrder;
+import mls.sho.dms.application.purchasing.entity.GoodsReceipt;
+import mls.sho.dms.application.purchasing.entity.PurchaseInvoice;
+import mls.sho.dms.application.purchasing.entity.PurchaseOrder;
 import mls.sho.dms.entity.Restaurant;
-import mls.sho.dms.entity.Supplier;
+import mls.sho.dms.application.purchasing.entity.Supplier;
 import mls.sho.dms.application.purchasing.repository.PurchaseOrderRepository;
 import org.springframework.web.bind.annotation.*;
 

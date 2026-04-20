@@ -3,6 +3,7 @@ package mls.sho.dms.application.primecost.service;
 import lombok.RequiredArgsConstructor;
 import mls.sho.dms.application.primecost.entity.*;
 import mls.sho.dms.application.primecost.repository.*;
+import mls.sho.dms.application.primecost.dto.LaborDtos;
 import mls.sho.dms.application.primecost.dto.LaborDtos.*;
 import mls.sho.dms.entity.Restaurant;
 import mls.sho.dms.entity.users.Staff;
@@ -17,7 +18,10 @@ import java.util.UUID;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -79,6 +83,9 @@ public class LaborService {
         }
 
         staff.setDisplayName(req.getName());
+        if (req.getEmployeeType() != null) {
+            staff.setEmployeeType(req.getEmployeeType());
+        }
         staff.setHourlyRate(req.getHourlyRate());
         staff.setAnnualSalary(req.getAnnualSalary());
         staff.setIsActive(req.isActive());
@@ -92,9 +99,9 @@ public class LaborService {
         Staff staff = staffRepository.findById(staffId)
                 .orElseThrow(() -> new RuntimeException("Staff not found"));
         
-        // Ensure no existing active punch
-        staffShiftRepository.findTopByStaffStaffIdAndIsActiveTrueOrderByClockInDesc(staffId)
-                .ifPresent(p -> { throw new IllegalStateException("Staff already clocked in"); });
+        // Ensure no existing active punch for this restaurant
+        staffShiftRepository.findTopByStaffStaffIdAndRestaurantIdAndIsActiveTrueOrderByClockInDesc(staffId, restaurantId)
+                .ifPresent(p -> { throw new IllegalStateException("Staff already clocked in at this restaurant"); });
         
         StaffShift shift = StaffShift.builder()
                 .staff(staff)
@@ -108,52 +115,132 @@ public class LaborService {
 
     @Transactional
     public StaffShift clockOut(Long restaurantId, UUID staffId, java.time.LocalDateTime clockOutTime) {
-        StaffShift shift = staffShiftRepository.findTopByStaffStaffIdAndIsActiveTrueOrderByClockInDesc(staffId)
-                .orElseThrow(() -> new RuntimeException("No active shift found for staff"));
-        
+        StaffShift shift = staffShiftRepository
+                .findTopByStaffStaffIdAndRestaurantIdAndIsActiveTrueOrderByClockInDesc(staffId, restaurantId)
+                .orElseThrow(() -> new RuntimeException("No active shift found for staff at this restaurant"));
+
         shift.setClockOut(clockOutTime);
         shift.setIsActive(false);
-        
+
         long mins = java.time.Duration.between(shift.getClockIn(), clockOutTime).toMinutes();
         shift.setDurationMinutes(mins);
 
-        // Update the weekly labor record aggregation
         Staff staff = shift.getStaff();
-        LocalDate shiftDate = shift.getClockIn().toLocalDate();
-        LocalDate weekStart = shiftDate.with(java.time.DayOfWeek.MONDAY);
-        
+        LocalDate clockInDate = shift.getClockIn().toLocalDate();
+        LocalDate clockOutDate = clockOutTime.toLocalDate();
+        LocalDate weekStart = clockInDate.with(java.time.DayOfWeek.MONDAY);
+
         StaffLaborRecord record = laborRecordRepository.findByStaffStaffIdAndWeekStartDate(staff.getStaffId(), weekStart)
                 .orElseGet(() -> {
                     StaffLaborRecord r = new StaffLaborRecord();
                     r.setStaff(staff);
-                    r.setRestaurant(restaurantRepository.findById(restaurantId).get()); // Simple lookup
+                    r.setRestaurant(restaurantRepository.findById(restaurantId).get());
                     r.setWeekStartDate(weekStart);
                     r.setRateSnapshot(staff.getHourlyRate());
                     return r;
                 });
-        
-        BigDecimal hours = BigDecimal.valueOf(mins).divide(BigDecimal.valueOf(60), 2, java.math.RoundingMode.HALF_UP);
-        
-        switch (shiftDate.getDayOfWeek()) {
-            case MONDAY -> record.setHoursMon(nvl(record.getHoursMon()).add(hours));
-            case TUESDAY -> record.setHoursTue(nvl(record.getHoursTue()).add(hours));
-            case WEDNESDAY -> record.setHoursWed(nvl(record.getHoursWed()).add(hours));
-            case THURSDAY -> record.setHoursThu(nvl(record.getHoursThu()).add(hours));
-            case FRIDAY -> record.setHoursFri(nvl(record.getHoursFri()).add(hours));
-            case SATURDAY -> record.setHoursSat(nvl(record.getHoursSat()).add(hours));
-            case SUNDAY -> record.setHoursSun(nvl(record.getHoursSun()).add(hours));
+
+        if (clockInDate.equals(clockOutDate)) {
+            // Same-day shift
+            BigDecimal hours = BigDecimal.valueOf(mins).divide(BigDecimal.valueOf(60), 2, java.math.RoundingMode.HALF_UP);
+            addHoursToDay(record, clockInDate.getDayOfWeek(), hours);
+        } else {
+            // Overnight shift: split hours at midnight so each calendar day gets its own hours
+            java.time.LocalDateTime midnight = clockOutDate.atStartOfDay();
+            long minsBeforeMidnight = java.time.Duration.between(shift.getClockIn(), midnight).toMinutes();
+            long minsAfterMidnight = java.time.Duration.between(midnight, clockOutTime).toMinutes();
+            BigDecimal hoursDay1 = BigDecimal.valueOf(minsBeforeMidnight).divide(BigDecimal.valueOf(60), 2, java.math.RoundingMode.HALF_UP);
+            BigDecimal hoursDay2 = BigDecimal.valueOf(minsAfterMidnight).divide(BigDecimal.valueOf(60), 2, java.math.RoundingMode.HALF_UP);
+            addHoursToDay(record, clockInDate.getDayOfWeek(), hoursDay1);
+            addHoursToDay(record, clockOutDate.getDayOfWeek(), hoursDay2);
         }
-        
+
         record.setUpdatedAt(java.time.LocalDateTime.now());
         laborRecordRepository.save(record);
-        
+
         return staffShiftRepository.save(shift);
+    }
+
+    @Transactional(readOnly = true)
+    public List<LaborDtos.ClockedInShiftDto> getClockedInStaff(Long restaurantId) {
+        List<StaffShift> shifts = staffShiftRepository.findByRestaurantIdAndIsActiveTrue(restaurantId);
+        return shifts.stream().map(shift -> {
+            LaborDtos.ClockedInShiftDto dto = new LaborDtos.ClockedInShiftDto();
+            dto.setId(shift.getShiftId());
+            dto.setClockIn(shift.getClockIn() != null ? shift.getClockIn().toString() : null);
+            dto.setIsActive(shift.getIsActive());
+            dto.setDurationMinutes(shift.getDurationMinutes());
+            
+            LaborDtos.ClockedInShiftDto.StaffInfo staffInfo = new LaborDtos.ClockedInShiftDto.StaffInfo();
+            if (shift.getStaff() != null) {
+                staffInfo.setStaffId(shift.getStaff().getStaffId());
+                staffInfo.setDisplayName(shift.getStaff().getDisplayName());
+            }
+            dto.setStaff(staffInfo);
+            
+            return dto;
+        }).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<LaborDtos.ClockedInShiftDto> getActualLabor(Long restaurantId, LocalDate weekStart) {
+        LocalDateTime start = weekStart.atStartOfDay();
+        LocalDateTime end = weekStart.plusDays(7).atStartOfDay();
+        
+        List<StaffShift> shifts = staffShiftRepository.findByRestaurantIdAndClockInBetween(restaurantId, start, end);
+        
+        return shifts.stream().map(shift -> {
+            LaborDtos.ClockedInShiftDto dto = new LaborDtos.ClockedInShiftDto();
+            dto.setId(shift.getShiftId());
+            dto.setClockIn(shift.getClockIn() != null ? shift.getClockIn().toString() : null);
+            dto.setClockOut(shift.getClockOut() != null ? shift.getClockOut().toString() : null);
+            dto.setIsActive(shift.getIsActive());
+            
+            // Calculate duration if not set
+            Long duration = shift.getDurationMinutes();
+            if (duration == null && shift.getClockIn() != null && shift.getClockOut() != null) {
+                duration = ChronoUnit.MINUTES.between(shift.getClockIn(), shift.getClockOut());
+            }
+            dto.setDurationMinutes(duration);
+            
+            // Calculate cost
+            BigDecimal hourlyRate = shift.getStaff() != null ? shift.getStaff().getHourlyRate() : BigDecimal.ZERO;
+            BigDecimal cost = BigDecimal.ZERO;
+            if (duration != null && hourlyRate != null) {
+                cost = hourlyRate.multiply(BigDecimal.valueOf(duration / 60.0));
+            }
+            dto.setTotalCost(cost);
+            
+            LaborDtos.ClockedInShiftDto.StaffInfo staffInfo = new LaborDtos.ClockedInShiftDto.StaffInfo();
+            if (shift.getStaff() != null) {
+                staffInfo.setStaffId(shift.getStaff().getStaffId());
+                staffInfo.setDisplayName(shift.getStaff().getDisplayName());
+                staffInfo.setRole(shift.getStaff().getRole() != null ? shift.getStaff().getRole().name() : null);
+                staffInfo.setHourlyRate(shift.getStaff().getHourlyRate());
+            }
+            dto.setStaff(staffInfo);
+            
+            return dto;
+        }).toList();
+    }
+
+    private void addHoursToDay(StaffLaborRecord record, java.time.DayOfWeek day, BigDecimal hours) {
+        switch (day) {
+            case MONDAY    -> record.setHoursMon(nvl(record.getHoursMon()).add(hours));
+            case TUESDAY   -> record.setHoursTue(nvl(record.getHoursTue()).add(hours));
+            case WEDNESDAY -> record.setHoursWed(nvl(record.getHoursWed()).add(hours));
+            case THURSDAY  -> record.setHoursThu(nvl(record.getHoursThu()).add(hours));
+            case FRIDAY    -> record.setHoursFri(nvl(record.getHoursFri()).add(hours));
+            case SATURDAY  -> record.setHoursSat(nvl(record.getHoursSat()).add(hours));
+            case SUNDAY    -> record.setHoursSun(nvl(record.getHoursSun()).add(hours));
+        }
     }
 
     @Transactional(readOnly = true)
     public LaborWeekSummaryDto getWeeklySummary(Long restaurantId, LocalDate weekStart) {
         // 1. Fetch all relevant data
-        List<Staff> hourlyStaff = staffRepository.findByRestaurantIdAndIsActiveTrue(restaurantId).stream()
+        List<Staff> allStaff = staffRepository.findByRestaurantIdAndIsActiveTrue(restaurantId);
+        List<Staff> hourlyStaff = allStaff.stream()
                 .filter(s -> s.getEmployeeType() == Staff.EmployeeType.HOURLY)
                 .collect(Collectors.toList());
         
@@ -206,7 +293,7 @@ public class LaborService {
                 .map(e -> nvl(e.getTotalHours()))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        List<Staff> mgmt = staffRepository.findByRestaurantIdAndIsActiveTrue(restaurantId).stream()
+        List<Staff> mgmt = allStaff.stream()
                 .filter(s -> s.getEmployeeType() == Staff.EmployeeType.MANAGEMENT)
                 .collect(Collectors.toList());
         
@@ -398,6 +485,7 @@ public class LaborService {
         StaffDto dto = new StaffDto();
         dto.setId(e.getStaffId());
         dto.setStaffName(e.getDisplayName());
+        dto.setRole(e.getRole() != null ? e.getRole().name() : null);
         dto.setEmployeeType(e.getEmployeeType());
         dto.setHourlyRate(e.getHourlyRate());
         dto.setAnnualSalary(e.getAnnualSalary());

@@ -1,6 +1,6 @@
 package mls.sho.dms.application.purchasing.repository;
 
-import mls.sho.dms.entity.PreferredVendor;
+import mls.sho.dms.application.purchasing.entity.PreferredVendor;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

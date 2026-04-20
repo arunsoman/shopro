@@ -1,5 +1,7 @@
 package mls.sho.dms.entity.users;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,6 +19,7 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class StaffShift {
 
     @Id
@@ -26,6 +29,7 @@ public class StaffShift {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "staff_id", nullable = false)
+    @JsonIgnore
     private Staff staff;
 
     @Column(name = "restaurant_id", nullable = false)

@@ -1,6 +1,6 @@
 package mls.sho.dms.application.pos.repository;
 
-import mls.sho.dms.entity.MenuItem;
+import mls.sho.dms.application.pos.entity.MenuItem;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -14,12 +14,23 @@ import java.util.Optional;
 public interface MenuItemRepository extends JpaRepository<MenuItem, Long> {
     List<MenuItem> findByRestaurantIdAndActiveTrue(Long restaurantId);
 
+    /**
+     * Lightweight query without EntityGraph - for POS menu display.
+     * Use when recipe details are not needed.
+     */
+    List<MenuItem> findAllByRestaurantId(Long restaurantId);
+
+    /**
+     * Eager-loaded query with recipes and ingredient lines.
+     * Use when recipe/ingredient details are required (e.g., inventory depletion, cost analysis).
+     */
     @EntityGraph(attributePaths = {
             "recipes",
             "recipes.ingredientLines",
             "recipes.ingredientLines.ingredient"
     })
-    List<MenuItem> findAllByRestaurantId(Long restaurantId);
+    @Query("SELECT m FROM MenuItem m WHERE m.restaurant.id = :restaurantId")
+    List<MenuItem> fetchByRestaurantIdWithRecipes(@Param("restaurantId") Long restaurantId);
 
     List<MenuItem> findAllByGroupId(Long groupId);
     Optional<MenuItem> findByPosIdAndRestaurantId(String posId, Long restaurantId);

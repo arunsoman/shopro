@@ -17,14 +17,22 @@ import type {
 
 const BASE = "/restaurants";
 
+// Handle UUID string conversion
+function toUuid(id: string | number): string {
+  return String(id);
+}
+
 export const listEmployees = (restaurantId: number): Promise<Employee[]> =>
-  apiGet(`${BASE}/${restaurantId}/labor/employees`);
+  apiGet(`${BASE}/${restaurantId}/prime-cost/labor/employees`);
 
 export const createEmployee = (restaurantId: number, req: CreateEmployeeRequest): Promise<Employee> =>
-  apiPost(`${BASE}/${restaurantId}/labor/employees`, req);
+  apiPost(`${BASE}/${restaurantId}/prime-cost/labor/employees`, req);
 
-export const updateEmployee = (restaurantId: number, employeeId: number, req: UpdateEmployeeRequest): Promise<Employee> =>
-  apiPut(`${BASE}/${restaurantId}/labor/employees/${employeeId}`, req);
+export const updateEmployee = (restaurantId: number, employeeId: string | number, req: UpdateEmployeeRequest): Promise<Employee> =>
+  apiPut(`${BASE}/${restaurantId}/prime-cost/labor/employees/${toUuid(employeeId)}`, req);
+
+export const getEmployee = (restaurantId: number, employeeId: string | number): Promise<Employee> =>
+  apiGet(`${BASE}/${restaurantId}/prime-cost/labor/employees/${toUuid(employeeId)}`);
 
 export const deactivateEmployee = (restaurantId: number, employeeId: number): Promise<void> =>
   apiPost(`${BASE}/${restaurantId}/labor/employees/${employeeId}/deactivate`);
@@ -54,3 +62,24 @@ export const getScheduleSummary = (restaurantId: number, weekStart: string): Pro
 
 export const compareScheduleVsActual = (restaurantId: number, weekStart: string): Promise<ScheduleVsActual> =>
   apiGet<ScheduleVsActual>(`${BASE}/${restaurantId}/labor/variance?weekStart=${weekStart}`);
+
+export interface ClockedInShift {
+  id: string;
+  staff: {
+    staffId: string;
+    displayName: string;
+    role?: string;
+    hourlyRate?: number;
+  };
+  clockIn: string;
+  clockOut?: string;
+  isActive: boolean;
+  durationMinutes?: number;
+  totalCost?: number;
+}
+
+export const getClockedInStaff = (restaurantId: number): Promise<ClockedInShift[]> =>
+  apiGet(`${BASE}/${restaurantId}/labor/clocked-in`);
+
+export const getActualLabor = (restaurantId: number, weekStart: string): Promise<ClockedInShift[]> =>
+  apiGet(`${BASE}/${restaurantId}/labor/actual-labor?weekStart=${weekStart}`);

@@ -1,6 +1,6 @@
 package mls.sho.dms.application.inventory.repository;
 
-import mls.sho.dms.entity.InventoryIngredientBalance;
+import mls.sho.dms.application.inventory.entity.InventoryIngredientBalance;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -137,4 +137,10 @@ public interface InventoryBalanceRepository extends JpaRepository<InventoryIngre
     @org.springframework.data.jpa.repository.Modifying
     @Query("DELETE FROM InventoryIngredientBalance b WHERE b.restaurant.id = :restaurantId")
     void deleteByRestaurantId(@Param("restaurantId") Long restaurantId);
+
+    @Query("SELECT b FROM InventoryIngredientBalance b WHERE b.restaurant.id = :restaurantId")
+    List<InventoryIngredientBalance> findAllByRestaurantId(@Param("restaurantId") Long restaurantId);
+
+    @Query("SELECT b FROM InventoryIngredientBalance b WHERE b.restaurant.id = :restaurantId AND b.ingredient.id IN :ingredientIds")
+    List<InventoryIngredientBalance> findAllByRestaurantIdAndIngredientIdIn(@Param("restaurantId") Long restaurantId, @Param("ingredientIds") List<Long> ingredientIds);
 }

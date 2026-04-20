@@ -1,7 +1,7 @@
 package mls.sho.dms.application.inventory.repository;
 
 import mls.sho.dms.common.enums.InventoryCategory;
-import mls.sho.dms.entity.InventoryIngredientLedger;
+import mls.sho.dms.application.inventory.entity.InventoryIngredientLedger;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -10,7 +10,6 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -57,6 +56,8 @@ public interface InventoryLedgerRepository extends JpaRepository<InventoryIngred
             Long ingredientId
     );
 
+    List<InventoryIngredientLedger> findAllByOrderId(Long orderId);
+
     @Query("SELECT SUM(e.quantity) FROM InventoryIngredientLedger e WHERE e.restaurant.id = :restaurantId AND e.ingredient.id = :ingredientId")
     BigDecimal sumQuantityByIngredient(Long restaurantId, Long ingredientId);
 
@@ -97,7 +98,7 @@ public interface InventoryLedgerRepository extends JpaRepository<InventoryIngred
     @Query("SELECT new mls.sho.dms.application.inventory.repository.InventoryLedgerRepository$DailyRevenue(" +
             "CAST(o.createdAt AS date), SUM(o.totalAmount)) " +
             "FROM Order o " +
-            "WHERE o.restaurant.id = :restaurantId AND o.id IN " +
+            "WHERE o.restaurantId = :restaurantId AND o.id IN " +
             "(SELECT DISTINCT l.orderId FROM InventoryIngredientLedger l " +
             " WHERE l.eventType = 'DEPLETION' AND l.reasonCode = 'POS_SALE' " +
             " AND l.createdAt BETWEEN :start AND :end) " +
@@ -124,8 +125,8 @@ public interface InventoryLedgerRepository extends JpaRepository<InventoryIngred
     @Query("SELECT new mls.sho.dms.application.inventory.repository.InventoryLedgerRepository$DailyGuestCount(" +
             "CAST(s.openedAt AS date), SUM(s.guestCount)) " +
             "FROM TableSession s " +
-            "WHERE s.table.restaurant.id = :restaurantId AND s.id IN " +
-            "(SELECT DISTINCT o.session.id FROM Order o WHERE o.id IN " +
+            "WHERE s.id IN " +
+            "(SELECT DISTINCT o.session.id FROM Order o WHERE o.restaurantId = :restaurantId AND o.id IN " +
             " (SELECT DISTINCT l.orderId FROM InventoryIngredientLedger l " +
             "  WHERE l.eventType = 'DEPLETION' AND l.reasonCode = 'POS_SALE' " +
             "  AND l.createdAt BETWEEN :start AND :end)) " +

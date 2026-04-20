@@ -114,12 +114,11 @@ export function useRestaurantId(): number {
   
   if (restaurantId === null) {
     if (isLoading) {
-       console.warn('[useRestaurantId] restaurantId is null but still loading. Returning 0 or handling gracefully?');
-       // For now, we still throw to prevent bad API calls, but we add more info
+       console.warn('[useRestaurantId] restaurantId is null but still loading.');
+       return 0; // Return 0 while loading
     }
-    throw new Error(
-      `useRestaurantId: restaurantId is null. (isLoading: ${isLoading}). Ensure this component is rendered inside an authenticated route.`,
-    );
+    console.error('[useRestaurantId] restaurantId is null. Check authentication.');
+    return 0; // Return 0 instead of throwing
   }
   return restaurantId;
 }

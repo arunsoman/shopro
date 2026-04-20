@@ -2,9 +2,9 @@ package mls.sho.dms.application.pos.service;
 
 import lombok.RequiredArgsConstructor;
 import mls.sho.dms.application.pos.repository.MenuItemRepository;
-import mls.sho.dms.entity.MenuItem;
-import mls.sho.dms.entity.Recipe;
-import mls.sho.dms.entity.RecipeIngredientLine;
+import mls.sho.dms.application.pos.entity.MenuItem;
+import mls.sho.dms.application.costing.entity.Recipe;
+import mls.sho.dms.application.costing.entity.RecipeIngredientLine;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -52,7 +52,11 @@ public class MenuItemConfigService {
             }
         }
 
-        item.getRecipes().add(recipe);
+        // 4. Only add the recipe to the collection if it's a newly created one
+        //    (the orElseGet branch). Existing recipes are already in the list.
+        if (!item.getRecipes().contains(recipe)) {
+            item.getRecipes().add(recipe);
+        }
         return menuItemRepository.save(item);
     }
 }

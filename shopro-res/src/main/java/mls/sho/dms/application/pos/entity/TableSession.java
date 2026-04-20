@@ -1,8 +1,9 @@
-package mls.sho.dms.entity;
+package mls.sho.dms.application.pos.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import mls.sho.dms.entity.Restaurant;
 import mls.sho.dms.entity.users.Guest;
 import java.time.LocalDateTime;
 

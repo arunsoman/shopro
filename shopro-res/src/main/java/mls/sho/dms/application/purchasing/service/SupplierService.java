@@ -3,7 +3,7 @@ package mls.sho.dms.application.purchasing.service;
 import lombok.RequiredArgsConstructor;
 import mls.sho.dms.application.purchasing.repository.SupplierRepository;
 import mls.sho.dms.application.purchasing.dto.SupplierDTO;
-import mls.sho.dms.entity.Supplier;
+import mls.sho.dms.application.purchasing.entity.Supplier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;

@@ -5,7 +5,7 @@ import mls.sho.dms.application.engineering.entity.MenuEngineeringPeriod;
 import mls.sho.dms.application.engineering.service.MenuEngineeringPeriodService;
 import mls.sho.dms.application.engineering.service.MenuEngineeringService;
 import mls.sho.dms.application.pos.repository.MenuItemRepository;
-import mls.sho.dms.entity.MenuItem;
+import mls.sho.dms.application.pos.entity.MenuItem;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

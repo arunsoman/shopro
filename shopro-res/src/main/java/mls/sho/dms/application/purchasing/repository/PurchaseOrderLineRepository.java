@@ -1,6 +1,6 @@
 package mls.sho.dms.application.purchasing.repository;
 
-import mls.sho.dms.entity.PurchaseOrderLine;
+import mls.sho.dms.application.purchasing.entity.PurchaseOrderLine;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;

@@ -1,6 +1,6 @@
 package mls.sho.dms.application.costing.repository;
 
-import mls.sho.dms.entity.RecipeProcedureStep;
+import mls.sho.dms.application.costing.entity.RecipeProcedureStep;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

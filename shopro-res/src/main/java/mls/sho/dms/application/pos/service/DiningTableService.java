@@ -2,7 +2,7 @@ package mls.sho.dms.application.pos.service;
 
 import lombok.RequiredArgsConstructor;
 import mls.sho.dms.application.pos.repository.DiningTableRepository;
-import mls.sho.dms.entity.DiningTable;
+import mls.sho.dms.application.pos.entity.DiningTable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;

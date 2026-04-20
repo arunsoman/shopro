@@ -1,13 +1,8 @@
 package mls.sho.dms.application.pos.web;
 
 import lombok.RequiredArgsConstructor;
-import mls.sho.dms.application.pos.dto.DiningTableDto;
-import mls.sho.dms.application.pos.dto.TableSessionDto;
 import mls.sho.dms.application.pos.service.TableSessionService;
-import mls.sho.dms.entity.TableSession;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 /**
  * REST API for table sessions - DTO version (DISABLED).

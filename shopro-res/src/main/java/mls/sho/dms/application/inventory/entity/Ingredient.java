@@ -1,12 +1,13 @@
-package mls.sho.dms.entity;
+package mls.sho.dms.application.inventory.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.*;
-import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import mls.sho.dms.common.enums.*;
+import mls.sho.dms.entity.Restaurant;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -87,7 +88,7 @@ public class Ingredient {
     private BigDecimal parLevel;
 
     /**
-     * @deprecated Use {@link mls.sho.dms.entity.InventoryIngredientBalance#getCurrentBalance()}
+     * @deprecated Use {@link InventoryIngredientBalance#getCurrentBalance()}
      *             as the authoritative stock-on-hand balance.
      *             This column is kept for backward reference only and is no longer written
      *             by the application. It will be dropped in a future migration.

@@ -2,7 +2,8 @@ package mls.sho.dms.application.analytics.service;
 
 import lombok.RequiredArgsConstructor;
 import mls.sho.dms.application.analytics.dto.*;
-import mls.sho.dms.entity.*;
+import mls.sho.dms.application.costing.entity.Recipe;
+import mls.sho.dms.application.pos.entity.MenuItem;
 import mls.sho.dms.application.inventory.repository.InventoryLedgerRepository;
 import mls.sho.dms.application.inventory.repository.InventoryLedgerRepository.*;
 import mls.sho.dms.application.pos.repository.DiningTableRepository;

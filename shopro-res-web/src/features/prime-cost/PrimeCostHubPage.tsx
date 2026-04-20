@@ -15,12 +15,14 @@ import { Button } from "@/components/ui/Button";
 import { cn, currency } from "@/lib/utils";
 
 const NAV_CARDS: NavCardContent[] = [
-  { label: "Live Dashboard",      desc: "Real-time prime cost %",        route: "prime-cost", Icon: Activity,   iconColor: "text-rose-600",    iconBg: "bg-rose-500/10" },
-  { label: "Weekly Worksheet",    desc: "Sales · COS · Labor summary",   route: "prime-cost", Icon: FileText,   iconColor: "text-sky-600",     iconBg: "bg-sky-500/10" },
-  { label: "Budget vs Actual",    desc: "Line-item variance report",      route: "prime-cost", Icon: Target,     iconColor: "text-emerald-600", iconBg: "bg-emerald-500/10" },
-  { label: "Variance Attribution",desc: "Price · Mix · Portion · Labor", route: "prime-cost", Icon: PieChart,   iconColor: "text-amber-600",   iconBg: "bg-amber-500/10" },
-  { label: "8-Week Trend",        desc: "Historical prime cost trend",    route: "prime-cost", Icon: TrendingUp, iconColor: "text-indigo-600",  iconBg: "bg-indigo-500/10" },
-  { label: "Labor & Schedule",    desc: "Hours entry + schedule",         route: "prime-cost", Icon: Users,      iconColor: "text-slate-600",   iconBg: "bg-slate-500/10" },
+  { label: "Live Dashboard",      desc: "Real-time prime cost %",        route: "/prime-cost", Icon: Activity,   iconColor: "text-rose-600",    iconBg: "bg-rose-500/10" },
+  { label: "Weekly Worksheet",    desc: "Sales · COS · Labor summary",   route: "/prime-cost/weekly", Icon: FileText,   iconColor: "text-sky-600",     iconBg: "bg-sky-500/10" },
+  { label: "Budget vs Actual",    desc: "Line-item variance report",      route: "/prime-cost/budget", Icon: Target,     iconColor: "text-emerald-600", iconBg: "bg-emerald-500/10" },
+  { label: "Variance Attribution",desc: "Price · Mix · Portion · Labor", route: "/prime-cost/variance", Icon: PieChart,   iconColor: "text-amber-600",   iconBg: "bg-amber-500/10" },
+  { label: "8-Week Trend",        desc: "Historical prime cost trend",    route: "/prime-cost/trend", Icon: TrendingUp, iconColor: "text-indigo-600",  iconBg: "bg-indigo-500/10" },
+  { label: "Labor & Schedule",    desc: "Hours entry + schedule",         route: "/prime-cost/labor", Icon: Users,      iconColor: "text-slate-600",   iconBg: "bg-slate-500/10" },
+  { label: "Staff Management",   desc: "Team overview & attendance",    route: "labor-staffing", Icon: Users2,    iconColor: "text-cyan-600",    iconBg: "bg-cyan-500/10" },
+  { label: "Finance Hub",        desc: "Supplier Pay, Payroll & Accounts", route: "finance-hub", Icon: DollarSign, iconColor: "text-green-600",  iconBg: "bg-green-500/10" },
 ];
 
 function pct(n: number) { return `${(n * 100).toFixed(1)}%`; }

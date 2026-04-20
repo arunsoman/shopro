@@ -1,10 +1,11 @@
-package mls.sho.dms.entity;
+package mls.sho.dms.application.inventory.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import mls.sho.dms.entity.Restaurant;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -190,7 +191,7 @@ public class InventoryIngredientBalance {
      *
      * @param entry a persisted ledger entry
      */
-    public void apply(mls.sho.dms.entity.InventoryIngredientLedger entry) {
+    public void apply(InventoryIngredientLedger entry) {
         if (entry == null || entry.getQuantity() == null) return;
 
         BigDecimal raw = (this.currentBalance != null ? this.currentBalance : BigDecimal.ZERO)

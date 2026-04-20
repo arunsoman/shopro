@@ -2,7 +2,7 @@ package mls.sho.dms.application.costing.service;
 
 import lombok.RequiredArgsConstructor;
 import mls.sho.dms.application.costing.repository.RecipeBuildChartRepository;
-import mls.sho.dms.entity.RecipeBuildChart;
+import mls.sho.dms.application.costing.entity.RecipeBuildChart;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

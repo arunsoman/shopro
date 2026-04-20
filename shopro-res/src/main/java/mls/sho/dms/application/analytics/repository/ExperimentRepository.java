@@ -2,7 +2,7 @@ package mls.sho.dms.application.analytics.repository;
 
 import mls.sho.dms.common.enums.ExperimentStatus;
 import mls.sho.dms.common.enums.ManagerRole;
-import mls.sho.dms.entity.experiment.Experiment;
+import mls.sho.dms.application.engineering.entity.Experiment;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;

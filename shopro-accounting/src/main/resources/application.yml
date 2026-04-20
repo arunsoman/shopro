@@ -1,0 +1,32 @@
+spring:
+  application:
+    name: shopro-accounting
+  
+  datasource:
+    url: jdbc:postgresql://localhost:5432/shopro_accounting
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    show-sql: false
+  
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+server:
+  port: 8083
+
+logging:
+  level:
+    com.shopro.accounting: DEBUG
+    org.springframework.web: INFO
+    org.hibernate.SQL: DEBUG

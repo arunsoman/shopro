@@ -1,10 +1,11 @@
-package mls.sho.dms.entity;
+package mls.sho.dms.application.purchasing.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Data;
 import mls.sho.dms.application.inventory.entity.Ingredient;
+import mls.sho.dms.entity.Restaurant;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

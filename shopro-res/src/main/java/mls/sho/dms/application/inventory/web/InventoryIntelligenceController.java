@@ -3,17 +3,14 @@ package mls.sho.dms.application.inventory.web;
 import lombok.RequiredArgsConstructor;
 import mls.sho.dms.application.inventory.dto.InventoryIntelligenceDtos.*;
 import mls.sho.dms.application.inventory.service.InventoryIntelligenceService;
-import mls.sho.dms.application.pos.repository.OrderRepository;
-import mls.sho.dms.application.pos.repository.MenuItemRepository;
-import mls.sho.dms.entity.MenuItem;
-import mls.sho.dms.entity.Order;
+import mls.sho.dms.application.pos.entity.MenuItem;
+import mls.sho.dms.application.pos.entity.Order;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/restaurants/{restaurantId}/inventory/intelligence")
@@ -21,15 +18,15 @@ import java.util.UUID;
 public class InventoryIntelligenceController {
 
     private final InventoryIntelligenceService intelligenceService;
-    private final OrderRepository orderRepository;
-    private final MenuItemRepository menuItemRepository;
+    private final mls.sho.dms.application.common.TenantGuard tenantGuard;
 
     // -- Operational Endpoints (The Kitchen Command) --
 
     @PostMapping("/fulfill-order/{orderId}")
-    public ResponseEntity<Void> fulfillOrder(@PathVariable Long orderId) {
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
+    public ResponseEntity<Void> fulfillOrder(
+            @PathVariable Long restaurantId, 
+            @PathVariable Long orderId) {
+        Order order = tenantGuard.order(restaurantId, orderId);
         intelligenceService.orderFulfillment(order);
         return ResponseEntity.ok().build();
     }
@@ -42,8 +39,8 @@ public class InventoryIntelligenceController {
             @RequestParam String reason,
             @RequestParam java.util.UUID staffId) {
         
-        MenuItem item = menuItemRepository.findById(menuId)
-                .orElseThrow(() -> new RuntimeException("Menu item not found"));
+        MenuItem item = tenantGuard.menuItem(restaurantId, menuId);
+        if (orderId != null) tenantGuard.order(restaurantId, orderId);
         
         intelligenceService.recordMisfire(item.getRestaurant(), item, orderId, reason, staffId);
         return ResponseEntity.ok().build();
@@ -56,8 +53,7 @@ public class InventoryIntelligenceController {
             @PathVariable Long restaurantId,
             @PathVariable Long menuId) {
         
-        MenuItem item = menuItemRepository.findById(menuId)
-                .orElseThrow(() -> new RuntimeException("Menu item not found"));
+        MenuItem item = tenantGuard.menuItem(restaurantId, menuId);
         
         return ResponseEntity.ok(intelligenceService.getMenuProfitability(menuId, item));
     }
@@ -75,6 +71,7 @@ public class InventoryIntelligenceController {
     public ResponseEntity<BigDecimal> getDerivedOnHand(
             @PathVariable Long restaurantId,
             @PathVariable Long ingredientId) {
+        tenantGuard.ingredient(restaurantId, ingredientId);
         return ResponseEntity.ok(intelligenceService.getLiveQuantity(restaurantId, ingredientId));
     }
 }

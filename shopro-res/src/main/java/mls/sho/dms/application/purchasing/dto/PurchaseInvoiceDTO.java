@@ -1,7 +1,7 @@
 package mls.sho.dms.application.purchasing.dto;
 
 import lombok.Data;
-import mls.sho.dms.entity.PurchaseInvoice.InvoiceStatus;
+import mls.sho.dms.application.purchasing.entity.PurchaseInvoice.InvoiceStatus;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;

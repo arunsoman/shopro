@@ -11,7 +11,7 @@ import mls.sho.dms.application.analytics.web.AnalyticsController;
 import mls.sho.dms.application.primecost.controller.LaborController;
 import mls.sho.dms.application.inventory.controller.SimulationController;
 import mls.sho.dms.application.kds.security.KdsDevicePrincipal;
-import mls.sho.dms.entity.MenuItem;
+import mls.sho.dms.application.pos.entity.MenuItem;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -22,7 +22,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicReference;
 
 import mls.sho.dms.entity.Restaurant;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 /**

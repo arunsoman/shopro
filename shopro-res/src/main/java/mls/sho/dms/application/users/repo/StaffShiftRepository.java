@@ -18,9 +18,13 @@ public interface StaffShiftRepository extends JpaRepository<StaffShift, UUID> {
 
     Optional<StaffShift> findTopByStaffStaffIdAndIsActiveTrueOrderByClockInDesc(UUID staffId);
 
+    Optional<StaffShift> findTopByStaffStaffIdAndRestaurantIdAndIsActiveTrueOrderByClockInDesc(UUID staffId, Long restaurantId);
+
     List<StaffShift> findByStaffStaffIdOrderByClockInDesc(UUID staffId);
 
     List<StaffShift> findByRestaurantIdAndIsActiveTrue(Long restaurantId);
+
+    List<StaffShift> findByRestaurantIdAndClockInBetween(Long restaurantId, LocalDateTime start, LocalDateTime end);
 
     @Query("SELECT CAST(s.clockIn AS date), SUM(s.durationMinutes), " +
            "SUM(CAST(s.durationMinutes AS double) / 60.0 * c.baseHourlyRate) " +

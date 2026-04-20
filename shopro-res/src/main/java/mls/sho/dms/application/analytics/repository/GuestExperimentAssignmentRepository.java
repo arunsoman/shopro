@@ -1,6 +1,6 @@
 package mls.sho.dms.application.analytics.repository;
 
-import mls.sho.dms.entity.experiment.GuestExperimentAssignment;
+import mls.sho.dms.application.engineering.entity.GuestExperimentAssignment;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

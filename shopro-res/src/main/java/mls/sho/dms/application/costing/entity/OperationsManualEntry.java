@@ -1,7 +1,9 @@
-package mls.sho.dms.entity;
+package mls.sho.dms.application.costing.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import mls.sho.dms.entity.Restaurant;
+
 import java.time.LocalDateTime;
 
 /**

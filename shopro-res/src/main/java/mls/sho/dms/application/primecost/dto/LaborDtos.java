@@ -21,6 +21,7 @@ public class LaborDtos {
 
     @Data public static class UpdateStaffRequest {
         private String name;
+        private Staff.EmployeeType employeeType;
         private BigDecimal hourlyRate;
         private BigDecimal annualSalary;
         private boolean active;
@@ -29,6 +30,7 @@ public class LaborDtos {
     @Data public static class StaffDto {
         private UUID id;
         private String staffName;
+        private String role;
         private Staff.EmployeeType employeeType;
         private BigDecimal hourlyRate;
         private BigDecimal annualSalary;
@@ -122,5 +124,22 @@ public class LaborDtos {
     @Data public static class DailyMetricDto {
         private LocalDate date;
         private BigDecimal value;
+    }
+
+    @Data public static class ClockedInShiftDto {
+        private UUID id;
+        private StaffInfo staff;
+        private String clockIn;
+        private String clockOut;
+        private Boolean isActive;
+        private Long durationMinutes;
+        private BigDecimal totalCost;
+
+        @Data public static class StaffInfo {
+            private UUID staffId;
+            private String displayName;
+            private String role;
+            private BigDecimal hourlyRate;
+        }
     }
 }

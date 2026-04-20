@@ -1,6 +1,6 @@
 package mls.sho.dms.application.inventory.repository;
 
-import mls.sho.dms.entity.InventoryWasteRegistry;
+import mls.sho.dms.application.inventory.entity.InventoryWasteRegistry;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -14,6 +14,8 @@ import java.util.List;
 public interface InventoryWasteRepository extends JpaRepository<InventoryWasteRegistry, Long> {
 
     List<InventoryWasteRegistry> findAllByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
+
+    List<InventoryWasteRegistry> findAllByLedgerRestaurantIdAndCreatedAtBetween(Long restaurantId, LocalDateTime start, LocalDateTime end);
 
     List<InventoryWasteRegistry> findAllByOrderId(Long orderId);
 

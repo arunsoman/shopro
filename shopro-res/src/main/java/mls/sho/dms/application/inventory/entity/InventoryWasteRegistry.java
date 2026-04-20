@@ -1,4 +1,4 @@
-package mls.sho.dms.entity;
+package mls.sho.dms.application.inventory.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;

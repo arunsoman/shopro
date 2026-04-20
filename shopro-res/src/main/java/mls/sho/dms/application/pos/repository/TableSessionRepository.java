@@ -1,7 +1,7 @@
 package mls.sho.dms.application.pos.repository;
 
 import jakarta.transaction.Transactional;
-import mls.sho.dms.entity.TableSession;
+import mls.sho.dms.application.pos.entity.TableSession;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -20,17 +20,17 @@ public interface TableSessionRepository extends JpaRepository<TableSession, Long
     List<TableSession> findAllByTableRestaurantIdAndClosedAtBetween(
             Long restaurantId, LocalDateTime start, LocalDateTime end);
 
-    @Query("SELECT COUNT(ts) FROM TableSession ts WHERE ts.table.restaurant.id = :restaurantId AND ts.closedAt IS NULL")
+    @Query("SELECT COUNT(ts) FROM TableSession ts WHERE ts.restaurant.id = :restaurantId AND ts.closedAt IS NULL")
     long countActiveSessions(@Param("restaurantId") Long restaurantId);
 
     @org.springframework.data.jpa.repository.Modifying
     @Transactional
-    @Query("DELETE FROM TableSession ts WHERE ts.table.restaurant.id = :restaurantId")
+    @Query("DELETE FROM TableSession ts WHERE ts.restaurant.id = :restaurantId")
     void deleteByRestaurantId(@Param("restaurantId") Long restaurantId);
 
     @Query("SELECT CAST(ts.openedAt as date) as arrivalDate, SUM(ts.guestCount) as count " +
            "FROM TableSession ts " +
-           "WHERE ts.table.restaurant.id = :restaurantId " +
+           "WHERE ts.restaurant.id = :restaurantId " +
            "AND ts.openedAt BETWEEN :startDate AND :endDate " +
            "GROUP BY CAST(ts.openedAt as date) " +
            "ORDER BY arrivalDate")

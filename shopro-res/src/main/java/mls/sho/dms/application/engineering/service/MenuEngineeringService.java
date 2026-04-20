@@ -7,7 +7,7 @@ import mls.sho.dms.application.costing.service.MenuItemCostService;
 import mls.sho.dms.common.enums.HighLow;
 import mls.sho.dms.common.enums.MenuEngClassification;
 import mls.sho.dms.common.util.ConversionFunctions;
-import mls.sho.dms.entity.MenuItem;
+import mls.sho.dms.application.pos.entity.MenuItem;
 import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.util.List;

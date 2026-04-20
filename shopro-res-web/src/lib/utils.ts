@@ -51,3 +51,10 @@ export function timeAgo(dateStr: string | null | undefined): string {
 export function sessionDuration(openedAt: string): number {
   return Math.round((Date.now() - new Date(openedAt).getTime()) / 60000)
 }
+
+export function formatTime(dateStr: string | null | undefined): string {
+  if (!dateStr) return 'N/A'
+  const date = new Date(dateStr)
+  if (isNaN(date.getTime())) return 'Invalid Date'
+  return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+}

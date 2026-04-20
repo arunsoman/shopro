@@ -3,7 +3,6 @@ package mls.sho.dms.application.purchasing.service;
 import lombok.RequiredArgsConstructor;
 import mls.sho.dms.application.purchasing.repository.GoodsReceiptRepository;
 import mls.sho.dms.application.purchasing.repository.PurchaseInvoiceRepository;
-import mls.sho.dms.common.util.ConversionFunctions;
 import mls.sho.dms.application.inventory.service.IngredientService;
 import mls.sho.dms.application.inventory.service.InventoryIntelligenceService;
 import mls.sho.dms.common.enums.InventoryCategory;
@@ -11,12 +10,12 @@ import mls.sho.dms.common.enums.PurchaseCategory;
 import mls.sho.dms.application.purchasing.dto.PurchaseInvoiceDTO;
 import mls.sho.dms.application.purchasing.dto.PurchaseOrderLineDTO;
 import mls.sho.dms.application.purchasing.dto.WeeklySummaryDTO;
-import mls.sho.dms.entity.Ingredient;
-import mls.sho.dms.entity.PurchaseInvoice;
-import mls.sho.dms.entity.PurchaseOrderLine;
+import mls.sho.dms.application.inventory.entity.Ingredient;
+import mls.sho.dms.application.purchasing.entity.PurchaseInvoice;
+import mls.sho.dms.application.purchasing.entity.PurchaseOrderLine;
 import mls.sho.dms.entity.Restaurant;
-import mls.sho.dms.entity.Supplier;
-import mls.sho.dms.entity.GoodsReceipt;
+import mls.sho.dms.application.purchasing.entity.Supplier;
+import mls.sho.dms.application.purchasing.entity.GoodsReceipt;
 import mls.sho.dms.application.inventory.repository.IngredientRepository;
 import java.math.RoundingMode;
 import org.springframework.stereotype.Service;
@@ -140,13 +139,13 @@ public class PurchaseInvoiceService {
                 ingredient.setPurchaseUnitPrice(line.getUnitPrice());
                 ingredientRepository.save(ingredient);
                 
-                // Create ledger entry for cost basis update
-                // This allows tracking price history and variance analysis
+                // Record price-only update — quantity=ZERO so balance is not inflated again.
+                // The GRN already posted the stock; invoice posting only confirms the cost basis.
                 intelligenceService.recordCostBasisUpdate(
                     invoice.getRestaurant(),
                     ingredient,
                     line.getUnitPrice(),
-                    line.getReceivedQty(),
+                    BigDecimal.ZERO,
                     invoice.getId()
                 );
             }
@@ -188,9 +187,13 @@ public class PurchaseInvoiceService {
                         ing -> mapCategory(ing.getCategory()),
                         Collectors.mapping(
                                 ing -> {
-                                    BigDecimal shortfall = ing.getParLevel().subtract(ing.getOnHand());
+                                    BigDecimal parLevel = ing.getParLevel();
+                                    BigDecimal onHand = ing.getOnHand();
+                                    BigDecimal price = ing.getPurchaseUnitPrice();
+                                    if (parLevel == null || onHand == null || price == null) return BigDecimal.ZERO;
+                                    BigDecimal shortfall = parLevel.subtract(onHand);
                                     if (shortfall.compareTo(BigDecimal.ZERO) <= 0) return BigDecimal.ZERO;
-                                    return shortfall.multiply(ing.getPurchaseUnitPrice());
+                                    return shortfall.multiply(price);
                                 },
                                 Collectors.reducing(BigDecimal.ZERO, BigDecimal::add)
                         )
@@ -241,6 +244,12 @@ public class PurchaseInvoiceService {
     @Transactional(readOnly = true)
     public java.util.Optional<PurchaseInvoice> findByGoodsReceiptId(Long grnId) {
         return invoiceRepository.findByGoodsReceiptId(grnId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<PurchaseInvoice> findByGoodsReceiptIdIn(List<Long> grnIds) {
+        if (grnIds == null || grnIds.isEmpty()) return new ArrayList<>();
+        return invoiceRepository.findByGoodsReceiptIdIn(grnIds);
     }
 
     @Transactional(readOnly = true)
@@ -343,7 +352,9 @@ public class PurchaseInvoiceService {
     }
 
     private void validateInvoiceBalanced(PurchaseInvoice invoice) {
-        // Invoice is balanced if total matches sum of line values from PO/GRN
+        // Invoices without a GRN (e.g. auto-generated drafts) have no lines to validate against.
+        if (invoice.getGoodsReceipt() == null) return;
+
         BigDecimal sum = invoice.getLines().stream()
                 .map(line -> {
                     BigDecimal qty = line.getReceivedQty() != null ? line.getReceivedQty() : BigDecimal.ZERO;

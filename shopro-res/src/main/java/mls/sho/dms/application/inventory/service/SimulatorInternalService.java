@@ -1,6 +1,7 @@
 package mls.sho.dms.application.inventory.service;
 
 import lombok.RequiredArgsConstructor;
+import mls.sho.dms.application.inventory.entity.InventoryIngredientLedger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import mls.sho.dms.application.inventory.repository.*;
@@ -71,7 +72,7 @@ public class SimulatorInternalService {
         BigDecimal actualSales = orderRepository.sumTotalSalesBetween(restaurantId, start, end);
         if (actualSales == null) actualSales = BigDecimal.ZERO;
         
-        List<InventoryIngredientLedger> depletions = ledgerRepository.findAllByRestaurantIdAndDateAndTypes(restaurantId, start, end, 
+        List<InventoryIngredientLedger> depletions = ledgerRepository.findAllByRestaurantIdAndDateAndTypes(restaurantId, start, end,
                 List.of(mls.sho.dms.common.enums.StockMovementType.DEPLETION));
         
         BigDecimal actualCost = depletions.stream().map(InventoryIngredientLedger::getTotalValue).reduce(BigDecimal.ZERO, BigDecimal::add).abs();

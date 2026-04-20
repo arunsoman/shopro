@@ -2,7 +2,6 @@ package mls.sho.dms.application.inventory.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import mls.sho.dms.entity.Ingredient;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

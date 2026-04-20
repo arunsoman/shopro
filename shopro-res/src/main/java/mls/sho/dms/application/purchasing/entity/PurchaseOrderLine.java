@@ -1,4 +1,4 @@
-package mls.sho.dms.entity;
+package mls.sho.dms.application.purchasing.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;

@@ -1,0 +1,55 @@
+> Task :shopro-accounting:compileJava UP-TO-DATE
+> Task :shopro-accounting:processResources UP-TO-DATE
+> Task :shopro-accounting:classes UP-TO-DATE
+> Task :shopro-accounting:resolveMainClassName UP-TO-DATE
+
+> Task :shopro-accounting:bootRun
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::                (v3.2.3)
+
+2026-04-20T22:49:50.060+05:30  INFO 359861 --- [shopro-accounting] [           main] c.s.accounting.AccountingApplication     : Starting AccountingApplication using Java 21.0.9 with PID 359861 (/home/arun/IdeaProjects/shopro-pos/shopro-accounting/build/classes/java/main started by arun in /home/arun/IdeaProjects/shopro-pos/shopro-accounting)
+2026-04-20T22:49:50.062+05:30 DEBUG 359861 --- [shopro-accounting] [           main] c.s.accounting.AccountingApplication     : Running with Spring Boot v3.2.3, Spring v6.1.4
+2026-04-20T22:49:50.063+05:30  INFO 359861 --- [shopro-accounting] [           main] c.s.accounting.AccountingApplication     : No active profile set, falling back to 1 default profile: "default"
+2026-04-20T22:49:50.532+05:30  INFO 359861 --- [shopro-accounting] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-04-20T22:49:50.595+05:30  INFO 359861 --- [shopro-accounting] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 53 ms. Found 5 JPA repository interfaces.
+2026-04-20T22:49:51.290+05:30  INFO 359861 --- [shopro-accounting] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8083 (http)
+2026-04-20T22:49:51.313+05:30  INFO 359861 --- [shopro-accounting] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-04-20T22:49:51.313+05:30  INFO 359861 --- [shopro-accounting] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.19]
+2026-04-20T22:49:51.364+05:30  INFO 359861 --- [shopro-accounting] [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-04-20T22:49:51.365+05:30  INFO 359861 --- [shopro-accounting] [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1249 ms
+2026-04-20T22:49:51.524+05:30  INFO 359861 --- [shopro-accounting] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-04-20T22:49:51.755+05:30  INFO 359861 --- [shopro-accounting] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@3e900e1a
+2026-04-20T22:49:51.759+05:30  INFO 359861 --- [shopro-accounting] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-04-20T22:49:52.006+05:30  INFO 359861 --- [shopro-accounting] [           main] o.f.c.i.s.classpath.ClassPathScanner     : Flyway OSS Edition 10.1.0 by Redgate
+2026-04-20T22:49:52.007+05:30  INFO 359861 --- [shopro-accounting] [           main] o.f.c.i.s.classpath.ClassPathScanner     : 
+2026-04-20T22:49:52.007+05:30  INFO 359861 --- [shopro-accounting] [           main] o.f.c.i.s.classpath.ClassPathScanner     : See release notes here: https://rd.gt/416ObMi
+2026-04-20T22:49:52.019+05:30  INFO 359861 --- [shopro-accounting] [           main] org.flywaydb.core.FlywayExecutor         : Database: jdbc:postgresql://localhost:5432/shopro_accounting (PostgreSQL 18.3)
+2026-04-20T22:49:52.030+05:30  WARN 359861 --- [shopro-accounting] [           main] o.f.c.internal.database.base.Database    : Flyway upgrade recommended: PostgreSQL 18.3 is newer than this version of Flyway and support has not been tested. The latest supported version of PostgreSQL is 16.
+2026-04-20T22:49:52.061+05:30  INFO 359861 --- [shopro-accounting] [           main] o.f.core.internal.command.DbValidate     : Successfully validated 0 migrations (execution time 00:00.021s)
+2026-04-20T22:49:52.062+05:30  WARN 359861 --- [shopro-accounting] [           main] o.f.core.internal.command.DbValidate     : No migrations found. Are your locations set up correctly?
+2026-04-20T22:49:52.074+05:30  INFO 359861 --- [shopro-accounting] [           main] o.f.core.internal.command.DbMigrate      : Current version of schema "public": << Empty Schema >>
+2026-04-20T22:49:52.077+05:30  INFO 359861 --- [shopro-accounting] [           main] o.f.core.internal.command.DbMigrate      : Schema "public" is up to date. No migration necessary.
+2026-04-20T22:49:52.155+05:30  INFO 359861 --- [shopro-accounting] [           main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-04-20T22:49:52.207+05:30  INFO 359861 --- [shopro-accounting] [           main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.4.4.Final
+2026-04-20T22:49:52.236+05:30  INFO 359861 --- [shopro-accounting] [           main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-04-20T22:49:52.449+05:30  INFO 359861 --- [shopro-accounting] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-04-20T22:49:52.488+05:30  WARN 359861 --- [shopro-accounting] [           main] org.hibernate.orm.deprecation            : HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-04-20T22:49:53.522+05:30  INFO 359861 --- [shopro-accounting] [           main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-04-20T22:49:53.571+05:30  INFO 359861 --- [shopro-accounting] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-04-20T22:49:53.848+05:30  INFO 359861 --- [shopro-accounting] [           main] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-04-20T22:49:54.496+05:30  WARN 359861 --- [shopro-accounting] [           main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-04-20T22:49:54.512+05:30  WARN 359861 --- [shopro-accounting] [           main] .s.s.UserDetailsServiceAutoConfiguration : 
+
+Using generated security password: bfa4d64e-03ad-44b2-b637-0c1879eb41a0
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+2026-04-20T22:49:54.966+05:30  INFO 359861 --- [shopro-accounting] [           main] o.s.s.web.DefaultSecurityFilterChain     : Will secure Or [Mvc [pattern='/**']] with [org.springframework.security.web.session.DisableEncodeUrlFilter@5d81b90a, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@635791b7, org.springframework.security.web.context.SecurityContextHolderFilter@7ba0c0e5, org.springframework.security.web.header.HeaderWriterFilter@2338c3f9, org.springframework.web.filter.CorsFilter@48ac4201, org.springframework.security.web.authentication.logout.LogoutFilter@35daccb8, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@60e83cb9, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@612e1c6e, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@f2bec99, org.springframework.security.web.access.ExceptionTranslationFilter@7dcfe455, org.springframework.security.web.access.intercept.AuthorizationFilter@2db27b46]
+2026-04-20T22:49:55.275+05:30  INFO 359861 --- [shopro-accounting] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8083 (http) with context path ''
+2026-04-20T22:49:55.283+05:30  INFO 359861 --- [shopro-accounting] [           main] c.s.accounting.AccountingApplication     : Started AccountingApplication in 5.572 seconds (process running for 5.858)

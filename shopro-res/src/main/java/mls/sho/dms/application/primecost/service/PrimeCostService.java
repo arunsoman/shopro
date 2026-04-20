@@ -10,10 +10,8 @@ import mls.sho.dms.application.pos.repository.RestaurantRepository;
 import mls.sho.dms.application.purchasing.repository.PurchaseInvoiceRepository;
 import mls.sho.dms.application.inventory.service.InventoryIntelligenceService;
 import mls.sho.dms.application.inventory.repository.InventoryLedgerRepository;
-import mls.sho.dms.entity.Order;
-import mls.sho.dms.entity.OrderLine;
-import mls.sho.dms.entity.PurchaseInvoice;
-import mls.sho.dms.entity.PurchaseOrderLine;
+import mls.sho.dms.application.pos.entity.Order;
+import mls.sho.dms.application.purchasing.entity.PurchaseInvoice;
 import mls.sho.dms.common.enums.StockMovementType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,18 +41,20 @@ public class PrimeCostService {
     @Transactional(readOnly = true)
     public LivePrimeCostDto getLivePrimeCost(Long restaurantId) {
         LocalDate today = LocalDate.now();
-        LocalDate weekStart = today.minusDays(today.getDayOfWeek().getValue() % 7); // assuming Sun/Mon start
-        
+        // Use ISO Monday as week start — consistent with LaborService and weekly reports.
+        LocalDate weekStart = today.with(java.time.DayOfWeek.MONDAY);
+
         BigDecimal grossSales = computeGrossSales(restaurantId, weekStart, today);
         BigDecimal theoreticalCos = computeTheoreticalCos(restaurantId, weekStart, today);
         BigDecimal purchases = computePurchases(restaurantId, weekStart, today);
-        
+
         LaborWeekSummaryDto laborSummary = laborService.getWeeklySummary(restaurantId, weekStart);
         BigDecimal laborCost = laborSummary.getTotalLaborCost();
-        
-        BigDecimal totalCost = theoreticalCos.add(purchases).add(laborCost);
-        BigDecimal pct = (grossSales.compareTo(BigDecimal.ZERO) > 0) 
-            ? totalCost.divide(grossSales, 4, RoundingMode.HALF_UP) 
+
+        // Prime Cost = COGS + Labor. purchases is already reflected in theoreticalCos.
+        BigDecimal totalCost = theoreticalCos.add(laborCost);
+        BigDecimal pct = (grossSales.compareTo(BigDecimal.ZERO) > 0)
+            ? totalCost.divide(grossSales, 4, RoundingMode.HALF_UP)
             : BigDecimal.ZERO;
 
         LivePrimeCostDto dto = new LivePrimeCostDto();
@@ -72,15 +72,8 @@ public class PrimeCostService {
         LocalDateTime start = from.atStartOfDay();
         LocalDateTime end = to.atTime(23, 59, 59);
         
-        List<Order> orders = orderRepository.findAllByRestaurantIdAndCreatedAtBetween(restaurantId, start, end);
-        
-        return orders.stream()
-            .flatMap(o -> o.getLines().stream())
-            .map(line -> {
-                BigDecimal unitCost = line.getMenuItem().getPlateCost() != null ? line.getMenuItem().getPlateCost() : BigDecimal.ZERO;
-                return unitCost.multiply(BigDecimal.valueOf(line.getQuantity()));
-            })
-            .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal theoretical = orderRepository.computeTheoreticalCos(restaurantId, start, end);
+        return theoretical != null ? theoretical : BigDecimal.ZERO;
     }
 
     @Transactional(readOnly = true)
@@ -279,13 +272,17 @@ public class PrimeCostService {
         List<PrimeCostTrendPointDto> points = new ArrayList<>();
         LocalDate today = LocalDate.now();
         
+        java.util.Map<LocalDate, LaborWeekSummaryDto> laborCache = new java.util.HashMap<>();
+        
         for (int i = days - 1; i >= 0; i--) {
             LocalDate date = today.minusDays(i);
             BigDecimal sales = computeGrossSales(restaurantId, date, date);
             BigDecimal theoretical = computeTheoreticalCos(restaurantId, date, date);
             
             // Daily labor cost
-            LaborWeekSummaryDto labor = laborService.getWeeklySummary(restaurantId, date.minusDays(date.getDayOfWeek().getValue() % 7));
+            LocalDate weekStart = date.minusDays(date.getDayOfWeek().getValue() % 7);
+            LaborWeekSummaryDto labor = laborCache.computeIfAbsent(weekStart, ws -> laborService.getWeeklySummary(restaurantId, ws));
+            
             // Find employee record for that day
             int dayIndex = date.getDayOfWeek().getValue() % 7;
             BigDecimal dayLabor = labor.getStaffList().stream()

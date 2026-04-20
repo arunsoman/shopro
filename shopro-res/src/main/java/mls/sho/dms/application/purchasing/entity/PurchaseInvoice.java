@@ -1,15 +1,16 @@
-package mls.sho.dms.entity;
+package mls.sho.dms.application.purchasing.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import mls.sho.dms.entity.Restaurant;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * One supplier invoice header.

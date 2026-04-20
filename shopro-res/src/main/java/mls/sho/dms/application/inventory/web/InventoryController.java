@@ -8,7 +8,7 @@ import mls.sho.dms.application.inventory.service.InventoryService;
 import mls.sho.dms.application.inventory.service.InventoryStats;
 import mls.sho.dms.application.inventory.service.PhysicalInventoryService;
 import mls.sho.dms.common.enums.InventoryType;
-import mls.sho.dms.entity.Ingredient;
+import mls.sho.dms.application.inventory.entity.Ingredient;
 import mls.sho.dms.entity.Restaurant;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -90,7 +90,7 @@ public class InventoryController {
     }
 
     @GetMapping("/ingredients")
-    public ResponseEntity<List<mls.sho.dms.entity.Ingredient>> getIngredients(@PathVariable Long restaurantId) {
+    public ResponseEntity<List<Ingredient>> getIngredients(@PathVariable Long restaurantId) {
         return ResponseEntity.ok(ingredientService.getAllIngredients(restaurantId));
     }
 

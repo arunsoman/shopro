@@ -9,7 +9,7 @@ import mls.sho.dms.application.purchasing.repository.GoodsReceiptRepository;
 import mls.sho.dms.application.purchasing.repository.PurchaseInvoiceRepository;
 import mls.sho.dms.application.purchasing.repository.PurchaseOrderRepository;
 import mls.sho.dms.application.purchasing.repository.PurchasingHubRepository;
-import mls.sho.dms.entity.PurchaseInvoice;
+import mls.sho.dms.application.purchasing.entity.PurchaseInvoice;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -70,8 +70,11 @@ public class PurchasingDashboardService {
         LocalDate weekIter = currentWeekStart.minus(7, ChronoUnit.WEEKS);
         BigDecimal maxSpendForTrend = BigDecimal.ONE;
         
+        List<WeeklySummaryDTO> cachedSummaries = new ArrayList<>();
+        
         for (int i = 0; i < 8; i++) {
             WeeklySummaryDTO wSummary = invoiceService.getWeeklySummary(restaurantId, weekIter);
+            cachedSummaries.add(wSummary);
             if (wSummary.getGrandTotal().compareTo(maxSpendForTrend) > 0) {
                 maxSpendForTrend = wSummary.getGrandTotal();
             }
@@ -80,7 +83,7 @@ public class PurchasingDashboardService {
 
         weekIter = currentWeekStart.minus(7, ChronoUnit.WEEKS);
         for (int i = 0; i < 8; i++) {
-            WeeklySummaryDTO wSummary = invoiceService.getWeeklySummary(restaurantId, weekIter);
+            WeeklySummaryDTO wSummary = cachedSummaries.get(i);
             BigDecimal weekSpend = wSummary.getGrandTotal();
             int pct = 0;
             if (maxSpendForTrend.compareTo(BigDecimal.ZERO) > 0) {

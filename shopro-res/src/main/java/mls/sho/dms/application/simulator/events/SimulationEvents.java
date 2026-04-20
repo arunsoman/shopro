@@ -1,7 +1,7 @@
 package mls.sho.dms.application.simulator.events;
 
-import mls.sho.dms.entity.DiningTable;
-import mls.sho.dms.entity.Order;
+import mls.sho.dms.application.pos.entity.DiningTable;
+import mls.sho.dms.application.pos.entity.Order;
 import java.util.UUID;
 
 /**

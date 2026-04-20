@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Outlet, Link, useLocation } from 'react-router-dom';
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Warehouse,
   Clock,
@@ -19,6 +19,7 @@ import { Toaster } from 'sonner';
 export const MainLayout: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
   const location = useLocation();
+  const navigate = useNavigate();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -41,6 +42,7 @@ export const MainLayout: React.FC = () => {
     { label: 'Inventory', path: '/inventory' },
     { label: 'Recipes', path: '/recipes' },
     { label: 'Prime Cost', path: '/prime-cost' },
+    { label: 'Finance', path: 'finance-hub' },
   ];
 
   return (
@@ -60,9 +62,16 @@ export const MainLayout: React.FC = () => {
 
           <nav className="hidden md:flex items-center gap-1">
             {navItems.map((item) => (
-              <Link
+              <button
                 key={item.path}
-                to={item.path}
+                onClick={() => {
+                  if (item.path.startsWith('/')) {
+                    navigate(item.path);
+                  } else {
+                    // Screen name navigation
+                    navigate(item.path as any);
+                  }
+                }}
                 className={cn(
                   "px-4 py-2 rounded-lg text-sm font-bold uppercase tracking-widest transition-all",
                   location.pathname === item.path
@@ -71,7 +80,7 @@ export const MainLayout: React.FC = () => {
                 )}
               >
                 {item.label}
-              </Link>
+              </button>
             ))}
           </nav>
         </div>

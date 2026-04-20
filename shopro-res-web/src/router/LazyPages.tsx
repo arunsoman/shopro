@@ -165,8 +165,48 @@ export const PrimeCostTrendPage = lazy(
 export const LaborSchedulePage = lazy(
   () => import(/* webpackChunkName: "prime-cost" */ "@/features/prime-cost/LaborSchedulePage"),
 );
+
+export const StaffManagementPage = lazy(
+  () => import(/* webpackChunkName: "prime-cost" */ "@/features/prime-cost/StaffManagementPage"),
+);
 export const MultiLocationPage = lazy(
   () => import(/* webpackChunkName: "prime-cost" */ "@/features/prime-cost/MultiLocationPage"),
+);
+
+// ── Staff & Labor ───────────────────────────────────────────
+export const StaffManagementHubPage = lazy(
+  () => import(/* webpackChunkName: "staff-management" */ "@/features/staff-management/StaffManagementHubPage"),
+);
+export const StaffLaborPage = lazy(
+  () => import(/* webpackChunkName: "staff-management" */ "@/features/staff-labor/StaffLaborPage"),
+);
+export const TableStaffMapPage = lazy(
+  () => import(/* webpackChunkName: "staff-management" */ "@/features/staff-labor/TableStaffMapPage"),
+);
+
+// ── Accounting ─────────────────────────────────────────────
+export const SalaryDisbursementPage = lazy(
+  () => import(/* webpackChunkName: "accounting" */ "@/features/accounting/SalaryDisbursementPage"),
+);
+export const ChartOfAccountsPage = lazy(
+  () => import(/* webpackChunkName: "accounting" */ "@/features/accounting/ChartOfAccountsPage"),
+);
+export const PnLStatementPage = lazy(
+  () => import(/* webpackChunkName: "accounting" */ "@/features/accounting/PnLStatementPage"),
+);
+export const ExpenseEntryPage = lazy(
+  () => import(/* webpackChunkName: "accounting" */ "@/features/accounting/ExpenseEntryPage"),
+);
+export const CashManagementPage = lazy(
+  () => import(/* webpackChunkName: "accounting" */ "@/features/accounting/CashManagementPage"),
+);
+export const SalesEntryPage = lazy(
+  () => import(/* webpackChunkName: "accounting" */ "@/features/accounting/SalesEntryPage"),
+);
+
+// ── Finance Hub ─────────────────────────────────────────────
+export const FinanceHubPage = lazy(
+  () => import(/* webpackChunkName: "finance" */ "@/features/finance/FinanceHubPage"),
 );
 
 // ── SS6: POS / Floor ──────────────────────────────────────────

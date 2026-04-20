@@ -11,9 +11,9 @@ import mls.sho.dms.application.purchasing.repository.PurchaseOrderRepository;
 import mls.sho.dms.application.purchasing.repository.SupplierRepository;
 import mls.sho.dms.application.purchasing.repository.GoodsReceiptRepository;
 import mls.sho.dms.application.inventory.repository.IngredientRepository;
-import mls.sho.dms.entity.PurchaseOrder;
-import mls.sho.dms.entity.GoodsReceipt;
-import mls.sho.dms.entity.PurchaseOrderLine;
+import mls.sho.dms.application.purchasing.entity.PurchaseOrder;
+import mls.sho.dms.application.purchasing.entity.GoodsReceipt;
+import mls.sho.dms.application.purchasing.entity.PurchaseOrderLine;
 import mls.sho.dms.entity.Restaurant;
 import mls.sho.dms.common.enums.PurchaseOrderStatus;
 import org.springframework.stereotype.Service;
@@ -21,9 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.time.ZonedDateTime;
 import java.util.List;
-import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 /**
@@ -103,10 +101,8 @@ public class PurchaseOrderService {
                 .map(this::mapToGrnDTO)
                 .collect(Collectors.toList());
 
-        List<PurchaseInvoiceDTO> invoiceDtos = grns.stream()
-                .map(grn -> invoiceService.findByGoodsReceiptId(grn.getId()))
-                .filter(java.util.Optional::isPresent)
-                .map(opt -> opt.get())
+        List<Long> grnIds = grns.stream().map(GoodsReceipt::getId).collect(Collectors.toList());
+        List<PurchaseInvoiceDTO> invoiceDtos = invoiceService.findByGoodsReceiptIdIn(grnIds).stream()
                 .map(invoiceService::toDTO)
                 .collect(Collectors.toList());
 

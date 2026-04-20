@@ -9,9 +9,11 @@ import type { EmployeeType, KitchenStationType } from "./enums.types";
 // ── Employee ──────────────────────────────────────────────────
 
 export interface Employee {
-  id: number;
+  id: string;  // UUID as string
   restaurantId: number;
-  name: string;
+  name?: string;  // Frontend-friendly
+  staffName?: string;  // Backend field
+  role: string;  // StaffRole as string
   employeeType: EmployeeType;
   hourlyRate: number | null;      // null for MANAGEMENT (salaried)
   annualSalary: number | null;    // null for HOURLY

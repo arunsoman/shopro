@@ -2,10 +2,18 @@ package mls.sho.dms.application.inventory.service;
 import java.util.Comparator;
 
 import lombok.RequiredArgsConstructor;
+import mls.sho.dms.application.costing.entity.Recipe;
+import mls.sho.dms.application.costing.entity.RecipeIngredientLine;
 import mls.sho.dms.application.inventory.dto.InventoryIntelligenceDtos.*;
+import mls.sho.dms.application.inventory.entity.*;
 import mls.sho.dms.application.inventory.repository.InventoryActiveLotRepository;
 import mls.sho.dms.application.inventory.repository.InventoryLedgerRepository;
 import mls.sho.dms.application.inventory.repository.InventoryWasteRepository;
+import mls.sho.dms.application.pos.entity.MenuItem;
+import mls.sho.dms.application.pos.entity.Order;
+import mls.sho.dms.application.pos.entity.OrderLine;
+import mls.sho.dms.application.purchasing.entity.GoodsReceipt;
+import mls.sho.dms.application.purchasing.entity.PurchaseOrderLine;
 import mls.sho.dms.common.enums.StockMovementType;
 import mls.sho.dms.entity.*;
 import org.springframework.stereotype.Service;
@@ -29,6 +37,10 @@ public class InventoryIntelligenceService {
     private final InventoryWasteRepository wasteRepository;
     private final mls.sho.dms.application.analytics.service.ExperimentService experimentService;
     private final InventoryBalanceService balanceService;
+    private final mls.sho.dms.application.inventory.repository.InventoryBalanceRepository balanceRepository;
+    private final mls.sho.dms.application.pos.repository.TableStaffMapRepository tableStaffMapRepository;
+    private final DepletionPlanner depletionPlanner;
+    private final DepletionExecutor depletionExecutor;
 
     /**
      * Records physical shipment intake. 
@@ -59,6 +71,7 @@ public class InventoryIntelligenceService {
             lot.setInitialQty(receivedQty);
             lot.setAvailableQty(receivedQty);
             lot.setUnitPrice(unitPrice);
+            lot.setTaxAmount(BigDecimal.ZERO);
             lot.setReceivedAt(grn.getReceivedDate());
             activeLotRepository.save(lot);
 
@@ -125,67 +138,49 @@ public class InventoryIntelligenceService {
     }
 
     /**
+     * Depletes stock for only the specified order lines (the delta).
+     * Uses the Optimized Depletion Pipeline for consistency.
+     */
+    @Transactional
+    public void orderFulfillmentDelta(Order order, List<OrderLine> newLines) {
+        DepletionPlan plan = depletionPlanner.planDelta(order, newLines);
+        if (plan == null || plan.getRequirements().isEmpty()) return;
+        depletionExecutor.execute(plan);
+    }
+
+    /**
      * Depletes stock automatically based on a POS Order.
-     * Expands the recipe for each Menu Item and consumes batches in FIFO order.
-     * Supports recursive expansion of Batch Recipes.
+     * Uses the Optimized Depletion Pipeline: Plan → Lock → Match → Batch Persist.
+     *
+     * <p>Previous implementation performed N×M individual DB queries (one per ingredient per order line).
+     * This version does exactly 2 DB round-trips: 1 bulk lock+fetch, 1 batch persist.</p>
+     *
+     * <p>Preserves per-line context (fulfillmentKey, menuId, lineItemId) for audit trail.</p>
      */
     @Transactional
     public void orderFulfillment(Order order) {
-        if (order == null || order.getLines() == null) return;
-
-        List<InventoryIngredientLedger> bulkLedgerEntries = new ArrayList<>();
-        List<InventoryActiveLot> bulkLotUpdates = new ArrayList<>();
-        List<InventoryWasteRegistry> bulkWasteEntries = new ArrayList<>();
-
-        for (OrderLine line : order.getLines()) {
-            MenuItem item = line.getMenuItem();
-            if (item == null) continue;
-            
-            BigDecimal orderQty = BigDecimal.valueOf(line.getQuantity());
-            accumulateDepletionsRecursive(order.getRestaurant(), item, orderQty, 
-                    StockMovementType.DEPLETION, order.getId(), line.getId(), 
-                    order.getCreatedAt(), "SYSTEM", "POS_SALE", 
-                    bulkLedgerEntries, bulkLotUpdates, bulkWasteEntries);
-        }
-
-        if (!bulkLotUpdates.isEmpty()) {
-            activeLotRepository.saveAll(bulkLotUpdates);
-        }
-        if (!bulkLedgerEntries.isEmpty()) {
-            ledgerRepository.saveAll(bulkLedgerEntries);
-            balanceService.applyLedgerEntries(bulkLedgerEntries);
-        }
-        if (!bulkWasteEntries.isEmpty()) {
-            wasteRepository.saveAll(bulkWasteEntries);
-        }
+        DepletionPlan plan = depletionPlanner.planOrder(order);
+        if (plan == null || plan.getRequirements().isEmpty()) return;
+        depletionExecutor.execute(plan);
     }
 
     /**
      * Records a kitchen error or misfire.
-     * Depletes stock physically but categorizes as controllable loss.
+     * Uses the Optimized Depletion Pipeline for consistency.
      */
     @Transactional
     public void recordMisfire(Restaurant restaurant, MenuItem item, Long orderId, String reason, UUID staffId) {
-        List<InventoryIngredientLedger> bulkLedgerEntries = new ArrayList<>();
-        List<InventoryActiveLot> bulkLotUpdates = new ArrayList<>();
-        List<InventoryWasteRegistry> bulkWasteEntries = new ArrayList<>();
-
-        accumulateDepletionsRecursive(restaurant, item, BigDecimal.ONE, 
-                StockMovementType.MISFIRE, orderId, null, 
-                LocalDateTime.now(), "KITCHEN_AGENT", reason,
-                bulkLedgerEntries, bulkLotUpdates, bulkWasteEntries);
-
-        if (!bulkLotUpdates.isEmpty()) activeLotRepository.saveAllAndFlush(bulkLotUpdates);
-        if (!bulkLedgerEntries.isEmpty()) {
-            ledgerRepository.saveAllAndFlush(bulkLedgerEntries);
-            balanceService.applyLedgerEntries(bulkLedgerEntries);
-        }
-        if (!bulkWasteEntries.isEmpty()) wasteRepository.saveAllAndFlush(bulkWasteEntries);
+        DepletionPlan plan = depletionPlanner.planSingleItem(restaurant, item, BigDecimal.ONE,
+                StockMovementType.MISFIRE, orderId, reason, staffId,
+                LocalDateTime.now(), "KITCHEN_AGENT");
+        if (plan == null || plan.getRequirements().isEmpty()) return;
+        depletionExecutor.execute(plan);
     }
 
     private void accumulateDepletionsRecursive(Restaurant restaurant, MenuItem item, BigDecimal quantity, 
                                  StockMovementType type, Long orderId, Long lineItemId, 
-                                 LocalDateTime orderDate, String actor, String reason,
+                                 LocalDateTime orderDate, String actor, String reason, String fulfillmentKey,
+                                 Long tableId, UUID staffId,
                                  List<InventoryIngredientLedger> entries, List<InventoryActiveLot> lotsToUpdate,
                                  List<InventoryWasteRegistry> wastes) {
         // Find the active recipe for this menu item
@@ -207,9 +202,10 @@ public class InventoryIntelligenceService {
         // PLATE recipes already have per-portion quantities (converted at recipe creation time)
         boolean isBatchRecipe = activeRecipe.getRecipeType() == mls.sho.dms.common.enums.RecipeType.BATCH;
 
-        // Sort lines by line number
+        // Sort lines by ingredient ID (not line number) so concurrent transactions always acquire
+        // PESSIMISTIC_WRITE locks in the same order, preventing deadlock on overlapping recipes.
         List<RecipeIngredientLine> sortedLines = new ArrayList<>(activeRecipe.getIngredientLines());
-        sortedLines.sort(Comparator.comparing(RecipeIngredientLine::getLineNumber));
+        sortedLines.sort(Comparator.comparing(l -> l.getIngredient().getId()));
 
         for (RecipeIngredientLine recipeLine : sortedLines) {
             // Base calculation: order quantity * recipe unit quantity per portion
@@ -242,18 +238,21 @@ public class InventoryIntelligenceService {
             // Since nested sub-recipes were removed, we only look at direct Ingredients
             if (ingredient != null) {
                 depleteFifoBulk(restaurant, ingredient, totalUsage, 
-                        type, orderId, lineItemId, item.getId(), reason, null, orderDate, actor, entries, lotsToUpdate, wastes);
+                        type, orderId, lineItemId, item.getId(), reason, null, orderDate, actor, fulfillmentKey,
+                        tableId, staffId,
+                        entries, lotsToUpdate, wastes);
             }
         }
     }
 
     private void depleteFifoBulk(Restaurant restaurant, Ingredient ingredient, BigDecimal quantityToDeplete, 
                               StockMovementType type, Long orderId, Long lineItemId, Long menuId, 
-                              String reason, UUID staffId, LocalDateTime orderDate, String actor,
+                              String reason, UUID staffIdParam, LocalDateTime orderDate, String actor, String fulfillmentKey,
+                              Long tableId, UUID staffId,
                               List<InventoryIngredientLedger> entriesAccumulator, List<InventoryActiveLot> lotsAccumulator,
                               List<InventoryWasteRegistry> wastesAccumulator) {
         
-        List<InventoryActiveLot> activeLots = activeLotRepository.findAvailableLotsOrderByFifo(restaurant.getId(), ingredient.getId());
+        List<InventoryActiveLot> activeLots = activeLotRepository.findAvailableLotsForUpdate(restaurant.getId(), ingredient.getId());
         BigDecimal remainingToDeplete = quantityToDeplete;
 
         for (InventoryActiveLot lot : activeLots) {
@@ -284,9 +283,12 @@ public class InventoryIntelligenceService {
             entry.setPoId((lot.getGoodsReceipt() != null && lot.getGoodsReceipt().getPurchaseOrder() != null) ? lot.getGoodsReceipt().getPurchaseOrder().getId() : null);
             entry.setSupplierId(lot.getSupplier() != null ? lot.getSupplier().getId() : null);
             entry.setOrderId(orderId);
+            entry.setTableId(tableId);
+            entry.setStaffId(staffId);
             entry.setLineItemId(lineItemId);
             entry.setMenuId(menuId);
             entry.setReasonCode(reason);
+            entry.setFulfillmentKey(fulfillmentKey);
             if (orderDate != null) entry.setCreatedAt(orderDate);
             entry.setCreatedBy(actor);
             entry.setTotalValue(entry.getQuantity().multiply(entry.getUnitCost()).add(entry.getTaxAmount()).setScale(4, RoundingMode.HALF_UP));
@@ -316,9 +318,12 @@ public class InventoryIntelligenceService {
             entry.setTaxAmount(BigDecimal.ZERO);
             entry.setActiveLot(null); // No lot available
             entry.setOrderId(orderId);
+            entry.setTableId(tableId);
+            entry.setStaffId(staffId);
             entry.setLineItemId(lineItemId);
             entry.setMenuId(menuId);
             entry.setReasonCode(reason != null ? reason : "OVER_DEPLETION_STOCKOUT");
+            entry.setFulfillmentKey(fulfillmentKey);
             if (orderDate != null) entry.setCreatedAt(orderDate);
             entry.setCreatedBy(actor);
             entry.setTotalValue(entry.getQuantity().multiply(entry.getUnitCost()).setScale(4, RoundingMode.HALF_UP));
@@ -361,8 +366,10 @@ public class InventoryIntelligenceService {
         List<InventoryActiveLot> lots = new ArrayList<>();
         List<InventoryWasteRegistry> wastes = new ArrayList<>();
         
+        // Discards are not order-related, so fulfillmentKey is null
         depleteFifoBulk(restaurant, ingredient, qty, StockMovementType.DISCARD, 
-                null, null, null, reason, staffId, LocalDateTime.now(), "MANUAL_DISCARD", entries, lots, wastes);
+                null, null, null, reason, staffId, LocalDateTime.now(), "MANUAL_DISCARD", null,
+                null, null, entries, lots, wastes);
         
         if (!lots.isEmpty()) activeLotRepository.saveAll(lots);
         if (!entries.isEmpty()) {
@@ -420,7 +427,7 @@ public class InventoryIntelligenceService {
 
     @Transactional(readOnly = true)
     public WasteSummaryDto getWasteSummary(Long restaurantId, LocalDateTime start, LocalDateTime end) {
-        List<InventoryWasteRegistry> wastes = wasteRepository.findAllByCreatedAtBetween(start, end);
+        List<InventoryWasteRegistry> wastes = wasteRepository.findAllByLedgerRestaurantIdAndCreatedAtBetween(restaurantId, start, end);
         
         BigDecimal totalWasteValue = wastes.stream()
                 .map(w -> w.getLedger().getTotalValue().abs()) 
@@ -449,7 +456,7 @@ public class InventoryIntelligenceService {
     }
 
     private BigDecimal getCurrentBatchPrice(Long restaurantId, Long ingredientId) {
-        List<InventoryActiveLot> lots = activeLotRepository.findAvailableLotsOrderByFifo(restaurantId, ingredientId);
+        List<InventoryActiveLot> lots = activeLotRepository.findAvailableLotsForUpdate(restaurantId, ingredientId);
         if (lots.isEmpty()) {
             return BigDecimal.ZERO; // fallback to last purchase price from ingredient master if needed
         }
@@ -462,12 +469,9 @@ public class InventoryIntelligenceService {
      */
     private BigDecimal getCurrentBatchPriceReadOnly(Long restaurantId, Long ingredientId) {
         try {
-            List<InventoryActiveLot> lots = activeLotRepository.findAllByRestaurantIdAndActiveTrueOrderByExpiryDateAsc(restaurantId).stream()
-                    .filter(lot -> lot.getIngredient().getId().equals(ingredientId) && lot.getAvailableQty().compareTo(BigDecimal.ZERO) > 0)
-                    .toList();
-            if (!lots.isEmpty()) {
-                return lots.get(0).getUnitPrice();
-            }
+            return activeLotRepository.findFirstByRestaurantIdAndIngredientIdAndActiveTrueAndAvailableQtyGreaterThanOrderByExpiryDateAsc(restaurantId, ingredientId, BigDecimal.ZERO)
+                    .map(InventoryActiveLot::getUnitPrice)
+                    .orElse(BigDecimal.ZERO);
         } catch (Exception e) {
             // Ignore - will fallback to ingredient purchase price
         }
@@ -530,8 +534,9 @@ public class InventoryIntelligenceService {
 
     @Transactional(readOnly = true)
     public BigDecimal getLiveQuantity(Long restaurantId, Long ingredientId) {
-        BigDecimal qty = ledgerRepository.sumQuantityByIngredient(restaurantId, ingredientId);
-        return qty != null ? qty : BigDecimal.ZERO;
+        return balanceRepository.findByRestaurantIdAndIngredientId(restaurantId, ingredientId)
+                .map(InventoryIngredientBalance::getCurrentBalance)
+                .orElse(BigDecimal.ZERO);
     }
 
     /**

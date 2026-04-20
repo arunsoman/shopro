@@ -92,6 +92,16 @@ export const ROUTES = {
   PRIME_COST_LABOR:     "/prime-cost/labor",
   PRIME_COST_LOCATIONS: "/prime-cost/locations",
   LABOR_STAFFING:       "/labor",
+  
+  // ── Staff Management ──────────────────────────────────────
+  STAFF_MANAGEMENT:    "/staff-management",
+  STAFF_ATTENDANCE:    "/staff-management/attendance",
+  TABLE_STAFF_MAP:     "/staff-management/table-staff",
+
+  // ── Accounting ───────────────────────────────────────────
+  SALARY_DISBURSEMENT: "/accounting/salary",
+  CHART_OF_ACCOUNTS:   "/accounting/accounts",
+
   SUPPLIER_PAY:         "/payments",
 
   // ── SS6: POS / Floor ──────────────────────────────────────

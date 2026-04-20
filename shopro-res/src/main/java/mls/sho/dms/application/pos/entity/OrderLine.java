@@ -1,4 +1,4 @@
-package mls.sho.dms.entity;
+package mls.sho.dms.application.pos.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;

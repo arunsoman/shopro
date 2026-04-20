@@ -1,15 +1,15 @@
 package mls.sho.dms.application.purchasing.service;
 
 import lombok.RequiredArgsConstructor;
+import mls.sho.dms.application.purchasing.entity.PurchaseInvoice;
+import mls.sho.dms.application.purchasing.entity.PurchaseOrder;
 import mls.sho.dms.application.purchasing.repository.GoodsReceiptRepository;
 import mls.sho.dms.common.enums.GoodsReceiptStatus;
-import mls.sho.dms.entity.GoodsReceipt;
-import mls.sho.dms.entity.PurchaseOrderLine;
-import mls.sho.dms.entity.Ingredient;
+import mls.sho.dms.application.purchasing.entity.GoodsReceipt;
+import mls.sho.dms.application.purchasing.entity.PurchaseOrderLine;
 import mls.sho.dms.application.inventory.repository.IngredientRepository;
 import mls.sho.dms.application.inventory.service.InventoryIntelligenceService;
 import mls.sho.dms.application.purchasing.repository.PurchaseOrderRepository;
-import mls.sho.dms.application.purchasing.service.PurchaseInvoiceService;
 import mls.sho.dms.common.enums.PurchaseOrderStatus;
 import mls.sho.dms.application.purchasing.dto.GoodsReceiptDTO;
 import mls.sho.dms.application.purchasing.dto.PurchaseOrderLineDTO;
@@ -65,24 +65,9 @@ public class GoodsReceiptService {
             throw new IllegalStateException("Goods Receipt is already finalized.");
         }
 
-        // 1. Process Stock Increments using PO lines
+        // 1. Generate FIFO lots and ledger inflow via InventoryIntelligenceService (authoritative balance)
         List<PurchaseOrderLine> poLines = grn.getLines();
         if (poLines != null) {
-            for (PurchaseOrderLine poLine : poLines) {
-                Ingredient ing = poLine.getIngredient();
-                if (ing != null && poLine.getReceivedQty() != null && poLine.getReceivedQty().compareTo(BigDecimal.ZERO) > 0) {
-                    // Convert Received Purchase Units to Inventory Units
-                    BigDecimal conversionFactor = ing.getIuPerPu() != null ? ing.getIuPerPu() : BigDecimal.ONE;
-                    BigDecimal increment = poLine.getReceivedQty().multiply(conversionFactor);
-                    
-                    BigDecimal currentStock = ing.getOnHand() != null ? ing.getOnHand() : BigDecimal.ZERO;
-                    ing.setOnHand(currentStock.add(increment));
-                    ing.setUpdatedAt(LocalDateTime.now());
-                    
-                    ingredientRepository.save(ing);
-                }
-            }
-            // Generate ledger and lot entries
             inventoryIntelligenceService.receiveShipment(grn);
         }
 
@@ -149,19 +134,9 @@ public class GoodsReceiptService {
         grn.calculateTotal();
         grn = goodsReceiptRepository.save(grn);
         
-        // 3. Update inventory
-        for (PurchaseOrderLine poLine : po.getLines()) {
-            Ingredient ing = poLine.getIngredient();
-            if (ing != null && poLine.getReceivedQty() != null && poLine.getReceivedQty().compareTo(BigDecimal.ZERO) > 0) {
-                BigDecimal conversionFactor = ing.getIuPerPu() != null ? ing.getIuPerPu() : BigDecimal.ONE;
-                BigDecimal increment = poLine.getReceivedQty().multiply(conversionFactor);
-                BigDecimal currentStock = ing.getOnHand() != null ? ing.getOnHand() : BigDecimal.ZERO;
-                ing.setOnHand(currentStock.add(increment));
-                ing.setUpdatedAt(LocalDateTime.now());
-                ingredientRepository.save(ing);
-            }
-        }
-        
+        // 3. Generate FIFO lots and ledger inflow via InventoryIntelligenceService (authoritative balance)
+        inventoryIntelligenceService.receiveShipment(grn);
+
         // 4. Create Invoice Draft
         return purchaseInvoiceService.createDraftFromGRN(grn.getId());
     }

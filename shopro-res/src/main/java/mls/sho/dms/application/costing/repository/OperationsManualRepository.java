@@ -1,6 +1,6 @@
 package mls.sho.dms.application.costing.repository;
 
-import mls.sho.dms.entity.OperationsManualEntry;
+import mls.sho.dms.application.costing.entity.OperationsManualEntry;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import java.util.List;

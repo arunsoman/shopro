@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import mls.sho.dms.application.purchasing.dto.PreferredVendorDto;
 import mls.sho.dms.application.purchasing.service.PreferredVendorService;
-import mls.sho.dms.entity.PreferredVendor;
+import mls.sho.dms.application.purchasing.entity.PreferredVendor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

@@ -4,7 +4,7 @@ import random
 import sys
 
 BASE_URL = "http://localhost:8080/api/v1/restaurants/{}/pos"
-REST_ID = 1
+REST_ID = 3  # Changed from 1 to 3 - your tables are in restaurant 3
 GUESTS = 2
 
 def log(msg, data=None):

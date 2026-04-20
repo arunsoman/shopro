@@ -3,8 +3,7 @@ package mls.sho.dms.application.inventory.service;
 import lombok.RequiredArgsConstructor;
 import mls.sho.dms.application.inventory.repository.IngredientRepository;
 import mls.sho.dms.application.inventory.repository.InventoryBalanceRepository;
-import mls.sho.dms.entity.Ingredient;
-import mls.sho.dms.entity.Restaurant;
+import mls.sho.dms.application.inventory.entity.Ingredient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import mls.sho.dms.application.inventory.dto.IngredientCostDto;
@@ -20,6 +19,7 @@ public class IngredientService {
 
     private final IngredientRepository repository;
     private final InventoryBalanceRepository balanceRepository;
+    private final mls.sho.dms.application.purchasing.repository.PurchaseOrderRepository poRepository;
 
     @Transactional(readOnly = true)
     public IngredientCostDto getIngredientCosts(Long id) {
@@ -58,12 +58,13 @@ public class IngredientService {
 
     @Transactional(readOnly = true)
     public List<Ingredient> getLowStockIngredients(Long restaurantId) {
-        return repository.findAllLowStock(restaurantId);
+        List<Long> onOrderIds = poRepository.findIngredientsOnOrder(restaurantId);
+        return onOrderIds.isEmpty() ? repository.findAllLowStockNoExits(restaurantId) : repository.findAllLowStockNotIn(restaurantId, onOrderIds);
     }
 
     @Transactional(readOnly = true)
     public List<LowStockAlertDto> getLowStockAlerts(Long restaurantId) {
-        List<Ingredient> lowStockIngredients = repository.findAllLowStock(restaurantId);
+        List<Ingredient> lowStockIngredients = getLowStockIngredients(restaurantId);
 
         return lowStockIngredients.stream()
             .map(ingredient -> {
@@ -89,7 +90,8 @@ public class IngredientService {
 
     @Transactional(readOnly = true)
     public long getLowStockCount(Long restaurantId) {
-        return repository.countLowStock(restaurantId);
+        List<Long> onOrderIds = poRepository.findIngredientsOnOrder(restaurantId);
+        return onOrderIds.isEmpty() ? repository.countLowStockNoExits(restaurantId) : repository.countLowStockNotIn(restaurantId, onOrderIds);
     }
 
     @Transactional

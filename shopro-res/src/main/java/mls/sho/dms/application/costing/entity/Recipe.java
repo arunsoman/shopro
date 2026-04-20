@@ -1,4 +1,4 @@
-package mls.sho.dms.entity;
+package mls.sho.dms.application.costing.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
@@ -7,6 +7,8 @@ import mls.sho.dms.common.enums.KitchenStationType;
 import mls.sho.dms.common.enums.RecipeType;
 import mls.sho.dms.common.enums.RecipeUnit;
 import mls.sho.dms.common.enums.ShelfLife;
+import mls.sho.dms.entity.Restaurant;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;

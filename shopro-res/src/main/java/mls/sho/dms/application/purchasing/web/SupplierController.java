@@ -3,12 +3,11 @@ package mls.sho.dms.application.purchasing.web;
 import lombok.RequiredArgsConstructor;
 import mls.sho.dms.application.purchasing.dto.SupplierDTO;
 import mls.sho.dms.application.purchasing.service.SupplierService;
-import mls.sho.dms.entity.Supplier;
+import mls.sho.dms.application.purchasing.entity.Supplier;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.stream.Collectors;
-import org.springframework.http.ResponseEntity;
 
 /**
  * Controller for managing suppliers at the restaurant level.
